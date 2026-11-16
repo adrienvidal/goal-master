@@ -1,5 +1,5 @@
 // Envoi des notifications Web Push (relances) vers tous les appareils abonnés d'un joueur.
-import webpush from "web-push";
+import * as webpush from "web-push";
 import { db } from "./db";
 
 let configured = false;
