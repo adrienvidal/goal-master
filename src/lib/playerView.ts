@@ -1,7 +1,7 @@
 import { avatarState, countsByDay, currentStreak, type Mood } from "@/game/avatar";
 import { addDays, parisDay, type Day } from "@/game/calendar";
 import { formForLevel, levelFromXp, type Form } from "@/game/levels";
-import { activeApplications, totalXp, type Application, type Nudge } from "@/game/xp";
+import { activeApplications, nudgeSucceeded, totalXp, type Application, type Nudge } from "@/game/xp";
 import { formName } from "./forms";
 import type { CharacterId, ColorId } from "./onboarding";
 
@@ -21,7 +21,7 @@ export type PlayerView = {
   idleWorkdays: number;
   streak: number;
   goal: { target: number; done: number; deadline: Day; daysLeft: number } | null;
-  today: { count: number; companies: string[] };
+  today: { count: number; items: { id: string; company: string; at: Date }[] };
   feed: FeedItem[];
 };
 
@@ -94,7 +94,7 @@ export function buildPlayerView(player: PlayerRow, apps: Application[], nudges: 
     idleWorkdays: state.idleWorkdays,
     streak: currentStreak(counts, today),
     goal: goalView,
-    today: { count: todays.length, companies: todays.map((a) => a.company).reverse() },
+    today: { count: todays.length, items: todays.map((a) => ({ id: a.id, company: a.company, at: a.createdAt })) },
     feed: [
       ...evolutions(player.id, apps, nudges).map((e) => ({ at: e.at, rank: 1, item: { kind: "evolution", formName: formName(player.character, e.form), day: parisDay(e.at) } as FeedItem })),
       ...mine.map((a) => ({ at: a.createdAt, rank: 0, item: { kind: "application", company: a.company, day: parisDay(a.createdAt) } as FeedItem })),
@@ -105,7 +105,6 @@ export function buildPlayerView(player: PlayerRow, apps: Application[], nudges: 
   };
 }
 
-/** Candidature précédente chez la même entreprise (casse et espaces ignorés), la plus récente. */
 /** Minuscules, sans accents ni ponctuation, espaces resserrés : « Licorn Society / Délibia » → « licorn society delibia ». */
 function normalize(text: string): string {
   return text
@@ -116,19 +115,43 @@ function normalize(text: string): string {
     .trim();
 }
 
+const SEPARATOR = /\s[-–—]\s|[/·|]/;
+
 /** Le nom de l'entreprise : ce qui précède le premier séparateur (« - », « / », « · », « | »), l'intitulé du poste suivant souvent. */
 function companyOf(text: string): string {
-  return normalize(text.split(/\s[-–—]\s|[/·|]/)[0]);
+  return normalize(text.split(SEPARATOR)[0]);
 }
 
-/** Candidature déjà envoyée à la même entreprise : même nom d'entreprise, ou même texte, à la casse, aux accents et à la ponctuation près. */
-export function findDuplicate(company: string, playerId: string, apps: Application[]): Application | null {
+/** Nom et intitulé pour l'affichage : « Whub - Développeur Front » → { name: "Whub", detail: "Développeur Front" }. */
+export function splitCompany(text: string): { name: string; detail: string } {
+  const match = SEPARATOR.exec(text);
+  if (!match || match.index === 0) return { name: text.trim(), detail: "" };
+  return { name: text.slice(0, match.index).trim(), detail: text.slice(match.index + match[0].length).trim() };
+}
+
+export type Duplicate = { app: Application; sure: boolean };
+
+/**
+ * Candidature déjà envoyée à la même entreprise, la plus récente. Sûr : même texte à la casse, aux accents et à la
+ * ponctuation près. Possible : même nom d'entreprise, intitulé différent.
+ */
+export function findDuplicate(company: string, playerId: string, apps: Application[]): Duplicate | null {
   const whole = normalize(company);
   const name = companyOf(company);
   if (!name) return null;
-  return (
-    activeApplications(apps)
-      .filter((a) => a.userId === playerId && (normalize(a.company) === whole || companyOf(a.company) === name))
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null
-  );
+  const mine = activeApplications(apps)
+    .filter((a) => a.userId === playerId)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const sure = mine.find((a) => normalize(a.company) === whole);
+  if (sure) return { app: sure, sure: true };
+  const possible = mine.find((a) => companyOf(a.company) === name);
+  return possible ? { app: possible, sure: false } : null;
+}
+
+/** Ce que coûte le retrait d'une candidature : XP perdue par le joueur, et relance qu'elle seule validait (−15 XP au binôme aussi). */
+export function removalImpact(appId: string, playerId: string, apps: Application[], nudges: Nudge[]): { xp: number; nudgeLost: boolean } {
+  const without = apps.filter((a) => a.id !== appId);
+  const xp = totalXp(playerId, apps, nudges) - totalXp(playerId, without, nudges);
+  const nudgeLost = nudges.some((n) => n.recipientId === playerId && nudgeSucceeded(n, apps) && !nudgeSucceeded(n, without));
+  return { xp, nudgeLost };
 }
