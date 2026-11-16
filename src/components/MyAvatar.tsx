@@ -9,7 +9,7 @@ import { Sprite } from "./Sprite";
 /** Événement envoyé par « + Candidature » pour jouer la pose Action. */
 export const ACTION_EVENT = "gm:action";
 
-type Props = { id: string; character: CharacterId; color: ColorId; form: Form; level: number; mood: Mood; fallen: boolean; px?: number };
+type Props = { id: string; character: CharacterId; color: ColorId; form: Form; level: number; mood: Mood; fallen: boolean; px?: number; hurt?: boolean };
 type Moment = { kind: "evolution" | "grace"; from: Form; to: Form } | null;
 
 function read(key: string): string | null {
@@ -29,7 +29,7 @@ function write(key: string, value: string): void {
 
 // Mon avatar : pose Repos en boucle, Action à chaque candidature, Victoire à la montée de niveau.
 // Évolution et « Retour en grâce » en plein écran, une fois par appareil (dernier état vu gardé en local).
-export function MyAvatar({ id, character, color, form, level, mood, fallen, px = 4 }: Props): React.ReactElement {
+export function MyAvatar({ id, character, color, form, level, mood, fallen, px = 4, hurt = false }: Props): React.ReactElement {
   const [pose, setPose] = useState<"rest" | "action" | "victory">("rest");
   const [moment, setMoment] = useState<Moment>(null);
 
@@ -63,7 +63,7 @@ export function MyAvatar({ id, character, color, form, level, mood, fallen, px =
 
   return (
     <>
-      <Sprite character={character} color={color} form={form} mood={mood} pose={pose} px={px} label={formName(character, form)} />
+      <Sprite character={character} color={color} form={form} mood={mood} pose={pose} px={px} label={formName(character, form)} hurt={hurt} />
       {moment ? (
         <div className="evo-overlay" role="dialog" aria-modal="true" aria-label={moment.kind === "grace" ? "Retour en grâce" : "Évolution"}>
           <div className="evo-flash" />

@@ -16,7 +16,8 @@ export type AchievementId =
   | "duo"
   | "coach"
   | "phoenix"
-  | "revenant";
+  | "revenant"
+  | "first_boss";
 
 export const ACHIEVEMENTS: Record<AchievementId, { title: string; condition: string }> = {
   first_step: { title: "Premier pas", condition: "1ʳᵉ candidature" },
@@ -32,6 +33,7 @@ export const ACHIEVEMENTS: Record<AchievementId, { title: string; condition: str
   coach: { title: "Coach", condition: "5 relances suivies d'effet" },
   phoenix: { title: "Phénix", condition: "Candidater après avoir reçu une relance" },
   revenant: { title: "Revenant", condition: "Sortir de l'état Déchu par une reconquête" },
+  first_boss: { title: "Premier boss", condition: "Vaincre un boss en duel" },
 };
 
 const APPLICATION_MILESTONES: [number, AchievementId][] = [
@@ -56,8 +58,9 @@ export function earnedAchievements(input: {
   goalsReached: number;
   today: Day;
   levelForm: Form;
+  bossesBeaten?: number;
 }): Set<AchievementId> {
-  const { userId, partnerId, apps, nudges, goalsReached, today, levelForm } = input;
+  const { userId, partnerId, apps, nudges, goalsReached, today, levelForm, bossesBeaten = 0 } = input;
   const active = activeApplications(apps);
   const mine = active.filter((a) => a.userId === userId);
   const myCounts = countsByDay(mine);
@@ -67,6 +70,7 @@ export function earnedAchievements(input: {
   const streak = bestStreak(myCounts);
   for (const [n, id] of STREAK_MILESTONES) if (streak >= n) earned.add(id);
   if (goalsReached >= 1) earned.add("mission");
+  if (bossesBeaten >= 1) earned.add("first_boss");
 
   const partnerDays = countsByDay(active.filter((a) => a.userId === partnerId));
   if ([...myCounts.keys()].some((d) => partnerDays.has(d))) earned.add("duo");
