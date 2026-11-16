@@ -2,11 +2,12 @@
 import { earnedAchievements } from "@/game/achievements";
 import { parisDay } from "@/game/calendar";
 import { formForLevel, levelFromXp } from "@/game/levels";
-import { totalXp, type Application, type Nudge } from "@/game/xp";
+import type { NudgeRow } from "@/game/nudges";
+import { totalXp, type Application } from "@/game/xp";
 import type { Player } from "@/generated/prisma/client";
 import { db } from "./db";
 
-export type GameData = { players: Player[]; apps: Application[]; nudges: Nudge[] };
+export type GameData = { players: Player[]; apps: Application[]; nudges: NudgeRow[] };
 
 export async function loadGame(): Promise<GameData> {
   const [players, rows, nudgeRows] = await Promise.all([
@@ -17,7 +18,7 @@ export async function loadGame(): Promise<GameData> {
   return {
     players,
     apps: rows.map((r) => ({ id: r.id, userId: r.playerId, company: r.company, createdAt: r.createdAt, cancelledAt: r.cancelledAt })),
-    nudges: nudgeRows.map((n) => ({ id: n.id, senderId: n.senderId, recipientId: n.recipientId, sentAt: n.sentAt })),
+    nudges: nudgeRows.map((n) => ({ id: n.id, senderId: n.senderId, recipientId: n.recipientId, message: n.message, sentAt: n.sentAt })),
   };
 }
 

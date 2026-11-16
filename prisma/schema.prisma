@@ -46,6 +46,7 @@ model Player {
   sentNudges   Nudge[]               @relation("sentNudges")
   gotNudges    Nudge[]               @relation("receivedNudges")
   achievements UnlockedAchievement[]
+  pushSubs     PushSubscription[]
 }
 
 model Goal {
@@ -165,4 +166,16 @@ model RateLimit {
   lastRequest BigInt
 
   @@map("rateLimit")
+}
+
+/// Abonnement Web Push d'un appareil, pour recevoir les relances app fermée.
+model PushSubscription {
+  endpoint  String   @id
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([playerId])
 }
