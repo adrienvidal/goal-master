@@ -5,7 +5,7 @@ import { requirePlayer } from "@/server/session";
 
 const BADGE: Record<AchievementId, string> = {
   first_step: "1", on_the_way: "10", quarter: "25", halfway: "50", centurion: "100",
-  warm_up: "3j", week_on_fire: "7j", machine: "30j", mission: "★", duo: "⚔", coach: "5", phoenix: "🔥", revenant: "↑", first_boss: "☠",
+  warm_up: "3j", week_on_fire: "7j", machine: "30j", mission: "★", duo: "⚔", coach: "5", phoenix: "🔥", revenant: "↑", first_boss: "☠", duelist: "♛", unbeaten: "3♛",
 };
 
 // Grille des 14 succès : débloqués en couleur avec leur date, les autres verrouillés avec leur condition (cadrage §6.5).
