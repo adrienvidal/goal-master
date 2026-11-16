@@ -49,6 +49,13 @@ export function bestStreak(counts: Map<Day, number>): number {
   return best;
 }
 
+function moodFor(fallen: boolean, idleWorkdays: number): Mood {
+  if (fallen) return "exhausted";
+  if (idleWorkdays >= TIRED_AFTER) return "tired";
+  if (idleWorkdays >= SLEEP_AFTER) return "sleep";
+  return "normal";
+}
+
 export function avatarState(counts: Map<Day, number>, levelForm: Form, today: Day): AvatarState {
   let idle = 0;
   let lostForms = 0;
@@ -77,7 +84,7 @@ export function avatarState(counts: Map<Day, number>, levelForm: Form, today: Da
     }
   }
 
-  const mood: Mood = fallen ? "exhausted" : idle >= TIRED_AFTER ? "tired" : idle >= SLEEP_AFTER ? "sleep" : "normal";
+  const mood = moodFor(fallen, idle);
   const displayedForm = Math.max(1, levelForm - lostForms) as Form;
   return { mood, idleWorkdays: idle, lostForms, displayedForm, fallen, reconquests };
 }
