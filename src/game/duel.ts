@@ -7,6 +7,11 @@ import { activeApplications, totalXp, type Application, type Nudge } from "./xp"
 export const BOSSES = ["Le Recruteur fantôme", "Le Golem ATS", "La Pile de refus", "Le Silence radio"] as const;
 export type BossIndex = 0 | 1 | 2 | 3;
 
+/** Nom du boss au milieu d'une phrase : « contre le Golem ATS ». */
+export function bossInSentence(boss: BossIndex): string {
+  return BOSSES[boss].replace(/^L/, "l");
+}
+
 export const DUEL_HOUR = 18;
 /** Un coup de grâce par tranche de 5 niveaux, ajouté au moment du duel. */
 export const LEVELS_PER_BONUS = 5;
@@ -122,6 +127,11 @@ export function pastDuels(input: DuelInput, now: Date): Duel[] {
 export function isWounded(input: DuelInput, now: Date): boolean {
   const last = pastDuels(input, now)[0];
   return last ? !last.won : false;
+}
+
+/** Les combattants, le joueur courant en premier. */
+export function fightersMeFirst(fighters: Fighter[], meId: string): Fighter[] {
+  return [...fighters].sort((a, b) => Number(b.playerId === meId) - Number(a.playerId === meId));
 }
 
 /** Moins de 24 h avant le duel et le boss tient encore, coup de grâce compris. */

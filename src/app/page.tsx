@@ -4,6 +4,10 @@ import { Bar } from "@/components/Bar";
 import { Flame } from "@/components/Flame";
 import { NudgeButton } from "@/components/NudgeButton";
 import { PushSetup } from "@/components/PushSetup";
+import { BossCard } from "@/components/BossCard";
+import { DecorView } from "@/components/DecorView";
+import { DuelWatcher } from "@/components/DuelWatcher";
+import { bossInSentence, currentDuel, pastDuels, type Duel } from "@/game/duel";
 import { parisDay } from "@/game/calendar";
 import { NUDGE_MESSAGES, pendingNudge, sentToday } from "@/game/nudges";
 import Link from "next/link";
@@ -12,9 +16,9 @@ import { devLogout } from "./connexion/dev-actions";
 import { devLoginEnabled } from "@/lib/devLogin";
 import { formName } from "@/lib/forms";
 import { goalOutcome } from "@/lib/goal";
-import { buildPlayerView, type PlayerView } from "@/lib/playerView";
+import { buildPlayerView, type FeedItem, type PlayerView } from "@/lib/playerView";
 import { db } from "@/server/db";
-import { loadGame } from "@/server/game";
+import { loadDuelInput, loadGame } from "@/server/game";
 import { requirePlayer } from "@/server/session";
 import AddApplication from "./AddApplication";
 
@@ -38,6 +42,29 @@ function partnerStatus(p: PlayerView): string {
   if (p.mood === "exhausted") return panda ? `${p.pseudo} a perdu sa robe de ${formName(p.character, p.levelForm)}` : `${p.pseudo} a perdu son armure de ${formName(p.character, p.levelForm)}`;
   if (p.mood === "tired") return panda ? `Le bambou de ${p.pseudo} se fend` : `L'armure de ${p.pseudo} rouille`;
   return `${p.pseudo} s'est endormi · rien depuis ${p.idleWorkdays} jours ouvrés`;
+}
+
+type FeedLine = FeedItem | { kind: "duel"; day: string; won: boolean; boss: string };
+
+/** Le dernier duel s'intercale dans le fil du binôme, à sa date. */
+function withDuelLine(feed: FeedItem[], duel: Duel | null): FeedLine[] {
+  const items: FeedLine[] = [...feed];
+  if (duel) {
+    const at = items.findIndex((it) => it.day <= duel.id);
+    items.splice(at === -1 ? items.length : at, 0, { kind: "duel", day: duel.id, won: duel.won, boss: bossInSentence(duel.boss) });
+  }
+  return items.slice(0, 5);
+}
+
+function FeedText({ line, pseudo }: { line: FeedLine; pseudo: string }): React.ReactElement {
+  switch (line.kind) {
+    case "duel":
+      return line.won ? <span className="text-[var(--ok)]">Victoire contre {line.boss}</span> : <span className="text-danger">Duel perdu contre {line.boss}</span>;
+    case "evolution":
+      return <span className="text-gold">{pseudo} est devenu {line.formName} ⚔️</span>;
+    case "application":
+      return <span>{pseudo} → <b>{line.company}</b></span>;
+  }
 }
 
 async function goalFor(playerId: string): Promise<{ target: number; deadline: Date; createdAt: Date } | null> {
@@ -72,10 +99,22 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const partnerRow = game.players.find((p) => p.id !== player.id);
   const partner = partnerRow ? buildPlayerView(partnerRow, game.apps, game.nudges, await goalFor(partnerRow.id), now) : null;
   const received = partner ? pendingNudge(player.id, game.nudges, game.apps, now) : null;
+  const duelInput = await loadDuelInput(game);
+  const duel = currentDuel(duelInput, now);
+  const lastDuel = pastDuels(duelInput, now)[0] ?? null;
+  const wounded = lastDuel ? !lastDuel.won : false;
+  const names = Object.fromEntries(game.players.map((p) => [p.id, p.pseudo]));
+  const walkers = [me, ...(partner ? [partner] : [])].map((v) => ({
+    pseudo: v.pseudo, level: v.level, character: v.character, color: v.color, form: v.displayedForm, mood: v.mood, hurt: wounded,
+    status: v.idleWorkdays >= 2 ? partnerStatus(v) : null,
+  }));
+  const partnerFeed = partner ? withDuelLine(partner.feed, lastDuel) : [];
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
+      {lastDuel ? <DuelWatcher id={lastDuel.id} /> : null}
       <div className="device grid gap-6 md:grid-cols-[1.3fr_1fr]">
+        <DecorView walkers={walkers} />
         <section className="flex flex-col gap-4" aria-label="Ma quête">
           {received && partner ? (
             <div role="status" className="flex items-end gap-3 border-[3px] border-ember bg-stone-2 px-3 py-2">
@@ -86,19 +125,20 @@ export default async function HomePage(): Promise<React.ReactElement> {
               </p>
             </div>
           ) : null}
-          <div className="flex items-end gap-4">
-            <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} level={me.level} mood={me.mood} fallen={me.fallen} />
+          <div className="flex items-end gap-4 pr-9">
+            <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} level={me.level} mood={me.mood} fallen={me.fallen} hurt={wounded} />
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-display text-[11px] leading-relaxed">{me.pseudo} · Niv. {me.level}</span>
                 <Streak days={me.streak} />
               </div>
-              <span className="text-sm text-muted">{me.title}</span>
+              <span className="text-sm text-muted">{me.title}{wounded ? " · blessé" : ""}</span>
               <Bar value={me.xpInLevel} max={me.xpForNext} label="Expérience du niveau" />
               <span className="num text-sm text-muted">{me.xpInLevel} / {me.xpForNext} XP</span>
             </div>
           </div>
           <GoalBlock view={me} />
+          {duel ? <BossCard duel={duel} names={names} meId={player.id} wounded={wounded} now={now} /> : null}
           <AddApplication todayCount={me.today.count} />
           <div className="grid grid-cols-2 gap-2">
             <Link href="/succes" className="btn ghost !text-[10px]">Mes succès</Link>
@@ -114,10 +154,10 @@ export default async function HomePage(): Promise<React.ReactElement> {
           {partner ? (
             <>
               <div className="flex items-end gap-3">
-                <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} mood={partner.mood} px={3} label={partner.title} />
+                <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} mood={partner.mood} px={3} label={partner.title} hurt={wounded} />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="font-display text-[11px] leading-relaxed">{partner.pseudo} · Niv. {partner.level}</span>
-                  <span className="text-sm text-muted">{partner.title} · série {partner.streak}</span>
+                  <span className="text-sm text-muted">{partner.title} · {wounded ? "blessé" : `série ${partner.streak}`}</span>
                   {partner.idleWorkdays >= 2 ? <span className="text-sm text-danger">{partnerStatus(partner)}</span> : null}
                 </div>
               </div>
@@ -129,14 +169,10 @@ export default async function HomePage(): Promise<React.ReactElement> {
                 </p>
               ) : null}
               <ul className="flex flex-col gap-1.5 text-sm">
-                {partner.feed.length === 0 ? <li className="text-muted">Pas encore de candidature.</li> : null}
-                {partner.feed.map((r, i) => (
+                {partnerFeed.length === 0 ? <li className="text-muted">Pas encore de candidature.</li> : null}
+                {partnerFeed.map((r, i) => (
                   <li key={i} className="flex justify-between gap-2 border-b-2 border-dotted border-stone-2 pb-1">
-                    {r.kind === "evolution" ? (
-                      <span className="text-gold">{partner.pseudo} est devenu {r.formName} ⚔️</span>
-                    ) : (
-                      <span>{partner.pseudo} → <b>{r.company}</b></span>
-                    )}
+                    <FeedText line={r} pseudo={partner.pseudo} />
                     <time className="text-muted">{shortDate(r.day)}</time>
                   </li>
                 ))}
