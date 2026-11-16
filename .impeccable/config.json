@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "docs/maquettes/goal-master-maquettes.html"
+        ],
+        "createdAt": "2026-11-16T10:05:24.846Z",
+        "reason": "Claude: les paires signalées (#a39dcc sur #ffffff, #000000 sur #221e40/#16132a) n'existent pas dans la page ; tout le texte vient de tokens clairs (--ink, --muted) sur fond sombre explicite, le scanner ne résout pas les variables CSS"
+      }
+    ]
+  }
+}
