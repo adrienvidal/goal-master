@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pendingNudge, sentToday, type NudgeRow } from "./nudges";
+import { justWonNudge, pendingNudge, sentToday, type NudgeRow } from "./nudges";
 import type { Application } from "./xp";
 
 const nudge = (sentAt: string, id = "n1"): NudgeRow => ({ id, senderId: "a", recipientId: "b", message: 0, sentAt: new Date(sentAt) });
@@ -23,5 +23,20 @@ describe("pendingNudge", () => {
   });
   it("disparaît après 24 h", () => {
     expect(pendingNudge("b", [nudge("2026-11-15T09:00:00Z")], [], now)).toBeNull();
+  });
+});
+
+describe("justWonNudge", () => {
+  const n = nudge("2026-11-16T09:00:00Z");
+  it("rend la relance validée il y a moins de 2 minutes", () => {
+    expect(justWonNudge("b", [n], [app("2026-11-16T10:00:00Z")], new Date("2026-11-16T10:01:00Z"))?.id).toBe("n1");
+  });
+  it("rend la plus récente quand plusieurs relances viennent d'être validées", () => {
+    const older = { ...nudge("2026-11-16T09:58:00Z"), id: "n0" };
+    const apps = [app("2026-11-16T09:59:00Z"), app("2026-11-16T10:00:30Z")];
+    expect(justWonNudge("b", [older, { ...nudge("2026-11-16T10:00:00Z"), id: "n2" }], apps, new Date("2026-11-16T10:01:00Z"))?.id).toBe("n2");
+  });
+  it("oublie une réussite plus ancienne", () => {
+    expect(justWonNudge("b", [n], [app("2026-11-16T10:00:00Z")], new Date("2026-11-16T10:05:00Z"))).toBeNull();
   });
 });

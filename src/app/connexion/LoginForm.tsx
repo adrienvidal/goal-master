@@ -50,7 +50,7 @@ export default function LoginForm(): React.ReactElement {
 
   if (step === "email") {
     return (
-      <form className="device flex flex-col gap-4" onSubmit={requestCode}>
+      <form className="flex flex-col gap-4" onSubmit={requestCode}>
         <label htmlFor="email" className="text-sm text-muted">Ton email</label>
         <input id="email" className="input" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         {error ? <p className="err">{error}</p> : null}
@@ -59,7 +59,7 @@ export default function LoginForm(): React.ReactElement {
     );
   }
   return (
-    <form className="device flex flex-col gap-4" onSubmit={signIn}>
+    <form className="flex flex-col gap-4" onSubmit={signIn}>
       <p className="h-title">Vérifie ta boîte mail</p>
       <p className="text-muted">Code envoyé à {email}. Il reste valable 10 minutes.</p>
       <label htmlFor="code" className="text-sm text-muted">Code à 6 chiffres</label>

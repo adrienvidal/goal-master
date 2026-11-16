@@ -1,0 +1,480 @@
+<title>Goal Master · Notifications</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
+<style>
+/* Maquette : écrans empilés, chacun annoncé par sa route. Tokens = ceux de l'app (globals.css), château de nuit, un seul thème sombre assumé. */
+:root {
+  color-scheme: dark;
+  --night: #16132a; --stone: #221e40; --stone-2: #2e2958; --edge: #4a4380;
+  --ink: #f1ecff; --muted: #a39dcc; --gold: #f2c14e; --gold-dk: #b9831c;
+  --ember: #ff7a45; --danger: #ff6b6b; --ok: #6fd49a; --boss: #c9b8ff;
+  --page: #0e0c1d; --shadow: #0c0a1a;
+  --os-card: rgb(40 38 60 / .95); --os-meta: #9a98ad;
+  --mail-bg: #eceaf4; --mail-card: #ffffff; --mail-ink: #1d1a2e; --mail-muted: #6b6785;
+  --f-display: "Press Start 2P", ui-monospace, monospace;
+  --f-ui: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-num: "VT323", ui-monospace, monospace;
+  --f-os: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--f-ui); font-size: 16px; margin: 0; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 980px; margin: 0 auto; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--page); padding: 14px 0 10px; border-bottom: 3px solid var(--edge); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--page); }
+.top h1 { font-family: var(--f-display); font-size: 12px; margin: 0 0 10px; line-height: 1.6; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: 13px; text-decoration: none; padding: 4px 8px; border: 2px solid var(--edge); color: var(--muted); }
+.toc a:hover { color: var(--ink); border-color: var(--gold); }
+.intro { color: var(--muted); max-width: 68ch; line-height: 1.5; margin: 22px 0 6px; }
+.rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 16px 0 8px; }
+.rules div { border: 2px dashed var(--edge); padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.rules b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+
+.screen { margin-top: 56px; scroll-margin-top: 150px; }
+.screen > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
+.route { font-family: var(--f-num); font-size: 22px; color: var(--gold); }
+.screen > header h2 { font-family: var(--f-display); font-size: 11px; margin: 0; line-height: 1.6; }
+.screen > header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 75ch; }
+
+.stage { position: relative; overflow: hidden; border: 3px solid #000; padding: 22px 14px; isolation: isolate; background: linear-gradient(#0f0c22 0 14%, #141030 14% 28%, #1a1540 28% 42%, #221b4f 42% 56%, #2b2160 56% 70%, #352870 70% 84%, #1b1638 84%); }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; image-rendering: pixelated; }
+
+.device { background: rgb(34 30 64 / .8); border: 4px solid var(--edge); box-shadow: 4px 4px 0 var(--shadow); padding: 18px 16px; position: relative; max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.h-title { font-family: var(--f-display); font-size: 14px; line-height: 1.6; margin: 0; }
+.label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0; }
+.muted { color: var(--muted); font-size: 14px; line-height: 1.45; }
+.num { font-family: var(--f-num); font-size: 1.2em; }
+.btn { display: flex; justify-content: center; align-items: center; width: 100%; font-family: var(--f-display); font-size: 12px; line-height: 1.4; color: #1a1626; background: var(--gold); padding: 15px 12px; box-shadow: inset -4px -4px 0 var(--gold-dk), 4px 4px 0 var(--shadow); text-decoration: none; border: 0; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 3px var(--edge); font-size: 10px; }
+.btn.auto { width: auto; padding: 12px 14px; font-size: 10px; flex: none; }
+.head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.cols { display: grid; gap: 18px; }
+@media (min-width: 760px) { .cols { grid-template-columns: 1fr 1fr; } }
+.col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+/* Canaux */
+.channel { border: 3px solid var(--stone-2); background: var(--night); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.channel .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.channel b { font-weight: 600; }
+.pill { font-family: var(--f-display); font-size: 10px; line-height: 1.4; padding: 5px 7px; border: 2px solid currentColor; white-space: nowrap; }
+.pill.on { color: var(--ok); }
+.pill.off { color: var(--muted); }
+.pill.warn { color: var(--ember); }
+.addr { font-family: var(--f-num); font-size: 20px; overflow-wrap: anywhere; }
+.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
+
+/* Interrupteurs par catégorie */
+.cats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.cats li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; padding: 10px 0; border-bottom: 2px dotted var(--stone-2); }
+.cats li:last-child { border-bottom: 0; }
+.cats label { font-weight: 600; cursor: pointer; }
+.cats small { grid-column: 1; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.cats .always { grid-column: 1; color: var(--gold); font-size: 12px; }
+.switch { grid-row: 1 / span 2; grid-column: 2; appearance: none; width: 46px; height: 24px; border: 3px solid var(--edge); background: var(--night); position: relative; cursor: pointer; margin: 0; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: var(--muted); transition: left .12s steps(2); }
+.switch:checked { border-color: var(--ok); }
+.switch:checked::after { left: 24px; background: var(--ok); }
+.toast { font-size: 13px; color: var(--ok); min-height: 1.2em; margin: 0; }
+
+.edges { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); margin-top: 16px; }
+.edges .device { margin: 0; gap: 12px; }
+.edges h4 { font-family: var(--f-display); font-size: 9px; line-height: 1.6; margin: 0; color: var(--gold); }
+
+/* Notifications push, écran verrouillé */
+.lock { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+.push { background: var(--os-card); border-radius: 14px; padding: 10px 12px; display: grid; grid-template-columns: 34px 1fr; gap: 10px; font-family: var(--f-os); font-size: 14px; line-height: 1.35; text-decoration: none; color: var(--ink); }
+.push:hover { outline: 2px solid var(--gold); }
+.push .ico { width: 34px; height: 34px; border-radius: 8px; background: var(--night); display: grid; place-items: center; }
+.push .ico svg { width: 22px; height: 22px; }
+.push b { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.push b span { color: var(--os-meta); font-weight: 400; }
+.push p { margin: 2px 0 0; }
+.push .dest { display: block; margin-top: 6px; font-size: 12px; color: var(--muted); }
+.ev { display: flex; flex-direction: column; gap: 6px; }
+.ev .tag { font-family: var(--f-display); font-size: 10px; line-height: 1.6; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+.ev .tag em { font-style: normal; color: var(--gold); }
+.ev .tag .new { color: var(--ok); }
+
+/* Journée type : plafond de 2 */
+.day { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
+.day li { display: grid; grid-template-columns: 60px 1fr auto; gap: 10px; align-items: baseline; padding: 9px 0; border-bottom: 2px dotted var(--stone-2); font-size: 15px; }
+.day time { font-family: var(--f-num); font-size: 20px; color: var(--muted); }
+.day .st { font-family: var(--f-display); font-size: 10px; line-height: 1.5; white-space: nowrap; }
+.day .sent { color: var(--ok); }
+.day .free { color: var(--boss); }
+.day .drop { color: var(--danger); }
+.day li.dropped span:nth-child(2) { color: var(--muted); text-decoration: line-through; }
+
+/* E-mail */
+.mailbox { background: var(--mail-bg); border: 3px solid #000; padding: 18px 12px; }
+.mailhead { max-width: 560px; margin: 0 auto 10px; font-family: var(--f-os); font-size: 13px; color: var(--mail-muted); display: grid; gap: 2px; }
+.mailhead b { color: var(--mail-ink); font-size: 15px; }
+.mail { max-width: 560px; margin: 0 auto; background: var(--mail-card); color: var(--mail-ink); font-family: var(--f-os); border-radius: 6px; overflow: hidden; }
+.mail .band { background: var(--night); padding: 16px 20px; display: flex; align-items: center; gap: 10px; }
+.mail .band span { font-family: var(--f-display); font-size: 11px; color: var(--gold); line-height: 1.5; }
+.mail .band svg { width: 22px; height: 22px; flex: none; }
+.mail .body { padding: 22px 20px 8px; display: flex; flex-direction: column; gap: 12px; }
+.mail h3 { margin: 0; font-size: 20px; line-height: 1.3; text-wrap: balance; }
+.mail p { margin: 0; font-size: 15px; line-height: 1.55; }
+.mail .cta { display: inline-block; align-self: flex-start; background: var(--gold); color: #1a1626; font-weight: 700; padding: 12px 18px; border-radius: 4px; text-decoration: none; box-shadow: inset -3px -3px 0 var(--gold-dk); }
+.mail .foot { padding: 16px 20px 20px; font-size: 12px; color: var(--mail-muted); line-height: 1.5; border-top: 1px solid var(--mail-bg); margin-top: 14px; }
+.mails { display: grid; gap: 22px; }
+
+.dests { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.dests a { border: 3px solid var(--edge); background: var(--night); padding: 12px; text-decoration: none; display: flex; flex-direction: column; gap: 4px; }
+.dests a:hover { border-color: var(--gold); }
+.dests .route { font-size: 20px; }
+.dests span:last-child { color: var(--muted); font-size: 14px; }
+
+/* Bandeaux en haut de l'accueil */
+.banners { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.banners .device { margin: 0; gap: 12px; }
+.banners h4 { font-family: var(--f-display); font-size: 9px; line-height: 1.6; margin: 0; color: var(--gold); }
+.banner { border: 3px solid var(--ember); background: var(--night); padding: 10px 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; }
+.banner p { margin: 0; font-size: 15px; line-height: 1.4; min-width: 0; }
+.banner small { color: var(--muted); font-size: 13px; }
+.banner .who { color: var(--ember); font-weight: 600; }
+.banner .mini { width: 26px; height: 26px; background: var(--stone-2); display: grid; place-items: center; }
+.banner .mini svg { width: 18px; height: 18px; }
+.banner .x { width: 32px; height: 32px; display: grid; place-items: center; border: 2px solid var(--edge); background: transparent; color: var(--muted); font-family: var(--f-display); font-size: 11px; text-decoration: none; cursor: pointer; }
+.banner .x:hover { color: var(--ink); border-color: var(--gold); }
+.banner.win { border-color: var(--ok); grid-template-columns: auto 1fr; }
+.banner.win .who { color: var(--ok); }
+.banner.version { border-color: var(--gold); grid-template-columns: 1fr auto; align-items: center; }
+.banner.version .who { color: var(--gold); }
+.ghosted { border: 2px dashed var(--edge); padding: 10px 12px; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.fade { animation: fade 4s steps(8) infinite; }
+@keyframes fade { 0%, 60% { opacity: 1; } 100% { opacity: 0; } }
+
+
+/* E-mail 8 bits : table de 560 px, fond nuit, cadre épais, bouton à relief en bordures (pas d'ombre : Gmail l'ignore). */
+.m8 { max-width: 560px; margin: 0 auto; background: var(--night); border: 4px solid var(--edge); color: var(--ink); font-family: var(--f-os); }
+.m8 .hdr { position: relative; height: 112px; overflow: hidden; border-bottom: 4px solid var(--edge); background: linear-gradient(#0f0c22 0 20%, #141030 20% 40%, #1a1540 40% 60%, #221b4f 60% 80%, #2b2160 80%); }
+.m8 .hdr canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+.m8 .hdr .brand { position: absolute; left: 18px; bottom: 16px; display: flex; align-items: center; gap: 10px; font-family: var(--f-display); font-size: 13px; color: var(--gold); text-shadow: 2px 2px 0 #0c0a1a; }
+.m8 .hdr .img-note { position: absolute; right: 8px; top: 6px; font-size: 10px; color: var(--muted); font-family: var(--f-os); background: rgb(22 19 42 / .8); padding: 2px 6px; }
+.m8 .scene { display: flex; align-items: flex-end; justify-content: center; gap: 18px; padding: 22px 16px 6px; background: var(--stone); border-bottom: 3px dotted var(--stone-2); min-height: 120px; }
+.m8 .scene svg { display: block; max-width: 100%; height: auto; }
+.m8 .body { padding: 20px 22px 8px; display: flex; flex-direction: column; gap: 12px; }
+.m8 h3 { margin: 0; font-family: var(--f-display); font-size: 14px; line-height: 1.7; color: var(--gold); text-wrap: balance; }
+.m8.fallback h3 { font-family: "Courier New", Courier, monospace; font-size: 18px; font-weight: 700; letter-spacing: .02em; }
+.m8.fallback .hdr .brand { font-family: var(--f-display); }
+.m8 p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--ink); }
+.m8 .stats { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
+.m8 .stats div { display: flex; justify-content: space-between; border-bottom: 2px dotted var(--stone-2); padding-bottom: 3px; }
+.m8 .stats b { color: var(--ink); font-weight: 600; }
+.m8 .cta { align-self: flex-start; display: inline-block; font-family: var(--f-display); font-size: 11px; line-height: 1.4; color: #1a1626; background: var(--gold); padding: 13px 16px; border-right: 4px solid var(--gold-dk); border-bottom: 4px solid var(--gold-dk); text-decoration: none; margin-top: 4px; }
+.m8.fallback .cta { font-family: "Courier New", Courier, monospace; font-size: 15px; font-weight: 700; }
+.m8 .foot { margin-top: 18px; padding: 14px 22px 18px; border-top: 3px solid var(--stone-2); font-size: 12px; line-height: 1.5; color: var(--muted); }
+.m8 .foot a { color: var(--muted); }
+.clients { display: grid; gap: 22px; }
+.clientnote { max-width: 560px; margin: 0 auto 8px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.clientnote b { color: var(--ink); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+@media (max-width: 420px) { .stage { padding: 14px 8px; } .device { padding: 16px 12px; } .day li { grid-template-columns: 50px 1fr; } .day .st { grid-column: 2; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="sword" viewBox="0 0 16 16" shape-rendering="crispEdges">
+    <rect x="7" y="1" width="2" height="9" fill="#e8e6f5"/><rect x="7" y="1" width="1" height="9" fill="#ffffff"/>
+    <rect x="4" y="10" width="8" height="2" fill="#f2c14e"/><rect x="7" y="12" width="2" height="2" fill="#8a5a2b"/><rect x="6" y="14" width="4" height="1" fill="#f2c14e"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Goal Master · Notifications</h1>
+    <nav class="toc" aria-label="Écrans">
+      <a href="#reglages">/reglages</a>
+      <a href="#etats">États du push</a>
+      <a href="#bandeaux">Bandeaux</a>
+      <a href="#push">Push</a>
+      <a href="#plafond">Plafond du jour</a>
+      <a href="#email">E-mail</a>
+      <a href="#destinations">Destinations</a>
+    </nav>
+  </div>
+
+  <p class="intro">Chaque notification part sur deux canaux : en push sur les appareils où il est activé, et toujours par e-mail. Une catégorie coupée dans les réglages se tait sur les deux. Les textes ci-dessous sont les textes réels.</p>
+  <div class="rules">
+    <div><b>Deux canaux, toujours</b>Web Push et e-mail à chaque événement. L'e-mail n'a pas d'interrupteur à lui.</div>
+    <div><b>Deux par jour, au plus</b>Par personne. Relances, rappel du jeudi et résultat du duel passent toujours ; le reste est abandonné au-delà, jamais reporté.</div>
+    <div><b>Rien de privé</b>Aucun nom d'entreprise dans une notification ni un e-mail.</div>
+    <div><b>Rouille</b>Après 3 jours ouvrés sans candidature, une seule fois par période d'inactivité.</div>
+  </div>
+
+  <!-- 1. Réglages -->
+  <section class="screen" id="reglages">
+    <header>
+      <span class="route">/reglages#notifications</span>
+      <h2>Réglages · Notifications</h2>
+      <p>Régler une fois pour toutes ce qu'on reçoit. Nouvelle section sous « Paysage de fond ». Ici : push activé sur cet appareil. Les interrupteurs sont cliquables.</p>
+    </header>
+    <div class="stage"><canvas data-stars></canvas>
+      <div class="device">
+        <div class="head">
+          <h3 class="h-title">Réglages</h3>
+          <a class="btn ghost auto" href="#destinations">Retour</a>
+        </div>
+        <p class="label">Paysage de fond</p>
+        <p class="muted">… (inchangé)</p>
+        <div class="cols">
+          <div class="col">
+            <p class="label" id="canaux">Où tu les reçois</p>
+            <div class="channel">
+              <div class="row"><b>Sur cet appareil</b><span class="pill on">ACTIVÉ</span></div>
+              <p class="muted">Chrome sur Android · notifications même app fermée.</p>
+              <a class="btn ghost" href="#etat-off">Désactiver sur cet appareil</a>
+            </div>
+            <div class="channel">
+              <div class="row"><b>Par e-mail</b><span class="pill on">TOUJOURS</span></div>
+              <span class="addr">contact@viloris.io</span>
+              <p class="muted">Chaque notification arrive aussi par e-mail, pour ne rien rater quand le téléphone est loin.</p>
+            </div>
+          </div>
+          <div class="col">
+            <p class="label" id="quoi">Ce que tu reçois</p>
+            <ul class="cats" aria-labelledby="quoi">
+              <li><label for="c-relances">Relances</label><input class="switch" type="checkbox" role="switch" id="c-relances" checked><small>Ton binôme te motive, ta relance a marché.</small></li>
+              <li><label for="c-binome">Binôme</label><input class="switch" type="checkbox" role="switch" id="c-binome" checked><small>Il change de forme, il achève le boss.</small></li>
+              <li><label for="c-duel">Duel</label><input class="switch" type="checkbox" role="switch" id="c-duel" checked><small>Rappel du jeudi soir, résultat du vendredi 18 h.</small></li>
+              <li><label for="c-rappels">Rappels</label><input class="switch" type="checkbox" role="switch" id="c-rappels" checked><small>Ton avatar commence à rouiller.</small></li>
+              <li><label for="c-nouveautes">Nouveautés</label><input class="switch" type="checkbox" role="switch" id="c-nouveautes" checked><small>Une nouvelle fonctionnalité arrive dans Goal Master.</small></li>
+            </ul>
+            <p class="toast" id="toast" role="status"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="edges" id="etats">
+      <div class="device" id="etat-off">
+        <h4>Pas encore activé</h4>
+        <div class="channel">
+          <div class="row"><b>Sur cet appareil</b><span class="pill off">DÉSACTIVÉ</span></div>
+          <p class="muted">Tu reçois tout par e-mail. Active le push pour être prévenu tout de suite.</p>
+          <a class="btn" href="#reglages">Activer</a>
+        </div>
+      </div>
+      <div class="device" id="etat-refuse">
+        <h4>Refusé par le navigateur</h4>
+        <div class="channel">
+          <div class="row"><b>Sur cet appareil</b><span class="pill warn">BLOQUÉ</span></div>
+          <p class="muted">Ton navigateur bloque les notifications de goal.viloris.io. Autorise-les dans ses réglages du site, puis reviens ici.</p>
+          <p class="muted">Les e-mails continuent d'arriver.</p>
+        </div>
+      </div>
+      <div class="device" id="etat-iphone">
+        <h4>iPhone, app pas installée</h4>
+        <div class="channel">
+          <div class="row"><b>Sur cet appareil</b><span class="pill off">INDISPONIBLE</span></div>
+          <p class="muted">Sur iPhone, le push ne marche que depuis l'app installée :</p>
+          <ol class="steps"><li>Bouton Partager de Safari</li><li>« Sur l'écran d'accueil »</li><li>Ouvre Goal Master depuis l'icône et reviens ici</li></ol>
+        </div>
+      </div>
+      <div class="device" id="etat-navigateur">
+        <h4>Navigateur sans push (hors iPhone)</h4>
+        <div class="channel">
+          <div class="row"><b>Sur cet appareil</b><span class="pill off">INDISPONIBLE</span></div>
+          <p class="muted">Ce navigateur ne gère pas les notifications. Ouvre goal.viloris.io dans Chrome, Edge ou Firefox pour les activer.</p>
+          <p class="muted">Les e-mails continuent d'arriver.</p>
+        </div>
+      </div>
+    </div>
+    <p class="intro">Android : le push marche directement dans Chrome, sans installer l'app. L'encadré iPhone ne s'affiche que sur iPhone ; aujourd'hui l'app le montre à tort à tout navigateur sans push.</p>
+  </section>
+
+  <!-- Bandeaux de l'accueil -->
+  <section class="screen" id="bandeaux">
+    <header>
+      <span class="route">/ (haut de l'accueil)</span>
+      <h2>Bandeaux : relance et nouvelle version</h2>
+      <p>La relance reçue se ferme d'une croix, se change en « relance réussie » après une candidature, ou s'éteint au bout de 24 h. La nouvelle version s'annonce après chaque mise en production.</p>
+    </header>
+    <div class="banners">
+      <div class="device" id="relance">
+        <h4>Relance reçue</h4>
+        <div class="banner">
+          <span class="mini"><svg><use href="#sword"/></svg></span>
+          <p><span class="who">Adrien te motive :</span> Allez, on lâche rien ! 💪<br><small>Candidate dans les 24 h : +15 XP pour vous deux.</small></p>
+          <a class="x" href="#relance-fermee" aria-label="Fermer la relance">✕</a>
+        </div>
+      </div>
+      <div class="device" id="relance-fermee">
+        <h4>Fermée</h4>
+        <div class="ghosted">Plus de bandeau sur cet appareil. Les +15 XP restent possibles jusqu'à demain 9 h 14.</div>
+        <a class="btn ghost" href="#relance-reussie">+ Candidature</a>
+      </div>
+      <div class="device" id="relance-reussie">
+        <h4>Après une candidature</h4>
+        <div class="banner win fade">
+          <span class="mini"><svg><use href="#sword"/></svg></span>
+          <p><span class="who">Relance réussie :</span> +15 XP pour Adrien et toi.</p>
+        </div>
+        <p class="muted">Visible 4 secondes, puis disparaît. Adrien reçoit la notification « ta relance a marché ».</p>
+      </div>
+      <div class="device" id="nouvelle-version">
+        <h4>Nouvelle version</h4>
+        <div class="banner version">
+          <p><span class="who">Nouvelle version de Goal Master.</span><br><small>Recharge pour en profiter.</small></p>
+          <a class="btn auto" href="#dest-intro">Recharger</a>
+        </div>
+        <p class="muted">Vérifiée au retour sur l'onglet et toutes les 5 minutes. Au rechargement, l'intro s'ouvre d'elle-même s'il y a un nouvel écran, sinon l'accueil revient tel quel.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Push -->
+  <section class="screen" id="push">
+    <header>
+      <span class="route">écran verrouillé</span>
+      <h2>Les 8 notifications</h2>
+      <p>Titre « Goal Master », une phrase, le clic ouvre l'écran indiqué. Le même texte part par e-mail. Les deux existantes sont gardées telles quelles.</p>
+    </header>
+    <div class="lock">
+      <div class="ev"><span class="tag"><em>Relances</em> existe · passe toujours</span>
+        <a class="push" href="#dest-accueil"><span class="ico"><svg><use href="#sword"/></svg></span><span><b>⚔️ Adrien te motive <span>maintenant</span></b><p>Alors, on fait la sieste ? 😴</p><span class="dest">→ accueil</span></span></a></div>
+      <div class="ev"><span class="tag"><em>Relances</em> <span class="new">nouveau</span></span>
+        <a class="push" href="#dest-accueil"><span class="ico"><svg><use href="#sword"/></svg></span><span><b>Goal Master <span>14:32</span></b><p>Nicolas a candidaté après ta relance : +15 XP pour vous deux.</p><span class="dest">→ accueil</span></span></a></div>
+      <div class="ev"><span class="tag"><em>Binôme</em> <span class="new">nouveau</span></span>
+        <a class="push" href="#dest-accueil"><span class="ico"><svg><use href="#sword"/></svg></span><span><b>Goal Master <span>11:05</span></b><p>Nicolas est devenu Moine voyageur ⚔️</p><span class="dest">→ accueil, fil du binôme</span></span></a></div>
+      <div class="ev"><span class="tag"><em>Binôme</em> <span class="new">nouveau</span></span>
+        <a class="push" href="#dest-accueil"><span class="ico"><svg><use href="#sword"/></svg></span><span><b>Goal Master <span>mer. 17:48</span></b><p>Nicolas a mis Le Golem ATS K.O. ! Victoire assurée vendredi.</p><span class="dest">→ accueil</span></span></a></div>
+      <div class="ev"><span class="tag"><em>Duel</em> existe · passe toujours</span>
+        <a class="push" href="#dest-accueil"><span class="ico"><svg><use href="#sword"/></svg></span><span><b>Goal Master <span>jeu. 19:00</span></b><p>Le Golem ATS tient encore. Il manque 4 coups avant demain 18 h.</p><span class="dest">→ accueil</span></span></a></div>
+      <div class="ev"><span class="tag"><em>Duel</em> <span class="new">nouveau</span> · passe toujours</span>
+        <a class="push" href="#dest-duel"><span class="ico"><svg><use href="#sword"/></svg></span><span><b>Goal Master <span>ven. 18:00</span></b><p>Boss vaincu ! Le Golem ATS est tombé : 18 coups contre 16 PV.</p><span class="dest">→ /duel</span></span></a></div>
+      <div class="ev"><span class="tag"><em>Duel</em> défaite · passe toujours</span>
+        <a class="push" href="#dest-duel"><span class="ico"><svg><use href="#sword"/></svg></span><span><b>Goal Master <span>ven. 18:00</span></b><p>Le Golem ATS s'échappe : 11 coups contre 16 PV. Vous êtes blessés jusqu'à la prochaine victoire.</p><span class="dest">→ /duel</span></span></a></div>
+      <div class="ev"><span class="tag"><em>Rappels</em> <span class="new">nouveau</span></span>
+        <a class="push" href="#dest-accueil"><span class="ico"><svg><use href="#sword"/></svg></span><span><b>Goal Master <span>jeu. 19:00</span></b><p>Ton chevalier commence à rouiller : 3 jours sans candidature.</p><span class="dest">→ accueil</span></span></a></div>
+      <div class="ev"><span class="tag"><em>Nouveautés</em> <span class="new">nouveau</span></span>
+        <a class="push" href="#dest-intro"><span class="ico"><svg><use href="#sword"/></svg></span><span><b>Goal Master <span>lun. 10:12</span></b><p>Nouveau dans Goal Master : la vue décor. Viens voir vos héros se promener.</p><span class="dest">→ /intro, au nouvel écran</span></span></a></div>
+    </div>
+  </section>
+
+  <!-- 3. Plafond -->
+  <section class="screen" id="plafond">
+    <header>
+      <span class="route">cas limite</span>
+      <h2>Une journée chargée de Nicolas</h2>
+      <p>Le plafond de deux par jour en action. Ce qui passe toujours ne compte pas dans les deux. Rien n'est reporté au lendemain.</p>
+    </header>
+    <div class="device">
+      <ul class="day">
+        <li><time>09:14</time><span>Adrien te motive</span><span class="st free">HORS PLAFOND</span></li>
+        <li><time>11:05</time><span>Adrien est devenu Écuyer ⚔️</span><span class="st sent">ENVOYÉE 1/2</span></li>
+        <li><time>14:32</time><span>Adrien a candidaté après ta relance : +15 XP</span><span class="st sent">ENVOYÉE 2/2</span></li>
+        <li class="dropped"><time>17:48</time><span>Adrien a mis Le Golem ATS K.O. !</span><span class="st drop">ABANDONNÉE</span></li>
+        <li><time>19:00</time><span>Le Golem ATS tient encore…</span><span class="st free">HORS PLAFOND</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 4. E-mail -->
+  <section class="screen" id="email">
+    <header>
+      <span class="route">e-mail</span>
+      <h2>Le gabarit 8 bits</h2>
+      <p>Identité de l'app : fond nuit, cadre épais, titre doré, bouton à relief. Le bandeau (paysage, épée, « GOAL MASTER ») et le sprite de l'événement sont des images PNG générées par l'app à partir des vrais sprites : la police pixel y est garantie partout. Les titres utilisent la police pixel là où le client la charge (Apple Mail, Mail iPhone), Courier ailleurs (Gmail, Outlook). Chaque image a un texte de remplacement.</p>
+    </header>
+    <div class="mails clients">
+      <div class="mailbox">
+        <p class="clientnote"><b>Apple Mail · Mail iPhone</b> police pixel chargée</p>
+        <div class="mailhead"><b>Nicolas est devenu Moine voyageur ⚔️</b><span>Goal Master &lt;contact@viloris.io&gt; · 11:05</span></div>
+        <div class="m8 ">
+          <div class="hdr"><canvas data-header></canvas><span class="brand"><svg width="28" height="28" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect width="16" height="16" fill="#221e40"/><rect x="7" y="1" width="1" height="1" fill="#1a1626"/><rect x="8" y="1" width="1" height="1" fill="#1a1626"/><rect x="6" y="2" width="1" height="1" fill="#1a1626"/><rect x="7" y="2" width="1" height="1" fill="#fffbe0"/><rect x="8" y="2" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="2" width="1" height="1" fill="#1a1626"/><rect x="6" y="3" width="1" height="1" fill="#1a1626"/><rect x="7" y="3" width="1" height="1" fill="#fffbe0"/><rect x="8" y="3" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="3" width="1" height="1" fill="#1a1626"/><rect x="6" y="4" width="1" height="1" fill="#1a1626"/><rect x="7" y="4" width="1" height="1" fill="#fffbe0"/><rect x="8" y="4" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="4" width="1" height="1" fill="#1a1626"/><rect x="6" y="5" width="1" height="1" fill="#1a1626"/><rect x="7" y="5" width="1" height="1" fill="#fffbe0"/><rect x="8" y="5" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="5" width="1" height="1" fill="#1a1626"/><rect x="6" y="6" width="1" height="1" fill="#1a1626"/><rect x="7" y="6" width="1" height="1" fill="#fffbe0"/><rect x="8" y="6" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="6" width="1" height="1" fill="#1a1626"/><rect x="6" y="7" width="1" height="1" fill="#1a1626"/><rect x="7" y="7" width="1" height="1" fill="#fffbe0"/><rect x="8" y="7" width="1" height="1" fill="#8b93a7"/><rect x="9" y="7" width="1" height="1" fill="#1a1626"/><rect x="6" y="8" width="1" height="1" fill="#1a1626"/><rect x="7" y="8" width="1" height="1" fill="#fffbe0"/><rect x="8" y="8" width="1" height="1" fill="#8b93a7"/><rect x="9" y="8" width="1" height="1" fill="#1a1626"/><rect x="3" y="9" width="1" height="1" fill="#1a1626"/><rect x="4" y="9" width="1" height="1" fill="#1a1626"/><rect x="5" y="9" width="1" height="1" fill="#1a1626"/><rect x="6" y="9" width="1" height="1" fill="#1a1626"/><rect x="7" y="9" width="1" height="1" fill="#1a1626"/><rect x="8" y="9" width="1" height="1" fill="#1a1626"/><rect x="9" y="9" width="1" height="1" fill="#1a1626"/><rect x="10" y="9" width="1" height="1" fill="#1a1626"/><rect x="11" y="9" width="1" height="1" fill="#1a1626"/><rect x="12" y="9" width="1" height="1" fill="#1a1626"/><rect x="3" y="10" width="1" height="1" fill="#1a1626"/><rect x="4" y="10" width="1" height="1" fill="#b9831c"/><rect x="5" y="10" width="1" height="1" fill="#f2c14e"/><rect x="6" y="10" width="1" height="1" fill="#f2c14e"/><rect x="7" y="10" width="1" height="1" fill="#f2c14e"/><rect x="8" y="10" width="1" height="1" fill="#f2c14e"/><rect x="9" y="10" width="1" height="1" fill="#f2c14e"/><rect x="10" y="10" width="1" height="1" fill="#f2c14e"/><rect x="11" y="10" width="1" height="1" fill="#b9831c"/><rect x="12" y="10" width="1" height="1" fill="#1a1626"/><rect x="4" y="11" width="1" height="1" fill="#1a1626"/><rect x="5" y="11" width="1" height="1" fill="#1a1626"/><rect x="6" y="11" width="1" height="1" fill="#1a1626"/><rect x="7" y="11" width="1" height="1" fill="#7a4a26"/><rect x="8" y="11" width="1" height="1" fill="#7a4a26"/><rect x="9" y="11" width="1" height="1" fill="#1a1626"/><rect x="10" y="11" width="1" height="1" fill="#1a1626"/><rect x="11" y="11" width="1" height="1" fill="#1a1626"/><rect x="6" y="12" width="1" height="1" fill="#1a1626"/><rect x="7" y="12" width="1" height="1" fill="#7a4a26"/><rect x="8" y="12" width="1" height="1" fill="#7a4a26"/><rect x="9" y="12" width="1" height="1" fill="#1a1626"/><rect x="5" y="13" width="1" height="1" fill="#1a1626"/><rect x="6" y="13" width="1" height="1" fill="#f2c14e"/><rect x="7" y="13" width="1" height="1" fill="#f2c14e"/><rect x="8" y="13" width="1" height="1" fill="#f2c14e"/><rect x="9" y="13" width="1" height="1" fill="#f2c14e"/><rect x="10" y="13" width="1" height="1" fill="#1a1626"/><rect x="6" y="14" width="1" height="1" fill="#1a1626"/><rect x="7" y="14" width="1" height="1" fill="#1a1626"/><rect x="8" y="14" width="1" height="1" fill="#1a1626"/><rect x="9" y="14" width="1" height="1" fill="#1a1626"/></svg>GOAL MASTER</span><span class="img-note">image PNG</span></div>
+          <div class="scene"><svg viewBox="0 0 20 25" width="73.60000000000001" height="92" shape-rendering="crispEdges" ><rect x="19" y="0" width="1" height="1" fill="#6fae4a"/><rect x="19" y="1" width="1" height="1" fill="#6fae4a"/><rect x="19" y="2" width="1" height="1" fill="#6fae4a"/><rect x="19" y="3" width="1" height="1" fill="#6fae4a"/><rect x="8" y="4" width="4" height="1" fill="#1a1626"/><rect x="19" y="4" width="1" height="1" fill="#6fae4a"/><rect x="5" y="5" width="2" height="1" fill="#1a1626"/><rect x="7" y="5" width="6" height="1" fill="#c99a5b"/><rect x="13" y="5" width="2" height="1" fill="#1a1626"/><rect x="19" y="5" width="1" height="1" fill="#6fae4a"/><rect x="2" y="6" width="2" height="1" fill="#1a1626"/><rect x="4" y="6" width="12" height="1" fill="#c99a5b"/><rect x="16" y="6" width="2" height="1" fill="#1a1626"/><rect x="19" y="6" width="1" height="1" fill="#6fae4a"/><rect x="3" y="7" width="1" height="1" fill="#1a1626"/><rect x="4" y="7" width="1" height="1" fill="#26232f"/><rect x="5" y="7" width="9" height="1" fill="#f3f1f6"/><rect x="14" y="7" width="1" height="1" fill="#26232f"/><rect x="15" y="7" width="1" height="1" fill="#1a1626"/><rect x="19" y="7" width="1" height="1" fill="#6fae4a"/><rect x="2" y="8" width="1" height="1" fill="#1a1626"/><rect x="3" y="8" width="1" height="1" fill="#f3f1f6"/><rect x="4" y="8" width="3" height="1" fill="#26232f"/><rect x="7" y="8" width="5" height="1" fill="#f3f1f6"/><rect x="12" y="8" width="3" height="1" fill="#26232f"/><rect x="15" y="8" width="1" height="1" fill="#f3f1f6"/><rect x="16" y="8" width="1" height="1" fill="#1a1626"/><rect x="19" y="8" width="1" height="1" fill="#6fae4a"/><rect x="2" y="9" width="1" height="1" fill="#1a1626"/><rect x="3" y="9" width="1" height="1" fill="#f3f1f6"/><rect x="4" y="9" width="1" height="1" fill="#26232f"/><rect x="5" y="9" width="1" height="1" fill="#ffffff"/><rect x="6" y="9" width="1" height="1" fill="#26232f"/><rect x="7" y="9" width="5" height="1" fill="#f3f1f6"/><rect x="12" y="9" width="1" height="1" fill="#26232f"/><rect x="13" y="9" width="1" height="1" fill="#ffffff"/><rect x="14" y="9" width="1" height="1" fill="#26232f"/><rect x="15" y="9" width="1" height="1" fill="#f3f1f6"/><rect x="16" y="9" width="1" height="1" fill="#1a1626"/><rect x="19" y="9" width="1" height="1" fill="#6fae4a"/><rect x="2" y="10" width="1" height="1" fill="#1a1626"/><rect x="3" y="10" width="6" height="1" fill="#f3f1f6"/><rect x="9" y="10" width="1" height="1" fill="#26232f"/><rect x="10" y="10" width="6" height="1" fill="#f3f1f6"/><rect x="16" y="10" width="1" height="1" fill="#1a1626"/><rect x="19" y="10" width="1" height="1" fill="#6fae4a"/><rect x="2" y="11" width="1" height="1" fill="#1a1626"/><rect x="3" y="11" width="5" height="1" fill="#f3f1f6"/><rect x="8" y="11" width="3" height="1" fill="#1a1626"/><rect x="11" y="11" width="5" height="1" fill="#f3f1f6"/><rect x="16" y="11" width="1" height="1" fill="#1a1626"/><rect x="19" y="11" width="1" height="1" fill="#6fae4a"/><rect x="3" y="12" width="1" height="1" fill="#1a1626"/><rect x="4" y="12" width="11" height="1" fill="#f3f1f6"/><rect x="15" y="12" width="1" height="1" fill="#1a1626"/><rect x="19" y="12" width="1" height="1" fill="#6fae4a"/><rect x="2" y="13" width="1" height="1" fill="#1a1626"/><rect x="3" y="13" width="2" height="1" fill="#26232f"/><rect x="5" y="13" width="1" height="1" fill="#3fa55b"/><rect x="6" y="13" width="8" height="1" fill="#f3f1f6"/><rect x="14" y="13" width="2" height="1" fill="#26232f"/><rect x="16" y="13" width="1" height="1" fill="#1a1626"/><rect x="18" y="13" width="1" height="1" fill="#26232f"/><rect x="19" y="13" width="1" height="1" fill="#6fae4a"/><rect x="1" y="14" width="1" height="1" fill="#1a1626"/><rect x="2" y="14" width="2" height="1" fill="#26232f"/><rect x="4" y="14" width="1" height="1" fill="#1a1626"/><rect x="5" y="14" width="1" height="1" fill="#f3f1f6"/><rect x="6" y="14" width="1" height="1" fill="#3fa55b"/><rect x="7" y="14" width="7" height="1" fill="#f3f1f6"/><rect x="14" y="14" width="1" height="1" fill="#1a1626"/><rect x="15" y="14" width="4" height="1" fill="#26232f"/><rect x="19" y="14" width="1" height="1" fill="#6fae4a"/><rect x="0" y="15" width="1" height="1" fill="#1a1626"/><rect x="1" y="15" width="2" height="1" fill="#26232f"/><rect x="3" y="15" width="1" height="1" fill="#1a1626"/><rect x="4" y="15" width="3" height="1" fill="#f3f1f6"/><rect x="7" y="15" width="1" height="1" fill="#3fa55b"/><rect x="8" y="15" width="7" height="1" fill="#f3f1f6"/><rect x="15" y="15" width="1" height="1" fill="#1a1626"/><rect x="16" y="15" width="3" height="1" fill="#26232f"/><rect x="19" y="15" width="1" height="1" fill="#6fae4a"/><rect x="0" y="16" width="1" height="1" fill="#1a1626"/><rect x="1" y="16" width="2" height="1" fill="#26232f"/><rect x="3" y="16" width="1" height="1" fill="#1a1626"/><rect x="4" y="16" width="4" height="1" fill="#f3f1f6"/><rect x="8" y="16" width="1" height="1" fill="#3fa55b"/><rect x="9" y="16" width="6" height="1" fill="#f3f1f6"/><rect x="15" y="16" width="1" height="1" fill="#1a1626"/><rect x="19" y="16" width="1" height="1" fill="#6fae4a"/><rect x="0" y="17" width="1" height="1" fill="#1a1626"/><rect x="1" y="17" width="2" height="1" fill="#26232f"/><rect x="3" y="17" width="1" height="1" fill="#1a1626"/><rect x="4" y="17" width="5" height="1" fill="#f3f1f6"/><rect x="9" y="17" width="1" height="1" fill="#3fa55b"/><rect x="10" y="17" width="5" height="1" fill="#f3f1f6"/><rect x="15" y="17" width="1" height="1" fill="#1a1626"/><rect x="19" y="17" width="1" height="1" fill="#f2c14e"/><rect x="1" y="18" width="3" height="1" fill="#1a1626"/><rect x="4" y="18" width="6" height="1" fill="#7a4a26"/><rect x="10" y="18" width="1" height="1" fill="#3fa55b"/><rect x="11" y="18" width="4" height="1" fill="#7a4a26"/><rect x="15" y="18" width="1" height="1" fill="#1a1626"/><rect x="3" y="19" width="1" height="1" fill="#1a1626"/><rect x="4" y="19" width="11" height="1" fill="#3fa55b"/><rect x="15" y="19" width="1" height="1" fill="#1a1626"/><rect x="3" y="20" width="1" height="1" fill="#1a1626"/><rect x="4" y="20" width="5" height="1" fill="#3fa55b"/><rect x="9" y="20" width="1" height="1" fill="#1a1626"/><rect x="10" y="20" width="5" height="1" fill="#3fa55b"/><rect x="15" y="20" width="1" height="1" fill="#1a1626"/><rect x="4" y="21" width="1" height="1" fill="#1a1626"/><rect x="5" y="21" width="3" height="1" fill="#26232f"/><rect x="8" y="21" width="1" height="1" fill="#1a1626"/><rect x="10" y="21" width="1" height="1" fill="#1a1626"/><rect x="11" y="21" width="3" height="1" fill="#26232f"/><rect x="14" y="21" width="1" height="1" fill="#1a1626"/><rect x="4" y="22" width="1" height="1" fill="#1a1626"/><rect x="5" y="22" width="3" height="1" fill="#26232f"/><rect x="8" y="22" width="1" height="1" fill="#1a1626"/><rect x="10" y="22" width="1" height="1" fill="#1a1626"/><rect x="11" y="22" width="3" height="1" fill="#26232f"/><rect x="14" y="22" width="1" height="1" fill="#1a1626"/><rect x="4" y="23" width="1" height="1" fill="#1a1626"/><rect x="5" y="23" width="3" height="1" fill="#c99a5b"/><rect x="8" y="23" width="1" height="1" fill="#1a1626"/><rect x="10" y="23" width="1" height="1" fill="#1a1626"/><rect x="11" y="23" width="3" height="1" fill="#c99a5b"/><rect x="14" y="23" width="1" height="1" fill="#1a1626"/><rect x="3" y="24" width="6" height="1" fill="#1a1626"/><rect x="10" y="24" width="6" height="1" fill="#1a1626"/></svg></div>
+          <div class="body">
+            <h3>Nicolas est devenu Moine voyageur ⚔️</h3>
+            <p>Ton binôme vient de changer de forme. À ton tour de lui montrer le chemin.</p>
+            
+            <a class="cta" href="#dest-accueil">Ouvrir Goal Master</a>
+          </div>
+          <div class="foot">Tu reçois cet e-mail parce que la catégorie Binôme est activée. <a href="#reglages">Régler mes notifications</a></div>
+        </div>
+      </div>
+      <div class="mailbox">
+        <p class="clientnote"><b>Apple Mail · Mail iPhone</b> police pixel chargée</p>
+        <div class="mailhead"><b>Boss vaincu !</b><span>Goal Master &lt;contact@viloris.io&gt; · ven. 18:00</span></div>
+        <div class="m8 ">
+          <div class="hdr"><canvas data-header></canvas><span class="brand"><svg width="28" height="28" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect width="16" height="16" fill="#221e40"/><rect x="7" y="1" width="1" height="1" fill="#1a1626"/><rect x="8" y="1" width="1" height="1" fill="#1a1626"/><rect x="6" y="2" width="1" height="1" fill="#1a1626"/><rect x="7" y="2" width="1" height="1" fill="#fffbe0"/><rect x="8" y="2" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="2" width="1" height="1" fill="#1a1626"/><rect x="6" y="3" width="1" height="1" fill="#1a1626"/><rect x="7" y="3" width="1" height="1" fill="#fffbe0"/><rect x="8" y="3" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="3" width="1" height="1" fill="#1a1626"/><rect x="6" y="4" width="1" height="1" fill="#1a1626"/><rect x="7" y="4" width="1" height="1" fill="#fffbe0"/><rect x="8" y="4" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="4" width="1" height="1" fill="#1a1626"/><rect x="6" y="5" width="1" height="1" fill="#1a1626"/><rect x="7" y="5" width="1" height="1" fill="#fffbe0"/><rect x="8" y="5" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="5" width="1" height="1" fill="#1a1626"/><rect x="6" y="6" width="1" height="1" fill="#1a1626"/><rect x="7" y="6" width="1" height="1" fill="#fffbe0"/><rect x="8" y="6" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="6" width="1" height="1" fill="#1a1626"/><rect x="6" y="7" width="1" height="1" fill="#1a1626"/><rect x="7" y="7" width="1" height="1" fill="#fffbe0"/><rect x="8" y="7" width="1" height="1" fill="#8b93a7"/><rect x="9" y="7" width="1" height="1" fill="#1a1626"/><rect x="6" y="8" width="1" height="1" fill="#1a1626"/><rect x="7" y="8" width="1" height="1" fill="#fffbe0"/><rect x="8" y="8" width="1" height="1" fill="#8b93a7"/><rect x="9" y="8" width="1" height="1" fill="#1a1626"/><rect x="3" y="9" width="1" height="1" fill="#1a1626"/><rect x="4" y="9" width="1" height="1" fill="#1a1626"/><rect x="5" y="9" width="1" height="1" fill="#1a1626"/><rect x="6" y="9" width="1" height="1" fill="#1a1626"/><rect x="7" y="9" width="1" height="1" fill="#1a1626"/><rect x="8" y="9" width="1" height="1" fill="#1a1626"/><rect x="9" y="9" width="1" height="1" fill="#1a1626"/><rect x="10" y="9" width="1" height="1" fill="#1a1626"/><rect x="11" y="9" width="1" height="1" fill="#1a1626"/><rect x="12" y="9" width="1" height="1" fill="#1a1626"/><rect x="3" y="10" width="1" height="1" fill="#1a1626"/><rect x="4" y="10" width="1" height="1" fill="#b9831c"/><rect x="5" y="10" width="1" height="1" fill="#f2c14e"/><rect x="6" y="10" width="1" height="1" fill="#f2c14e"/><rect x="7" y="10" width="1" height="1" fill="#f2c14e"/><rect x="8" y="10" width="1" height="1" fill="#f2c14e"/><rect x="9" y="10" width="1" height="1" fill="#f2c14e"/><rect x="10" y="10" width="1" height="1" fill="#f2c14e"/><rect x="11" y="10" width="1" height="1" fill="#b9831c"/><rect x="12" y="10" width="1" height="1" fill="#1a1626"/><rect x="4" y="11" width="1" height="1" fill="#1a1626"/><rect x="5" y="11" width="1" height="1" fill="#1a1626"/><rect x="6" y="11" width="1" height="1" fill="#1a1626"/><rect x="7" y="11" width="1" height="1" fill="#7a4a26"/><rect x="8" y="11" width="1" height="1" fill="#7a4a26"/><rect x="9" y="11" width="1" height="1" fill="#1a1626"/><rect x="10" y="11" width="1" height="1" fill="#1a1626"/><rect x="11" y="11" width="1" height="1" fill="#1a1626"/><rect x="6" y="12" width="1" height="1" fill="#1a1626"/><rect x="7" y="12" width="1" height="1" fill="#7a4a26"/><rect x="8" y="12" width="1" height="1" fill="#7a4a26"/><rect x="9" y="12" width="1" height="1" fill="#1a1626"/><rect x="5" y="13" width="1" height="1" fill="#1a1626"/><rect x="6" y="13" width="1" height="1" fill="#f2c14e"/><rect x="7" y="13" width="1" height="1" fill="#f2c14e"/><rect x="8" y="13" width="1" height="1" fill="#f2c14e"/><rect x="9" y="13" width="1" height="1" fill="#f2c14e"/><rect x="10" y="13" width="1" height="1" fill="#1a1626"/><rect x="6" y="14" width="1" height="1" fill="#1a1626"/><rect x="7" y="14" width="1" height="1" fill="#1a1626"/><rect x="8" y="14" width="1" height="1" fill="#1a1626"/><rect x="9" y="14" width="1" height="1" fill="#1a1626"/></svg>GOAL MASTER</span><span class="img-note">image PNG</span></div>
+          <div class="scene"><svg viewBox="0 0 14 16" width="56" height="64" shape-rendering="crispEdges" ><rect x="4" y="0" width="6" height="1" fill="#1a1626"/><rect x="3" y="1" width="1" height="1" fill="#1a1626"/><rect x="4" y="1" width="6" height="1" fill="#c99a5b"/><rect x="10" y="1" width="1" height="1" fill="#1a1626"/><rect x="2" y="2" width="1" height="1" fill="#1a1626"/><rect x="3" y="2" width="8" height="1" fill="#c99a5b"/><rect x="11" y="2" width="1" height="1" fill="#1a1626"/><rect x="12" y="2" width="1" height="1" fill="#7a4a26"/><rect x="2" y="3" width="10" height="1" fill="#1a1626"/><rect x="12" y="3" width="1" height="1" fill="#7a4a26"/><rect x="2" y="4" width="1" height="1" fill="#1a1626"/><rect x="3" y="4" width="8" height="1" fill="#f4c7a1"/><rect x="11" y="4" width="1" height="1" fill="#1a1626"/><rect x="12" y="4" width="1" height="1" fill="#7a4a26"/><rect x="2" y="5" width="1" height="1" fill="#1a1626"/><rect x="3" y="5" width="1" height="1" fill="#f4c7a1"/><rect x="4" y="5" width="1" height="1" fill="#1a1626"/><rect x="5" y="5" width="4" height="1" fill="#f4c7a1"/><rect x="9" y="5" width="1" height="1" fill="#1a1626"/><rect x="10" y="5" width="1" height="1" fill="#f4c7a1"/><rect x="11" y="5" width="1" height="1" fill="#1a1626"/><rect x="12" y="5" width="1" height="1" fill="#7a4a26"/><rect x="2" y="6" width="1" height="1" fill="#1a1626"/><rect x="3" y="6" width="3" height="1" fill="#f4c7a1"/><rect x="6" y="6" width="2" height="1" fill="#1a1626"/><rect x="8" y="6" width="3" height="1" fill="#f4c7a1"/><rect x="11" y="6" width="1" height="1" fill="#1a1626"/><rect x="12" y="6" width="1" height="1" fill="#7a4a26"/><rect x="3" y="7" width="2" height="1" fill="#1a1626"/><rect x="5" y="7" width="4" height="1" fill="#f4c7a1"/><rect x="9" y="7" width="2" height="1" fill="#1a1626"/><rect x="11" y="7" width="3" height="1" fill="#7a4a26"/><rect x="1" y="8" width="2" height="1" fill="#8b93a7"/><rect x="3" y="8" width="1" height="1" fill="#1a1626"/><rect x="4" y="8" width="2" height="1" fill="#c99a5b"/><rect x="6" y="8" width="2" height="1" fill="#3d7bd9"/><rect x="8" y="8" width="2" height="1" fill="#c99a5b"/><rect x="10" y="8" width="1" height="1" fill="#1a1626"/><rect x="11" y="8" width="1" height="1" fill="#f4c7a1"/><rect x="12" y="8" width="1" height="1" fill="#7a4a26"/><rect x="0" y="9" width="4" height="1" fill="#8b93a7"/><rect x="4" y="9" width="1" height="1" fill="#1a1626"/><rect x="5" y="9" width="1" height="1" fill="#c99a5b"/><rect x="6" y="9" width="2" height="1" fill="#3d7bd9"/><rect x="8" y="9" width="1" height="1" fill="#c99a5b"/><rect x="9" y="9" width="2" height="1" fill="#1a1626"/><rect x="11" y="9" width="1" height="1" fill="#f4c7a1"/><rect x="12" y="9" width="1" height="1" fill="#7a4a26"/><rect x="0" y="10" width="1" height="1" fill="#8b93a7"/><rect x="1" y="10" width="1" height="1" fill="#dfe6ee"/><rect x="2" y="10" width="2" height="1" fill="#8b93a7"/><rect x="4" y="10" width="1" height="1" fill="#1a1626"/><rect x="5" y="10" width="4" height="1" fill="#c99a5b"/><rect x="9" y="10" width="1" height="1" fill="#1a1626"/><rect x="0" y="11" width="4" height="1" fill="#8b93a7"/><rect x="4" y="11" width="1" height="1" fill="#1a1626"/><rect x="5" y="11" width="4" height="1" fill="#c99a5b"/><rect x="9" y="11" width="1" height="1" fill="#1a1626"/><rect x="1" y="12" width="2" height="1" fill="#8b93a7"/><rect x="3" y="12" width="2" height="1" fill="#1a1626"/><rect x="5" y="12" width="4" height="1" fill="#c99a5b"/><rect x="9" y="12" width="2" height="1" fill="#1a1626"/><rect x="4" y="13" width="1" height="1" fill="#1a1626"/><rect x="5" y="13" width="2" height="1" fill="#3d7bd9"/><rect x="7" y="13" width="1" height="1" fill="#1a1626"/><rect x="8" y="13" width="2" height="1" fill="#3d7bd9"/><rect x="10" y="13" width="1" height="1" fill="#1a1626"/><rect x="4" y="14" width="1" height="1" fill="#1a1626"/><rect x="5" y="14" width="1" height="1" fill="#f4c7a1"/><rect x="6" y="14" width="1" height="1" fill="#1a1626"/><rect x="8" y="14" width="1" height="1" fill="#1a1626"/><rect x="9" y="14" width="1" height="1" fill="#f4c7a1"/><rect x="10" y="14" width="1" height="1" fill="#1a1626"/><rect x="3" y="15" width="3" height="1" fill="#1a1626"/><rect x="8" y="15" width="3" height="1" fill="#1a1626"/></svg><svg viewBox="0 0 16 15" width="64" height="60" shape-rendering="crispEdges" ><rect x="4" y="0" width="1" height="1" fill="#4b4e66"/><rect x="5" y="0" width="1" height="1" fill="#4b4e66"/><rect x="6" y="0" width="1" height="1" fill="#4b4e66"/><rect x="7" y="0" width="1" height="1" fill="#4b4e66"/><rect x="8" y="0" width="1" height="1" fill="#4b4e66"/><rect x="9" y="0" width="1" height="1" fill="#4b4e66"/><rect x="10" y="0" width="1" height="1" fill="#4b4e66"/><rect x="11" y="0" width="1" height="1" fill="#4b4e66"/><rect x="3" y="1" width="1" height="1" fill="#4b4e66"/><rect x="4" y="1" width="1" height="1" fill="#8b8fa8"/><rect x="5" y="1" width="1" height="1" fill="#8b8fa8"/><rect x="6" y="1" width="1" height="1" fill="#8b8fa8"/><rect x="7" y="1" width="1" height="1" fill="#8b8fa8"/><rect x="8" y="1" width="1" height="1" fill="#8b8fa8"/><rect x="9" y="1" width="1" height="1" fill="#8b8fa8"/><rect x="10" y="1" width="1" height="1" fill="#8b8fa8"/><rect x="11" y="1" width="1" height="1" fill="#8b8fa8"/><rect x="12" y="1" width="1" height="1" fill="#4b4e66"/><rect x="3" y="2" width="1" height="1" fill="#4b4e66"/><rect x="4" y="2" width="1" height="1" fill="#8b8fa8"/><rect x="5" y="2" width="1" height="1" fill="#16132a"/><rect x="6" y="2" width="1" height="1" fill="#16132a"/><rect x="7" y="2" width="1" height="1" fill="#16132a"/><rect x="8" y="2" width="1" height="1" fill="#16132a"/><rect x="9" y="2" width="1" height="1" fill="#16132a"/><rect x="10" y="2" width="1" height="1" fill="#16132a"/><rect x="11" y="2" width="1" height="1" fill="#8b8fa8"/><rect x="12" y="2" width="1" height="1" fill="#4b4e66"/><rect x="3" y="3" width="1" height="1" fill="#4b4e66"/><rect x="4" y="3" width="1" height="1" fill="#8b8fa8"/><rect x="5" y="3" width="1" height="1" fill="#16132a"/><rect x="6" y="3" width="1" height="1" fill="#6fd49a"/><rect x="7" y="3" width="1" height="1" fill="#16132a"/><rect x="8" y="3" width="1" height="1" fill="#16132a"/><rect x="9" y="3" width="1" height="1" fill="#6fd49a"/><rect x="10" y="3" width="1" height="1" fill="#16132a"/><rect x="11" y="3" width="1" height="1" fill="#8b8fa8"/><rect x="12" y="3" width="1" height="1" fill="#4b4e66"/><rect x="3" y="4" width="1" height="1" fill="#4b4e66"/><rect x="4" y="4" width="1" height="1" fill="#8b8fa8"/><rect x="5" y="4" width="1" height="1" fill="#16132a"/><rect x="6" y="4" width="1" height="1" fill="#16132a"/><rect x="7" y="4" width="1" height="1" fill="#16132a"/><rect x="8" y="4" width="1" height="1" fill="#16132a"/><rect x="9" y="4" width="1" height="1" fill="#16132a"/><rect x="10" y="4" width="1" height="1" fill="#16132a"/><rect x="11" y="4" width="1" height="1" fill="#8b8fa8"/><rect x="12" y="4" width="1" height="1" fill="#4b4e66"/><rect x="3" y="5" width="1" height="1" fill="#4b4e66"/><rect x="4" y="5" width="1" height="1" fill="#8b8fa8"/><rect x="5" y="5" width="1" height="1" fill="#16132a"/><rect x="6" y="5" width="1" height="1" fill="#6fd49a"/><rect x="7" y="5" width="1" height="1" fill="#6fd49a"/><rect x="8" y="5" width="1" height="1" fill="#6fd49a"/><rect x="9" y="5" width="1" height="1" fill="#6fd49a"/><rect x="10" y="5" width="1" height="1" fill="#16132a"/><rect x="11" y="5" width="1" height="1" fill="#8b8fa8"/><rect x="12" y="5" width="1" height="1" fill="#4b4e66"/><rect x="3" y="6" width="1" height="1" fill="#4b4e66"/><rect x="4" y="6" width="1" height="1" fill="#8b8fa8"/><rect x="5" y="6" width="1" height="1" fill="#8b8fa8"/><rect x="6" y="6" width="1" height="1" fill="#8b8fa8"/><rect x="7" y="6" width="1" height="1" fill="#8b8fa8"/><rect x="8" y="6" width="1" height="1" fill="#8b8fa8"/><rect x="9" y="6" width="1" height="1" fill="#8b8fa8"/><rect x="10" y="6" width="1" height="1" fill="#8b8fa8"/><rect x="11" y="6" width="1" height="1" fill="#8b8fa8"/><rect x="12" y="6" width="1" height="1" fill="#4b4e66"/><rect x="1" y="7" width="1" height="1" fill="#4b4e66"/><rect x="2" y="7" width="1" height="1" fill="#4b4e66"/><rect x="3" y="7" width="1" height="1" fill="#4b4e66"/><rect x="4" y="7" width="1" height="1" fill="#8b8fa8"/><rect x="5" y="7" width="1" height="1" fill="#8b8fa8"/><rect x="6" y="7" width="1" height="1" fill="#8b8fa8"/><rect x="7" y="7" width="1" height="1" fill="#8b8fa8"/><rect x="8" y="7" width="1" height="1" fill="#8b8fa8"/><rect x="9" y="7" width="1" height="1" fill="#8b8fa8"/><rect x="10" y="7" width="1" height="1" fill="#8b8fa8"/><rect x="11" y="7" width="1" height="1" fill="#8b8fa8"/><rect x="12" y="7" width="1" height="1" fill="#4b4e66"/><rect x="13" y="7" width="1" height="1" fill="#4b4e66"/><rect x="14" y="7" width="1" height="1" fill="#4b4e66"/><rect x="0" y="8" width="1" height="1" fill="#4b4e66"/><rect x="1" y="8" width="1" height="1" fill="#8b8fa8"/><rect x="2" y="8" width="1" height="1" fill="#8b8fa8"/><rect x="3" y="8" width="1" height="1" fill="#4b4e66"/><rect x="4" y="8" width="1" height="1" fill="#8b8fa8"/><rect x="5" y="8" width="1" height="1" fill="#8b8fa8"/><rect x="6" y="8" width="1" height="1" fill="#8b8fa8"/><rect x="7" y="8" width="1" height="1" fill="#ff6b6b"/><rect x="8" y="8" width="1" height="1" fill="#ff6b6b"/><rect x="9" y="8" width="1" height="1" fill="#8b8fa8"/><rect x="10" y="8" width="1" height="1" fill="#8b8fa8"/><rect x="11" y="8" width="1" height="1" fill="#8b8fa8"/><rect x="12" y="8" width="1" height="1" fill="#4b4e66"/><rect x="13" y="8" width="1" height="1" fill="#8b8fa8"/><rect x="14" y="8" width="1" height="1" fill="#8b8fa8"/><rect x="15" y="8" width="1" height="1" fill="#4b4e66"/><rect x="0" y="9" width="1" height="1" fill="#4b4e66"/><rect x="1" y="9" width="1" height="1" fill="#8b8fa8"/><rect x="2" y="9" width="1" height="1" fill="#8b8fa8"/><rect x="3" y="9" width="1" height="1" fill="#4b4e66"/><rect x="4" y="9" width="1" height="1" fill="#8b8fa8"/><rect x="5" y="9" width="1" height="1" fill="#8b8fa8"/><rect x="6" y="9" width="1" height="1" fill="#8b8fa8"/><rect x="7" y="9" width="1" height="1" fill="#ff6b6b"/><rect x="8" y="9" width="1" height="1" fill="#ff6b6b"/><rect x="9" y="9" width="1" height="1" fill="#8b8fa8"/><rect x="10" y="9" width="1" height="1" fill="#8b8fa8"/><rect x="11" y="9" width="1" height="1" fill="#8b8fa8"/><rect x="12" y="9" width="1" height="1" fill="#4b4e66"/><rect x="13" y="9" width="1" height="1" fill="#8b8fa8"/><rect x="14" y="9" width="1" height="1" fill="#8b8fa8"/><rect x="15" y="9" width="1" height="1" fill="#4b4e66"/><rect x="0" y="10" width="1" height="1" fill="#4b4e66"/><rect x="1" y="10" width="1" height="1" fill="#8b8fa8"/><rect x="2" y="10" width="1" height="1" fill="#8b8fa8"/><rect x="3" y="10" width="1" height="1" fill="#4b4e66"/><rect x="4" y="10" width="1" height="1" fill="#8b8fa8"/><rect x="5" y="10" width="1" height="1" fill="#8b8fa8"/><rect x="6" y="10" width="1" height="1" fill="#8b8fa8"/><rect x="7" y="10" width="1" height="1" fill="#8b8fa8"/><rect x="8" y="10" width="1" height="1" fill="#8b8fa8"/><rect x="9" y="10" width="1" height="1" fill="#8b8fa8"/><rect x="10" y="10" width="1" height="1" fill="#8b8fa8"/><rect x="11" y="10" width="1" height="1" fill="#8b8fa8"/><rect x="12" y="10" width="1" height="1" fill="#4b4e66"/><rect x="13" y="10" width="1" height="1" fill="#8b8fa8"/><rect x="14" y="10" width="1" height="1" fill="#8b8fa8"/><rect x="15" y="10" width="1" height="1" fill="#4b4e66"/><rect x="0" y="11" width="1" height="1" fill="#4b4e66"/><rect x="1" y="11" width="1" height="1" fill="#4b4e66"/><rect x="2" y="11" width="1" height="1" fill="#4b4e66"/><rect x="4" y="11" width="1" height="1" fill="#4b4e66"/><rect x="5" y="11" width="1" height="1" fill="#8b8fa8"/><rect x="6" y="11" width="1" height="1" fill="#8b8fa8"/><rect x="7" y="11" width="1" height="1" fill="#8b8fa8"/><rect x="8" y="11" width="1" height="1" fill="#8b8fa8"/><rect x="9" y="11" width="1" height="1" fill="#8b8fa8"/><rect x="10" y="11" width="1" height="1" fill="#8b8fa8"/><rect x="11" y="11" width="1" height="1" fill="#4b4e66"/><rect x="13" y="11" width="1" height="1" fill="#4b4e66"/><rect x="14" y="11" width="1" height="1" fill="#4b4e66"/><rect x="15" y="11" width="1" height="1" fill="#4b4e66"/><rect x="4" y="12" width="1" height="1" fill="#4b4e66"/><rect x="5" y="12" width="1" height="1" fill="#8b8fa8"/><rect x="6" y="12" width="1" height="1" fill="#8b8fa8"/><rect x="7" y="12" width="1" height="1" fill="#4b4e66"/><rect x="8" y="12" width="1" height="1" fill="#4b4e66"/><rect x="9" y="12" width="1" height="1" fill="#8b8fa8"/><rect x="10" y="12" width="1" height="1" fill="#8b8fa8"/><rect x="11" y="12" width="1" height="1" fill="#4b4e66"/><rect x="4" y="13" width="1" height="1" fill="#4b4e66"/><rect x="5" y="13" width="1" height="1" fill="#8b8fa8"/><rect x="6" y="13" width="1" height="1" fill="#8b8fa8"/><rect x="7" y="13" width="1" height="1" fill="#4b4e66"/><rect x="8" y="13" width="1" height="1" fill="#4b4e66"/><rect x="9" y="13" width="1" height="1" fill="#8b8fa8"/><rect x="10" y="13" width="1" height="1" fill="#8b8fa8"/><rect x="11" y="13" width="1" height="1" fill="#4b4e66"/><rect x="3" y="14" width="1" height="1" fill="#4b4e66"/><rect x="4" y="14" width="1" height="1" fill="#4b4e66"/><rect x="5" y="14" width="1" height="1" fill="#4b4e66"/><rect x="6" y="14" width="1" height="1" fill="#4b4e66"/><rect x="9" y="14" width="1" height="1" fill="#4b4e66"/><rect x="10" y="14" width="1" height="1" fill="#4b4e66"/><rect x="11" y="14" width="1" height="1" fill="#4b4e66"/><rect x="12" y="14" width="1" height="1" fill="#4b4e66"/></svg><svg viewBox="0 0 20 25" width="73.60000000000001" height="92" shape-rendering="crispEdges" ><rect x="19" y="0" width="1" height="1" fill="#6fae4a"/><rect x="19" y="1" width="1" height="1" fill="#6fae4a"/><rect x="19" y="2" width="1" height="1" fill="#6fae4a"/><rect x="19" y="3" width="1" height="1" fill="#6fae4a"/><rect x="8" y="4" width="4" height="1" fill="#1a1626"/><rect x="19" y="4" width="1" height="1" fill="#6fae4a"/><rect x="5" y="5" width="2" height="1" fill="#1a1626"/><rect x="7" y="5" width="6" height="1" fill="#c99a5b"/><rect x="13" y="5" width="2" height="1" fill="#1a1626"/><rect x="19" y="5" width="1" height="1" fill="#6fae4a"/><rect x="2" y="6" width="2" height="1" fill="#1a1626"/><rect x="4" y="6" width="12" height="1" fill="#c99a5b"/><rect x="16" y="6" width="2" height="1" fill="#1a1626"/><rect x="19" y="6" width="1" height="1" fill="#6fae4a"/><rect x="3" y="7" width="1" height="1" fill="#1a1626"/><rect x="4" y="7" width="1" height="1" fill="#26232f"/><rect x="5" y="7" width="9" height="1" fill="#f3f1f6"/><rect x="14" y="7" width="1" height="1" fill="#26232f"/><rect x="15" y="7" width="1" height="1" fill="#1a1626"/><rect x="19" y="7" width="1" height="1" fill="#6fae4a"/><rect x="2" y="8" width="1" height="1" fill="#1a1626"/><rect x="3" y="8" width="1" height="1" fill="#f3f1f6"/><rect x="4" y="8" width="3" height="1" fill="#26232f"/><rect x="7" y="8" width="5" height="1" fill="#f3f1f6"/><rect x="12" y="8" width="3" height="1" fill="#26232f"/><rect x="15" y="8" width="1" height="1" fill="#f3f1f6"/><rect x="16" y="8" width="1" height="1" fill="#1a1626"/><rect x="19" y="8" width="1" height="1" fill="#6fae4a"/><rect x="2" y="9" width="1" height="1" fill="#1a1626"/><rect x="3" y="9" width="1" height="1" fill="#f3f1f6"/><rect x="4" y="9" width="1" height="1" fill="#26232f"/><rect x="5" y="9" width="1" height="1" fill="#ffffff"/><rect x="6" y="9" width="1" height="1" fill="#26232f"/><rect x="7" y="9" width="5" height="1" fill="#f3f1f6"/><rect x="12" y="9" width="1" height="1" fill="#26232f"/><rect x="13" y="9" width="1" height="1" fill="#ffffff"/><rect x="14" y="9" width="1" height="1" fill="#26232f"/><rect x="15" y="9" width="1" height="1" fill="#f3f1f6"/><rect x="16" y="9" width="1" height="1" fill="#1a1626"/><rect x="19" y="9" width="1" height="1" fill="#6fae4a"/><rect x="2" y="10" width="1" height="1" fill="#1a1626"/><rect x="3" y="10" width="6" height="1" fill="#f3f1f6"/><rect x="9" y="10" width="1" height="1" fill="#26232f"/><rect x="10" y="10" width="6" height="1" fill="#f3f1f6"/><rect x="16" y="10" width="1" height="1" fill="#1a1626"/><rect x="19" y="10" width="1" height="1" fill="#6fae4a"/><rect x="2" y="11" width="1" height="1" fill="#1a1626"/><rect x="3" y="11" width="5" height="1" fill="#f3f1f6"/><rect x="8" y="11" width="3" height="1" fill="#1a1626"/><rect x="11" y="11" width="5" height="1" fill="#f3f1f6"/><rect x="16" y="11" width="1" height="1" fill="#1a1626"/><rect x="19" y="11" width="1" height="1" fill="#6fae4a"/><rect x="3" y="12" width="1" height="1" fill="#1a1626"/><rect x="4" y="12" width="11" height="1" fill="#f3f1f6"/><rect x="15" y="12" width="1" height="1" fill="#1a1626"/><rect x="19" y="12" width="1" height="1" fill="#6fae4a"/><rect x="2" y="13" width="1" height="1" fill="#1a1626"/><rect x="3" y="13" width="2" height="1" fill="#26232f"/><rect x="5" y="13" width="1" height="1" fill="#3fa55b"/><rect x="6" y="13" width="8" height="1" fill="#f3f1f6"/><rect x="14" y="13" width="2" height="1" fill="#26232f"/><rect x="16" y="13" width="1" height="1" fill="#1a1626"/><rect x="18" y="13" width="1" height="1" fill="#26232f"/><rect x="19" y="13" width="1" height="1" fill="#6fae4a"/><rect x="1" y="14" width="1" height="1" fill="#1a1626"/><rect x="2" y="14" width="2" height="1" fill="#26232f"/><rect x="4" y="14" width="1" height="1" fill="#1a1626"/><rect x="5" y="14" width="1" height="1" fill="#f3f1f6"/><rect x="6" y="14" width="1" height="1" fill="#3fa55b"/><rect x="7" y="14" width="7" height="1" fill="#f3f1f6"/><rect x="14" y="14" width="1" height="1" fill="#1a1626"/><rect x="15" y="14" width="4" height="1" fill="#26232f"/><rect x="19" y="14" width="1" height="1" fill="#6fae4a"/><rect x="0" y="15" width="1" height="1" fill="#1a1626"/><rect x="1" y="15" width="2" height="1" fill="#26232f"/><rect x="3" y="15" width="1" height="1" fill="#1a1626"/><rect x="4" y="15" width="3" height="1" fill="#f3f1f6"/><rect x="7" y="15" width="1" height="1" fill="#3fa55b"/><rect x="8" y="15" width="7" height="1" fill="#f3f1f6"/><rect x="15" y="15" width="1" height="1" fill="#1a1626"/><rect x="16" y="15" width="3" height="1" fill="#26232f"/><rect x="19" y="15" width="1" height="1" fill="#6fae4a"/><rect x="0" y="16" width="1" height="1" fill="#1a1626"/><rect x="1" y="16" width="2" height="1" fill="#26232f"/><rect x="3" y="16" width="1" height="1" fill="#1a1626"/><rect x="4" y="16" width="4" height="1" fill="#f3f1f6"/><rect x="8" y="16" width="1" height="1" fill="#3fa55b"/><rect x="9" y="16" width="6" height="1" fill="#f3f1f6"/><rect x="15" y="16" width="1" height="1" fill="#1a1626"/><rect x="19" y="16" width="1" height="1" fill="#6fae4a"/><rect x="0" y="17" width="1" height="1" fill="#1a1626"/><rect x="1" y="17" width="2" height="1" fill="#26232f"/><rect x="3" y="17" width="1" height="1" fill="#1a1626"/><rect x="4" y="17" width="5" height="1" fill="#f3f1f6"/><rect x="9" y="17" width="1" height="1" fill="#3fa55b"/><rect x="10" y="17" width="5" height="1" fill="#f3f1f6"/><rect x="15" y="17" width="1" height="1" fill="#1a1626"/><rect x="19" y="17" width="1" height="1" fill="#f2c14e"/><rect x="1" y="18" width="3" height="1" fill="#1a1626"/><rect x="4" y="18" width="6" height="1" fill="#7a4a26"/><rect x="10" y="18" width="1" height="1" fill="#3fa55b"/><rect x="11" y="18" width="4" height="1" fill="#7a4a26"/><rect x="15" y="18" width="1" height="1" fill="#1a1626"/><rect x="3" y="19" width="1" height="1" fill="#1a1626"/><rect x="4" y="19" width="11" height="1" fill="#3fa55b"/><rect x="15" y="19" width="1" height="1" fill="#1a1626"/><rect x="3" y="20" width="1" height="1" fill="#1a1626"/><rect x="4" y="20" width="5" height="1" fill="#3fa55b"/><rect x="9" y="20" width="1" height="1" fill="#1a1626"/><rect x="10" y="20" width="5" height="1" fill="#3fa55b"/><rect x="15" y="20" width="1" height="1" fill="#1a1626"/><rect x="4" y="21" width="1" height="1" fill="#1a1626"/><rect x="5" y="21" width="3" height="1" fill="#26232f"/><rect x="8" y="21" width="1" height="1" fill="#1a1626"/><rect x="10" y="21" width="1" height="1" fill="#1a1626"/><rect x="11" y="21" width="3" height="1" fill="#26232f"/><rect x="14" y="21" width="1" height="1" fill="#1a1626"/><rect x="4" y="22" width="1" height="1" fill="#1a1626"/><rect x="5" y="22" width="3" height="1" fill="#26232f"/><rect x="8" y="22" width="1" height="1" fill="#1a1626"/><rect x="10" y="22" width="1" height="1" fill="#1a1626"/><rect x="11" y="22" width="3" height="1" fill="#26232f"/><rect x="14" y="22" width="1" height="1" fill="#1a1626"/><rect x="4" y="23" width="1" height="1" fill="#1a1626"/><rect x="5" y="23" width="3" height="1" fill="#c99a5b"/><rect x="8" y="23" width="1" height="1" fill="#1a1626"/><rect x="10" y="23" width="1" height="1" fill="#1a1626"/><rect x="11" y="23" width="3" height="1" fill="#c99a5b"/><rect x="14" y="23" width="1" height="1" fill="#1a1626"/><rect x="3" y="24" width="6" height="1" fill="#1a1626"/><rect x="10" y="24" width="6" height="1" fill="#1a1626"/></svg></div>
+          <div class="body">
+            <h3>Boss vaincu !</h3>
+            <p>Le Golem ATS est tombé. Vous gagnez le succès « Premier boss ».</p>
+            <div class="stats"><div><span>Adrien</span><b>8 coups</b></div><div><span>Nicolas</span><b>8 coups</b></div><div><span>Coup de grâce</span><b>+2</b></div><div><span>Total contre 16 PV</span><b>18</b></div></div>
+            <a class="cta" href="#dest-duel">Ouvrir Goal Master</a>
+          </div>
+          <div class="foot">Tu reçois cet e-mail parce que la catégorie Duel est activée. <a href="#reglages">Régler mes notifications</a></div>
+        </div>
+      </div>
+      <div class="mailbox">
+        <p class="clientnote"><b>Gmail · Outlook</b> police de secours (Courier) pour les titres ; bandeau et sprite inchangés</p>
+        <div class="mailhead"><b>Ton chevalier commence à rouiller.</b><span>Goal Master &lt;contact@viloris.io&gt; · jeu. 19:00</span></div>
+        <div class="m8 fallback">
+          <div class="hdr"><canvas data-header></canvas><span class="brand"><svg width="28" height="28" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect width="16" height="16" fill="#221e40"/><rect x="7" y="1" width="1" height="1" fill="#1a1626"/><rect x="8" y="1" width="1" height="1" fill="#1a1626"/><rect x="6" y="2" width="1" height="1" fill="#1a1626"/><rect x="7" y="2" width="1" height="1" fill="#fffbe0"/><rect x="8" y="2" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="2" width="1" height="1" fill="#1a1626"/><rect x="6" y="3" width="1" height="1" fill="#1a1626"/><rect x="7" y="3" width="1" height="1" fill="#fffbe0"/><rect x="8" y="3" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="3" width="1" height="1" fill="#1a1626"/><rect x="6" y="4" width="1" height="1" fill="#1a1626"/><rect x="7" y="4" width="1" height="1" fill="#fffbe0"/><rect x="8" y="4" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="4" width="1" height="1" fill="#1a1626"/><rect x="6" y="5" width="1" height="1" fill="#1a1626"/><rect x="7" y="5" width="1" height="1" fill="#fffbe0"/><rect x="8" y="5" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="5" width="1" height="1" fill="#1a1626"/><rect x="6" y="6" width="1" height="1" fill="#1a1626"/><rect x="7" y="6" width="1" height="1" fill="#fffbe0"/><rect x="8" y="6" width="1" height="1" fill="#dfe6ee"/><rect x="9" y="6" width="1" height="1" fill="#1a1626"/><rect x="6" y="7" width="1" height="1" fill="#1a1626"/><rect x="7" y="7" width="1" height="1" fill="#fffbe0"/><rect x="8" y="7" width="1" height="1" fill="#8b93a7"/><rect x="9" y="7" width="1" height="1" fill="#1a1626"/><rect x="6" y="8" width="1" height="1" fill="#1a1626"/><rect x="7" y="8" width="1" height="1" fill="#fffbe0"/><rect x="8" y="8" width="1" height="1" fill="#8b93a7"/><rect x="9" y="8" width="1" height="1" fill="#1a1626"/><rect x="3" y="9" width="1" height="1" fill="#1a1626"/><rect x="4" y="9" width="1" height="1" fill="#1a1626"/><rect x="5" y="9" width="1" height="1" fill="#1a1626"/><rect x="6" y="9" width="1" height="1" fill="#1a1626"/><rect x="7" y="9" width="1" height="1" fill="#1a1626"/><rect x="8" y="9" width="1" height="1" fill="#1a1626"/><rect x="9" y="9" width="1" height="1" fill="#1a1626"/><rect x="10" y="9" width="1" height="1" fill="#1a1626"/><rect x="11" y="9" width="1" height="1" fill="#1a1626"/><rect x="12" y="9" width="1" height="1" fill="#1a1626"/><rect x="3" y="10" width="1" height="1" fill="#1a1626"/><rect x="4" y="10" width="1" height="1" fill="#b9831c"/><rect x="5" y="10" width="1" height="1" fill="#f2c14e"/><rect x="6" y="10" width="1" height="1" fill="#f2c14e"/><rect x="7" y="10" width="1" height="1" fill="#f2c14e"/><rect x="8" y="10" width="1" height="1" fill="#f2c14e"/><rect x="9" y="10" width="1" height="1" fill="#f2c14e"/><rect x="10" y="10" width="1" height="1" fill="#f2c14e"/><rect x="11" y="10" width="1" height="1" fill="#b9831c"/><rect x="12" y="10" width="1" height="1" fill="#1a1626"/><rect x="4" y="11" width="1" height="1" fill="#1a1626"/><rect x="5" y="11" width="1" height="1" fill="#1a1626"/><rect x="6" y="11" width="1" height="1" fill="#1a1626"/><rect x="7" y="11" width="1" height="1" fill="#7a4a26"/><rect x="8" y="11" width="1" height="1" fill="#7a4a26"/><rect x="9" y="11" width="1" height="1" fill="#1a1626"/><rect x="10" y="11" width="1" height="1" fill="#1a1626"/><rect x="11" y="11" width="1" height="1" fill="#1a1626"/><rect x="6" y="12" width="1" height="1" fill="#1a1626"/><rect x="7" y="12" width="1" height="1" fill="#7a4a26"/><rect x="8" y="12" width="1" height="1" fill="#7a4a26"/><rect x="9" y="12" width="1" height="1" fill="#1a1626"/><rect x="5" y="13" width="1" height="1" fill="#1a1626"/><rect x="6" y="13" width="1" height="1" fill="#f2c14e"/><rect x="7" y="13" width="1" height="1" fill="#f2c14e"/><rect x="8" y="13" width="1" height="1" fill="#f2c14e"/><rect x="9" y="13" width="1" height="1" fill="#f2c14e"/><rect x="10" y="13" width="1" height="1" fill="#1a1626"/><rect x="6" y="14" width="1" height="1" fill="#1a1626"/><rect x="7" y="14" width="1" height="1" fill="#1a1626"/><rect x="8" y="14" width="1" height="1" fill="#1a1626"/><rect x="9" y="14" width="1" height="1" fill="#1a1626"/></svg>GOAL MASTER</span><span class="img-note">image PNG</span></div>
+          <div class="scene"><svg viewBox="0 0 14 16" width="56" height="64" shape-rendering="crispEdges" ><rect x="4" y="0" width="6" height="1" fill="#1a1626"/><rect x="3" y="1" width="1" height="1" fill="#1a1626"/><rect x="4" y="1" width="6" height="1" fill="#c99a5b"/><rect x="10" y="1" width="1" height="1" fill="#1a1626"/><rect x="2" y="2" width="1" height="1" fill="#1a1626"/><rect x="3" y="2" width="8" height="1" fill="#c99a5b"/><rect x="11" y="2" width="1" height="1" fill="#1a1626"/><rect x="12" y="2" width="1" height="1" fill="#7a4a26"/><rect x="2" y="3" width="10" height="1" fill="#1a1626"/><rect x="12" y="3" width="1" height="1" fill="#7a4a26"/><rect x="2" y="4" width="1" height="1" fill="#1a1626"/><rect x="3" y="4" width="8" height="1" fill="#dcc6b6"/><rect x="11" y="4" width="1" height="1" fill="#1a1626"/><rect x="12" y="4" width="1" height="1" fill="#7a4a26"/><rect x="2" y="5" width="1" height="1" fill="#1a1626"/><rect x="3" y="5" width="1" height="1" fill="#dcc6b6"/><rect x="4" y="5" width="1" height="1" fill="#1a1626"/><rect x="5" y="5" width="4" height="1" fill="#dcc6b6"/><rect x="9" y="5" width="1" height="1" fill="#1a1626"/><rect x="10" y="5" width="1" height="1" fill="#dcc6b6"/><rect x="11" y="5" width="1" height="1" fill="#1a1626"/><rect x="12" y="5" width="1" height="1" fill="#7a4a26"/><rect x="2" y="6" width="1" height="1" fill="#1a1626"/><rect x="3" y="6" width="1" height="1" fill="#dcc6b6"/><rect x="4" y="6" width="1" height="1" fill="#7a5aa0"/><rect x="5" y="6" width="1" height="1" fill="#dcc6b6"/><rect x="6" y="6" width="2" height="1" fill="#1a1626"/><rect x="8" y="6" width="1" height="1" fill="#dcc6b6"/><rect x="9" y="6" width="1" height="1" fill="#7a5aa0"/><rect x="10" y="6" width="1" height="1" fill="#dcc6b6"/><rect x="11" y="6" width="1" height="1" fill="#1a1626"/><rect x="12" y="6" width="1" height="1" fill="#7a4a26"/><rect x="3" y="7" width="2" height="1" fill="#1a1626"/><rect x="5" y="7" width="4" height="1" fill="#dcc6b6"/><rect x="9" y="7" width="2" height="1" fill="#1a1626"/><rect x="11" y="7" width="3" height="1" fill="#7a4a26"/><rect x="1" y="8" width="2" height="1" fill="#7b6f5e"/><rect x="3" y="8" width="1" height="1" fill="#1a1626"/><rect x="4" y="8" width="2" height="1" fill="#c99a5b"/><rect x="6" y="8" width="2" height="1" fill="#7d5a45"/><rect x="8" y="8" width="2" height="1" fill="#c99a5b"/><rect x="10" y="8" width="1" height="1" fill="#1a1626"/><rect x="11" y="8" width="1" height="1" fill="#dcc6b6"/><rect x="12" y="8" width="1" height="1" fill="#7a4a26"/><rect x="0" y="9" width="3" height="1" fill="#7b6f5e"/><rect x="3" y="9" width="1" height="1" fill="#a4501f"/><rect x="4" y="9" width="1" height="1" fill="#1a1626"/><rect x="5" y="9" width="1" height="1" fill="#c99a5b"/><rect x="6" y="9" width="2" height="1" fill="#7d5a45"/><rect x="8" y="9" width="1" height="1" fill="#c99a5b"/><rect x="9" y="9" width="2" height="1" fill="#1a1626"/><rect x="11" y="9" width="1" height="1" fill="#dcc6b6"/><rect x="12" y="9" width="1" height="1" fill="#7a4a26"/><rect x="0" y="10" width="1" height="1" fill="#7b6f5e"/><rect x="1" y="10" width="1" height="1" fill="#b3a58c"/><rect x="2" y="10" width="2" height="1" fill="#7b6f5e"/><rect x="4" y="10" width="1" height="1" fill="#1a1626"/><rect x="5" y="10" width="4" height="1" fill="#c99a5b"/><rect x="9" y="10" width="1" height="1" fill="#1a1626"/><rect x="0" y="11" width="1" height="1" fill="#7b6f5e"/><rect x="1" y="11" width="1" height="1" fill="#a4501f"/><rect x="2" y="11" width="2" height="1" fill="#7b6f5e"/><rect x="4" y="11" width="1" height="1" fill="#1a1626"/><rect x="5" y="11" width="4" height="1" fill="#c99a5b"/><rect x="9" y="11" width="1" height="1" fill="#1a1626"/><rect x="1" y="12" width="2" height="1" fill="#7b6f5e"/><rect x="3" y="12" width="2" height="1" fill="#1a1626"/><rect x="5" y="12" width="4" height="1" fill="#c99a5b"/><rect x="9" y="12" width="2" height="1" fill="#1a1626"/><rect x="4" y="13" width="1" height="1" fill="#1a1626"/><rect x="5" y="13" width="2" height="1" fill="#7d5a45"/><rect x="7" y="13" width="1" height="1" fill="#1a1626"/><rect x="8" y="13" width="2" height="1" fill="#7d5a45"/><rect x="10" y="13" width="1" height="1" fill="#1a1626"/><rect x="4" y="14" width="1" height="1" fill="#1a1626"/><rect x="5" y="14" width="1" height="1" fill="#dcc6b6"/><rect x="6" y="14" width="1" height="1" fill="#1a1626"/><rect x="8" y="14" width="1" height="1" fill="#1a1626"/><rect x="9" y="14" width="1" height="1" fill="#dcc6b6"/><rect x="10" y="14" width="1" height="1" fill="#1a1626"/><rect x="3" y="15" width="3" height="1" fill="#1a1626"/><rect x="8" y="15" width="3" height="1" fill="#1a1626"/></svg></div>
+          <div class="body">
+            <h3>Ton chevalier commence à rouiller.</h3>
+            <p>3 jours sans candidature. Une candidature suffit à le réveiller.</p>
+            
+            <a class="cta" href="#dest-accueil">Ouvrir Goal Master</a>
+          </div>
+          <div class="foot">Tu reçois cet e-mail parce que la catégorie Rappels est activée. <a href="#reglages">Régler mes notifications</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Destinations -->
+  <section class="screen" id="destinations">
+    <header>
+      <span class="route">où mène le clic</span>
+      <h2>Écrans existants</h2>
+      <p>Aucun nouvel écran : chaque notification ouvre un écran déjà en production. Liens vers leurs maquettes de référence.</p>
+    </header>
+    <div class="dests">
+      <a id="dest-accueil" href="https://claude.ai/artifact/6i42Tj6uFKTxzp6QzukjtQ" target="_blank" rel="noopener"><span class="route">/</span><span>Accueil, carte du boss et fil du binôme</span></a>
+      <a id="dest-duel" href="https://claude.ai/artifact/6i42Tj6uFKTxzp6QzukjtQ" target="_blank" rel="noopener"><span class="route">/duel</span><span>Résultat du duel, victoire ou défaite</span></a>
+      <a id="dest-intro" href="https://claude.ai/artifact/A8WmTezNTQUourDKYfCyaQ" target="_blank" rel="noopener"><span class="route">/intro</span><span>Intro, ouverte au premier écran pas encore vu</span></a>
+      <a href="#reglages"><span class="route">/reglages#notifications</span><span>Depuis le pied de chaque e-mail</span></a>
+    </div>
+  </section>
+</div>
+
+<script>
+// Étoiles pixel sur les scènes, comme le paysage de l'app.
+document.querySelectorAll("canvas[data-stars]").forEach((c) => {
+  const w = 192, h = 108; c.width = w; c.height = h;
+  const g = c.getContext("2d");
+  let s = 7;
+  const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+  const tones = ["#fffbe0", "#a39dcc", "#ffffff"];
+  for (let i = 0; i < 70; i++) { g.fillStyle = tones[i % 3]; g.fillRect(Math.floor(rnd() * w), Math.floor(rnd() * h * 0.6), 1, 1); }
+  g.fillStyle = "#0f0c22";
+  for (let x = 0; x < w; x++) { const y = Math.floor(h * 0.78 + Math.sin(x / 9) * 3 + Math.sin(x / 23) * 4); g.fillRect(x, y, 1, h - y); }
+});
+// Bandeau des e-mails : étoiles et remparts en pixels (en vrai, une image PNG).
+document.querySelectorAll("canvas[data-header]").forEach((c) => {
+  const w = 140, h = 28; c.width = w; c.height = h;
+  const g = c.getContext("2d");
+  let s = 11;
+  const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+  for (let i = 0; i < 40; i++) { g.fillStyle = ["#fffbe0", "#a39dcc", "#ffffff"][i % 3]; g.fillRect(Math.floor(rnd() * w), Math.floor(rnd() * h * 0.6), 1, 1); }
+  g.fillStyle = "#e8e2c4"; g.fillRect(118, 3, 5, 5); g.fillStyle = "#0f0c22"; g.fillRect(121, 3, 2, 2);
+  g.fillStyle = "#0f0c22";
+  for (let x = 70; x < w; x++) { const y = 18 + (Math.floor(x / 4) % 2 ? 0 : -2) + (x > 100 && x < 108 ? -6 : 0); g.fillRect(x, y, 1, h - y); }
+  g.fillStyle = "#f2c14e"; g.fillRect(103, 15, 1, 1); g.fillRect(88, 21, 1, 1);
+});
+// Interrupteurs : confirmation courte, comme dans l'app.
+const toast = document.getElementById("toast");
+document.querySelectorAll(".cats .switch").forEach((sw) => sw.addEventListener("change", () => {
+  const name = document.querySelector(`label[for="${sw.id}"]`).textContent;
+  toast.textContent = `${name} : ${sw.checked ? "activé" : "coupé, en push comme par e-mail"}.`;
+}));
+</script>

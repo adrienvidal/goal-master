@@ -6,10 +6,12 @@ import { NudgeButton } from "@/components/NudgeButton";
 import { PushSetup } from "@/components/PushSetup";
 import { BossCard } from "@/components/BossCard";
 import { DecorView } from "@/components/DecorView";
+import { NudgeBanner, NudgeWinBanner } from "@/components/Banners";
 import { DuelWatcher } from "@/components/DuelWatcher";
+import { LiveRefresh } from "@/components/LiveRefresh";
 import { bossInSentence, currentDuel, pastDuels, type Duel } from "@/game/duel";
 import { parisDay } from "@/game/calendar";
-import { NUDGE_MESSAGES, pendingNudge, sentToday } from "@/game/nudges";
+import { justWonNudge, NUDGE_MESSAGES, pendingNudge, sentToday } from "@/game/nudges";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -103,6 +105,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const partnerRow = game.players.find((p) => p.id !== player.id);
   const partner = partnerRow ? buildPlayerView(partnerRow, game.apps, game.nudges, await goalFor(partnerRow.id), now) : null;
   const received = partner ? pendingNudge(player.id, game.nudges, game.apps, now) : null;
+  const won = partner ? justWonNudge(player.id, game.nudges, game.apps, now) : null;
   const duelInput = await loadDuelInput(game);
   const duel = currentDuel(duelInput, now);
   const lastDuel = pastDuels(duelInput, now)[0] ?? null;
@@ -116,19 +119,21 @@ export default async function HomePage(): Promise<React.ReactElement> {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
+      <LiveRefresh />
       {lastDuel ? <DuelWatcher id={lastDuel.id} /> : null}
       <div className="device grid gap-6 md:grid-cols-[1.3fr_1fr]">
         <DecorView walkers={walkers} />
         <section className="flex flex-col gap-4" aria-label="Ma quête">
           {received && partner ? (
-            <div role="status" className="flex items-end gap-3 border-[3px] border-ember bg-stone-2 px-3 py-2">
+            <NudgeBanner id={received.id}>
               <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} pose="victory" px={2} />
-              <p className="text-[15px]">
+              <p className="min-w-0 text-[15px]">
                 <b className="text-ember">{partner.pseudo} te motive :</b> {NUDGE_MESSAGES[received.message]}
                 <br /><small className="text-muted">Candidate dans les 24 h : +15 XP pour vous deux.</small>
               </p>
-            </div>
+            </NudgeBanner>
           ) : null}
+          {won && partner ? <NudgeWinBanner id={won.id} partner={partner.pseudo} /> : null}
           <div className="flex items-end gap-4 pr-9">
             <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} level={me.level} mood={me.mood} fallen={me.fallen} hurt={wounded} />
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">

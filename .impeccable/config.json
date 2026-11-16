@@ -11,6 +11,51 @@
         ],
         "createdAt": "2026-11-16T10:05:24.846Z",
         "reason": "Claude: les paires signalées (#a39dcc sur #ffffff, #000000 sur #221e40/#16132a) n'existent pas dans la page ; tout le texte vient de tokens clairs (--ink, --muted) sur fond sombre explicite, le scanner ne résout pas les variables CSS"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          "docs/maquettes/notifications.html"
+        ],
+        "createdAt": "2026-11-16T14:45:20.051Z",
+        "reason": "Claude: Press Start 2P pixel font at 9-10px is the app's established size (src/app buttons use !text-[10px]); renders wider than a normal 11px face"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "docs/maquettes/notifications.html"
+        ],
+        "createdAt": "2026-11-16T14:45:20.066Z",
+        "reason": "Claude: same pixel-font convention as the app (h4/labels in Press Start 2P 9-11px)"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "docs/maquettes/notifications.html"
+        ],
+        "createdAt": "2026-11-16T14:45:26.311Z",
+        "reason": "Claude: static scan pairs text with wrong backgrounds (no #000 text exists; gold/ink text sits on night, not on the white mail card); single dark theme mirrors the app"
+      },
+      {
+        "rule": "hard-offset-shadow",
+        "value": "*",
+        "files": [
+          "docs/maquettes/notifications.html"
+        ],
+        "createdAt": "2026-11-16T14:45:26.340Z",
+        "reason": "Claude: blur-free 4px offset shadow is the 8-bit look of the app (globals.css .device/.btn)"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/maquettes/notifications.html"
+        ],
+        "createdAt": "2026-11-16T14:45:26.364Z",
+        "reason": "Claude: sticky .top bar sits inside the body gutter, same as earlier maquettes"
       }
     ]
   }

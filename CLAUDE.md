@@ -156,6 +156,11 @@ En anglais, à l'impératif, sans point final. Préfixe `feat:`, `fix:`, `test:`
   et une par déploiement de prévisualisation via l'intégration Vercel ; RLS non
   activé : la sécurité est applicative, toute requête filtre sur l'utilisateur
   courant
+- Branches Neon d'aperçu : quand un aperçu Vercel échoue parce que la limite de
+  branches est atteinte (« Resource provisioning failed », 10 en offre gratuite),
+  Claude supprime lui-même les branches `preview/*` (`npx neonctl branches list`
+  puis `delete`), sans demander : c'est l'exception à « toute suppression se
+  confirme ». Jamais la branche de production `main`. Le noter dans « Réalisé »
 - Authentification par code à usage unique envoyé par e-mail avec Better Auth (greffon emailOTP), comme
   viloris-studio ; codes envoyés depuis contact@viloris.io par le SMTP de Google Workspace (SMTP_USER,
   SMTP_PASS) ; adresses autorisées dans ALLOWED_EMAILS. Variables récupérées en local par
@@ -180,5 +185,5 @@ Référence complète : `docs/specs/2026-11-16-goal-master-mvp-design.md`.
 - **Une relance par jour et par personne.** Si le destinataire candidate dans les 24 h, +15 XP pour les deux, une seule fois par relance.
 - **La rétrogradation est visuelle uniquement** : l'inactivité (comptée en jours ouvrés) fait rouiller puis redescendre la forme affichée de l'avatar, sans jamais toucher à l'XP, au niveau ni aux succès. La forme affichée se calcule à partir du niveau et de l'inactivité, elle ne se stocke pas.
 - **Duel de fin de semaine, à deux contre un boss** (vendredi 18 h, heure de Paris) : PV = rythme nécessaire pour tenir l'objectif, 1 candidature de la semaine = 1 coup, +1 coup de grâce par tranche de 5 niveaux. Tout se calcule, rien ne se stocke. La défaite est visuelle uniquement (bandage jusqu'à la victoire suivante).
-- **Toute fonctionnalité qui change l'intro s'y ajoute en écran** et incrémente `INTRO_STEP_COUNT` (`src/lib/intro.ts`) : chaque appareil voit d'office les nouveaux écrans à la prochaine ouverture, à partir du premier pas encore vu.
+- **Toute fonctionnalité qui change l'intro s'y ajoute en écran** et incrémente `INTRO_STEP_COUNT` (`src/lib/intro.ts`), en mettant à jour `LATEST_NEWS` (texte de la notification « Nouveauté ») : chaque appareil voit d'office les nouveaux écrans à la prochaine ouverture, à partir du premier pas encore vu.
 - **Deux personnages au MVP (Chevalier, Panda)** ; Ninja et Guerrière sont en pause, décrits dans le cadrage pour plus tard,, avec les mêmes règles de formes et de niveaux. Le personnage se choisit au premier lancement et ne se change qu'au moment de fixer un nouvel objectif.

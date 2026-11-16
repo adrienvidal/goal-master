@@ -1,0 +1,96 @@
+import { describe, expect, it } from "vitest";
+import type { Duel } from "./duel";
+import { formReached, keyOf, koCrossed, nudgesJustSucceeded, pushBody, rustDue, shouldSend, textOf, type NotificationEvent } from "./notifications";
+import type { NudgeRow } from "./nudges";
+import type { Application } from "./xp";
+
+const app = (at: string, userId = "b", cancelled = false): Application => ({ id: `${userId}-${at}`, userId, company: "Alan", createdAt: new Date(at), cancelledAt: cancelled ? new Date(at) : null });
+const nudge = (sentAt: string): NudgeRow => ({ id: "n1", senderId: "a", recipientId: "b", message: 0, sentAt: new Date(sentAt) });
+const evo: NotificationEvent = { kind: "evo", partnerId: "b", partner: "Nicolas", form: 4, formName: "Moine voyageur" };
+const nudgeEvent: NotificationEvent = { kind: "nudge", nudgeId: "n1", from: "Adrien", message: 0 };
+const duel = (id: string, hits: number, hp = 16): Duel => ({ id, boss: 1, start: new Date(0), at: new Date(0), hp, hits, bonus: 0, fighters: [], won: hits >= hp, resolved: false });
+
+describe("shouldSend", () => {
+  it("se tait quand la catégorie est coupée, sur les deux canaux", () => {
+    expect(shouldSend(evo, ["partner"], 0)).toBe(false);
+    expect(shouldSend(nudgeEvent, ["nudges"], 0)).toBe(false);
+  });
+  it("plafonne à deux par jour, sauf la relance reçue et le duel", () => {
+    expect(shouldSend(evo, [], 1)).toBe(true);
+    expect(shouldSend(evo, [], 2)).toBe(false);
+    expect(shouldSend(nudgeEvent, [], 5)).toBe(true);
+    expect(shouldSend({ kind: "duel", friday: "2026-11-20", won: true, boss: 1, total: 18, hp: 16 }, [], 5)).toBe(true);
+  });
+});
+
+describe("keyOf", () => {
+  it("donne une clé stable par événement", () => {
+    expect(keyOf(evo)).toBe("evo:b:4");
+    expect(keyOf({ kind: "rust", lastDay: "2026-11-12", idle: 3, hero: "chevalier" })).toBe("rust:2026-11-12");
+    expect(keyOf({ kind: "news", step: 6, title: "la vue décor" })).toBe("news:6");
+  });
+});
+
+describe("textOf", () => {
+  it("reprend les textes de la maquette, sans nom d'entreprise", () => {
+    expect(textOf(evo).headline).toBe("Nicolas est devenu Moine voyageur ⚔️");
+    const won = textOf({ kind: "duel", friday: "2026-11-20", won: true, boss: 1, total: 18, hp: 16 });
+    expect(won.url).toBe("/duel");
+    expect(`${won.headline} ${won.detail}`).toBe("Boss vaincu ! Le Golem ATS est tombé : 18 coups contre 16 PV.");
+    expect(textOf({ kind: "remind", friday: "2026-11-20", boss: 1, missing: 1 }).detail).toBe("Il manque 1 coup avant demain 18 h.");
+    expect(textOf({ kind: "news", step: 6, title: "la vue décor" }).url).toBe("/intro");
+  });
+  it("garde le titre et le message de la relance", () => {
+    const t = textOf(nudgeEvent);
+    expect(t.title).toBe("⚔️ Adrien te motive");
+    expect(pushBody(t, nudgeEvent)).not.toContain("Adrien");
+  });
+});
+
+describe("rustDue", () => {
+  it("se déclenche au 3e jour ouvré sans candidature, week-end non compté", () => {
+    // Dernière candidature le jeudi 12/11 ; vendredi, lundi : 2 jours ouvrés ; mardi : 3.
+    const apps = [app("2026-11-12T10:00:00Z")];
+    expect(rustDue("b", apps, "2026-11-16")).toBeNull();
+    expect(rustDue("b", apps, "2026-11-17")).toEqual({ lastDay: "2026-11-12", idle: 3 });
+  });
+  it("ignore les candidatures annulées et celles du binôme", () => {
+    const apps = [app("2026-11-02T10:00:00Z"), app("2026-11-13T10:00:00Z", "b", true), app("2026-11-16T10:00:00Z", "a")];
+    expect(rustDue("b", apps, "2026-11-17")?.lastDay).toBe("2026-11-02");
+  });
+  it("ne dit rien à qui n'a jamais candidaté", () => {
+    expect(rustDue("b", [], "2026-11-17")).toBeNull();
+  });
+});
+
+describe("formReached", () => {
+  it("repère le passage à une nouvelle forme", () => {
+    // 10 XP par candidature ; le niveau 4 (2e forme) demande 22 + 24 + 26 = 72 XP : la 8e candidature.
+    const before = Array.from({ length: 7 }, (_, i) => app(`2026-11-0${i + 2}T10:00:00Z`));
+    const after = [...before, app("2026-11-16T10:00:00Z")];
+    expect(formReached("b", before, after, [])).toBe(2);
+    expect(formReached("b", after, after, [])).toBeNull();
+  });
+  it("ne signale rien sans changement de forme", () => {
+    expect(formReached("b", [], [app("2026-11-16T10:00:00Z")], [])).toBeNull();
+  });
+});
+
+describe("nudgesJustSucceeded", () => {
+  it("rend la relance que la nouvelle candidature valide", () => {
+    const n = nudge("2026-11-16T09:00:00Z");
+    const before = [app("2026-11-16T08:00:00Z")];
+    const after = [...before, app("2026-11-16T10:00:00Z")];
+    expect(nudgesJustSucceeded("b", [n], before, after)).toEqual([n]);
+    expect(nudgesJustSucceeded("b", [n], after, after)).toEqual([]);
+  });
+});
+
+describe("koCrossed", () => {
+  it("ne se déclenche qu'au passage à 0 PV", () => {
+    expect(koCrossed(duel("2026-11-20", 15), duel("2026-11-20", 16))).toBe(true);
+    expect(koCrossed(duel("2026-11-20", 16), duel("2026-11-20", 17))).toBe(false);
+    expect(koCrossed(duel("2026-11-20", 10), duel("2026-11-20", 11))).toBe(false);
+    expect(koCrossed(null, null)).toBe(false);
+  });
+});

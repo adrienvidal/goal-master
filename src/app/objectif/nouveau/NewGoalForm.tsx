@@ -13,6 +13,7 @@ export default function NewGoalForm({ character: initial, color, form, defaultDe
   const [character, setCharacter] = useState<CharacterId>(initial);
   return (
     <form action={action} className="device flex flex-col gap-5">
+      <h1 className="h-title text-gold">Nouvel objectif</h1>
       <section className="flex flex-col gap-2">
         <span className="text-xs uppercase tracking-wider text-muted">Ton personnage</span>
         <input type="hidden" name="character" value={character} />
@@ -25,7 +26,7 @@ export default function NewGoalForm({ character: initial, color, form, defaultDe
               onClick={() => setCharacter(c)}
               className={`flex flex-col items-center gap-1 border-[3px] bg-night p-3 text-center ${character === c ? "border-gold" : "border-edge"}`}
             >
-              <span className="flex min-h-[110px] items-end"><Sprite character={c} color={color} form={form} px={3} /></span>
+              <span className="flex min-h-[110px] items-end"><Sprite character={c} color={color} form={form} px={4} /></span>
               <b>{formName(c, form)}</b>
               <small className="text-muted">{c === initial ? "Ton personnage actuel" : "Même niveau, autre univers"}</small>
             </button>
@@ -36,24 +37,23 @@ export default function NewGoalForm({ character: initial, color, form, defaultDe
         <span className="text-xs uppercase tracking-wider text-muted">Ton nouvel objectif</span>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <span className="text-sm text-muted">Candidatures · commun</span>
+            <span className="text-sm text-muted">Candidatures</span>
             <p className="input num !border-stone-2 text-muted" aria-label="Objectif commun">100</p>
           </div>
           <div>
-            <label htmlFor={sharedDeadline ? undefined : "deadline"} className="text-sm text-muted">{sharedDeadline ? "Avant le · commune" : "Avant le"}</label>
+            <label htmlFor={sharedDeadline ? undefined : "deadline"} className="text-sm text-muted">Avant le</label>
             {sharedDeadline ? (
               <p className="input num !border-stone-2 text-muted" aria-label="Date limite commune">
                 {sharedDeadline.slice(8, 10)}/{sharedDeadline.slice(5, 7)}/{sharedDeadline.slice(0, 4)}
               </p>
             ) : (
-              <>
-                <input id="deadline" name="deadline" className="input num" type="date" min={minDeadline} defaultValue={defaultDeadline} required aria-describedby="deadline-hint" />
-                <small id="deadline-hint" className="mt-1 block text-xs text-muted">Ton binôme reprendra cette date.</small>
-              </>
+              <input id="deadline" name="deadline" className="input num" type="date" min={minDeadline} defaultValue={defaultDeadline} required aria-describedby="deadline-hint" />
             )}
           </div>
         </div>
-        <p className="text-sm text-muted">XP, niveau, avatar et succès sont conservés.</p>
+        <p id="deadline-hint" className="text-sm text-muted">
+          {sharedDeadline ? "Objectif et date communs à vous deux." : "Objectif commun. Ton binôme reprendra ta date."} XP, niveau, avatar et succès sont conservés.
+        </p>
       </section>
       {state?.error ? <p className="err">{state.error}</p> : null}
       <button type="submit" className="btn" disabled={pending}>Repartir en quête</button>

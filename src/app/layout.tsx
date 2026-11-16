@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Pixelify_Sans, Press_Start_2P, VT323 } from "next/font/google";
+import { VersionWatcher } from "@/components/Banners";
 import { Landscape } from "@/components/Landscape";
 import { db } from "@/server/db";
 import { currentUser } from "@/server/session";
 import type { LandscapeId } from "@/lib/landscapes";
+import { appVersion } from "@/lib/version";
 import "./globals.css";
 
 const pressStart = Press_Start_2P({ weight: "400", subsets: ["latin"], variable: "--font-press-start" });
@@ -32,6 +34,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className="min-h-dvh antialiased">
         <Landscape id={landscape} className="landscape-bg" />
         <div className="landscape-veil" />
+        <VersionWatcher version={appVersion()} />
         {children}
       </body>
     </html>

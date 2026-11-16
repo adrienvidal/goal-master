@@ -7,6 +7,9 @@ export const INTRO_COOKIE = "gm-intro-seen";
  */
 export const INTRO_STEP_COUNT = 6;
 
+/** Ce qu'annonce la notification « Nouveauté » : à changer en même temps que INTRO_STEP_COUNT. */
+export const LATEST_NEWS = "la vue décor";
+
 /** L'ancienne valeur « 1 » date de l'intro à 4 écrans. */
 export function introStepsSeen(cookie: string | undefined): number {
   if (!cookie) return 0;
