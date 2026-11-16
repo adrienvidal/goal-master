@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { headerPng, parseScene, pngSize, scenePng, sceneToken } from "./emailArt";
+import { readFileSync } from "node:fs";
+import { headerPng, swordBadgePng, parseScene, pngSize, scenePng, sceneToken } from "./emailArt";
 
 describe("parseScene", () => {
   it("lit les jetons valides et les réécrit à l'identique", () => {
@@ -22,5 +23,13 @@ describe("images", () => {
     const scene = scenePng(parseScene("hero.KNIGHT.BLUE.2.victory.hurt,boss.1.down")!);
     expect(scene.subarray(1, 4).toString()).toBe("PNG");
     expect(pngSize(scene).height).toBeGreaterThan(20);
+  });
+});
+
+describe("badge des notifications", () => {
+  it("public/badge-96.png est l'épée en silhouette, à jour", () => {
+    const badge = swordBadgePng();
+    expect(pngSize(badge)).toEqual({ width: 96, height: 96 });
+    expect(readFileSync("public/badge-96.png").equals(badge)).toBe(true);
   });
 });
