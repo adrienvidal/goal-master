@@ -26,3 +26,17 @@ export function pendingNudge(recipientId: string, nudges: NudgeRow[], apps: Appl
   const mine = activeApplications(apps).filter((a) => a.userId === recipientId);
   return fresh.find((n) => !nudgeSucceeded(n, mine)) ?? null;
 }
+
+/** Relance que le destinataire vient de valider (candidature des 2 dernières minutes) : bandeau « Relance réussie ». */
+export function justWonNudge(recipientId: string, nudges: NudgeRow[], apps: Application[], now: Date, windowMs = 2 * 60 * 1000): NudgeRow | null {
+  const mine = activeApplications(apps).filter((a) => a.userId === recipientId);
+  return (
+    nudges
+      .filter((n) => n.recipientId === recipientId && nudgeSucceeded(n, mine))
+      .sort((a, b) => b.sentAt.getTime() - a.sentAt.getTime())
+      .find((n) => {
+        const first = mine.filter((a) => a.createdAt > n.sentAt).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
+        return first !== undefined && now.getTime() - first.createdAt.getTime() <= windowMs;
+      }) ?? null
+  );
+}

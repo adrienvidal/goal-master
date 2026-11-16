@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { Landscape } from "@/components/Landscape";
+import { PushChannel } from "@/components/PushSetup";
+import { isCategory } from "@/game/notifications";
 import { LANDSCAPE_NAMES, LANDSCAPES } from "@/lib/landscapes";
 import { requirePlayer } from "@/server/session";
 import { setLandscape } from "./actions";
+import { NotificationSettings } from "./NotificationSettings";
 
 // Réglages : pour l'instant, le paysage de fond de l'app (propre à chaque joueur).
 export default async function SettingsPage(): Promise<React.ReactElement> {
@@ -39,6 +42,27 @@ export default async function SettingsPage(): Promise<React.ReactElement> {
               );
             })}
           </ul>
+        </section>
+        <section id="notifications" className="flex scroll-mt-6 flex-col gap-3" aria-labelledby="notifs">
+          <h2 id="notifs" className="text-xs uppercase tracking-wider text-muted">Notifications</h2>
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="flex min-w-0 flex-col gap-3">
+              <p className="text-sm font-semibold">Où tu les reçois</p>
+              <PushChannel />
+              <div className="flex flex-col gap-2.5 border-[3px] border-stone-2 bg-night p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <b className="font-semibold">Par e-mail</b>
+                  <span className="border-2 border-current px-2 py-1 font-display text-[10px] leading-none text-[var(--ok)]">TOUJOURS</span>
+                </div>
+                <span className="num break-all text-lg">{player.email}</span>
+                <p className="text-sm text-muted">Chaque notification arrive aussi par e-mail, pour ne rien rater quand le téléphone est loin.</p>
+              </div>
+            </div>
+            <div className="flex min-w-0 flex-col gap-1">
+              <p className="text-sm font-semibold">Ce que tu reçois</p>
+              <NotificationSettings muted={player.mutedCategories.filter(isCategory)} />
+            </div>
+          </div>
         </section>
       </div>
     </main>

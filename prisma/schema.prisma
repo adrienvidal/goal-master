@@ -41,20 +41,23 @@ enum GoalStatus {
 
 /// One of the two players. `id` is the Better Auth user id.
 model Player {
-  id           String                @id
-  user         User                  @relation(fields: [id], references: [id], onDelete: Cascade)
-  email        String                @unique
-  pseudo       String
-  character    Character
-  color        Color                 @unique
-  landscape    Landscape             @default(CASTLE)
-  createdAt    DateTime              @default(now())
-  goals        Goal[]
-  applications Application[]
-  sentNudges   Nudge[]               @relation("sentNudges")
-  gotNudges    Nudge[]               @relation("receivedNudges")
-  achievements UnlockedAchievement[]
-  pushSubs     PushSubscription[]
+  id              String                @id
+  user            User                  @relation(fields: [id], references: [id], onDelete: Cascade)
+  email           String                @unique
+  pseudo          String
+  character       Character
+  color           Color                 @unique
+  landscape       Landscape             @default(CASTLE)
+  /// Catégories de notifications coupées (voir src/game/notifications.ts).
+  mutedCategories String[]              @default([])
+  createdAt       DateTime              @default(now())
+  goals           Goal[]
+  applications    Application[]
+  sentNudges      Nudge[]               @relation("sentNudges")
+  gotNudges       Nudge[]               @relation("receivedNudges")
+  achievements    UnlockedAchievement[]
+  pushSubs        PushSubscription[]
+  notifications   NotificationLog[]
 }
 
 model Goal {
@@ -186,4 +189,17 @@ model PushSubscription {
   createdAt DateTime @default(now())
 
   @@index([playerId])
+}
+
+/// One row per notification sent: `key` makes each event go out once, `capped` counts toward the daily limit.
+model NotificationLog {
+  id       String   @id @default(cuid())
+  playerId String
+  player   Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  key      String
+  capped   Boolean
+  sentAt   DateTime @default(now())
+
+  @@unique([playerId, key])
+  @@index([playerId, sentAt])
 }
