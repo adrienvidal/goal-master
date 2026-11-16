@@ -161,6 +161,11 @@ En anglais, à l'impératif, sans point final. Préfixe `feat:`, `fix:`, `test:`
   Claude supprime lui-même les branches `preview/*` (`npx neonctl branches list`
   puis `delete`), sans demander : c'est l'exception à « toute suppression se
   confirme ». Jamais la branche de production `main`. Le noter dans « Réalisé »
+- Déploiements Vercel réservés aux branches longues : `vercel.json` porte
+  `git.deploymentEnabled` avec `"**": false`, puis `main` et `dev` à `true`. Une
+  branche de lot ne crée ni aperçu ni branche Neon : l'offre gratuite plafonne à
+  100 déploiements par 24 h pour tout le compte. Ce qui ne se teste pas en local
+  (push, PWA, vrai e-mail) se teste sur l'aperçu de `dev`
 - Authentification par code à usage unique envoyé par e-mail avec Better Auth (greffon emailOTP), comme
   viloris-studio ; codes envoyés depuis contact@viloris.io par le SMTP de Google Workspace (SMTP_USER,
   SMTP_PASS) ; adresses autorisées dans ALLOWED_EMAILS. Variables récupérées en local par
