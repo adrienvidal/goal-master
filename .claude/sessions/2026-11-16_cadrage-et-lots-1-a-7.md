@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Défi entre les deux joueurs en prod (course, couronne, succès)
-⛔ Bloqué    Rien
-🎯 Priorité  Vérifier le cron n8n et le premier duel (échéance 20/11)
+✅ Fait      Cause du cron trouvée (401), secret changé sur Vercel et n8n
+⛔ Bloqué    Redéploiement : quota Vercel atteint (Vercel, libre le 17/11 à 12 h 38)
+🎯 Priorité  Fusionner #57, redéployer la prod, lancer le cron (échéance 17/11 18 h)
 ```
 
 ## Réalisé
@@ -193,3 +193,28 @@
 - Victoire enregistrée une fois (`winnerId`, `wonAt`), jamais retirée ; score figé à la fin
 - Pas de notification pour un nul, une expiration, un refus ou une annulation (fins souvent à minuit)
 - Sur ordinateur, la course reste dans la colonne du joueur (écart avec la maquette)
+
+---
+
+## Suite : cron en échec, quota Vercel, déploiements limités
+
+### Réalisé
+- PR #55 (push fiabilisé : urgence haute, TTL 24 h, réabonnement à l'ouverture, bouton de test, badge épée Android) fusionnée dans `dev`, puis #56 en prod (déploiement de 19 h 03 prêt)
+- Cron de 18 h 01 diagnostiqué : n8n a bien appelé `/api/cron/daily`, l'app a répondu 401 (secret différent). `NotificationLog` vide en prod depuis toujours : aucune notification n'est jamais partie par le cron
+- Nouveau `CRON_SECRET` posé sur Vercel (Production seulement) et dans l'identifiant n8n « Goal Master · cron » (`Bearer <secret>`, limité à goal.viloris.io), par l'API n8n
+- Redéploiement refusé : 100 déploiements sur 24 h atteints sur tout le compte (goal-master 92 dont 75 aperçus)
+- PR #57 : `vercel.json` ne déploie plus que `main` et `dev` (`git.deploymentEnabled`), règle ajoutée au CLAUDE.md ; même règle ajoutée au skill `wnr-init-claude` (gabarit et variante deux environnements)
+- Deux e-mails de test envoyés à Nicolas avec le gabarit des notifications, hors journal
+
+### Reste à faire
+- **Demain 17/11 après 12 h 40, avant 18 h 01** : fusionner #57, redéployer la prod (`vercel redeploy`), puis appeler le cron une fois (secret dans le scratchpad de la session, sinon en régénérer un) et vérifier `news:7` dans `NotificationLog` et l'e-mail « Nouveauté » dans Gmail
+- Le 17/11 à 18 h 01 : vérifier l'exécution n8n (onglet Executions, workflow `w3IWGR9ybegbfSZN`)
+- Jeudi 19/11 et vendredi 20/11 à 18 h 01 : rappel du boss, puis résultat du duel
+- Les autres points de la section « Défi » restent ouverts (premier vrai défi, Android, textes du boss, base locale)
+
+### Blockers
+- Quota Vercel : aucun déploiement possible sur le compte avant le 17/11 à 12 h 38. Si rien n'est redéployé avant 18 h 01, le cron reprend un 401 (n8n a le nouveau secret, la prod l'ancien)
+
+### Décisions
+- Plus d'aperçu par branche de lot : les tests sur appareil réel (push, PWA, e-mail) se font sur l'aperçu de `dev`
+- Logs Vercel limités à 30 min en offre gratuite : pour le cron, lire l'exécution n8n (API, clé dans la config MCP n8n de viloris-studio) et `NotificationLog`
