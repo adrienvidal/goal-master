@@ -2,7 +2,7 @@ import { MyAvatar } from "@/components/MyAvatar";
 import { Sprite } from "@/components/Sprite";
 import { Bar } from "@/components/Bar";
 import { Flame } from "@/components/Flame";
-import { ChallengeClosedBanner, ChallengeIncoming, ChallengePending, PartnerActions } from "@/components/Challenge";
+import { ChallengeClosedBanner, ChallengeIncoming, ChallengePending, PartnerActions, type LaunchState } from "@/components/Challenge";
 import { PushSetup } from "@/components/PushSetup";
 import { BossCard } from "@/components/BossCard";
 import { DecorView } from "@/components/DecorView";
@@ -79,6 +79,31 @@ function FeedText({ line, pseudo }: { line: FeedLine; pseudo: string }): React.R
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** Mon dernier défi refusé ou expiré dans les dernières 24 h, à signaler tant qu'aucun autre n'est ouvert. */
+function closedChallenge(playerId: string, partnerName: string, challenges: ChallengeRow[], now: Date): { id: string; text: string } | null {
+  if (openChallenge(challenges, now)) return null;
+  const last = challenges.find((c) => c.challengerId === playerId);
+  if (!last || now.getTime() - (last.closedAt ?? last.deadline).getTime() >= DAY_MS) return null;
+  const phase = phaseOf(last, now);
+  if (phase === "declined") return { id: last.id, text: `${partnerName} passe son tour pour ce défi. Tu peux en lancer un autre.` };
+  if (phase === "expired") return { id: last.id, text: `Ton défi a expiré : ${partnerName} ne l'a pas relevé à temps.` };
+  return null;
+}
+
+/** Ce que le bouton « Défier » propose : les échéances encore possibles, ou la raison du refus. */
+function launchState(playerId: string, challenges: ChallengeRow[], now: Date): LaunchState {
+  const check = canLaunch(playerId, challenges, now);
+  if (check.ok) {
+    const left = (deadline: Date) => timeLeft(deadline.getTime() - now.getTime());
+    const tonight = deadlineFor("tonight", now);
+    return { ok: true, tonightLeft: tonight ? left(tonight) : null, fridayLeft: left(deadlineFor("friday", now)!) };
+  }
+  if (check.reason === "today") return { ok: false, reason: "Tu as déjà lancé un défi aujourd'hui, reviens demain." };
+  const open = openChallenge(challenges, now);
+  const waiting = open !== null && phaseOf(open, now) === "pending";
+  return { ok: false, reason: waiting ? "Un défi attend une réponse." : "Un défi est déjà en cours." };
+}
+
 /** Course du défi en cours, le joueur courant en premier (maquette defi, écran 5). */
 function ChallengeRace({ challenge, views, apps, now }: { challenge: ChallengeRow; views: PlayerView[]; apps: Parameters<typeof challengeScore>[2]; now: Date }): React.ReactElement {
   return (
@@ -148,17 +173,8 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const incoming = open && openPhase === "pending" && open.opponentId === player.id ? open : null;
   const outgoing = open && openPhase === "pending" && open.challengerId === player.id ? open : null;
   const running = open && openPhase === "running" ? open : null;
-  const myLast = game.challenges.find((c) => c.challengerId === player.id) ?? null;
-  const myLastPhase = myLast ? phaseOf(myLast, now) : null;
-  const closed =
-    myLast && !open && (myLastPhase === "declined" || myLastPhase === "expired") && now.getTime() - (myLast.closedAt ?? myLast.deadline).getTime() < DAY_MS
-      ? { id: myLast.id, text: myLastPhase === "declined" ? `${partnerRow?.pseudo ?? "Ton binôme"} passe son tour pour ce défi. Tu peux en lancer un autre.` : `Ton défi a expiré : ${partnerRow?.pseudo ?? "ton binôme"} ne l'a pas relevé à temps.` }
-      : null;
-  const check = canLaunch(player.id, game.challenges, now);
-  const tonight = deadlineFor("tonight", now);
-  const launch = check.ok
-    ? { ok: true as const, tonightLeft: tonight ? timeLeft(tonight.getTime() - now.getTime()) : null, fridayLeft: timeLeft(deadlineFor("friday", now)!.getTime() - now.getTime()) }
-    : { ok: false as const, reason: check.reason === "open" ? "Un défi est déjà en cours." : "Tu as déjà lancé un défi aujourd'hui, reviens demain." };
+  const closed = closedChallenge(player.id, partnerRow?.pseudo ?? "ton binôme", game.challenges, now);
+  const launch = launchState(player.id, game.challenges, now);
   const lastChallenge = lastFinished(game.challenges, now);
   const names = Object.fromEntries(game.players.map((p) => [p.id, p.pseudo]));
   const walkers = [me, ...(partner ? [partner] : [])].map((v) => ({

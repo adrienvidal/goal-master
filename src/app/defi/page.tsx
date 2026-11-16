@@ -39,7 +39,7 @@ export default async function ChallengePage(): Promise<React.ReactElement> {
             <Sprite key={v.id} character={v.character} color={v.color} form={v.displayedForm} mood={v.mood} pose={crowned(v.id) ? "victory" : "rest"} crown={crowned(v.id)} px={crowned(v.id) ? 5 : 3} label={v.title} />
           ))}
         </div>
-        <p className="num text-5xl leading-none">
+        <p className="num !text-5xl leading-none">
           {mine} – {theirs}
         </p>
         {outcome === "won" ? <p className="text-sm text-muted">Ta couronne reste sur ton avatar jusqu&apos;à demain minuit.</p> : null}

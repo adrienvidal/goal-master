@@ -6,8 +6,8 @@ import { NudgeButton } from "./NudgeButton";
 
 // Défi (maquette docs/maquettes/defi.html) : bouton et panneau dans la carte du binôme, bandeaux sur l'accueil.
 
-type Launch = { ok: true; tonightLeft: string | null; fridayLeft: string } | { ok: false; reason: string };
-type Props = { partnerName: string; nudgeSentToday: boolean; blink: boolean; launch: Launch };
+export type LaunchState = { ok: true; tonightLeft: string | null; fridayLeft: string } | { ok: false; reason: string };
+type Props = { partnerName: string; nudgeSentToday: boolean; blink: boolean; launch: LaunchState };
 
 function useAction(): [boolean, string, (run: () => Promise<ChallengeResult>) => void] {
   const [pending, startTransition] = useTransition();
@@ -41,7 +41,7 @@ export function PartnerActions({ partnerName, nudgeSentToday, blink, launch }: P
   );
 }
 
-function ChallengePanel({ partnerName, launch, onClose }: { partnerName: string; launch: Extract<Launch, { ok: true }>; onClose: () => void }): React.ReactElement {
+function ChallengePanel({ partnerName, launch, onClose }: { partnerName: string; launch: Extract<LaunchState, { ok: true }>; onClose: () => void }): React.ReactElement {
   const [target, setTarget] = useState<number>(5);
   const [when, setWhen] = useState<ChallengeWhen>(launch.tonightLeft ? "tonight" : "friday");
   const [pending, error, run] = useAction();
