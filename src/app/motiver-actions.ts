@@ -6,6 +6,7 @@ import { NUDGE_MESSAGES, sentToday } from "@/game/nudges";
 import { db } from "@/server/db";
 import { loadGame } from "@/server/game";
 import { notify } from "@/server/notify";
+import { pushToDevice, type PushOutcome } from "@/server/push";
 import { requirePlayer } from "@/server/session";
 
 export type NudgeResult = { ok: true } | { ok: false; error: string };
@@ -41,4 +42,10 @@ export async function savePushSubscription(sub: SubscriptionJson): Promise<void>
 export async function deletePushSubscription(endpoint: string): Promise<void> {
   const player = await requirePlayer();
   await db().pushSubscription.deleteMany({ where: { endpoint, playerId: player.id } });
+}
+
+/** Réglages : envoie une notification de test à cet appareil seulement, pour vérifier qu'elle s'affiche. */
+export async function sendTestPush(endpoint: string): Promise<PushOutcome> {
+  const player = await requirePlayer();
+  return pushToDevice(player.id, endpoint, { title: "Test Goal Master", body: "Si tu lis ceci, les notifications marchent sur cet appareil.", url: "/reglages#notifications" });
 }

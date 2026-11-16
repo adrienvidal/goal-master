@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { deletePushSubscription, savePushSubscription } from "@/app/motiver-actions";
+import { deletePushSubscription, savePushSubscription, sendTestPush } from "@/app/motiver-actions";
 import { deviceLabel, isIos } from "@/lib/device";
+import type { PushOutcome } from "@/server/push";
 
 function keyBytes(base64: string): Uint8Array<ArrayBuffer> {
   const padded = (base64 + "=".repeat((4 - (base64.length % 4)) % 4)).replace(/-/g, "+").replace(/_/g, "/");
@@ -14,8 +15,22 @@ function keyBytes(base64: string): Uint8Array<ArrayBuffer> {
 /** « ios » : iPhone sans l'app installée ; « unsupported » : autre navigateur sans push. */
 type State = "loading" | "ios" | "unsupported" | "ask" | "denied" | "on";
 
+/** Même clé VAPID que celle de l'abonnement ? Sinon le serveur ne peut plus lui écrire. */
+function sameKey(sub: PushSubscription, key: Uint8Array): boolean {
+  const current = sub.options.applicationServerKey;
+  if (!current) return true;
+  const a = new Uint8Array(current);
+  return a.length === key.length && a.every((b, i) => b === key[i]);
+}
+
+async function subscribe(reg: ServiceWorkerRegistration): Promise<PushSubscription> {
+  return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!) });
+}
+
 // Enregistre le service worker et suit l'état du push sur cet appareil (cadrage §7, spec notifications).
-function usePush(): { state: State; device: string; enable: () => Promise<void>; disable: () => Promise<void> } {
+// À chaque ouverture, l'abonnement est réparé sans rien demander : clé changée → on se réabonne ;
+// notifications autorisées mais plus d'abonnement (expiré, oublié par le serveur) → on en recrée un.
+function usePush(): { state: State; device: string; enable: () => Promise<void>; disable: () => Promise<void>; test: () => Promise<PushOutcome> } {
   const [state, setState] = useState<State>("loading");
   const [device, setDevice] = useState("Cet appareil");
 
@@ -28,8 +43,13 @@ function usePush(): { state: State; device: string; enable: () => Promise<void>;
     }
     navigator.serviceWorker
       .register("/sw.js", { scope: "/", updateViaCache: "none" })
-      .then((reg) => reg.pushManager.getSubscription())
-      .then(async (sub) => {
+      .then(async (reg) => {
+        let sub = await reg.pushManager.getSubscription();
+        if (sub && !sameKey(sub, keyBytes(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!))) {
+          await sub.unsubscribe().catch(() => false);
+          sub = null;
+        }
+        if (!sub && Notification.permission === "granted") sub = await subscribe(await navigator.serviceWorker.ready).catch(() => null);
         if (sub) {
           await savePushSubscription(JSON.parse(JSON.stringify(sub)));
           setState("on");
@@ -41,8 +61,7 @@ function usePush(): { state: State; device: string; enable: () => Promise<void>;
   async function enable(): Promise<void> {
     setState("loading");
     try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!) });
+      const sub = await subscribe(await navigator.serviceWorker.ready);
       await savePushSubscription(JSON.parse(JSON.stringify(sub)));
       setState("on");
     } catch {
@@ -60,7 +79,22 @@ function usePush(): { state: State; device: string; enable: () => Promise<void>;
     setState("ask");
   }
 
-  return { state, device, enable, disable };
+  /** Envoie un push de test à cet appareil ; un abonnement oublié par le serveur est recréé puis retenté une fois. */
+  async function test(): Promise<PushOutcome> {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) return "gone";
+    let outcome = await sendTestPush(sub.endpoint);
+    if (outcome === "gone") {
+      await sub.unsubscribe().catch(() => false);
+      sub = await subscribe(reg);
+      await savePushSubscription(JSON.parse(JSON.stringify(sub)));
+      outcome = await sendTestPush(sub.endpoint);
+    }
+    return outcome;
+  }
+
+  return { state, device, enable, disable, test };
 }
 
 const IOS_STEPS = ["Bouton Partager de Safari", "« Sur l'écran d'accueil »", "Ouvre Goal Master depuis l'icône et reviens ici"];
@@ -90,8 +124,21 @@ function Pill({ tone, children }: { tone: "on" | "off" | "warn"; children: React
 }
 
 // Réglages : le canal push de cet appareil, avec ses quatre états (maquette notifications).
+const TEST_FEEDBACK: Record<PushOutcome | "sending", string> = {
+  sending: "Envoi en cours…",
+  ok: "Envoyé. Rien d'affiché d'ici quelques secondes ? Autorise les notifications de ton navigateur dans les réglages de l'appareil (sur Android, mets aussi la batterie du navigateur sur « Non restreinte »).",
+  gone: "Cet appareil n'est plus abonné : désactive puis réactive les notifications.",
+  error: "L'envoi a échoué, réessaie dans un moment.",
+  unconfigured: "Les notifications ne sont pas configurées sur le serveur.",
+};
+
 export function PushChannel(): React.ReactElement {
-  const { state, device, enable, disable } = usePush();
+  const { state, device, enable, disable, test } = usePush();
+  const [testState, setTestState] = useState<PushOutcome | "sending" | null>(null);
+  async function runTest(): Promise<void> {
+    setTestState("sending");
+    setTestState(await test().catch((): PushOutcome => "error"));
+  }
   const pill =
     state === "on" ? <Pill tone="on">ACTIVÉ</Pill> : state === "denied" ? <Pill tone="warn">BLOQUÉ</Pill> : state === "ask" ? <Pill tone="off">DÉSACTIVÉ</Pill> : state === "loading" ? <Pill tone="off">…</Pill> : <Pill tone="off">INDISPONIBLE</Pill>;
   return (
@@ -103,6 +150,8 @@ export function PushChannel(): React.ReactElement {
       {state === "on" ? (
         <>
           <p className="text-sm text-muted">{device} · notifications même app fermée.</p>
+          <button type="button" className="btn !text-[10px]" onClick={runTest} disabled={testState === "sending"}>M&apos;envoyer un test</button>
+          {testState ? <p role="status" className="text-sm text-muted">{TEST_FEEDBACK[testState]}</p> : null}
           <button type="button" className="btn ghost !text-[10px]" onClick={disable}>Désactiver sur cet appareil</button>
         </>
       ) : null}
