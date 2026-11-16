@@ -110,3 +110,16 @@ export function bestWinStreak(playerId: string, challenges: ChallengeRow[], now:
   }
   return best;
 }
+
+/** Temps restant lisible : « 38 min », « 5 h 12 », « 4 j ». */
+export function timeLeft(ms: number): string {
+  const minutes = Math.max(0, Math.floor(ms / 60_000));
+  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 24 * 60) return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, "0")}`;
+  return `${Math.round(minutes / (24 * 60))} j`;
+}
+
+/** « ce soir minuit » ou « vendredi 18 h », d'après l'heure de l'échéance. */
+export function untilLabel(deadline: Date): string {
+  return Number(hourFormatter.format(deadline)) === 0 ? "ce soir minuit" : "vendredi 18 h";
+}

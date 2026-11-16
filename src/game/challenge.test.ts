@@ -9,6 +9,7 @@ import {
   openChallenge,
   phaseOf,
   reachedTarget,
+  timeLeft,
   type ChallengeRow,
 } from "./challenge";
 import type { Application } from "./xp";
@@ -132,4 +133,10 @@ describe("crown and history", () => {
     expect(bestWinStreak("a", history, now)).toBe(3);
     expect(bestWinStreak("n", history, now)).toBe(1);
   });
+});
+
+test("time left", () => {
+  expect(timeLeft(38 * 60_000)).toBe("38 min");
+  expect(timeLeft((5 * 60 + 2) * 60_000)).toBe("5 h 02");
+  expect(timeLeft(4 * 24 * 3600_000 + 3600_000)).toBe("4 j");
 });
