@@ -1,0 +1,14 @@
+# Base Postgres locale pour le développement (npm run db). La base Neon est réservée aux déploiements.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: goal
+      POSTGRES_PASSWORD: goal
+      POSTGRES_DB: goal_master
+    ports:
+      - "5432:5432"
+    volumes:
+      - goal-master-db:/var/lib/postgresql/data
+volumes:
+  goal-master-db:
