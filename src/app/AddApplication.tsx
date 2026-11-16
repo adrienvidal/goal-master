@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { ACTION_EVENT } from "@/components/MyAvatar";
 import { addApplication, cancelApplication } from "./actions";
 
 const UNDO_SECONDS = 5;
@@ -34,6 +35,7 @@ export default function AddApplication({ todayCount }: Props): React.ReactElemen
     startTransition(async () => {
       const result = await addApplication(company, confirm);
       if (result.ok) {
+        window.dispatchEvent(new Event(ACTION_EVENT));
         setToast({ id: result.id, company: company.trim(), xp: todayCount < DAILY_CAP });
         setCompany("");
         setDuplicateOf(null);

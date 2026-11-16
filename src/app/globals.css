@@ -50,3 +50,56 @@ body {
 .btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 3px var(--edge); }
 .err { color: var(--danger); font-size: 14px; border-left: 4px solid var(--danger); padding: 4px 10px; background: #3a1b2a; }
 .num { font-family: var(--font-vt323), ui-monospace, monospace; font-size: 1.2em; }
+
+/* ---------- Avatars 8 bits (maquettes : poses, humeurs, évolution) ---------- */
+.sprite { position: relative; display: inline-flex; align-items: flex-end; line-height: 0; }
+.sprite svg { display: block; image-rendering: pixelated; }
+.sprite.idle svg { animation: breathe 1.6s steps(2) infinite; }
+@keyframes breathe { 50% { transform: translateY(-2px); } }
+.pose-action svg { animation: strike .3s steps(2) 3; transform-origin: bottom left; }
+@keyframes strike { 50% { transform: translateX(4px); } }
+.pose-victory { animation: hop .6s steps(2) infinite; }
+.pose-victory::before, .pose-victory::after { content: ""; position: absolute; width: 6px; height: 6px; background: var(--gold); box-shadow: 14px -10px 0 var(--ember), -10px 8px 0 var(--ok), 22px 14px 0 var(--gold); top: 0; left: -8px; animation: spark 1.2s steps(3) infinite; }
+.pose-victory::after { left: auto; right: -6px; top: 10px; background: var(--ember); }
+@keyframes hop { 50% { transform: translateY(-6px); } }
+@keyframes spark { 50% { opacity: .2; } }
+.legend-glow svg { filter: drop-shadow(0 0 6px rgba(242,193,78,.7)); }
+.legend-glow.idle svg { animation: breathe 1.6s steps(2) infinite, aura 1.6s ease-in-out infinite; }
+@keyframes aura { 50% { filter: drop-shadow(0 0 14px rgba(242,193,78,.95)); } }
+.mood-sleep svg { filter: saturate(.55) brightness(.8); transform: rotate(-4deg); transform-origin: bottom center; }
+.mood-sleep::after { content: "z Z"; position: absolute; top: -6px; right: -14px; font-family: var(--font-press-start); font-size: 10px; color: var(--muted); line-height: 1; animation: zz 2.4s steps(4) infinite; }
+@keyframes zz { 0% { opacity: 0; transform: translateY(6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
+.mood-sleep.idle svg { animation: b-sleep 3.2s steps(2) infinite; }
+@keyframes b-sleep { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(-4deg) translateY(1px); } }
+.mood-tired svg { transform: rotate(2deg); transform-origin: bottom center; }
+.mood-tired.idle svg { animation: b-tired 2.6s steps(2) infinite; }
+@keyframes b-tired { 0%, 100% { transform: rotate(2deg); } 50% { transform: rotate(2deg) translateY(1px); } }
+.mood-exhausted svg { transform: translateY(3px) rotate(4deg) scaleY(.94); transform-origin: bottom center; }
+.mood-exhausted.idle svg { animation: b-exh 2.2s ease-in-out infinite; }
+@keyframes b-exh { 0%, 100% { transform: translateY(3px) rotate(4deg) scaleY(.94); } 50% { transform: translateY(4px) rotate(5deg) scaleY(.91); } }
+.mood-exhausted::before { content: ""; position: absolute; top: 14%; right: 18%; width: 5px; height: 7px; background: #8fd3ff; box-shadow: 0 2px 0 #5aa9d6; animation: drip 1.8s steps(3) infinite; }
+@keyframes drip { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(10px); opacity: 0; } }
+
+.evo-overlay { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 16px; text-align: center; background: radial-gradient(circle at 50% 50%, #4b3f8f 0, var(--night) 70%); }
+.evo-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; animation: evo-flash .44s ease-out 1.52s; }
+@keyframes evo-flash { 25% { opacity: .85; } 100% { opacity: 0; } }
+.evo-stage { display: grid; place-items: end center; min-height: 180px; }
+.evo-stage > * { grid-area: 1 / 1; }
+.evo-old { animation: evo-old 1.6s steps(1, end) forwards; }
+.evo-new { opacity: 0; animation: evo-new 1.6s steps(1, end) forwards; }
+.evo-old svg, .evo-new svg { filter: brightness(0) invert(1); }
+.evo-new svg { animation: evo-reveal .54s 1.6s forwards; }
+@keyframes evo-old { 0% { opacity: 1; } 12% { opacity: 0; } 30% { opacity: 1; } 44% { opacity: 0; } 55% { opacity: 1; } 64% { opacity: 0; } 71% { opacity: 1; } 77% { opacity: 0; } 82% { opacity: 1; } 86%, 100% { opacity: 0; } }
+@keyframes evo-new { 0% { opacity: 0; } 12% { opacity: 1; } 30% { opacity: 0; } 44% { opacity: 1; } 55% { opacity: 0; } 64% { opacity: 1; } 71% { opacity: 0; } 77% { opacity: 1; } 82% { opacity: 0; } 86%, 100% { opacity: 1; } }
+@keyframes evo-reveal { from { filter: brightness(0) invert(1); transform: scale(1.14); } to { filter: none; transform: none; } }
+.evo-title { clip-path: inset(0 100% 0 0); animation: evo-type .64s steps(16, end) 1.9s forwards; }
+@keyframes evo-type { to { clip-path: inset(0 0 0 0); } }
+.evo-after { opacity: 0; animation: evo-in .42s 2.5s forwards; }
+@keyframes evo-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sprite svg, .sprite::before, .sprite::after, .pose-victory, .evo-flash { animation: none !important; }
+  .evo-old { display: none; }
+  .evo-new, .evo-title, .evo-after { opacity: 1; clip-path: none; animation: none; }
+  .evo-new svg { filter: none; animation: none; }
+}

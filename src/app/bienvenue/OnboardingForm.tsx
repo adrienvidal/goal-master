@@ -1,9 +1,10 @@
 "use client";
 import { useActionState, useState } from "react";
+import { Sprite } from "@/components/Sprite";
+import { COLOR_HEX } from "@/lib/sprites";
 import { COLORS, type CharacterId, type ColorId } from "@/lib/onboarding";
 import { createPlayer, type OnboardingState } from "./actions";
 
-const COLOR_HEX: Record<ColorId, string> = { BLUE: "#3d7bd9", RED: "#d94848", GREEN: "#3fa55b", PURPLE: "#8a55d6", ORANGE: "#e8892e", BLACK: "#4a4a5e" };
 const COLOR_NAME: Record<ColorId, string> = { BLUE: "Bleu", RED: "Rouge", GREEN: "Vert", PURPLE: "Violet", ORANGE: "Orange", BLACK: "Noir" };
 const CHARACTER_INFO: Record<CharacterId, { name: string; line: string }> = {
   KNIGHT: { name: "Chevalier", line: "Du bébé au chevalier légendaire" },
@@ -37,10 +38,14 @@ export default function OnboardingForm({ takenColor, partnerName, defaultTarget,
               onClick={() => setCharacter(c)}
               className={`flex flex-col items-center gap-1 border-[3px] bg-night p-3 text-center ${character === c ? "border-gold" : "border-edge"}`}
             >
+              <span className="flex min-h-[84px] items-end"><Sprite character={c} color={color} form={5} px={3} /></span>
               <b>{CHARACTER_INFO[c].name}</b>
               <small className="text-muted">{CHARACTER_INFO[c].line}</small>
             </button>
           ))}
+        </div>
+        <div className="grid min-h-[110px] place-items-end justify-center bg-night p-3">
+          <Sprite character={character} color={color} form={1} px={7} label="Aperçu du bébé" />
         </div>
         <input type="hidden" name="color" value={color} />
         <div className="mt-2 grid grid-cols-6 gap-2">
