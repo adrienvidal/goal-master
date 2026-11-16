@@ -39,6 +39,23 @@ test("duplicate detection is case and space insensitive", () => {
   expect(findDuplicate("Alan", "b", apps)).toBeNull();
 });
 
+test("duplicate ignores case, accents and punctuation (Nicolas's double entry)", () => {
+  const apps = [app("2026-11-16T16:00:58Z", "Licorn society - Delibia - Développeur Front-End React & Design System")];
+  expect(findDuplicate("Licorn Society / Delibia - Developpeur Front-End React & Design System", "a", apps)).not.toBeNull();
+});
+
+test("duplicate catches the same company with or without the job title", () => {
+  const apps = [app("2026-11-16T10:00:00Z", "Qonto - Développeur Front-End")];
+  expect(findDuplicate("qonto", "a", apps)).not.toBeNull();
+  expect(findDuplicate("Qonto · Développeur Frontend Senior", "a", apps)).not.toBeNull();
+});
+
+test("duplicate stays quiet for different companies sharing a job title", () => {
+  const apps = [app("2026-11-16T10:00:00Z", "Whub - Développeur Front-End Senior React")];
+  expect(findDuplicate("Alan - Développeur Front-End Senior React", "a", apps)).toBeNull();
+  expect(findDuplicate("Qonto", "a", [app("2026-11-16T10:00:00Z", "Qontom")])).toBeNull();
+});
+
 test("feed shows when the player reached a new form, among recent applications", () => {
   const apps = [
     ...Array.from({ length: 7 }, (_, i) => app(`2026-11-13T0${i}:00:00Z`, `Boite ${i}`)),

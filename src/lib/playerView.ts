@@ -106,11 +106,29 @@ export function buildPlayerView(player: PlayerRow, apps: Application[], nudges: 
 }
 
 /** Candidature précédente chez la même entreprise (casse et espaces ignorés), la plus récente. */
+/** Minuscules, sans accents ni ponctuation, espaces resserrés : « Licorn Society / Délibia » → « licorn society delibia ». */
+function normalize(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+/** Le nom de l'entreprise : ce qui précède le premier séparateur (« - », « / », « · », « | »), l'intitulé du poste suivant souvent. */
+function companyOf(text: string): string {
+  return normalize(text.split(/\s[-–—]\s|[/·|]/)[0]);
+}
+
+/** Candidature déjà envoyée à la même entreprise : même nom d'entreprise, ou même texte, à la casse, aux accents et à la ponctuation près. */
 export function findDuplicate(company: string, playerId: string, apps: Application[]): Application | null {
-  const key = company.trim().toLowerCase();
+  const whole = normalize(company);
+  const name = companyOf(company);
+  if (!name) return null;
   return (
     activeApplications(apps)
-      .filter((a) => a.userId === playerId && a.company.trim().toLowerCase() === key)
+      .filter((a) => a.userId === playerId && (normalize(a.company) === whole || companyOf(a.company) === name))
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null
   );
 }
