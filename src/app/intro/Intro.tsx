@@ -95,9 +95,19 @@ const STEPS: Step[] = [
       </div>
     ),
   },
+  {
+    title: "Défie ton binôme.",
+    text: "Sur sa carte, touche « Défier » : 3, 5 ou 10 candidatures, avant ce soir minuit ou vendredi 18 h. S'il relève le défi, c'est la course. Le premier arrivé porte la couronne jusqu'au lendemain soir. Toutes les candidatures comptent aussi pour l'XP et pour le boss.",
+    stage: (
+      <div className="flex items-end justify-center gap-6">
+        <Sprite character="KNIGHT" color="BLUE" form={3} px={5} label="Ton héros" />
+        <Sprite character="PANDA" color="RED" form={3} pose="victory" crown px={5} label="Le héros du binôme, couronné" />
+      </div>
+    ),
+  },
 ];
 
-// Intro du premier lancement (maquettes validées) : 6 écrans, « Passer » à tout moment.
+// Intro du premier lancement (maquettes validées) : 7 écrans, « Passer » à tout moment.
 export default function Intro({ start = 0 }: { start?: number }): React.ReactElement {
   const [i, setI] = useState(start);
   const step = STEPS[i];

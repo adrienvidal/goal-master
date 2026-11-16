@@ -2,13 +2,14 @@ import { MyAvatar } from "@/components/MyAvatar";
 import { Sprite } from "@/components/Sprite";
 import { Bar } from "@/components/Bar";
 import { Flame } from "@/components/Flame";
-import { NudgeButton } from "@/components/NudgeButton";
+import { ChallengeClosedBanner, ChallengeIncoming, ChallengePending, PartnerActions, type LaunchState } from "@/components/Challenge";
 import { PushSetup } from "@/components/PushSetup";
 import { BossCard } from "@/components/BossCard";
 import { DecorView } from "@/components/DecorView";
 import { NudgeBanner, NudgeWinBanner } from "@/components/Banners";
-import { DuelWatcher } from "@/components/DuelWatcher";
+import { ChallengeWatcher, DuelWatcher } from "@/components/DuelWatcher";
 import { LiveRefresh } from "@/components/LiveRefresh";
+import { canLaunch, challengeScore, crownHolder, deadlineFor, lastFinished, openChallenge, phaseOf, timeLeft, untilLabel, type ChallengeRow } from "@/game/challenge";
 import { bossInSentence, currentDuel, pastDuels, type Duel } from "@/game/duel";
 import { parisDay } from "@/game/calendar";
 import { justWonNudge, NUDGE_MESSAGES, pendingNudge, sentToday } from "@/game/nudges";
@@ -19,6 +20,7 @@ import { INTRO_COOKIE, INTRO_STEP_COUNT, introStepsSeen } from "@/lib/intro";
 import { devLogout } from "./connexion/dev-actions";
 import { devLoginEnabled } from "@/lib/devLogin";
 import { formName } from "@/lib/forms";
+import { COLOR_HEX } from "@/lib/sprites";
 import { goalOutcome } from "@/lib/goal";
 import { buildPlayerView, removalImpact, splitCompany, type FeedItem, type PlayerView } from "@/lib/playerView";
 import { DAILY_XP_CAP } from "@/game/levels";
@@ -75,6 +77,57 @@ function FeedText({ line, pseudo }: { line: FeedLine; pseudo: string }): React.R
   }
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Mon dernier défi refusé ou expiré dans les dernières 24 h, à signaler tant qu'aucun autre n'est ouvert. */
+function closedChallenge(playerId: string, partnerName: string, challenges: ChallengeRow[], now: Date): { id: string; text: string } | null {
+  if (openChallenge(challenges, now)) return null;
+  const last = challenges.find((c) => c.challengerId === playerId);
+  if (!last || now.getTime() - (last.closedAt ?? last.deadline).getTime() >= DAY_MS) return null;
+  const phase = phaseOf(last, now);
+  if (phase === "declined") return { id: last.id, text: `${partnerName} passe son tour pour ce défi. Tu peux en lancer un autre.` };
+  if (phase === "expired") return { id: last.id, text: `Ton défi a expiré : ${partnerName} ne l'a pas relevé à temps.` };
+  return null;
+}
+
+/** Ce que le bouton « Défier » propose : les échéances encore possibles, ou la raison du refus. */
+function launchState(playerId: string, challenges: ChallengeRow[], now: Date): LaunchState {
+  const check = canLaunch(playerId, challenges, now);
+  if (check.ok) {
+    const left = (deadline: Date) => timeLeft(deadline.getTime() - now.getTime());
+    const tonight = deadlineFor("tonight", now);
+    return { ok: true, tonightLeft: tonight ? left(tonight) : null, fridayLeft: left(deadlineFor("friday", now)!) };
+  }
+  if (check.reason === "today") return { ok: false, reason: "Tu as déjà lancé un défi aujourd'hui, reviens demain." };
+  const open = openChallenge(challenges, now);
+  const waiting = open !== null && phaseOf(open, now) === "pending";
+  return { ok: false, reason: waiting ? "Un défi attend une réponse." : "Un défi est déjà en cours." };
+}
+
+/** Course du défi en cours, le joueur courant en premier (maquette defi, écran 5). */
+function ChallengeRace({ challenge, views, apps, now }: { challenge: ChallengeRow; views: PlayerView[]; apps: Parameters<typeof challengeScore>[2]; now: Date }): React.ReactElement {
+  return (
+    <div className="flex flex-col gap-3 border-[3px] border-ember bg-night p-3" aria-label="Défi en cours">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="h-title !text-[10px]">🏁 Défi · {challenge.target} candidatures</span>
+        <span className="num text-ember">reste {timeLeft(challenge.deadline.getTime() - now.getTime())}</span>
+      </div>
+      {views.map((v, i) => {
+        const score = challengeScore(v.id, challenge, apps);
+        return (
+          <div key={v.id} className="grid grid-cols-[1fr_auto] items-center gap-3">
+            <div className="flex min-w-0 flex-col gap-1">
+              <span className="text-sm">{i === 0 ? "Toi" : v.pseudo}</span>
+              <Bar value={score} max={challenge.target} color={COLOR_HEX[v.color]} label={`Défi : ${i === 0 ? "toi" : v.pseudo}`} />
+            </div>
+            <span className="num text-2xl">{score}/{challenge.target}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 async function goalFor(playerId: string): Promise<{ target: number; deadline: Date; createdAt: Date } | null> {
   return db().goal.findFirst({ where: { playerId, status: "ACTIVE" }, orderBy: { createdAt: "desc" }, select: { target: true, deadline: true, createdAt: true } });
 }
@@ -114,9 +167,18 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const duel = currentDuel(duelInput, now);
   const lastDuel = pastDuels(duelInput, now)[0] ?? null;
   const wounded = lastDuel ? !lastDuel.won : false;
+  const crownId = crownHolder(game.challenges, now);
+  const open = openChallenge(game.challenges, now);
+  const openPhase = open ? phaseOf(open, now) : null;
+  const incoming = open && openPhase === "pending" && open.opponentId === player.id ? open : null;
+  const outgoing = open && openPhase === "pending" && open.challengerId === player.id ? open : null;
+  const running = open && openPhase === "running" ? open : null;
+  const closed = closedChallenge(player.id, partnerRow?.pseudo ?? "ton binôme", game.challenges, now);
+  const launch = launchState(player.id, game.challenges, now);
+  const lastChallenge = lastFinished(game.challenges, now);
   const names = Object.fromEntries(game.players.map((p) => [p.id, p.pseudo]));
   const walkers = [me, ...(partner ? [partner] : [])].map((v) => ({
-    pseudo: v.pseudo, level: v.level, character: v.character, color: v.color, form: v.displayedForm, mood: v.mood, hurt: wounded,
+    pseudo: v.pseudo, level: v.level, character: v.character, color: v.color, form: v.displayedForm, mood: v.mood, hurt: wounded, crown: v.id === crownId,
     status: v.idleWorkdays >= 2 ? partnerStatus(v) : null,
   }));
   const todayItems: TodayItem[] = me.today.items.map((a) => {
@@ -134,6 +196,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
     <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
       <LiveRefresh />
       {lastDuel ? <DuelWatcher id={lastDuel.id} /> : null}
+      {lastChallenge ? <ChallengeWatcher id={lastChallenge.id} /> : null}
       <div className="device grid gap-6 md:grid-cols-[1.3fr_1fr]">
         <DecorView walkers={walkers} />
         <section className="flex flex-col gap-4" aria-label="Ma quête">
@@ -147,8 +210,17 @@ export default async function HomePage(): Promise<React.ReactElement> {
             </NudgeBanner>
           ) : null}
           {won && partner ? <NudgeWinBanner id={won.id} partner={partner.pseudo} /> : null}
+          {incoming && partner ? (
+            <ChallengeIncoming id={incoming.id}>
+              <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} pose="victory" px={2} crown={partner.id === crownId} />
+              <p className="min-w-0 text-[15px]">
+                <b className="text-ember">{partner.pseudo} te défie :</b> le premier à {incoming.target} candidatures avant {untilLabel(incoming.deadline)} gagne la couronne.
+              </p>
+            </ChallengeIncoming>
+          ) : null}
+          {closed ? <ChallengeClosedBanner id={closed.id} text={closed.text} /> : null}
           <div className="flex items-end gap-4 pr-9">
-            <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} level={me.level} mood={me.mood} fallen={me.fallen} hurt={wounded} />
+            <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} level={me.level} mood={me.mood} fallen={me.fallen} hurt={wounded} crown={me.id === crownId} />
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-display text-[11px] leading-relaxed">{me.pseudo} · Niv. {me.level}</span>
@@ -161,6 +233,8 @@ export default async function HomePage(): Promise<React.ReactElement> {
           </div>
           <GoalBlock view={me} />
           {duel ? <BossCard duel={duel} names={names} meId={player.id} wounded={wounded} now={now} /> : null}
+          {outgoing && partner ? <ChallengePending id={outgoing.id} partnerName={partner.pseudo} target={outgoing.target} until={untilLabel(outgoing.deadline)} /> : null}
+          {running && partner ? <ChallengeRace challenge={running} views={[me, partner]} apps={game.apps} now={now} /> : null}
           <AddApplication todayCount={me.today.count} />
           <div className="grid grid-cols-2 gap-2">
             <Link href="/succes" className="btn ghost !text-[10px]">Mes succès</Link>
@@ -173,7 +247,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
           {partner ? (
             <>
               <div className="flex items-end gap-3">
-                <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} mood={partner.mood} px={3} label={partner.title} hurt={wounded} />
+                <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} mood={partner.mood} px={3} label={partner.title} hurt={wounded} crown={partner.id === crownId} />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="font-display text-[11px] leading-relaxed">{partner.pseudo} · Niv. {partner.level}</span>
                   <span className="text-sm text-muted">{partner.title} · {wounded ? "blessé" : `série ${partner.streak}`}</span>
@@ -196,7 +270,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
                   </li>
                 ))}
               </ul>
-              <NudgeButton partnerName={partner.pseudo} sentToday={sentToday(player.id, game.nudges, parisDay(now))} blink={partner.idleWorkdays >= 2} />
+              <PartnerActions partnerName={partner.pseudo} nudgeSentToday={sentToday(player.id, game.nudges, parisDay(now))} blink={partner.idleWorkdays >= 2} launch={launch} />
             </>
           ) : (
             <p className="text-muted">Ton binôme ne s&apos;est pas encore connecté. Sa carte apparaîtra ici dès son premier lancement.</p>

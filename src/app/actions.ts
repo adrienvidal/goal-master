@@ -8,6 +8,7 @@ import { formName } from "@/lib/forms";
 import { findDuplicate, removalImpact } from "@/lib/playerView";
 import { db } from "@/server/db";
 import { loadDuelInput, loadGame, syncAchievements, type GameData } from "@/server/game";
+import { settleChallenge } from "@/server/challenge";
 import { notifyAll } from "@/server/notify";
 import { requirePlayer } from "@/server/session";
 
@@ -37,8 +38,9 @@ export async function addApplication(company: string, confirmDuplicate: boolean)
   const row = await db().application.create({ data: { playerId: player.id, company: name } });
   const now = new Date();
   const updated = await loadGame();
+  const challengeEvents = await settleChallenge(player.id, updated, now);
   await syncAchievements(updated, now);
-  after(async () => notifyAll(await applicationEvents(player.id, game, updated, now), now));
+  after(async () => notifyAll([...challengeEvents, ...(await applicationEvents(player.id, game, updated, now))], now));
   revalidatePath("/");
   return { ok: true, id: row.id };
 }

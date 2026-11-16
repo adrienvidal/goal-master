@@ -94,9 +94,32 @@ function pandaFace(g: Grid, mood: Mood): Grid {
   return a.map((r) => r.join(""));
 }
 
+/** Couronne du gagnant d'un défi (spec defi) : lettres à part, que la rouille ne touche pas. */
+const CROWN_PAL: Record<string, string> = { Q: "#ffd84a", J: "#b9831c", X: "#d94848" };
+const CROWN: Grid = ["Q..Q..Q", "QQ.Q.QQ", "QQQQQQQ", "QJXJXJQ"];
+
+/** Pose la couronne juste au-dessus de la tête : la première ligne dont le contour fait au moins 4 pixels. */
+export function crowned(g: Grid): Grid {
+  const width = Math.max(...g.map((r) => r.length));
+  let a = g.map((r) => r.padEnd(width, ".").split(""));
+  let top = a.findIndex((r) => r.lastIndexOf("K") - r.indexOf("K") >= 3);
+  if (top < 0) return g;
+  const missing = Math.max(0, CROWN.length - top);
+  if (missing > 0) {
+    a = Array.from({ length: missing }, () => Array<string>(width).fill(".")).concat(a);
+    top += missing;
+  }
+  const row = a[top];
+  const center = Math.round((row.indexOf("K") + row.lastIndexOf("K")) / 2);
+  const left = Math.max(0, Math.min(width - CROWN[0].length, center - Math.floor(CROWN[0].length / 2)));
+  CROWN.forEach((line, dy) => [...line].forEach((c, dx) => { if (c !== ".") a[top - CROWN.length + dy][left + dx] = c; }));
+  return a.map((r) => r.join(""));
+}
+
 const RUST: Record<string, string> = { P: "#7d5a45", W: "#b3a58c", G: "#7b6f5e", Y: "#a88a4a", O: "#7b6f5e" };
 
 function colorOf(c: string, player: string, mood: Mood, x: number, y: number, character: CharacterId): string {
+  if (CROWN_PAL[c]) return CROWN_PAL[c];
   const rusty = mood === "tired" || mood === "exhausted";
   if (c === "F" && mood === "tired") return "#cfcad6";
   if (c === "F" && mood === "exhausted") return "#b7b1bf";
@@ -145,11 +168,12 @@ function posed(g: Grid, pose: Pose): Grid {
   return out.map((r) => r.join(""));
 }
 
-export function sprite(character: CharacterId, color: ColorId, form: Form, mood: Mood, pose: Pose = "rest"): SpriteData {
+export function sprite(character: CharacterId, color: ColorId, form: Form, mood: Mood, pose: Pose = "rest", crown = false): SpriteData {
   const tired = mood === "tired" || mood === "exhausted";
   const base = character === "KNIGHT" && tired && OPEN_HELMET[form] ? OPEN_HELMET[form]! : GRIDS[character][form];
   const faced = character === "PANDA" ? pandaFace(base, mood) : knightFace(base, mood);
-  const g = posed(faced, mood === "normal" ? pose : "rest");
+  const posedGrid = posed(faced, mood === "normal" ? pose : "rest");
+  const g = crown ? crowned(posedGrid) : posedGrid;
   const player = COLOR_HEX[color];
   const rects: Rect[] = [];
   g.forEach((row, y) => {

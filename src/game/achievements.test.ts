@@ -15,8 +15,8 @@ function daily(userId: string, firstDay: string, days: number, perDay = 1): Appl
 const base = { userId: "a", partnerId: "b", nudges: [] as Nudge[], goalsReached: 0, today: "2026-11-30", levelForm: 1 as const };
 
 describe("earnedAchievements", () => {
-  test("14 achievements are defined", () => {
-    expect(Object.keys(ACHIEVEMENTS)).toHaveLength(14);
+  test("16 achievements are defined", () => {
+    expect(Object.keys(ACHIEVEMENTS)).toHaveLength(16);
     expect(ACHIEVEMENTS.centurion.title).toBe("Centurion");
   });
 
@@ -78,4 +78,12 @@ test("first boss beaten", () => {
   const base = { userId: "a", partnerId: "b", apps: [], nudges: [], goalsReached: 0, today: "2026-11-16", levelForm: 1 as const };
   expect(earnedAchievements(base).has("first_boss")).toBe(false);
   expect(earnedAchievements({ ...base, bossesBeaten: 1 }).has("first_boss")).toBe(true);
+});
+
+test("challenge wins: duelist, then unbeaten after 3 in a row", () => {
+  const base = { userId: "a", partnerId: "b", apps: [], nudges: [], goalsReached: 0, today: "2026-11-16", levelForm: 1 as const };
+  expect(earnedAchievements(base).has("duelist")).toBe(false);
+  expect(earnedAchievements({ ...base, challengeWinStreak: 1 }).has("duelist")).toBe(true);
+  expect(earnedAchievements({ ...base, challengeWinStreak: 2 }).has("unbeaten")).toBe(false);
+  expect(earnedAchievements({ ...base, challengeWinStreak: 3 }).has("unbeaten")).toBe(true);
 });

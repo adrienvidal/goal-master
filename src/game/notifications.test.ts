@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Duel } from "./duel";
-import { formReached, keyOf, koCrossed, nudgesJustSucceeded, pushBody, rustDue, shouldSend, textOf, type NotificationEvent } from "./notifications";
+import { formReached, keyOf, koCrossed, nudgesJustSucceeded, pushBody, ruleOf, rustDue, shouldSend, textOf, type NotificationEvent } from "./notifications";
 import type { NudgeRow } from "./nudges";
 import type { Application } from "./xp";
 
@@ -92,5 +92,22 @@ describe("koCrossed", () => {
     expect(koCrossed(duel("2026-11-20", 16), duel("2026-11-20", 17))).toBe(false);
     expect(koCrossed(duel("2026-11-20", 10), duel("2026-11-20", 11))).toBe(false);
     expect(koCrossed(null, null)).toBe(false);
+  });
+});
+
+describe("challenge notifications", () => {
+  const sent = { kind: "challenge", challengeId: "c1", from: "Adrien", target: 5, until: "ce soir minuit" } as const;
+  const end = { kind: "challenge-end", challengeId: "c1", won: false, partner: "Nicolas", mine: 3, theirs: 5 } as const;
+  it("duel category, never capped, one per challenge", () => {
+    expect(ruleOf(sent)).toEqual({ category: "duel", capped: false });
+    expect(ruleOf(end)).toEqual({ category: "duel", capped: false });
+    expect(keyOf(sent)).toBe("challenge:c1");
+    expect(keyOf(end)).toBe("challenge-end:c1");
+  });
+  it("texts", () => {
+    expect(textOf(sent).title).toBe("🏁 Adrien te défie");
+    expect(pushBody(textOf(sent), sent)).toBe("5 candidatures avant ce soir minuit. Le premier arrivé gagne la couronne.");
+    expect(textOf(end).headline).toBe("Nicolas l'emporte 5 à 3.");
+    expect(textOf({ ...end, won: true, mine: 5, theirs: 2 }).url).toBe("/defi");
   });
 });

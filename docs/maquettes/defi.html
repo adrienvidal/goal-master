@@ -1,0 +1,412 @@
+<title>Goal Master · Défi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
+<style>
+/* Maquette : écrans empilés, chacun annoncé par sa route. Tokens = ceux de l'app (globals.css), un seul thème sombre assumé.
+   Ajout du lot : --p1 / --p2 (couleur choisie par chaque joueur, ici bleu et rouge) et --crown. */
+:root {
+  color-scheme: dark;
+  --night: #16132a; --stone: #221e40; --stone-2: #2e2958; --edge: #4a4380;
+  --ink: #f1ecff; --muted: #a39dcc; --gold: #f2c14e; --gold-dk: #b9831c;
+  --ember: #ff7a45; --danger: #ff6b6b; --ok: #6fd49a; --warn-bg: #3a2f17;
+  --page: #0e0c1d; --shadow: #0c0a1a;
+  --p1: #5aa9ff; --p1-dk: #2f6fc0; --p2: #e5533d; --p2-dk: #a1301f; --crown: #ffd84a;
+  --f-display: "Press Start 2P", ui-monospace, monospace;
+  --f-ui: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-num: "VT323", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--f-ui); font-size: 16px; margin: 0; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 980px; margin: 0 auto; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--page); padding: 14px 0 10px; border-bottom: 3px solid var(--edge); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--page); }
+.top h1 { font-family: var(--f-display); font-size: 12px; margin: 0 0 10px; line-height: 1.6; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: 13px; text-decoration: none; padding: 4px 8px; border: 2px solid var(--edge); color: var(--muted); }
+.toc a:hover { color: var(--ink); border-color: var(--gold); }
+.intro { color: var(--muted); max-width: 68ch; line-height: 1.5; margin: 22px 0 6px; }
+.rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 16px 0 8px; }
+.rules div { border: 2px dashed var(--edge); padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.rules b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+.screen { margin-top: 56px; scroll-margin-top: 150px; }
+.screen > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
+.route { font-family: var(--f-num); font-size: 22px; color: var(--gold); }
+.screen > header h2 { font-family: var(--f-display); font-size: 11px; margin: 0; line-height: 1.6; }
+.screen > header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 75ch; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.device { background: rgb(34 30 64 / .9); border: 4px solid var(--edge); box-shadow: 4px 4px 0 var(--shadow); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.device h4 { font-family: var(--f-display); font-size: 9px; line-height: 1.6; margin: 0; color: var(--gold); }
+.muted { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0; }
+.num { font-family: var(--f-num); font-size: 1.2em; }
+.btn { display: flex; justify-content: center; align-items: center; text-align: center; width: 100%; font-family: var(--f-display); font-size: 10px; line-height: 1.4; color: #1a1626; background: var(--gold); padding: 12px; box-shadow: inset -4px -4px 0 var(--gold-dk), 4px 4px 0 var(--shadow); text-decoration: none; border: 0; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 3px var(--edge); }
+.btn.ember { background: var(--ember); box-shadow: inset -4px -4px 0 #b8512b, 4px 4px 0 var(--shadow); }
+.btn.off { background: var(--stone-2); color: var(--muted); box-shadow: inset 0 0 0 3px var(--edge); cursor: not-allowed; }
+.h-title { font-family: var(--f-display); font-size: 12px; line-height: 1.6; margin: 0; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (min-width: 760px) { .wide { grid-column: span 2; } }
+@media (max-width: 420px) { .device { padding: 14px 12px; } }
+
+/* Avatars pixel (dessin de repère, les vrais sprites viennent de l'app) */
+.av { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.av svg { display: block; image-rendering: pixelated; }
+.av .crown { position: relative; left: -3px; margin-bottom: -3px; z-index: 1; }
+.av.rust .body { filter: sepia(.7) saturate(.6) brightness(.85); }
+
+/* Carte du binôme */
+.partner { display: flex; gap: 12px; align-items: center; }
+.partner .who { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.partner .name { font-weight: 600; font-size: 17px; }
+.partner .meta { color: var(--muted); font-size: 14px; }
+.bar { height: 12px; background: var(--night); border: 2px solid var(--edge); position: relative; }
+.bar i { position: absolute; inset: 0 auto 0 0; background: var(--gold); }
+.bar.p1 i { background: var(--p1); }
+.bar.p2 i { background: var(--p2); }
+
+/* Panneau « Lancer un défi » */
+.panel { border: 3px solid var(--ember); background: var(--night); padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--f-num); font-size: 22px; padding: 4px 14px; border: 3px solid var(--edge); text-decoration: none; color: var(--muted); }
+.chip.on { border-color: var(--ember); color: var(--ink); background: #3a2219; }
+.chip small { font-family: var(--f-ui); font-size: 13px; display: block; line-height: 1.1; }
+.label { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.sum { font-size: 15px; line-height: 1.45; margin: 0; }
+
+/* Bandeaux */
+.banner { border: 3px solid var(--ember); background: #2c1a20; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.banner .line { display: flex; gap: 10px; align-items: center; }
+.banner p { margin: 0; font-size: 15px; line-height: 1.45; }
+.banner.calm { border-color: var(--edge); background: var(--night); }
+.banner.calm .x { margin-left: auto; color: var(--muted); text-decoration: none; font-family: var(--f-display); font-size: 10px; }
+.pending { border: 3px dashed var(--ember); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.pending p { margin: 0; font-size: 15px; line-height: 1.45; }
+
+/* Course */
+.race { border: 3px solid var(--ember); background: var(--night); padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.race .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.race .clock { font-family: var(--f-num); font-size: 22px; color: var(--ember); }
+.lane { display: grid; grid-template-columns: 60px 1fr auto; gap: 10px; align-items: center; }
+.lane .bar { height: 16px; }
+.lane .score { font-family: var(--f-num); font-size: 26px; min-width: 3ch; text-align: right; }
+.lane .nm { font-size: 14px; margin-bottom: 4px; }
+.race .done { border-top: 2px dotted var(--stone-2); padding-top: 10px; font-size: 15px; }
+.race .done b { color: var(--crown); }
+
+/* Résultat */
+.result { text-align: center; align-items: center; }
+.result .big-t { font-family: var(--f-display); font-size: 16px; line-height: 1.6; margin: 0; text-wrap: balance; }
+.result .big-t.win { color: var(--crown); }
+.result .big-t.lose { color: var(--muted); }
+.result .score { font-family: var(--f-num); font-size: 40px; line-height: 1; }
+.result .score .s1 { color: var(--p1); } .result .score .s2 { color: var(--p2); }
+.duo { display: flex; gap: 20px; justify-content: center; align-items: end; }
+.badge { display: flex; gap: 10px; align-items: center; border: 3px solid var(--gold-dk); background: var(--warn-bg); padding: 8px 12px; text-align: left; }
+.badge b { font-family: var(--f-display); font-size: 9px; color: var(--gold); display: block; margin-bottom: 4px; }
+.badge span { font-size: 14px; }
+
+/* Notification push */
+.push { background: #2b2840; border-radius: 14px; padding: 10px 12px; display: grid; grid-template-columns: 28px 1fr; gap: 4px 10px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; line-height: 1.35; }
+.push .ic { width: 28px; height: 28px; border-radius: 6px; background: var(--stone-2); display: grid; place-items: center; grid-row: span 2; font-family: var(--f-display); font-size: 8px; color: var(--gold); }
+.push b { font-weight: 600; }
+
+/* Succès */
+.ach { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.ach div { border: 3px solid var(--edge); padding: 10px; display: flex; flex-direction: column; gap: 6px; align-items: center; text-align: center; font-size: 13px; color: var(--muted); }
+.ach div.got { border-color: var(--gold-dk); background: var(--warn-bg); color: var(--ink); }
+.ach div.new { outline: 3px solid var(--crown); outline-offset: 2px; }
+.ach b { font-family: var(--f-display); font-size: 8px; line-height: 1.6; color: var(--gold); }
+.ach div:not(.got) b { color: var(--muted); }
+
+/* Intro */
+.introscreen { align-items: center; text-align: center; }
+.introscreen .steps { font-family: var(--f-num); font-size: 18px; color: var(--muted); }
+.introscreen ol { text-align: left; margin: 0; padding-left: 22px; line-height: 1.55; font-size: 15px; }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Goal Master · Défi</h1>
+    <nav class="toc" aria-label="Écrans">
+      <a href="#carte">1 · Carte du binôme</a>
+      <a href="#lancer">2 · Lancer</a>
+      <a href="#attente">3 · En attente</a>
+      <a href="#recu">4 · Défi reçu</a>
+      <a href="#course">5 · Course</a>
+      <a href="#resultat">6 · Résultat</a>
+      <a href="#intro">7 · Intro</a>
+      <a href="#succes">8 · Succès</a>
+    </nav>
+  </div>
+
+  <p class="intro">Un défi court entre Adrien et Nicolas : le premier à atteindre la cible avant l'échéance gagne une couronne sur son avatar, jusqu'au lendemain minuit. Les candidatures du défi comptent aussi pour l'XP et pour le boss de la semaine. Ici, Adrien lance le défi, Nicolas le reçoit.</p>
+  <div class="rules">
+    <div><b>Un défi à la fois</b>Pour vous deux. Et un défi lancé par jour et par personne, comme la relance.</div>
+    <div><b>Compte après l'acceptation</b>Seules les candidatures envoyées après « Relever le défi » font avancer la course.</div>
+    <div><b>Victoire acquise</b>Le premier à la cible gagne tout de suite. Une candidature retirée ensuite ne lui reprend pas la couronne.</div>
+    <div><b>Aucune XP en jeu</b>Une couronne sur l'avatar jusqu'au lendemain minuit, et deux succès. L'XP, le niveau et la forme ne bougent pas.</div>
+  </div>
+
+  <!-- 1 -->
+  <section class="screen" id="carte">
+    <header>
+      <span class="route">/ (accueil, carte du binôme)</span>
+      <h2>1 · « Défier » à côté de « Motiver »</h2>
+      <p>Les deux boutons partagent la ligne. « Défier » est grisé quand un défi est déjà en attente ou en cours, ou quand on en a déjà lancé un aujourd'hui, avec la raison écrite dessous.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>Disponible</h4>
+        <div class="partner"><div class="av" data-sprite="panda" data-color="p2"></div><div class="who"><span class="name">Nicolas · Niv. 9 <span style="color:var(--ember)">🔥3</span></span><span class="meta"><span class="num">38/100</span> · +2 aujourd'hui</span></div></div>
+        <div class="bar p2"><i style="width:38%"></i></div>
+        <div class="row2"><a class="btn" href="#recu">⚔️ Motiver</a><a class="btn ember" href="#lancer">🏁 Défier</a></div>
+      </div>
+      <div class="device">
+        <h4>Indisponible</h4>
+        <div class="partner"><div class="av" data-sprite="panda" data-color="p2"></div><div class="who"><span class="name">Nicolas · Niv. 9 <span style="color:var(--ember)">🔥3</span></span><span class="meta"><span class="num">38/100</span> · +2 aujourd'hui</span></div></div>
+        <div class="bar p2"><i style="width:38%"></i></div>
+        <div class="row2"><a class="btn" href="#recu">⚔️ Motiver</a><span class="btn off" aria-disabled="true">🏁 Défier</span></div>
+        <p class="muted">Selon le cas : « Un défi est déjà en cours » · « Tu as déjà lancé un défi aujourd'hui, reviens demain ».</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="screen" id="lancer">
+    <header>
+      <span class="route">/ · Défier (dans la carte)</span>
+      <h2>2 · Lancer un défi</h2>
+      <p>Le panneau s'ouvre dans la carte, comme le choix du message de « Motiver ». Deux choix, une phrase qui résume, un bouton. Après 21 h, « Ce soir minuit » disparaît : il resterait moins de 3 h, et le défi ne pourrait plus être relevé à temps.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <div class="partner"><div class="av" data-sprite="panda" data-color="p2"></div><div class="who"><span class="name">Nicolas · Niv. 9</span><span class="meta"><span class="num">38/100</span> · +2 aujourd'hui</span></div></div>
+        <div class="panel">
+          <span class="h-title" style="font-size:10px">Défier Nicolas</span>
+          <div><div class="label">Cible</div>
+            <div class="choices"><a class="chip" href="#lancer">3</a><a class="chip on" href="#lancer">5</a><a class="chip" href="#lancer">10</a></div></div>
+          <div><div class="label">Avant</div>
+            <div class="choices"><a class="chip on" href="#lancer">Ce soir minuit<small>dans 7 h 48</small></a><a class="chip" href="#lancer">Vendredi 18 h<small>dans 4 j</small></a></div></div>
+          <p class="sum">Le premier à <b>5 candidatures</b> avant <b>ce soir minuit</b> gagne la couronne.</p>
+          <a class="btn ember" href="#attente">Envoyer le défi</a>
+          <a class="btn ghost" href="#carte">Fermer</a>
+        </div>
+      </div>
+      <div class="device">
+        <h4>Vendredi après 18 h</h4>
+        <div class="panel">
+          <span class="h-title" style="font-size:10px">Défier Nicolas</span>
+          <div><div class="label">Avant</div>
+            <div class="choices"><a class="chip on" href="#lancer">Ce soir minuit<small>dans 5 h 30</small></a><a class="chip" href="#lancer">Vendredi 18 h<small>dans 7 j</small></a></div></div>
+          <p class="muted">« Vendredi 18 h » désigne toujours le prochain, jamais celui qui vient de passer.</p>
+        </div>
+        <h4>Échec réseau</h4>
+        <p class="muted" style="border-left:4px solid var(--danger);padding:4px 10px;background:#3a1b2a;color:var(--ink)">Le défi n'est pas parti. Vérifie ta connexion et réessaie.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="screen" id="attente">
+    <header>
+      <span class="route">/ (accueil d'Adrien)</span>
+      <h2>3 · Défi en attente, refusé, expiré</h2>
+      <p>Tant que Nicolas n'a pas répondu, la carte le dit et propose d'annuler. Le défi expire tout seul à l'échéance s'il n'a pas été relevé. Un défi refusé ou expiré ne compte pas comme lancé : Adrien peut en relancer un autre le jour même.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>En attente</h4>
+        <div class="pending">
+          <p>🏁 Défi envoyé à Nicolas : <b>5 candidatures avant ce soir minuit</b>.</p>
+          <p class="muted">En attente de sa réponse. Il a reçu une notification.</p>
+          <a class="btn ghost" href="#carte">Annuler le défi</a>
+        </div>
+        <a class="btn ghost" href="#course">(Nicolas accepte → course)</a>
+      </div>
+      <div class="device">
+        <h4>Refusé</h4>
+        <div class="banner calm"><div class="line"><div class="av" data-sprite="panda" data-color="p2"></div><p>Nicolas passe son tour pour ce défi. Tu peux en lancer un autre.</p><a class="x" href="#carte" aria-label="Fermer">✕</a></div></div>
+        <h4>Expiré sans réponse</h4>
+        <div class="banner calm"><div class="line"><p>Ton défi a expiré : Nicolas ne l'a pas relevé avant minuit.</p><a class="x" href="#carte" aria-label="Fermer">✕</a></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="screen" id="recu">
+    <header>
+      <span class="route">/ (accueil de Nicolas) + notification</span>
+      <h2>4 · « Adrien te défie »</h2>
+      <p>La notification part toujours (catégorie Duel, hors plafond). Dans l'app, un bandeau en haut de l'accueil, avec l'avatar de celui qui défie. Refuser ne coûte rien et ne se voit que dans l'app d'Adrien.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>Notification</h4>
+        <div class="push"><span class="ic">GM</span><b>🏁 Adrien te défie</b><span>5 candidatures avant ce soir minuit. Le premier arrivé gagne la couronne.</span></div>
+        <h4>Accueil de Nicolas</h4>
+        <div class="banner">
+          <div class="line"><div class="av" data-sprite="knight" data-color="p1"></div><p><b>Adrien te défie</b> : le premier à 5 candidatures avant ce soir minuit gagne la couronne.</p></div>
+          <div class="row2"><a class="btn ghost" href="#attente">Pas cette fois</a><a class="btn ember" href="#course">Relever le défi</a></div>
+        </div>
+      </div>
+      <div class="device">
+        <h4>Défi déjà relevé ailleurs</h4>
+        <p class="muted">Si Adrien annule pendant que Nicolas lit la notification, le bandeau dit : « Adrien a annulé son défi. » et se ferme.</p>
+        <h4>Les deux se défient en même temps</h4>
+        <p class="muted">Le premier envoyé gagne : le second voit « Nicolas vient de te défier » à la place de son panneau, avec les boutons pour répondre.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="screen" id="course">
+    <header>
+      <span class="route">/ (accueil des deux)</span>
+      <h2>5 · La course</h2>
+      <p>Une carte au-dessus de « + Candidature », identique chez les deux, le joueur courant en premier. Mobile : les deux couloirs empilés. Ordinateur : la carte prend toute la largeur au-dessus des deux colonnes.</p>
+    </header>
+    <div class="grid">
+      <div class="device wide">
+        <h4>En cours (vu par Adrien)</h4>
+        <div class="race">
+          <div class="head"><span class="h-title" style="font-size:10px">🏁 Défi · 5 candidatures</span><span class="clock">reste 5 h 12</span></div>
+          <div class="lane"><div class="av" data-sprite="knight" data-color="p1"></div><div><div class="nm">Toi</div><div class="bar p1"><i style="width:60%"></i></div></div><span class="score">3/5</span></div>
+          <div class="lane"><div class="av" data-sprite="panda" data-color="p2"></div><div><div class="nm">Nicolas</div><div class="bar p2"><i style="width:20%"></i></div></div><span class="score">1/5</span></div>
+        </div>
+        <a class="btn" href="#course" style="font-size:12px;padding:18px">+ Candidature</a>
+      </div>
+      <div class="device">
+        <h4>Gagné avant l'échéance</h4>
+        <div class="race">
+          <div class="head"><span class="h-title" style="font-size:10px">🏁 Défi · 5 candidatures</span><span class="clock">terminé</span></div>
+          <div class="lane"><div class="av" data-sprite="knight" data-color="p1" data-crown="1"></div><div><div class="nm">Toi</div><div class="bar p1"><i style="width:100%"></i></div></div><span class="score">5/5</span></div>
+          <div class="lane"><div class="av" data-sprite="panda" data-color="p2"></div><div><div class="nm">Nicolas</div><div class="bar p2"><i style="width:40%"></i></div></div><span class="score">2/5</span></div>
+          <div class="done">Tu as gagné à <b>16:42</b>. <a href="#resultat">Voir le résultat</a></div>
+        </div>
+      </div>
+      <div class="device">
+        <h4>Dernière heure, égalité</h4>
+        <div class="race">
+          <div class="head"><span class="h-title" style="font-size:10px">🏁 Défi · 5 candidatures</span><span class="clock">reste 38 min</span></div>
+          <div class="lane"><div class="av" data-sprite="knight" data-color="p1"></div><div><div class="nm">Toi</div><div class="bar p1"><i style="width:80%"></i></div></div><span class="score">4/5</span></div>
+          <div class="lane"><div class="av" data-sprite="panda" data-color="p2"></div><div><div class="nm">Nicolas</div><div class="bar p2"><i style="width:80%"></i></div></div><span class="score">4/5</span></div>
+        </div>
+        <p class="muted">Au-delà de 15 candidatures dans la journée, elles font toujours avancer la course, même sans XP.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="screen" id="resultat">
+    <header>
+      <span class="route">/defi</span>
+      <h2>6 · Résultat</h2>
+      <p>Ouvert une fois d'office à la prochaine visite après la fin, comme <span class="num">/duel</span>. La notification de résultat part chez les deux. La défaite rappelle ce que les candidatures ont quand même rapporté.</p>
+    </header>
+    <div class="grid">
+      <div class="device result">
+        <h4>Victoire</h4>
+        <div class="duo"><div class="av big" data-sprite="knight" data-color="p1" data-crown="1" data-px="6"></div><div class="av" data-sprite="panda" data-color="p2"></div></div>
+        <p class="big-t win">Tu as battu Nicolas !</p>
+        <p class="score"><span class="s1">5</span> – <span class="s2">2</span></p>
+        <p class="muted">Ta couronne reste sur ton avatar, sur les deux accueils, jusqu'à demain minuit.</p>
+        <div class="badge"><div class="av" data-sprite="crown-only"></div><div><b>Succès débloqué</b><span>Duelliste · gagner un défi</span></div></div>
+        <a class="btn" href="#carte">Continuer</a>
+      </div>
+      <div class="device result">
+        <h4>Défaite</h4>
+        <div class="duo"><div class="av" data-sprite="knight" data-color="p1"></div><div class="av big" data-sprite="panda" data-color="p2" data-crown="1" data-px="6"></div></div>
+        <p class="big-t lose">Nicolas l'emporte.</p>
+        <p class="score"><span class="s1">3</span> – <span class="s2">5</span></p>
+        <p class="muted">Tes 3 candidatures t'ont rapporté 30 XP et 3 coups contre le Golem ATS.</p>
+        <a class="btn" href="#carte">Continuer</a>
+      </div>
+      <div class="device result">
+        <h4>Nul</h4>
+        <div class="duo"><div class="av" data-sprite="knight" data-color="p1"></div><div class="av" data-sprite="panda" data-color="p2"></div></div>
+        <p class="big-t lose">Personne n'a atteint 5.</p>
+        <p class="score"><span class="s1">4</span> – <span class="s2">4</span></p>
+        <p class="muted">Pas de couronne cette fois.</p>
+        <a class="btn" href="#carte">Continuer</a>
+      </div>
+      <div class="device">
+        <h4>Notification de résultat</h4>
+        <div class="push"><span class="ic">GM</span><b>👑 Défi gagné !</b><span>Tu as battu Nicolas 5 à 2.</span></div>
+        <div class="push"><span class="ic">GM</span><b>🏁 Nicolas l'emporte</b><span>3 à 5. Tes candidatures comptent quand même pour le boss.</span></div>
+        <h4>Après la victoire, sur les deux accueils</h4>
+        <div class="duo" style="justify-content:flex-start"><div class="av" data-sprite="knight" data-color="p1" data-crown="1"></div><div class="av rust" data-sprite="knight" data-color="p1" data-crown="1"></div></div>
+        <div class="partner"><div class="av" data-sprite="knight" data-color="p1" data-crown="1"></div><div class="who"><span class="name">Adrien · Niv. 9 <span style="color:var(--ember)">🔥4</span></span><span class="meta"><span class="num">42/100</span> · +5 aujourd'hui</span></div></div>
+        <p class="muted">La couronne se pose sur le sprite partout où il s'affiche (en-tête, carte du binôme, course), par-dessus la rouille et le bandage, jusqu'au lendemain minuit, heure de Paris. À dessiner pour chaque forme des deux personnages.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="screen" id="intro">
+    <header>
+      <span class="route">/intro (nouvel écran)</span>
+      <h2>7 · Écran d'intro « Le Défi »</h2>
+      <p>Ajouté en fin d'intro : <span class="num">INTRO_STEP_COUNT</span> passe à n+1, et <span class="num">LATEST_NEWS</span> devient « le Défi ». Chacun le voit à sa prochaine ouverture.</p>
+    </header>
+    <div class="grid">
+      <div class="device introscreen">
+        <span class="steps">Nouveauté</span>
+        <div class="duo"><div class="av big" data-sprite="knight" data-color="p1" data-px="6"></div><div class="av big" data-sprite="panda" data-color="p2" data-crown="1" data-px="6"></div></div>
+        <p class="h-title">Le Défi</p>
+        <ol>
+          <li>Sur la carte de ton binôme, touche <b>Défier</b> : choisis 3, 5 ou 10 candidatures, avant ce soir ou vendredi.</li>
+          <li>S'il relève le défi, c'est la course.</li>
+          <li>Le premier arrivé porte la couronne sur son avatar, jusqu'au lendemain minuit.</li>
+        </ol>
+        <p class="muted">Toutes les candidatures comptent aussi pour l'XP et pour le boss.</p>
+        <a class="btn" href="#carte">Compris</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="screen" id="succes">
+    <header>
+      <span class="route">/succes</span>
+      <h2>8 · Deux succès de plus</h2>
+      <p>Écran existant, deux cases ajoutées en fin de grille. « Invaincu » demande 3 victoires d'affilée : un nul ou une défaite remet le compteur à zéro.</p>
+    </header>
+    <div class="grid">
+      <div class="device wide">
+        <div class="ach">
+          <div class="got"><b>Premier boss</b>Vaincre un boss en duel</div>
+          <div class="got new"><b>Duelliste</b>Gagner un défi</div>
+          <div><b>Invaincu</b>Gagner 3 défis d'affilée</div>
+        </div>
+        <a class="btn ghost" href="#carte" style="width:auto;align-self:flex-start;padding:10px 16px">Retour</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// Sprites réels de l'app (src/lib/spriteGrids.ts), forme 3 : Écuyer et Novice. P = couleur du joueur (COLOR_HEX).
+const PAL = {K:'#1a1626',E:'#1a1626',S:'#f4c7a1',R:'#e8838a',W:'#dfe6ee',G:'#8b93a7',T:'#c99a5b',B:'#7a4a26',Y:'#f2c14e',O:'#b9831c',L:'#fffbe0',C:'#7a5aa0',H:'#9c7f73',F:'#f3f1f6',N:'#26232f',I:'#ffffff',V:'#6fae4a',A:'#3b2b4a',D:'#2b2f4a',Z:'#a1402a',g:'#ffd84a',y:'#c99a1a',r:'#e8838a'};
+const PLAYER = { p1: "#3d7bd9", p2: "#d94848" };
+const SQUIRE = ["....KKKKKKK.....","...KBBBBBBBK....","..KBBBBBBBBBK...","..KBSSSSSSSBK.W.","..KSSESSSESSK.W.","..KSSSSSSSSSK.W.","...KSSSKKSSK..W.","....KKSSSSKK..W.","...KKPPPPPPKKYWY",".KKKPPPPPPPPKSB.","KPPPKPPYYPPPKSB.","KPYPKPPPPPPKKK..","KPPPKBBBBBBK....",".KKKKPPPPPPK....","....KPPKKPPK....","....KGGK.KGGK...","....KBBK.KBBK...","...KKKKK.KKKKK.."];
+const P_NOV = ["....KKK......KKK....","...KNNNKKKKKKNNNK...","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNNFFFFFFFFFNNK.NV",".KNNKFFFFFFFFFKNNNNV","KNNKFFFFFFFFFFFKNNNV","KNNKFFFFFFFFFFFK...V","KNNKFFFFFFFFFFFK...V",".KKKBBBBBBBBBBBK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK....V","....KNNNK.KNNNK....V","...KKKKKK.KKKKKK...."];
+const CROWN = ["g..g..g","gg.g.gg","ggggggg","gyrgryg"];
+function svg(grid, player, px, cls) {
+  const w = grid[0].length, h = grid.length;
+  let r = "";
+  grid.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${ch === "P" ? player : PAL[ch]}"/>`;
+  }));
+  return `<svg class="${cls}" width="${w * px}" height="${h * px}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+document.querySelectorAll("[data-sprite]").forEach((el) => {
+  const px = Number(el.dataset.px || 3);
+  if (el.dataset.sprite === "crown-only") { el.innerHTML = svg(CROWN, PLAYER.p1, 6, "body"); return; }
+  const grid = el.dataset.sprite === "panda" ? P_NOV : SQUIRE;
+  const crown = el.dataset.crown ? svg(CROWN, PLAYER.p1, px, "crown") : "";
+  el.innerHTML = crown + svg(grid, PLAYER[el.dataset.color || "p1"], px, "body");
+});
+</script>
