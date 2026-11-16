@@ -8,6 +8,8 @@ import { parisDay } from "@/game/calendar";
 import { NUDGE_MESSAGES, pendingNudge, sentToday } from "@/game/nudges";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { devLogout } from "./connexion/dev-actions";
+import { devLoginEnabled } from "@/lib/devLogin";
 import { formName } from "@/lib/forms";
 import { goalOutcome } from "@/lib/goal";
 import { buildPlayerView, type PlayerView } from "@/lib/playerView";
@@ -140,6 +142,11 @@ export default async function HomePage(): Promise<React.ReactElement> {
         </section>
       </div>
       <div className="mt-4"><PushSetup /></div>
+      {devLoginEnabled(process.env) ? (
+        <form action={devLogout} className="mt-4 text-right">
+          <button type="submit" className="text-sm text-muted underline">Changer de joueur (local)</button>
+        </form>
+      ) : null}
     </main>
   );
 }
