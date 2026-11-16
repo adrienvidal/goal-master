@@ -78,7 +78,7 @@ export default function Intro(): React.ReactElement {
           <button type="submit" className="text-sm text-muted underline">Passer</button>
         </form>
       </div>
-      <div key={i} className="grid min-h-[260px] place-items-end justify-center md:min-h-[360px]">{step.stage}</div>
+      <div key={i} className="device grid min-h-[280px] place-items-end justify-center !bg-night !pb-8 md:min-h-[380px]">{step.stage}</div>
       <div className="flex flex-col gap-4">
         <div className="device flex flex-col gap-3" aria-live="polite">
           <h1 className="h-title text-gold text-balance">{step.title}</h1>
