@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      MVP complet en prod (lots 1 à 7), base de prod purgée, Nicolas autorisé
+✅ Fait      MVP en prod sur goal.viloris.io, intro, paysages, objectif et date communs
 ⛔ Bloqué    Rien
-🎯 Priorité  Adrien recrée son profil, puis Nicolas se connecte et active ses notifications
+🎯 Priorité  Adrien crée son profil (fixe la date), puis Nicolas se connecte
 ```
 
 ## Réalisé
@@ -65,3 +65,31 @@
 - L'invitation aux notifications est sur l'accueil plutôt qu'en 4e étape du premier lancement
 - « Mission accomplie » se débloque dès la cible atteinte ; l'objectif est clos au clic sur « Nouvel objectif »
 - Pas de domaine personnalisé : on reste sur goal-master-theta.vercel.app
+
+---
+
+## Suite : confort, identité visuelle, intro et domaine
+
+### Réalisé
+- PR #16 connexion directe en local (choix d'une adresse autorisée, « Changer de joueur ») ; jamais en production
+- PR #18 objectif fixé à 100 candidatures, commun, non modifiable
+- PR #19 et #21 icône épée verticale (favicon, Apple, PWA) ; paysages 8 bits en fond, choix personnel dans `/reglages` (Château de nuit par défaut, champ `Player.landscape`) ; date limite commune (le premier la fixe, l'autre la reprend, Prolonger décale les deux)
+- PR #21 et #24 intro du premier lancement en 4 écrans (`/intro`, cookie `gm-intro-seen`), héros dans un cadre ; revoir depuis Réglages
+- PR #22 et #26 retouches responsive (Mes succès, date sur une ligne, réglages sur deux colonnes), ligne « Ton binôme reprendra cette date »
+- Domaine **goal.viloris.io** : CNAME chez name.com, BETTER_AUTH_URL de prod à jour, connexion par code vérifiée
+- Base de prod purgée deux fois à la demande d'Adrien, vide en fin de session
+- Maquettes de référence : icône et fond https://claude.ai/artifact/W8a7C4erG4kDBCxAJNhsFe ; intro https://claude.ai/artifact/A8WmTezNTQUourDKYfCyaQ
+
+### Reste à faire
+- Adrien crée son profil en prod (il fixe la date commune), puis envoie https://goal.viloris.io à Nicolas (sur iPhone : ajouter à l'écran d'accueil pour les relances)
+- Aperçus Vercel en échec « Resource provisioning failed » (quota de branches Neon) : nettoyer les branches Neon
+- Fil du binôme : « Nicolas est devenu Chevalier » non affiché
+- Repasse responsive non faite sur `/connexion`, `/objectif/nouveau`, `/objectif/fin`
+
+### Blockers
+- Aucun
+
+### Décisions
+- Objectif commun fixe (100) et date limite commune ; le premier joueur choisit la date
+- Fond d'écran propre à chaque joueur, intro vue une fois par appareil
+- NordVPN met en cache les réponses DNS négatives : le couper pour tester un domaine fraîchement créé

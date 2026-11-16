@@ -47,7 +47,7 @@ export function PushSetup(): React.ReactElement | null {
 
   if (state === "ask")
     return (
-      <div className="flex flex-col gap-2 border-[3px] border-edge bg-night p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 border-[3px] border-edge bg-night/80 p-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[15px]">Active les notifications pour recevoir les relances de ton binôme, même app fermée.</p>
         <button type="button" className="btn !w-auto shrink-0 px-4 !text-[10px]" onClick={enable}>Activer</button>
       </div>
