@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { headerPng, parseScene, pngDisplaySize, scenePng, sceneToken } from "./emailArt";
+import { headerPng, parseScene, pngSize, scenePng, sceneToken } from "./emailArt";
 
 describe("parseScene", () => {
   it("lit les jetons valides et les réécrit à l'identique", () => {
@@ -18,9 +18,9 @@ describe("parseScene", () => {
 describe("images", () => {
   it("produit le bandeau et une scène en PNG", () => {
     const header = headerPng();
-    expect(pngDisplaySize(header)).toEqual({ width: 384, height: 80 });
+    expect(pngSize(header)).toEqual({ width: 768, height: 160 });
     const scene = scenePng(parseScene("hero.KNIGHT.BLUE.2.victory.hurt,boss.1.down")!);
     expect(scene.subarray(1, 4).toString()).toBe("PNG");
-    expect(pngDisplaySize(scene).height).toBeGreaterThan(20);
+    expect(pngSize(scene).height).toBeGreaterThan(20);
   });
 });

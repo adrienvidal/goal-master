@@ -8,11 +8,10 @@ import { drawText, encodePng, hexToRgba, PixelCanvas, type Rgba } from "./pixelP
 import { sprite, type Pose } from "./sprites";
 import { SWORD_ICON, SWORD_PALETTE } from "./swordIcon";
 
-/** Agrandissement des PNG : l'e-mail les affiche à mi-taille pour des pixels nets sur écran dense. */
-export const EMAIL_PNG_SCALE = 4;
+/** Agrandissement du bandeau (192 × 40 cases) : 768 px de large, affiché sur toute la largeur de l'e-mail. */
+const HEADER_SCALE = 4;
 
 const STONE = "#221e40";
-const GROUND = "#2e2958";
 const HEADER_H = 40;
 
 export function headerPng(): Buffer {
@@ -26,7 +25,7 @@ export function headerPng(): Buffer {
   c.blit(land, 0, 8, LANDSCAPE_W, HEADER_H, 0, 0);
   SWORD_ICON.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && c.set(99 + x, 13 + y, hexToRgba(SWORD_PALETTE[ch]))));
   drawText(c, "GOAL MASTER", 119, 19, "#f2c14e", "#0c0a1a");
-  return encodePng(c, EMAIL_PNG_SCALE);
+  return encodePng(c, HEADER_SCALE);
 }
 
 export type Actor =
@@ -75,7 +74,7 @@ function tint([r, g, b, a]: Rgba, mode: "hurt" | "down"): Rgba {
   return [mix(r), mix(g), mix(b), a];
 }
 
-/** Pixels d'image par case de sprite (le chevalier) ; l'e-mail affiche l'image à mi-taille. */
+/** Pixels d'image par case de sprite (le chevalier), comme le `px={4}` de l'app. */
 const CELL = 4;
 
 function block(out: Pixels["pixels"], x: number, y: number, w: number, h: number, color: Rgba): void {
@@ -107,8 +106,6 @@ export function scenePng(actors: Actor[]): Buffer {
   const c = new PixelCanvas(width, height);
   c.fillStyle = STONE;
   c.fillRect(0, 0, width, height);
-  c.fillStyle = GROUND;
-  c.fillRect(0, height - pad + CELL, width, pad);
   let x = pad;
   for (const p of parts) {
     const top = height - pad - p.height + CELL;
@@ -118,7 +115,7 @@ export function scenePng(actors: Actor[]): Buffer {
   return encodePng(c);
 }
 
-/** Taille d'affichage (moitié de l'image) d'un PNG produit ici. */
-export function pngDisplaySize(png: Buffer): { width: number; height: number } {
-  return { width: png.readUInt32BE(16) / 2, height: png.readUInt32BE(20) / 2 };
+/** Taille en pixels d'un PNG produit ici (la scène s'affiche à cette taille : 4 px par case, comme dans l'app). */
+export function pngSize(png: Buffer): { width: number; height: number } {
+  return { width: png.readUInt32BE(16), height: png.readUInt32BE(20) };
 }

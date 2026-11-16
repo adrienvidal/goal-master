@@ -5,7 +5,7 @@ import { parisTime } from "@/game/duel";
 import { keyOf, pushBody, ruleOf, shouldSend, textOf, type NotificationEvent } from "@/game/notifications";
 import { formForLevel, levelFromXp } from "@/game/levels";
 import { totalXp } from "@/game/xp";
-import { pngDisplaySize, sceneToken, scenePng } from "@/lib/emailArt";
+import { pngSize, sceneToken, scenePng } from "@/lib/emailArt";
 import { sceneFor, type Hero } from "@/lib/emailScene";
 import { db } from "./db";
 import { loadGame } from "./game";
@@ -49,7 +49,7 @@ async function mailScene(playerId: string, event: NotificationEvent): Promise<Ma
   const partnerId = game.players.find((p) => p.id !== playerId)?.id;
   const actors = sceneFor(event, me, partnerId ? heroOf(partnerId) : null);
   if (actors.length === 0) return null;
-  return { query: actors.map(sceneToken).join(","), ...pngDisplaySize(scenePng(actors)) };
+  return { query: actors.map(sceneToken).join(","), ...pngSize(scenePng(actors)) };
 }
 
 /** Plusieurs notifications d'affilée, sans qu'un échec n'arrête les suivantes. */
