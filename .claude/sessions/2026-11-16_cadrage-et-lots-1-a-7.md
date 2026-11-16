@@ -172,12 +172,12 @@
 - PR #50 : table `Challenge`, moteur pur `src/game/challenge.ts` (testé), actions lancer / répondre / annuler, victoire posée dans `addApplication`, bandeaux et course sur l'accueil, `/defi`, couronne sur tous les sprites, succès Duelliste et Invaincu, notifications « défi reçu » et résultat, 7e écran d'intro (`LATEST_NEWS` = « le Défi »)
 - Parcours testé en local de bout en bout (lancer → relever → course → victoire → `/defi` → couronne)
 - PR #51 mise en prod (commit de fusion), déploiement OK
+- PR #53 : en local, tous les e-mails partent vers `DEV_MAIL_TO` (contact@viloris.io, dans `.env.development.local`), destinataire d'origine dans l'objet ; sans `DEV_MAIL_TO`, rien ne part. Le test du Défi avait écrit pour de vrai à boulom.nicolas@gmail.com
 
 ### Reste à faire
 - Ce soir 16/11 à 18 h 01 : vérifier l'exécution n8n (onglet Executions) et le rendu réel de l'e-mail « Nouveauté » (Gmail)
 - Jeudi 19/11 et vendredi 20/11 à 18 h 01 : rappel du boss, puis résultat du duel (push, e-mail, écran `/duel`)
 - Premier vrai défi avec Nicolas : vérifier la notification « défi reçu », la course et la couronne en prod
-- Les e-mails partent pour de vrai en local (SMTP présent dans `.env.local`) : le test du Défi a sans doute écrit à contact@viloris.io et à boulom.nicolas@gmail.com. Option : n'envoyer en local qu'à une adresse de test
 - Base locale : un défi et 5 candidatures « Test défi 1 à 5 » de Nicolas, à effacer si gênant
 - Vérifier sur Android qu'une relance reçue app ouverte rafraîchit l'accueil (non testable en local)
 - Textes de la carte du boss : victoire déjà acquise grâce aux coups de grâce non annoncée ; « vendredi 18 h » ambigu le soir même
