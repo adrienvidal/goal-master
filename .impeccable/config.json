@@ -56,6 +56,51 @@
         ],
         "createdAt": "2026-11-16T14:45:26.364Z",
         "reason": "Claude: sticky .top bar sits inside the body gutter, same as earlier maquettes"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "docs/maquettes/candidatures-du-jour.html"
+        ],
+        "createdAt": "2026-11-16T16:07:39.953Z",
+        "reason": "Claude: static scan pairs text with absent backgrounds (no #000 text, no white surface on this single dark-theme page)"
+      },
+      {
+        "rule": "hard-offset-shadow",
+        "value": "*",
+        "files": [
+          "docs/maquettes/candidatures-du-jour.html"
+        ],
+        "createdAt": "2026-11-16T16:07:39.971Z",
+        "reason": "Claude: blur-free offset shadow is the app's 8-bit look (globals.css .device/.btn)"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/maquettes/candidatures-du-jour.html"
+        ],
+        "createdAt": "2026-11-16T16:07:39.999Z",
+        "reason": "Claude: sticky .top bar sits inside the body gutter, same as earlier mockups"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          "docs/maquettes/candidatures-du-jour.html"
+        ],
+        "createdAt": "2026-11-16T16:07:40.032Z",
+        "reason": "Claude: Press Start 2P pixel font at 9-10px is the app's established size"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "docs/maquettes/candidatures-du-jour.html"
+        ],
+        "createdAt": "2026-11-16T16:07:40.058Z",
+        "reason": "Claude: same pixel-font convention as the app"
       }
     ]
   }

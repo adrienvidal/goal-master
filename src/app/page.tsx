@@ -20,11 +20,15 @@ import { devLogout } from "./connexion/dev-actions";
 import { devLoginEnabled } from "@/lib/devLogin";
 import { formName } from "@/lib/forms";
 import { goalOutcome } from "@/lib/goal";
-import { buildPlayerView, type FeedItem, type PlayerView } from "@/lib/playerView";
+import { buildPlayerView, removalImpact, splitCompany, type FeedItem, type PlayerView } from "@/lib/playerView";
+import { DAILY_XP_CAP } from "@/game/levels";
 import { db } from "@/server/db";
 import { loadDuelInput, loadGame } from "@/server/game";
 import { requirePlayer } from "@/server/session";
 import AddApplication from "./AddApplication";
+import TodayList, { type TodayItem } from "./TodayList";
+
+const TIME = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
 
 function shortDate(day: string): string {
   const [, m, d] = day.split("-");
@@ -115,6 +119,15 @@ export default async function HomePage(): Promise<React.ReactElement> {
     pseudo: v.pseudo, level: v.level, character: v.character, color: v.color, form: v.displayedForm, mood: v.mood, hurt: wounded,
     status: v.idleWorkdays >= 2 ? partnerStatus(v) : null,
   }));
+  const todayItems: TodayItem[] = me.today.items.map((a) => {
+    const { xp, nudgeLost } = removalImpact(a.id, player.id, game.apps, game.nudges);
+    const warning = nudgeLost
+      ? `Elle ne comptera plus : tu perds ${xp} XP, et ${partner?.pseudo ?? "ton binôme"} perd les 15 XP de la relance.`
+      : xp > 0
+        ? `Elle ne comptera plus, et ses ${xp} XP disparaissent.`
+        : "Elle ne comptera plus pour ton objectif. Ton XP ne change pas.";
+    return { id: a.id, ...splitCompany(a.company), time: TIME.format(a.at), warning };
+  });
   const partnerFeed = partner ? withDuelLine(partner.feed, lastDuel) : [];
 
   return (
@@ -153,10 +166,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
             <Link href="/succes" className="btn ghost !text-[10px]">Mes succès</Link>
             <Link href="/reglages" className="btn ghost !text-[10px]">Réglages</Link>
           </div>
-          <p className="text-sm text-muted">
-            Aujourd&apos;hui (<span className="num">{me.today.count}/15</span>)
-            {me.today.companies.length ? <> : <b className="text-ink">{me.today.companies.join(", ")}</b></> : " : pas encore de candidature."}
-          </p>
+          <TodayList items={todayItems} count={me.today.count} cap={DAILY_XP_CAP} />
         </section>
 
         <section className="flex flex-col gap-3 border-[3px] border-stone-2 bg-night p-3" aria-label="Mon binôme">

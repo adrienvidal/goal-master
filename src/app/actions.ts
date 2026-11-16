@@ -1,10 +1,11 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
+import { parisDay } from "@/game/calendar";
 import { currentDuel } from "@/game/duel";
 import { formReached, koCrossed, nudgesJustSucceeded, type NotificationEvent } from "@/game/notifications";
 import { formName } from "@/lib/forms";
-import { findDuplicate } from "@/lib/playerView";
+import { findDuplicate, removalImpact } from "@/lib/playerView";
 import { db } from "@/server/db";
 import { loadDuelInput, loadGame, syncAchievements, type GameData } from "@/server/game";
 import { notifyAll } from "@/server/notify";
@@ -13,7 +14,16 @@ import { requirePlayer } from "@/server/session";
 const MAX_COMPANY = 80;
 const UNDO_WINDOW_MS = 60_000;
 
-export type AddResult = { ok: true; id: string } | { ok: false; error: string } | { ok: false; duplicateOf: string };
+export type DuplicateInfo = { company: string; when: string; sure: boolean };
+export type AddResult = { ok: true; id: string } | { ok: false; error: string } | { ok: false; duplicate: DuplicateInfo };
+
+const TIME = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
+const DATE = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", timeZone: "Europe/Paris" });
+
+/** « aujourd'hui à 16:00 » ou « le 12/11 ». */
+function whenLabel(at: Date, now: Date): string {
+  return parisDay(at) === parisDay(now) ? `aujourd'hui à ${TIME.format(at)}` : `le ${DATE.format(at)}`;
+}
 
 export async function addApplication(company: string, confirmDuplicate: boolean): Promise<AddResult> {
   const player = await requirePlayer();
@@ -22,7 +32,7 @@ export async function addApplication(company: string, confirmDuplicate: boolean)
   const game = await loadGame();
   const previous = findDuplicate(name, player.id, game.apps);
   if (previous && !confirmDuplicate) {
-    return { ok: false, duplicateOf: previous.createdAt.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", timeZone: "Europe/Paris" }) };
+    return { ok: false, duplicate: { company: previous.app.company, when: whenLabel(previous.app.createdAt, new Date()), sure: previous.sure } };
   }
   const row = await db().application.create({ data: { playerId: player.id, company: name } });
   const now = new Date();
@@ -41,6 +51,21 @@ export async function cancelApplication(id: string): Promise<void> {
     data: { cancelledAt: new Date() },
   });
   revalidatePath("/");
+}
+
+export type RemoveResult = { ok: true; xp: number } | { ok: false; error: string };
+
+/** Retire une candidature saisie par erreur, le jour même seulement (maquette candidatures-du-jour). L'XP suit, les succès restent. */
+export async function removeApplication(id: string): Promise<RemoveResult> {
+  const player = await requirePlayer();
+  const now = new Date();
+  const game = await loadGame();
+  const app = game.apps.find((a) => a.id === id && a.userId === player.id && a.cancelledAt === null);
+  if (!app || parisDay(app.createdAt) !== parisDay(now)) return { ok: false, error: "Seules tes candidatures du jour se retirent." };
+  const { xp } = removalImpact(id, player.id, game.apps, game.nudges);
+  await db().application.updateMany({ where: { id, playerId: player.id, cancelledAt: null }, data: { cancelledAt: now } });
+  revalidatePath("/");
+  return { ok: true, xp };
 }
 
 /** Ce que la candidature qu'on vient d'ajouter change pour le binôme : relance réussie, nouvelle forme, boss K.O. */
