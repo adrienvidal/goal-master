@@ -155,11 +155,12 @@ En anglais, à l'impératif, sans point final. Préfixe `feat:`, `fix:`, `test:`
   et une par déploiement de prévisualisation via l'intégration Vercel ; RLS non
   activé : la sécurité est applicative, toute requête filtre sur l'utilisateur
   courant
-- Authentification par code à usage unique envoyé par e-mail (email OTP de Neon
-  Auth), sans mot de passe, pas de lien magique ni d'autre fournisseur sans le
-  demander
+- Authentification par code à usage unique envoyé par e-mail avec Better Auth (greffon emailOTP), comme
+  viloris-studio ; codes envoyés depuis contact@viloris.io par le SMTP de Google Workspace (SMTP_USER,
+  SMTP_PASS) ; adresses autorisées dans ALLOWED_EMAILS. Variables récupérées en local par
+  `npx vercel env pull .env.local --environment=development`
 - Pas de notion d'organisation ni d'invitation, ne pas en prévoir
-- Prisma comme ORM : schema.prisma = source de vérité du schéma, migrations Prisma Migrate (jamais de SQL manuel via dashboard)
+- Prisma 7 comme ORM (adaptateur pg) : schema.prisma = source de vérité du schéma, migrations Prisma Migrate (jamais de SQL manuel via dashboard) ; `npx prisma generate` après chaque migration (Prisma 7 ne le fait plus)
 - Tailwind, icônes lucide-react
 - Vitest + Testing Library en TypeScript
 - Déploiement Vercel + Neon
