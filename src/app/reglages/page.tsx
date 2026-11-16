@@ -17,7 +17,7 @@ export default async function SettingsPage(): Promise<React.ReactElement> {
         <Link href="/intro" className="btn ghost !text-[10px]">Revoir l&apos;intro</Link>
         <section className="flex flex-col gap-3" aria-labelledby="fond">
           <h2 id="fond" className="text-xs uppercase tracking-wider text-muted">Paysage de fond</h2>
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <ul className="grid grid-cols-2 gap-2 sm:gap-3">
             {LANDSCAPES.map((id) => {
               const current = player.landscape === id;
               return (
@@ -29,8 +29,8 @@ export default async function SettingsPage(): Promise<React.ReactElement> {
                       className={`flex w-full flex-col gap-2 border-[3px] bg-night p-2 text-left ${current ? "border-gold" : "border-edge"}`}
                     >
                       <Landscape id={id} label />
-                      <span className="flex items-center justify-between gap-2 px-1">
-                        <b>{LANDSCAPE_NAMES[id]}</b>
+                      <span className="flex flex-wrap items-center justify-between gap-x-2 px-1">
+                        <b className="text-sm leading-tight sm:text-base">{LANDSCAPE_NAMES[id]}</b>
                         {current ? <small className="font-display text-[9px] text-gold">Actuel</small> : null}
                       </span>
                     </button>
