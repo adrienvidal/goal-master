@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { BossSprite } from "@/components/BossSprite";
 import { Sprite } from "@/components/Sprite";
 import { finishIntro } from "./actions";
 
@@ -59,9 +60,27 @@ const STEPS: Step[] = [
       </div>
     ),
   },
+  {
+    title: "Chaque vendredi, un boss.",
+    text: "Vous l'affrontez à deux, le vendredi à 18 h. Chaque candidature de la semaine lui porte un coup, et ton niveau ajoute un coup de grâce. Perdu ? Vos héros portent un bandage jusqu'à la victoire suivante, et c'est tout.",
+    stage: (
+      <div className="flex flex-col items-center gap-4">
+        <span className="font-display text-[10px] text-[#c9b8ff]">Le Recruteur fantôme</span>
+        <span className="intro-hp w-56 max-w-full"><i /></span>
+        <div className="flex items-end justify-center gap-6">
+          <span className="intro-swap">
+            <span className="intro-rest"><Sprite character="KNIGHT" color="BLUE" form={3} px={5} label="Ton héros" /></span>
+            <span className="intro-act"><Sprite character="KNIGHT" color="BLUE" form={3} pose="action" px={5} /></span>
+          </span>
+          <span className="boss-float"><BossSprite boss={0} px={5} /></span>
+          <Sprite character="PANDA" color="RED" form={3} px={5} label="Le héros du binôme" />
+        </div>
+      </div>
+    ),
+  },
 ];
 
-// Intro du premier lancement (maquette validée) : 4 écrans, « Passer » à tout moment.
+// Intro du premier lancement (maquettes validées) : 5 écrans, « Passer » à tout moment.
 export default function Intro(): React.ReactElement {
   const [i, setI] = useState(0);
   const step = STEPS[i];
