@@ -22,8 +22,32 @@ export type PlayerView = {
   streak: number;
   goal: { target: number; done: number; deadline: Day; daysLeft: number } | null;
   today: { count: number; companies: string[] };
-  recent: { company: string; day: Day }[];
+  feed: FeedItem[];
 };
+
+export type FeedItem =
+  | { kind: "application"; company: string; day: Day }
+  | { kind: "evolution"; formName: string; day: Day };
+
+const FEED_SIZE = 5;
+
+/** Moments où le joueur a atteint une nouvelle forme, en rejouant l'XP à chaque candidature (la sienne ou celle qui valide une relance). */
+function evolutions(playerId: string, apps: Application[], nudges: Nudge[]): { form: Form; at: Date }[] {
+  const checkpoints = activeApplications(apps)
+    .map((a) => a.createdAt)
+    .sort((a, b) => a.getTime() - b.getTime());
+  const events: { form: Form; at: Date }[] = [];
+  let best: Form = 1;
+  for (const at of checkpoints) {
+    const until = apps.filter((a) => a.createdAt <= at);
+    const form = formForLevel(levelFromXp(totalXp(playerId, until, nudges.filter((n) => n.sentAt <= at))).level);
+    if (form > best) {
+      best = form;
+      events.push({ form, at });
+    }
+  }
+  return events;
+}
 
 type PlayerRow = { id: string; pseudo: string; character: CharacterId; color: ColorId };
 type GoalRow = { target: number; deadline: Date; createdAt: Date } | null;
@@ -71,7 +95,13 @@ export function buildPlayerView(player: PlayerRow, apps: Application[], nudges: 
     streak: currentStreak(counts, today),
     goal: goalView,
     today: { count: todays.length, companies: todays.map((a) => a.company).reverse() },
-    recent: mine.slice(0, 5).map((a) => ({ company: a.company, day: parisDay(a.createdAt) })),
+    feed: [
+      ...evolutions(player.id, apps, nudges).map((e) => ({ at: e.at, rank: 1, item: { kind: "evolution", formName: formName(player.character, e.form), day: parisDay(e.at) } as FeedItem })),
+      ...mine.map((a) => ({ at: a.createdAt, rank: 0, item: { kind: "application", company: a.company, day: parisDay(a.createdAt) } as FeedItem })),
+    ]
+      .sort((a, b) => b.at.getTime() - a.at.getTime() || b.rank - a.rank)
+      .slice(0, FEED_SIZE)
+      .map((e) => e.item),
   };
 }
 
