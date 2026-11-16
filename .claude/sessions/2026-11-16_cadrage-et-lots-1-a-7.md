@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      MVP complet en prod (lots 1 à 7), base locale Docker, Nicolas autorisé
+✅ Fait      MVP complet en prod (lots 1 à 7), base de prod purgée, Nicolas autorisé
 ⛔ Bloqué    Rien
-🎯 Priorité  Nicolas se connecte et active ses notifications sur son téléphone
+🎯 Priorité  Adrien recrée son profil, puis Nicolas se connecte et active ses notifications
 ```
 
 ## Réalisé
@@ -46,10 +46,12 @@
 - PR #11 lot 6 : `/succes`, `/objectif/fin` (victoire, temps écoulé : prolonger 4 semaines ou repartir), `/objectif/nouveau` (changement de personnage) ; correctif import web-push
 - PR #12 lot 7 : `vercel.json` (preset Next.js), script `vercel-build` qui applique les migrations ; PR #13 dev → main
 - Production : https://goal-master-theta.vercel.app, BETTER_AUTH_URL posé, migration appliquée, connexion testée de bout en bout
+- Base de prod purgée à la demande d'Adrien (toutes les données, migrations conservées) : la candidature de test « doctolib » a disparu avec
+- Badge Git « 10K » de VS Code : vue figée sur un ancien état (avant le .gitignore), dépôt propre ; recharger la fenêtre
 - Parcours complet testé en local (connexion, candidature, relance, victoire, succès, nouvel objectif en Panda, temps écoulé)
 
 ### Reste à faire
-- Supprimer la candidature de test « doctolib » en prod (accord d'Adrien à demander)
+- Adrien recrée son profil en prod (premier lancement)
 - Envoyer le lien à Nicolas ; sur iPhone, ajouter l'app à l'écran d'accueil pour recevoir les relances
 - Aperçus Vercel en échec « Resource provisioning failed » (intégration Neon, sans doute le quota de branches) : nettoyer les branches Neon des aperçus
 - Fil du binôme : « Tom est devenu Chevalier » n'est pas affiché (seuls les états endormi/rouille/déchu le sont)
