@@ -1,5 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Pixelify_Sans, Press_Start_2P, VT323 } from "next/font/google";
+import { Landscape } from "@/components/Landscape";
+import { db } from "@/server/db";
+import { currentUser } from "@/server/session";
+import type { LandscapeId } from "@/lib/landscapes";
 import "./globals.css";
 
 const pressStart = Press_Start_2P({ weight: "400", subsets: ["latin"], variable: "--font-press-start" });
@@ -14,10 +18,22 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#16132a" };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>): React.ReactElement {
+async function landscapeOf(): Promise<LandscapeId> {
+  const user = await currentUser().catch(() => null);
+  if (!user) return "CASTLE";
+  const player = await db().player.findUnique({ where: { id: user.id }, select: { landscape: true } });
+  return player?.landscape ?? "CASTLE";
+}
+
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>): Promise<React.ReactElement> {
+  const landscape = await landscapeOf();
   return (
     <html lang="fr" className={`${pressStart.variable} ${pixelify.variable} ${vt323.variable}`}>
-      <body className="min-h-dvh antialiased">{children}</body>
+      <body className="min-h-dvh antialiased">
+        <Landscape id={landscape} className="landscape-bg" />
+        <div className="landscape-veil" />
+        {children}
+      </body>
     </html>
   );
 }

@@ -4,14 +4,15 @@ import { parisDay } from "@/game/calendar";
 import { extendedDeadline, validateNewGoal } from "@/lib/goal";
 import { GOAL_TARGET } from "@/lib/onboarding";
 import { db } from "@/server/db";
+import { partnerDeadline } from "@/server/sharedGoal";
 import { requirePlayer } from "@/server/session";
 
 const noon = (day: string): Date => new Date(`${day}T12:00:00Z`);
 
-/** Temps écoulé : on prolonge la date limite de 4 semaines, sans pénalité. */
+/** Temps écoulé : on prolonge de 4 semaines, sans pénalité ; la date limite reste commune aux deux joueurs. */
 export async function extendGoal(): Promise<void> {
-  const player = await requirePlayer();
-  await db().goal.updateMany({ where: { playerId: player.id, status: "ACTIVE" }, data: { deadline: noon(extendedDeadline(parisDay(new Date()))) } });
+  await requirePlayer();
+  await db().goal.updateMany({ where: { status: "ACTIVE" }, data: { deadline: noon(extendedDeadline(parisDay(new Date()))) } });
   redirect("/");
 }
 
@@ -35,7 +36,7 @@ export type NewGoalState = { error: string } | null;
 export async function createGoal(_prev: NewGoalState, form: FormData): Promise<NewGoalState> {
   const player = await requirePlayer();
   const field = (name: string): string => String(form.get(name) ?? "");
-  const result = validateNewGoal({ deadline: field("deadline"), character: field("character") }, parisDay(new Date()));
+  const result = validateNewGoal({ deadline: (await partnerDeadline(player.id)) ?? field("deadline"), character: field("character") }, parisDay(new Date()));
   if (!result.ok) return { error: result.error };
   const active = await db().goal.count({ where: { playerId: player.id, status: "ACTIVE" } });
   if (active > 0) redirect("/");

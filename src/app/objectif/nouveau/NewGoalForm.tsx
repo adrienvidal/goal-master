@@ -6,9 +6,9 @@ import { formName } from "@/lib/forms";
 import type { CharacterId, ColorId } from "@/lib/onboarding";
 import { createGoal, type NewGoalState } from "../actions";
 
-type Props = { character: CharacterId; color: ColorId; form: Form; defaultDeadline: string; minDeadline: string };
+type Props = { character: CharacterId; color: ColorId; form: Form; defaultDeadline: string; minDeadline: string; sharedDeadline: string | null };
 
-export default function NewGoalForm({ character: initial, color, form, defaultDeadline, minDeadline }: Props): React.ReactElement {
+export default function NewGoalForm({ character: initial, color, form, defaultDeadline, minDeadline, sharedDeadline }: Props): React.ReactElement {
   const [state, action, pending] = useActionState<NewGoalState, FormData>(createGoal, null);
   const [character, setCharacter] = useState<CharacterId>(initial);
   return (
@@ -40,8 +40,14 @@ export default function NewGoalForm({ character: initial, color, form, defaultDe
             <p className="input num !border-stone-2 text-muted" aria-label="Objectif commun">100 · commun</p>
           </div>
           <div>
-            <label htmlFor="deadline" className="text-sm text-muted">Avant le</label>
-            <input id="deadline" name="deadline" className="input num" type="date" min={minDeadline} defaultValue={defaultDeadline} required />
+            <label htmlFor={sharedDeadline ? undefined : "deadline"} className="text-sm text-muted">Avant le</label>
+            {sharedDeadline ? (
+              <p className="input num !border-stone-2 text-muted" aria-label="Date limite commune">
+                {sharedDeadline.slice(8, 10)}/{sharedDeadline.slice(5, 7)}/{sharedDeadline.slice(0, 4)} · commune
+              </p>
+            ) : (
+              <input id="deadline" name="deadline" className="input num" type="date" min={minDeadline} defaultValue={defaultDeadline} required />
+            )}
           </div>
         </div>
         <p className="text-sm text-muted">XP, niveau, avatar et succès sont conservés.</p>
