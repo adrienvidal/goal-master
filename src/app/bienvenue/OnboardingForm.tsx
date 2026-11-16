@@ -82,7 +82,10 @@ export default function OnboardingForm({ takenColor, partnerName, defaultDeadlin
                 {sharedDeadline.slice(8, 10)}/{sharedDeadline.slice(5, 7)}/{sharedDeadline.slice(0, 4)}
               </p>
             ) : (
-              <input id="deadline" name="deadline" className="input num" type="date" min={minDeadline} defaultValue={defaultDeadline} required />
+              <>
+                <input id="deadline" name="deadline" className="input num" type="date" min={minDeadline} defaultValue={defaultDeadline} required aria-describedby="deadline-hint" />
+                <small id="deadline-hint" className="mt-1 block text-xs text-muted">Ton binôme reprendra cette date.</small>
+              </>
             )}
           </div>
         </div>
