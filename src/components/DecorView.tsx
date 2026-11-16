@@ -6,7 +6,7 @@ import type { Form } from "@/game/levels";
 import type { CharacterId, ColorId } from "@/lib/onboarding";
 import { Sprite } from "./Sprite";
 
-export type Walker = { pseudo: string; level: number; character: CharacterId; color: ColorId; form: Form; mood: Mood; hurt: boolean; status: string | null };
+export type Walker = { pseudo: string; level: number; character: CharacterId; color: ColorId; form: Form; mood: Mood; hurt: boolean; status: string | null; crown?: boolean };
 
 // Trajets des deux héros : le premier part de la gauche, le second de la droite.
 const PATHS = [
@@ -61,7 +61,7 @@ export function DecorView({ walkers }: { walkers: Walker[] }): React.ReactElemen
                     <span className={`tag ${w.status ? "sad" : ""}`}>{w.status ?? `${w.pseudo} · Niv. ${w.level}`}</span>
                     <span className="facer">
                       <span className="sizer">
-                        <Sprite character={w.character} color={w.color} form={w.form} mood={w.mood} px={4} hurt={w.hurt} />
+                        <Sprite character={w.character} color={w.color} form={w.form} mood={w.mood} px={4} hurt={w.hurt} crown={w.crown} />
                       </span>
                     </span>
                   </span>

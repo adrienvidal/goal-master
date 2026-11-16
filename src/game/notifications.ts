@@ -12,7 +12,7 @@ export type Category = (typeof CATEGORIES)[number];
 export const CATEGORY_INFO: Record<Category, { label: string; hint: string }> = {
   nudges: { label: "Relances", hint: "Ton binôme te motive, ta relance a marché." },
   partner: { label: "Binôme", hint: "Il change de forme, il achève le boss." },
-  duel: { label: "Duel", hint: "Rappel du jeudi soir, résultat du vendredi 18 h." },
+  duel: { label: "Duel", hint: "Rappel du jeudi soir, résultat du vendredi 18 h, défis." },
   reminders: { label: "Rappels", hint: "Ton avatar commence à rouiller." },
   news: { label: "Nouveautés", hint: "Une nouvelle fonctionnalité arrive dans Goal Master." },
 };
@@ -34,7 +34,9 @@ export type NotificationEvent =
   | { kind: "remind"; friday: Day; boss: BossIndex; missing: number }
   | { kind: "duel"; friday: Day; won: boolean; boss: BossIndex; total: number; hp: number }
   | { kind: "rust"; lastDay: Day; idle: number; hero: string }
-  | { kind: "news"; step: number; title: string };
+  | { kind: "news"; step: number; title: string }
+  | { kind: "challenge"; challengeId: string; from: string; target: number; until: string }
+  | { kind: "challenge-end"; challengeId: string; won: boolean; partner: string; mine: number; theirs: number };
 
 const RULES: Record<NotificationEvent["kind"], { category: Category; capped: boolean }> = {
   nudge: { category: "nudges", capped: false },
@@ -45,6 +47,8 @@ const RULES: Record<NotificationEvent["kind"], { category: Category; capped: boo
   duel: { category: "duel", capped: false },
   rust: { category: "reminders", capped: true },
   news: { category: "news", capped: true },
+  challenge: { category: "duel", capped: false },
+  "challenge-end": { category: "duel", capped: false },
 };
 
 export function ruleOf(event: NotificationEvent): { category: Category; capped: boolean } {
@@ -67,6 +71,9 @@ export function keyOf(event: NotificationEvent): string {
       return `rust:${event.lastDay}`;
     case "news":
       return `news:${event.step}`;
+    case "challenge":
+    case "challenge-end":
+      return `${event.kind}:${event.challengeId}`;
   }
 }
 
@@ -101,12 +108,20 @@ export function textOf(event: NotificationEvent): NotificationText {
       return t(`Ton ${event.hero} commence à rouiller.`, `${event.idle} jours sans candidature. Une candidature suffit à le réveiller.`);
     case "news":
       return t(`Nouveau dans Goal Master : ${event.title}.`, "Viens voir ce qui a changé.", "/intro");
+    case "challenge":
+      return { title: `🏁 ${event.from} te défie`, headline: `${event.from} te défie : ${event.target} candidatures avant ${event.until}.`, detail: "Le premier arrivé gagne la couronne.", url: "/" };
+    case "challenge-end":
+      return event.won
+        ? t(`Défi gagné ! Tu as battu ${event.partner} ${event.mine} à ${event.theirs}.`, "La couronne est à toi jusqu'à demain soir.", "/defi")
+        : t(`${event.partner} l'emporte ${event.theirs} à ${event.mine}.`, "Tes candidatures comptent quand même pour l'XP et pour le boss.", "/defi");
   }
 }
 
 /** Corps de la notification push : titre à part, le reste en une phrase. */
 export function pushBody(text: NotificationText, event: NotificationEvent): string {
-  return event.kind === "nudge" ? NUDGE_MESSAGES[event.message] : `${text.headline} ${text.detail}`;
+  if (event.kind === "nudge") return NUDGE_MESSAGES[event.message];
+  if (event.kind === "challenge") return `${event.target} candidatures avant ${event.until}. ${text.detail}`;
+  return `${text.headline} ${text.detail}`;
 }
 
 /** Rouille : dernier jour actif et jours ouvrés d'inactivité depuis, si le seuil est atteint. */

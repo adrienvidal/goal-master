@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Décor, duel du vendredi et intro versionnée en prod
+✅ Fait      Notifications push + e-mail 8 bits, cron n8n, doublons, en prod
 ⛔ Bloqué    Rien
-🎯 Priorité  Vérifier le premier duel et son rappel (échéance 20/11)
+🎯 Priorité  Vérifier le cron n8n et le premier duel (échéance 20/11)
 ```
 
 ## Réalisé
@@ -125,3 +125,39 @@
 - Duel à deux contre un boss, pas l'un contre l'autre ; PV = rythme nécessaire pour tenir l'objectif ; +1 coup de grâce par tranche de 5 niveaux ; défaite visuelle uniquement
 - Semaine du vendredi 18 h au vendredi 18 h (les candidatures du week-end comptent pour le boss suivant) ; un joueur qui arrive en cours de semaine combat tout de suite, boss au prorata des jours ouvrés
 - Rappel du jeudi à 18 h UTC (19 h l'hiver, 20 h l'été)
+
+---
+
+## Suite : responsive, notifications, e-mails 8 bits, cron n8n, doublons
+
+### Réalisé
+- PR #39 repasse responsive de `/connexion`, `/objectif/fin`, `/objectif/nouveau` (titres dans la carte, cartes centrées, libellés sur une ligne)
+- Écrans du duel vus en local avec une horloge simulée : alerte du jeudi, boss K.O. avant vendredi, victoire (seule la défaite avait été vue)
+- PR #40 notifications Web Push + e-mail (8 événements, plafond 2/jour, 5 catégories dans `/reglages#notifications`, journal `NotificationLog` à clé unique), bandeau de relance fermable et « Relance réussie », bandeau « Nouvelle version », correctif du message iPhone affiché sur Android
+- PR #41 e-mails 8 bits : bandeau et scène en PNG pixel art générés par l'app (`/api/email/header`, `/api/email/scene`), sans dépendance (encodeur PNG maison), rouille dans l'image
+- PR #42 règle CLAUDE.md (et skill `wnr-init-claude`) : Claude supprime seul les branches Neon `preview/*` quand la limite est atteinte. **Blocker levé** : aperçus Vercel en échec, 9 branches `preview/*` supprimées (`neonctl` authentifié sur la machine)
+- PR #43 accueil rafraîchi sans rechargement (retour sur l'app, toutes les 60 s, à l'arrivée d'un push)
+- PR #45 cron quotidien déplacé sur n8n (auto.webnrolls.com, workflow « Goal Master · cron quotidien », 18 h 01 heure de Paris, identifiant « Goal Master · cron » limité à goal.viloris.io) ; cron Vercel retiré
+- Doublon de Nicolas (« Licorn Society / Delibia ») annulé en base de prod à la demande d'Adrien
+- PR #47 doublons sûrs ou possibles (comparaison normalisée, par nom d'entreprise) et retrait des candidatures du jour avec confirmation
+- Mises en prod #44, #46, #48 (commits de fusion)
+- Maquettes : notifications https://claude.ai/artifact/T7UcytDdGCRdEMB4uwnFNu (`docs/maquettes/notifications.html`) ; candidatures du jour https://claude.ai/artifact/11kJZdFkbDAdQ2VNmxuDnj (`docs/maquettes/candidatures-du-jour.html`)
+
+### Reste à faire
+- Ce soir 16/11 à 18 h 01 : vérifier l'exécution n8n (onglet Executions) et le rendu réel de l'e-mail « Nouveauté » (Gmail)
+- Jeudi 19/11 et vendredi 20/11 à 18 h 01 : rappel du boss, puis résultat du duel (push, e-mail, écran `/duel`)
+- Vérifier sur Android qu'une relance reçue app ouverte rafraîchit l'accueil (non testable en local)
+- Textes de la carte du boss : victoire déjà acquise grâce aux coups de grâce non annoncée ; « vendredi 18 h » ambigu le soir même
+- Option : activer dans Vercel (Integrations > Neon) la suppression automatique des branches d'aperçu
+
+### Blockers
+- Aucun
+
+### Décisions
+- Notifications sur deux canaux, l'e-mail toujours (pas d'interrupteur propre) ; ntfy et Telegram écartés
+- Plafond de 2 notifications par jour et par personne, hors relance reçue, rappel du jeudi et résultat du duel ; rouille à 3 jours ouvrés
+- Nouvelle version : bandeau « Recharger », pas de rechargement automatique ; seules les données se rafraîchissent seules
+- Cron sur n8n plutôt que Vercel (heure exacte, fuseau de Paris) ; chaque envoi reste dédoublonné, un appel en trop est sans effet
+- Doublon : sûr → « Ne pas l'ajouter » d'abord ; possible → « C'est une autre candidature ? » ; jamais bloquant
+- Retrait d'une candidature le jour même seulement ; l'XP suit, les succès restent
+- Les 4 boss tournent chaque semaine (Recruteur fantôme, Golem ATS, Pile de refus, Silence radio)

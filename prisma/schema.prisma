@@ -33,6 +33,13 @@ enum Landscape {
   PLAINS
 }
 
+enum ChallengeStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+}
+
 enum GoalStatus {
   ACTIVE
   COMPLETED
@@ -55,6 +62,8 @@ model Player {
   applications    Application[]
   sentNudges      Nudge[]               @relation("sentNudges")
   gotNudges       Nudge[]               @relation("receivedNudges")
+  sentChallenges  Challenge[]           @relation("sentChallenges")
+  gotChallenges   Challenge[]           @relation("receivedChallenges")
   achievements    UnlockedAchievement[]
   pushSubs        PushSubscription[]
   notifications   NotificationLog[]
@@ -95,6 +104,25 @@ model Nudge {
   sentAt      DateTime @default(now())
 
   @@index([senderId, sentAt])
+}
+
+/// Défi entre les deux joueurs (spec defi) : seuls la demande, la réponse et le gagnant sont stockés.
+model Challenge {
+  id           String          @id @default(cuid())
+  challengerId String
+  challenger   Player          @relation("sentChallenges", fields: [challengerId], references: [id])
+  opponentId   String
+  opponent     Player          @relation("receivedChallenges", fields: [opponentId], references: [id])
+  target       Int
+  deadline     DateTime
+  status       ChallengeStatus @default(PENDING)
+  createdAt    DateTime        @default(now())
+  acceptedAt   DateTime?
+  closedAt     DateTime?
+  winnerId     String?
+  wonAt        DateTime?
+
+  @@index([createdAt])
 }
 
 /// Achievements are never removed once unlocked.

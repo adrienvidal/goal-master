@@ -3,11 +3,13 @@ import { useState, useTransition } from "react";
 import { NUDGE_MESSAGES } from "@/game/nudges";
 import { sendNudge } from "@/app/motiver-actions";
 
-type Props = { partnerName: string; sentToday: boolean; blink: boolean };
+type Props = { partnerName: string; sentToday: boolean; blink: boolean; open?: boolean; onOpenChange?: (open: boolean) => void };
 
 // « Motiver » : choix parmi 4 messages, une relance par jour (cadrage §7).
-export function NudgeButton({ partnerName, sentToday, blink }: Props): React.ReactElement {
-  const [open, setOpen] = useState(false);
+export function NudgeButton({ partnerName, sentToday, blink, open: openProp, onOpenChange }: Props): React.ReactElement {
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = openProp ?? ownOpen;
+  const setOpen = onOpenChange ?? setOwnOpen;
   const [choice, setChoice] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
