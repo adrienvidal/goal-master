@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { BossSprite } from "@/components/BossSprite";
+import { EyeIcon } from "@/components/DecorView";
 import { Sprite } from "@/components/Sprite";
 import { finishIntro } from "./actions";
 
@@ -78,9 +79,25 @@ const STEPS: Step[] = [
       </div>
     ),
   },
+  {
+    title: "Regarde-les vivre.",
+    text: "Touche l'œil en haut à droite de la carte : elle s'efface, et vos héros se promènent dans le paysage. Touche l'écran pour la faire revenir.",
+    stage: (
+      <div className="intro-decor" role="img" aria-label="L'œil masque la carte, les héros se promènent">
+        <div className="intro-decor-card">
+          <span className="intro-decor-eye"><EyeIcon /></span>
+          <i /><i /><i />
+        </div>
+        <div className="intro-decor-heroes">
+          <span className="intro-decor-walk"><Sprite character="KNIGHT" color="BLUE" form={3} px={4} /></span>
+          <span className="intro-decor-walk is-late"><Sprite character="PANDA" color="RED" form={3} px={4} /></span>
+        </div>
+      </div>
+    ),
+  },
 ];
 
-// Intro du premier lancement (maquettes validées) : 5 écrans, « Passer » à tout moment.
+// Intro du premier lancement (maquettes validées) : 6 écrans, « Passer » à tout moment.
 export default function Intro({ start = 0 }: { start?: number }): React.ReactElement {
   const [i, setI] = useState(start);
   const step = STEPS[i];
