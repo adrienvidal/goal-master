@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
 import { currentUser } from "@/server/session";
+import { parseAllowedEmails } from "@/lib/allowlist";
+import { devLoginEnabled } from "@/lib/devLogin";
+import { devLogin } from "./dev-actions";
 import LoginForm from "./LoginForm";
 
 export default async function LoginPage(): Promise<React.ReactElement> {
@@ -10,7 +13,18 @@ export default async function LoginPage(): Promise<React.ReactElement> {
         <p className="font-display text-base text-gold">GOAL MASTER</p>
         <p className="mt-2 text-muted">100 candidatures. Un chevalier.</p>
       </div>
-      <LoginForm />
+      {devLoginEnabled(process.env) ? (
+        <div className="device flex flex-col gap-3">
+          <p className="text-sm text-muted">Base locale : connexion directe, sans code.</p>
+          {parseAllowedEmails(process.env.ALLOWED_EMAILS).map((email) => (
+            <form key={email} action={devLogin.bind(null, email)}>
+              <button type="submit" className="btn ghost !text-[10px]">{email}</button>
+            </form>
+          ))}
+        </div>
+      ) : (
+        <LoginForm />
+      )}
     </main>
   );
 }
