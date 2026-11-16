@@ -156,6 +156,11 @@ En anglais, à l'impératif, sans point final. Préfixe `feat:`, `fix:`, `test:`
   et une par déploiement de prévisualisation via l'intégration Vercel ; RLS non
   activé : la sécurité est applicative, toute requête filtre sur l'utilisateur
   courant
+- Branches Neon d'aperçu : quand un aperçu Vercel échoue parce que la limite de
+  branches est atteinte (« Resource provisioning failed », 10 en offre gratuite),
+  Claude supprime lui-même les branches `preview/*` (`npx neonctl branches list`
+  puis `delete`), sans demander : c'est l'exception à « toute suppression se
+  confirme ». Jamais la branche de production `main`. Le noter dans « Réalisé »
 - Authentification par code à usage unique envoyé par e-mail avec Better Auth (greffon emailOTP), comme
   viloris-studio ; codes envoyés depuis contact@viloris.io par le SMTP de Google Workspace (SMTP_USER,
   SMTP_PASS) ; adresses autorisées dans ALLOWED_EMAILS. Variables récupérées en local par
