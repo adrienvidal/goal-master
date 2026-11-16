@@ -36,3 +36,9 @@ export async function savePushSubscription(sub: SubscriptionJson): Promise<void>
     update: { playerId: player.id, p256dh: keys.p256dh, auth: keys.auth },
   });
 }
+
+/** Désactive le push sur cet appareil : l'abonnement est oublié côté serveur. */
+export async function deletePushSubscription(endpoint: string): Promise<void> {
+  const player = await requirePlayer();
+  await db().pushSubscription.deleteMany({ where: { endpoint, playerId: player.id } });
+}
