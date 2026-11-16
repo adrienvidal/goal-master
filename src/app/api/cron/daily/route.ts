@@ -1,4 +1,5 @@
-// Cron quotidien (Vercel Hobby : une fois par jour, dans l'heure ; 17 h UTC = 18 h ou 19 h à Paris, après le duel).
+// Cron quotidien, appelé par n8n (workflow « Goal Master · cron quotidien » sur auto.webnrolls.com) à 18 h 01, heure de Paris :
+// juste après le duel du vendredi 18 h. Chaque envoi est dédoublonné, un second appel ne renvoie rien.
 // Jeudi : rappel si le boss tient encore. Vendredi : résultat du duel. Chaque jour : rouille et nouveauté.
 import { parisDay, type Day } from "@/game/calendar";
 import { currentDuel, pastDuels } from "@/game/duel";
