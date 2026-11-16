@@ -26,7 +26,7 @@ export default async function GoalEndPage(): Promise<React.ReactElement> {
   if (outcome === "won") {
     const days = Math.max(1, Math.round((now.getTime() - goal.createdAt.getTime()) / DAY_MS));
     return (
-      <main className="mx-auto max-w-md px-4 py-10">
+      <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-10">
         <div className="device evo-end flex flex-col items-center gap-5 text-center">
           <Sprite character={me.character} color={me.color} form={me.levelForm} pose="victory" px={6} label={me.title} />
           <p className="h-title text-gold">Mission accomplie !</p>
@@ -44,7 +44,7 @@ export default async function GoalEndPage(): Promise<React.ReactElement> {
   }
 
   return (
-    <main className="mx-auto max-w-md px-4 py-10">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-10">
       <div className="device flex flex-col items-center gap-5 text-center">
         <Sprite character={me.character} color={me.color} form={me.displayedForm} mood={me.mood} px={5} label={me.title} />
         <p className="h-title text-gold">Temps écoulé</p>
@@ -52,7 +52,7 @@ export default async function GoalEndPage(): Promise<React.ReactElement> {
           <span className="num">{g.done}</span> candidatures sur <span className="num">{g.target}</span> au {short(g.deadline)}. Ton avatar garde tout ce qu&apos;il a gagné.
         </p>
         <form action={extendGoal} className="w-full">
-          <button type="submit" className="btn">Prolonger jusqu&apos;au {short(extendedDeadline(parisDay(now)))}</button>
+          <button type="submit" className="btn">Prolonger jusqu&apos;au <span className="whitespace-nowrap">{short(extendedDeadline(parisDay(now)))}</span></button>
         </form>
         <form action={abandonGoal} className="w-full">
           <button type="submit" className="btn ghost">Nouvel objectif</button>
