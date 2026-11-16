@@ -17,6 +17,7 @@ export type PlayerView = {
   displayedForm: Form;
   title: string;
   mood: Mood;
+  fallen: boolean;
   idleWorkdays: number;
   streak: number;
   goal: { target: number; done: number; deadline: Day; daysLeft: number } | null;
@@ -65,6 +66,7 @@ export function buildPlayerView(player: PlayerRow, apps: Application[], nudges: 
     displayedForm: state.displayedForm,
     title,
     mood: state.mood,
+    fallen: state.fallen,
     idleWorkdays: state.idleWorkdays,
     streak: currentStreak(counts, today),
     goal: goalView,

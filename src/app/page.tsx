@@ -1,6 +1,8 @@
-import { AvatarBox } from "@/components/AvatarBox";
+import { MyAvatar } from "@/components/MyAvatar";
+import { Sprite } from "@/components/Sprite";
 import { Bar } from "@/components/Bar";
 import { Flame } from "@/components/Flame";
+import { formName } from "@/lib/forms";
 import { buildPlayerView, type PlayerView } from "@/lib/playerView";
 import { db } from "@/server/db";
 import { loadGame } from "@/server/game";
@@ -19,6 +21,14 @@ function Streak({ days }: { days: number }): React.ReactElement {
       {days} j
     </span>
   );
+}
+
+/** Ligne d'état du binôme inactif (cadrage §6.3 bis et ter). */
+function partnerStatus(p: PlayerView): string {
+  const panda = p.character === "PANDA";
+  if (p.mood === "exhausted") return panda ? `${p.pseudo} a perdu sa robe de ${formName(p.character, p.levelForm)}` : `${p.pseudo} a perdu son armure de ${formName(p.character, p.levelForm)}`;
+  if (p.mood === "tired") return panda ? `Le bambou de ${p.pseudo} se fend` : `L'armure de ${p.pseudo} rouille`;
+  return `${p.pseudo} s'est endormi · rien depuis ${p.idleWorkdays} jours ouvrés`;
 }
 
 async function goalFor(playerId: string): Promise<{ target: number; deadline: Date; createdAt: Date } | null> {
@@ -55,7 +65,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
       <div className="device grid gap-6 md:grid-cols-[1.3fr_1fr]">
         <section className="flex flex-col gap-4" aria-label="Ma quête">
           <div className="flex items-end gap-4">
-            <AvatarBox character={me.character} color={me.color} form={me.displayedForm} mood={me.mood} size={88} />
+            <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} level={me.level} mood={me.mood} fallen={me.fallen} />
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-display text-[11px] leading-relaxed">{me.pseudo} · Niv. {me.level}</span>
@@ -78,11 +88,11 @@ export default async function HomePage(): Promise<React.ReactElement> {
           {partner ? (
             <>
               <div className="flex items-end gap-3">
-                <AvatarBox character={partner.character} color={partner.color} form={partner.displayedForm} mood={partner.mood} size={72} />
+                <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} mood={partner.mood} px={3} label={partner.title} />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="font-display text-[11px] leading-relaxed">{partner.pseudo} · Niv. {partner.level}</span>
                   <span className="text-sm text-muted">{partner.title} · série {partner.streak}</span>
-                  {partner.idleWorkdays >= 2 ? <span className="text-sm text-danger">Rien depuis {partner.idleWorkdays} jours ouvrés</span> : null}
+                  {partner.idleWorkdays >= 2 ? <span className="text-sm text-danger">{partnerStatus(partner)}</span> : null}
                 </div>
               </div>
               {partner.goal ? <Bar value={partner.goal.done} max={partner.goal.target} tone="green" label={`Progression de ${partner.pseudo}`} /> : null}
