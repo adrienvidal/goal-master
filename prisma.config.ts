@@ -1,8 +1,8 @@
-// Prisma 7 : l'adresse de la base vient de .env.local en local (vercel env pull), des variables Vercel en ligne.
+// Prisma 7 : en local, la base Docker de .env.development.local prime sur .env.local (vercel env pull) ; en ligne, les variables Vercel.
 import { config } from "dotenv";
 import { defineConfig } from "prisma/config";
 
-config({ path: ".env.local", quiet: true });
+config({ path: [".env.development.local", ".env.local"], quiet: true });
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

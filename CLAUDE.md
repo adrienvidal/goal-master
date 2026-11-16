@@ -151,7 +151,8 @@ En anglais, à l'impératif, sans point final. Préfixe `feat:`, `fix:`, `test:`
 - **npm** comme gestionnaire de paquets, jamais pnpm, yarn ni bun : un seul
   lockfile (`package-lock.json`), et toute commande s'écrit `npm` / `npx`
 - Next.js App Router + TypeScript strict, RSC par défaut
-- Neon (Postgres serverless) en ligne : une branche de base pour la production,
+- Postgres local dans Docker pour le développement (`npm run db` : conteneur, migrations, generate ; adresse dans `.env.development.local`, qui prime sur `.env.local`)
+- Neon (Postgres serverless) en ligne, réservé aux déploiements : une branche de base pour la production,
   et une par déploiement de prévisualisation via l'intégration Vercel ; RLS non
   activé : la sécurité est applicative, toute requête filtre sur l'utilisateur
   courant
