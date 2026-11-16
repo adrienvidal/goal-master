@@ -6,7 +6,7 @@ self.addEventListener("push", (event) => {
       self.registration.showNotification(data.title || "Goal Master", {
         body: data.body || "",
         icon: "/icon-192.png",
-        badge: "/icon-192.png",
+        badge: "/badge-96.png",
         data: { url: data.url || "/" },
       }),
       // Une page ouverte rafraîchit ses données tout de suite (LiveRefresh).

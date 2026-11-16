@@ -28,6 +28,13 @@ export function headerPng(): Buffer {
   return encodePng(c, HEADER_SCALE);
 }
 
+/** Badge des notifications Android : l'épée en silhouette blanche sur fond transparent (Android n'en garde que la transparence). */
+export function swordBadgePng(): Buffer {
+  const c = new PixelCanvas(16, 16);
+  SWORD_ICON.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && c.set(x, y, [255, 255, 255, 255])));
+  return encodePng(c, 6);
+}
+
 export type Actor =
   | { type: "hero"; character: CharacterId; color: ColorId; form: Form; pose: Pose; effect: "none" | "rust" | "hurt" }
   | { type: "boss"; boss: BossIndex; down: boolean };
