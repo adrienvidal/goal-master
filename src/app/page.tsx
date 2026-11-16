@@ -6,7 +6,10 @@ import { NudgeButton } from "@/components/NudgeButton";
 import { PushSetup } from "@/components/PushSetup";
 import { parisDay } from "@/game/calendar";
 import { NUDGE_MESSAGES, pendingNudge, sentToday } from "@/game/nudges";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { formName } from "@/lib/forms";
+import { goalOutcome } from "@/lib/goal";
 import { buildPlayerView, type PlayerView } from "@/lib/playerView";
 import { db } from "@/server/db";
 import { loadGame } from "@/server/game";
@@ -60,7 +63,10 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const player = await requirePlayer();
   const game = await loadGame();
   const now = new Date();
-  const me = buildPlayerView(player, game.apps, game.nudges, await goalFor(player.id), now);
+  const myGoal = await goalFor(player.id);
+  if (!myGoal) redirect("/objectif/nouveau");
+  const me = buildPlayerView(player, game.apps, game.nudges, myGoal, now);
+  if (me.goal && goalOutcome(me.goal.done, me.goal.target, me.goal.deadline, parisDay(now)) !== "active") redirect("/objectif/fin");
   const partnerRow = game.players.find((p) => p.id !== player.id);
   const partner = partnerRow ? buildPlayerView(partnerRow, game.apps, game.nudges, await goalFor(partnerRow.id), now) : null;
   const received = partner ? pendingNudge(player.id, game.nudges, game.apps, now) : null;
@@ -92,6 +98,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
           </div>
           <GoalBlock view={me} />
           <AddApplication todayCount={me.today.count} />
+          <Link href="/succes" className="btn ghost !text-[10px]">Mes succès</Link>
           <p className="text-sm text-muted">
             Aujourd&apos;hui (<span className="num">{me.today.count}/15</span>)
             {me.today.companies.length ? <> : <b className="text-ink">{me.today.companies.join(", ")}</b></> : " : pas encore de candidature."}

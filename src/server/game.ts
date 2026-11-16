@@ -27,7 +27,11 @@ export async function syncAchievements(data: GameData, now: Date): Promise<void>
   const today = parisDay(now);
   for (const player of data.players) {
     const partner = data.players.find((p) => p.id !== player.id);
-    const goalsReached = await db().goal.count({ where: { playerId: player.id, status: "COMPLETED" } });
+    const completed = await db().goal.count({ where: { playerId: player.id, status: "COMPLETED" } });
+    // Un objectif actif dont la cible est atteinte compte déjà : le succès s'affiche sur l'écran de victoire.
+    const active = await db().goal.findFirst({ where: { playerId: player.id, status: "ACTIVE" }, select: { target: true, createdAt: true } });
+    const doneInActive = active ? data.apps.filter((a) => a.userId === player.id && a.cancelledAt === null && a.createdAt >= active.createdAt).length : 0;
+    const goalsReached = completed + (active && doneInActive >= active.target ? 1 : 0);
     const levelForm = formForLevel(levelFromXp(totalXp(player.id, data.apps, data.nudges)).level);
     const earned = earnedAchievements({ userId: player.id, partnerId: partner?.id ?? "", apps: data.apps, nudges: data.nudges, goalsReached, today, levelForm });
     if (earned.size === 0) continue;
