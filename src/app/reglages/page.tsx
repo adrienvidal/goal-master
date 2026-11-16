@@ -14,6 +14,7 @@ export default async function SettingsPage(): Promise<React.ReactElement> {
           <h1 className="h-title">Réglages</h1>
           <Link href="/" className="btn ghost !w-auto px-4 !text-[10px]">Retour</Link>
         </div>
+        <Link href="/intro" className="btn ghost !text-[10px]">Revoir l&apos;intro</Link>
         <section className="flex flex-col gap-3" aria-labelledby="fond">
           <h2 id="fond" className="text-xs uppercase tracking-wider text-muted">Paysage de fond</h2>
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">

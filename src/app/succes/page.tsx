@@ -18,7 +18,10 @@ export default async function AchievementsPage(): Promise<React.ReactElement> {
     <main className="mx-auto max-w-3xl px-4 py-6 md:py-10">
       <div className="device flex flex-col gap-5">
         <div className="flex items-center justify-between gap-3">
-          <h1 className="h-title">Succès de {player.pseudo} · <span className="num text-gold">{unlocked.size}/{ids.length}</span></h1>
+          <div className="flex flex-col gap-1">
+            <h1 className="h-title">Mes succès</h1>
+            <span className="num text-gold">{unlocked.size} / {ids.length} débloqués</span>
+          </div>
           <Link href="/" className="btn ghost !w-auto px-4 !text-[10px]">Retour</Link>
         </div>
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(104px,1fr))] gap-2.5">

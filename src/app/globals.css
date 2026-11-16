@@ -113,3 +113,34 @@ body {
 .landscape { display: block; image-rendering: pixelated; width: 100%; height: auto; aspect-ratio: 16 / 9; }
 .landscape-bg { position: fixed; inset: 0; z-index: -1; width: 100vw; height: 100dvh; aspect-ratio: auto; object-fit: cover; }
 .landscape-veil { position: fixed; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(22,19,42,.15), rgba(22,19,42,.55)); pointer-events: none; }
+
+/* ---------- Intro (maquette validée) ---------- */
+.intro-swap { display: grid; place-items: end center; }
+.intro-swap > * { grid-area: 1 / 1; }
+.intro-rest { animation: intro-a 3s steps(1) infinite; }
+.intro-act { animation: intro-b 3s steps(1) infinite; }
+@keyframes intro-a { 0%, 40% { opacity: 1; } 41%, 70% { opacity: 0; } 71% { opacity: 1; } }
+@keyframes intro-b { 0%, 40% { opacity: 0; } 41%, 70% { opacity: 1; } 71% { opacity: 0; } }
+.intro-pop { animation: intro-pop 3s steps(6) infinite; }
+@keyframes intro-pop { 0%, 40% { opacity: 0; transform: translateY(10px); } 50% { opacity: 1; transform: none; } 75%, 100% { opacity: 0; transform: translateY(-14px); } }
+.intro-xp { display: block; height: 14px; background: var(--night); border: 3px solid var(--edge); }
+.intro-xp i { display: block; height: 100%; background: var(--gold); animation: intro-fill 3s steps(8) infinite; }
+@keyframes intro-fill { 0%, 40% { width: 30%; } 60%, 100% { width: 72%; } }
+.intro-press { font-size: 10px; color: #1a1626; background: var(--gold); padding: 10px 14px; box-shadow: inset -3px -3px 0 var(--gold-dk); animation: intro-press 3s steps(1) infinite; }
+@keyframes intro-press { 0%, 38% { transform: none; } 39%, 44% { transform: translate(2px, 2px); box-shadow: none; } 45% { transform: none; } }
+.intro-evo { display: grid; place-items: end center; }
+.intro-evo > span { grid-area: 1 / 1; opacity: 0; animation: intro-evo 8s steps(1) infinite; }
+.intro-evo > span:nth-child(2), .intro-evo-names > span:nth-child(2) { animation-delay: 2s; }
+.intro-evo > span:nth-child(3), .intro-evo-names > span:nth-child(3) { animation-delay: 4s; }
+.intro-evo > span:nth-child(4), .intro-evo-names > span:nth-child(4) { animation-delay: 6s; }
+.intro-evo > span:nth-child(4) svg { filter: drop-shadow(0 0 8px rgba(242,193,78,.8)); }
+@keyframes intro-evo { 0% { opacity: 1; filter: brightness(0) invert(1); } 4% { filter: none; } 25% { opacity: 1; } 25.01%, 100% { opacity: 0; } }
+.intro-evo-names { display: grid; min-height: 1.5em; }
+.intro-evo-names > span { grid-area: 1 / 1; text-align: center; opacity: 0; animation: intro-names 8s steps(1) infinite; }
+@keyframes intro-names { 0%, 24% { opacity: 1; } 25%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .intro-rest, .intro-act, .intro-pop, .intro-xp i, .intro-press, .intro-evo > span, .intro-evo-names > span { animation: none; }
+  .intro-act { opacity: 0; }
+  .intro-evo > span:last-child, .intro-evo-names > span:last-child { opacity: 1; }
+  .intro-xp i { width: 72%; }
+}

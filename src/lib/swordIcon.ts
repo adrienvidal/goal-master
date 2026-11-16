@@ -1,21 +1,21 @@
-// Icône de l'app : l'épée penchée, dessinée en 16 × 16 (choix d'Adrien sur la planche des icônes).
+// Icône de l'app : l'épée seule, verticale, dessinée en 16 × 16 (choix d'Adrien sur la planche des icônes).
 export const SWORD_ICON: string[] = [
   "................",
-  "............KK..",
-  "...........KLK..",
-  "..........KLWK..",
-  "..........KLWK..",
-  ".........KLWK...",
-  ".........KLWK...",
-  "........KLGK....",
-  "...KK...KLGK....",
-  "...KYKKKKKK.....",
-  "....KOYYYYYKK...",
-  ".....KKBBKKOYK..",
-  "......KBBK.KK...",
-  ".....KBBK.......",
-  "....KYYK........",
-  ".....KK.........",
+  ".......KK.......",
+  "......KLWK......",
+  "......KLWK......",
+  "......KLWK......",
+  "......KLWK......",
+  "......KLWK......",
+  "......KLGK......",
+  "......KLGK......",
+  "...KKKKKKKKKK...",
+  "...KOYYYYYYOK...",
+  "....KKKBBKKK....",
+  "......KBBK......",
+  ".....KYYYYK.....",
+  "......KKKK......",
+  "................",
 ];
 
 const PAL: Record<string, string> = { K: "#1a1626", W: "#dfe6ee", L: "#fffbe0", G: "#8b93a7", Y: "#f2c14e", O: "#b9831c", B: "#7a4a26" };

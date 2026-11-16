@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { INTRO_COOKIE } from "@/lib/intro";
 import { parisDay } from "@/game/calendar";
 import { defaultDeadline } from "@/lib/onboarding";
 import { db } from "@/server/db";
@@ -10,6 +12,7 @@ export default async function WelcomePage(): Promise<React.ReactElement> {
   const user = await requireUser();
   const players = await db().player.findMany({ select: { id: true, pseudo: true, color: true } });
   if (players.some((p) => p.id === user.id)) redirect("/");
+  if (!(await cookies()).get(INTRO_COOKIE)) redirect("/intro");
   const partner = players.find((p) => p.id !== user.id) ?? null;
   return (
     <main className="mx-auto max-w-md px-4 py-10">
