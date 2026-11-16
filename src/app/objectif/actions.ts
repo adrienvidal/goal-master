@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { parisDay } from "@/game/calendar";
 import { extendedDeadline, validateNewGoal } from "@/lib/goal";
+import { GOAL_TARGET } from "@/lib/onboarding";
 import { db } from "@/server/db";
 import { requirePlayer } from "@/server/session";
 
@@ -34,14 +35,14 @@ export type NewGoalState = { error: string } | null;
 export async function createGoal(_prev: NewGoalState, form: FormData): Promise<NewGoalState> {
   const player = await requirePlayer();
   const field = (name: string): string => String(form.get(name) ?? "");
-  const result = validateNewGoal({ target: field("target"), deadline: field("deadline"), character: field("character") }, parisDay(new Date()));
+  const result = validateNewGoal({ deadline: field("deadline"), character: field("character") }, parisDay(new Date()));
   if (!result.ok) return { error: result.error };
   const active = await db().goal.count({ where: { playerId: player.id, status: "ACTIVE" } });
   if (active > 0) redirect("/");
-  const { target, deadline, character } = result.value;
+  const { deadline, character } = result.value;
   await db().$transaction([
     db().player.update({ where: { id: player.id }, data: { character } }),
-    db().goal.create({ data: { playerId: player.id, target, deadline: noon(deadline) } }),
+    db().goal.create({ data: { playerId: player.id, target: GOAL_TARGET, deadline: noon(deadline) } }),
   ]);
   redirect("/");
 }

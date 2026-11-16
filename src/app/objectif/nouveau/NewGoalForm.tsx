@@ -6,9 +6,9 @@ import { formName } from "@/lib/forms";
 import type { CharacterId, ColorId } from "@/lib/onboarding";
 import { createGoal, type NewGoalState } from "../actions";
 
-type Props = { character: CharacterId; color: ColorId; form: Form; defaultTarget: number; defaultDeadline: string; minDeadline: string };
+type Props = { character: CharacterId; color: ColorId; form: Form; defaultDeadline: string; minDeadline: string };
 
-export default function NewGoalForm({ character: initial, color, form, defaultTarget, defaultDeadline, minDeadline }: Props): React.ReactElement {
+export default function NewGoalForm({ character: initial, color, form, defaultDeadline, minDeadline }: Props): React.ReactElement {
   const [state, action, pending] = useActionState<NewGoalState, FormData>(createGoal, null);
   const [character, setCharacter] = useState<CharacterId>(initial);
   return (
@@ -36,8 +36,8 @@ export default function NewGoalForm({ character: initial, color, form, defaultTa
         <span className="text-xs uppercase tracking-wider text-muted">Ton nouvel objectif</span>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label htmlFor="target" className="text-sm text-muted">Candidatures</label>
-            <input id="target" name="target" className="input num" type="number" min={1} max={1000} defaultValue={defaultTarget} required />
+            <span className="text-sm text-muted">Candidatures</span>
+            <p className="input num !border-stone-2 text-muted" aria-label="Objectif commun">100 · commun</p>
           </div>
           <div>
             <label htmlFor="deadline" className="text-sm text-muted">Avant le</label>
