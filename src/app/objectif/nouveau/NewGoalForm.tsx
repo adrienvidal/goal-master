@@ -36,14 +36,14 @@ export default function NewGoalForm({ character: initial, color, form, defaultDe
         <span className="text-xs uppercase tracking-wider text-muted">Ton nouvel objectif</span>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <span className="text-sm text-muted">Candidatures</span>
-            <p className="input num !border-stone-2 text-muted" aria-label="Objectif commun">100 · commun</p>
+            <span className="text-sm text-muted">Candidatures · commun</span>
+            <p className="input num !border-stone-2 text-muted" aria-label="Objectif commun">100</p>
           </div>
           <div>
-            <label htmlFor={sharedDeadline ? undefined : "deadline"} className="text-sm text-muted">Avant le</label>
+            <label htmlFor={sharedDeadline ? undefined : "deadline"} className="text-sm text-muted">{sharedDeadline ? "Avant le · commune" : "Avant le"}</label>
             {sharedDeadline ? (
               <p className="input num !border-stone-2 text-muted" aria-label="Date limite commune">
-                {sharedDeadline.slice(8, 10)}/{sharedDeadline.slice(5, 7)}/{sharedDeadline.slice(0, 4)} · commune
+                {sharedDeadline.slice(8, 10)}/{sharedDeadline.slice(5, 7)}/{sharedDeadline.slice(0, 4)}
               </p>
             ) : (
               <input id="deadline" name="deadline" className="input num" type="date" min={minDeadline} defaultValue={defaultDeadline} required />
