@@ -21,26 +21,42 @@ export async function sendMail(mail: Mail): Promise<void> {
 
 const escapeHtml = (s: string): string => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** Gabarit unique des notifications (maquette notifications, section E-mail) : pas de police pixel, elle ne se charge pas partout. */
-export function notificationMail(to: string, text: NotificationText, category: Category): Mail {
+/** Image de scène jointe à l'e-mail : jetons d'URL et taille d'affichage. */
+export type MailScene = { query: string; width: number; height: number };
+
+const PIXEL_FONT = "'Press Start 2P','Courier New',Courier,monospace";
+const BODY_FONT = "system-ui,-apple-system,'Segoe UI',Roboto,sans-serif";
+
+/**
+ * Gabarit 8 bits des notifications (maquette notifications, section E-mail) : fond nuit, cadre épais, bandeau et scène
+ * en PNG pixel art, titres en police pixel là où le client la charge (Courier ailleurs), bouton à relief en bordures.
+ */
+export function notificationMail(to: string, text: NotificationText, category: Category, scene: MailScene | null = null): Mail {
   const base = (process.env.BETTER_AUTH_URL ?? "https://goal.viloris.io").replace(/\/$/, "");
   const link = `${base}${text.url}`;
   const settings = `${base}/reglages#notifications`;
   const why = `Tu reçois cet e-mail parce que la catégorie ${CATEGORY_INFO[category].label} est activée.`;
+  const sceneHtml = scene
+    ? `<tr><td align="center" style="background:#221e40;border-bottom:3px dotted #2e2958;padding:20px 12px 0"><img src="${base}/api/email/scene?s=${encodeURIComponent(scene.query)}" width="${scene.width}" height="${scene.height}" alt="${escapeHtml(text.headline)}" style="display:block;max-width:100%;height:auto;image-rendering:pixelated;border:0"></td></tr>`
+    : "";
   return {
     to,
     subject: text.headline,
     text: `${text.headline}\n\n${text.detail}\n\nOuvrir Goal Master : ${link}\n\n${why}\nRégler mes notifications : ${settings}`,
-    html: `<div style="background:#eceaf4;padding:24px 12px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif">
-<div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px;overflow:hidden;color:#1d1a2e">
-<div style="background:#16132a;padding:16px 20px;color:#f2c14e;font-weight:700;letter-spacing:2px;font-size:13px">⚔ GOAL MASTER</div>
-<div style="padding:22px 20px 8px">
-<h1 style="margin:0 0 12px;font-size:20px;line-height:1.3">${escapeHtml(text.headline)}</h1>
-<p style="margin:0 0 18px;font-size:15px;line-height:1.55">${escapeHtml(text.detail)}</p>
-<a href="${link}" style="display:inline-block;background:#f2c14e;color:#1a1626;font-weight:700;padding:12px 18px;border-radius:4px;text-decoration:none">Ouvrir Goal Master</a>
-</div>
-<div style="padding:16px 20px 20px;margin-top:14px;border-top:1px solid #eceaf4;font-size:12px;line-height:1.5;color:#6b6785">${why} <a href="${settings}" style="color:#6b6785">Régler mes notifications</a></div>
-</div></div>`,
+    html: `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark">
+<style>@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');</style></head>
+<body style="margin:0;padding:0;background:#0e0c1d">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0e0c1d"><tr><td align="center" style="padding:20px 10px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#16132a;border:4px solid #4a4380">
+<tr><td style="border-bottom:4px solid #4a4380;line-height:0"><a href="${link}"><img src="${base}/api/email/header" width="552" alt="Goal Master" style="display:block;width:100%;height:auto;image-rendering:pixelated;border:0"></a></td></tr>
+${sceneHtml}
+<tr><td style="padding:20px 22px 6px;font-family:${BODY_FONT};color:#f1ecff">
+<h1 style="margin:0 0 12px;font-family:${PIXEL_FONT};font-size:15px;line-height:1.7;font-weight:700;color:#f2c14e">${escapeHtml(text.headline)}</h1>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:#f1ecff">${escapeHtml(text.detail)}</p>
+<a href="${link}" style="display:inline-block;font-family:${PIXEL_FONT};font-size:12px;line-height:1.4;font-weight:700;color:#1a1626;background:#f2c14e;padding:13px 16px;border-right:4px solid #b9831c;border-bottom:4px solid #b9831c;text-decoration:none">Ouvrir Goal Master</a>
+</td></tr>
+<tr><td style="padding:16px 22px 18px;border-top:3px solid #2e2958;font-family:${BODY_FONT};font-size:12px;line-height:1.5;color:#a39dcc">${why} <a href="${settings}" style="color:#a39dcc">Régler mes notifications</a></td></tr>
+</table></td></tr></table></body></html>`,
   };
 }
 
