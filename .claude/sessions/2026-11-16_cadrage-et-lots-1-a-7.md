@@ -3,7 +3,7 @@
 ## Reprise
 
 ```
-✅ Fait      Notifications push + e-mail 8 bits, cron n8n, doublons, en prod
+✅ Fait      Défi entre les deux joueurs en prod (course, couronne, succès)
 ⛔ Bloqué    Rien
 🎯 Priorité  Vérifier le cron n8n et le premier duel (échéance 20/11)
 ```
@@ -161,3 +161,35 @@
 - Doublon : sûr → « Ne pas l'ajouter » d'abord ; possible → « C'est une autre candidature ? » ; jamais bloquant
 - Retrait d'une candidature le jour même seulement ; l'XP suit, les succès restent
 - Les 4 boss tournent chaque semaine (Recruteur fantôme, Golem ATS, Pile de refus, Silence radio)
+
+---
+
+## Suite : Défi entre les deux joueurs
+
+### Réalisé
+- Cadrage du Défi (exception assumée au « pas de compétition ») ; maquette https://claude.ai/artifact/FGU4wdTYcMar8hPngDhvyz (`docs/maquettes/defi.html`, sprites réels de l'app)
+- Spec `docs/specs/2026-11-16-defi-design.md`, plan `docs/superpowers/plans/2026-11-16-defi.md`
+- PR #50 : table `Challenge`, moteur pur `src/game/challenge.ts` (testé), actions lancer / répondre / annuler, victoire posée dans `addApplication`, bandeaux et course sur l'accueil, `/defi`, couronne sur tous les sprites, succès Duelliste et Invaincu, notifications « défi reçu » et résultat, 7e écran d'intro (`LATEST_NEWS` = « le Défi »)
+- Parcours testé en local de bout en bout (lancer → relever → course → victoire → `/defi` → couronne)
+- PR #51 mise en prod (commit de fusion), déploiement OK
+
+### Reste à faire
+- Ce soir 16/11 à 18 h 01 : vérifier l'exécution n8n (onglet Executions) et le rendu réel de l'e-mail « Nouveauté » (Gmail)
+- Jeudi 19/11 et vendredi 20/11 à 18 h 01 : rappel du boss, puis résultat du duel (push, e-mail, écran `/duel`)
+- Premier vrai défi avec Nicolas : vérifier la notification « défi reçu », la course et la couronne en prod
+- Les e-mails partent pour de vrai en local (SMTP présent dans `.env.local`) : le test du Défi a sans doute écrit à contact@viloris.io et à boulom.nicolas@gmail.com. Option : n'envoyer en local qu'à une adresse de test
+- Base locale : un défi et 5 candidatures « Test défi 1 à 5 » de Nicolas, à effacer si gênant
+- Vérifier sur Android qu'une relance reçue app ouverte rafraîchit l'accueil (non testable en local)
+- Textes de la carte du boss : victoire déjà acquise grâce aux coups de grâce non annoncée ; « vendredi 18 h » ambigu le soir même
+- Option : activer dans Vercel (Integrations > Neon) la suppression automatique des branches d'aperçu
+
+### Blockers
+- Aucun
+
+### Décisions
+- Défi : cible 3/5/10, échéance ce soir minuit (jusqu'à 21 h) ou vendredi 18 h ; un défi ouvert à la fois, un lancement par jour et par personne (refusé ou expiré ne comptent pas, annulé compte)
+- Aucune XP en jeu ; les candidatures du défi comptent pour l'XP et le boss
+- Couronne sur le sprite du gagnant jusqu'à la fin du lendemain, sans option pour la retirer (le 👑 à côté du pseudo a été écarté)
+- Victoire enregistrée une fois (`winnerId`, `wonAt`), jamais retirée ; score figé à la fin
+- Pas de notification pour un nul, une expiration, un refus ou une annulation (fins souvent à minuit)
+- Sur ordinateur, la course reste dans la colonne du joueur (écart avec la maquette)
