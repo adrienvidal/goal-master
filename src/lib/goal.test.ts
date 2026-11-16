@@ -13,9 +13,9 @@ describe("goalOutcome", () => {
 
 describe("validateNewGoal", () => {
   it("accepte un objectif valide et refuse une date passée", () => {
-    expect(validateNewGoal({ target: "50", deadline: "2027-01-31", character: "PANDA" }, "2026-11-16").ok).toBe(true);
-    expect(validateNewGoal({ target: "50", deadline: "2026-11-16", character: "PANDA" }, "2026-11-16").ok).toBe(false);
-    expect(validateNewGoal({ target: "0", deadline: "2027-01-31", character: "KNIGHT" }, "2026-11-16").ok).toBe(false);
+    expect(validateNewGoal({ deadline: "2027-01-31", character: "PANDA" }, "2026-11-16").ok).toBe(true);
+    expect(validateNewGoal({ deadline: "2026-11-16", character: "PANDA" }, "2026-11-16").ok).toBe(false);
+    expect(validateNewGoal({ deadline: "2027-01-31", character: "WIZARD" }, "2026-11-16").ok).toBe(false);
   });
 });
 

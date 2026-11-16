@@ -1,8 +1,9 @@
 "use server";
 import { redirect } from "next/navigation";
 import { parisDay } from "@/game/calendar";
-import { validateOnboarding } from "@/lib/onboarding";
+import { GOAL_TARGET, validateOnboarding } from "@/lib/onboarding";
 import { db } from "@/server/db";
+import { partnerDeadline } from "@/server/sharedGoal";
 import { requireUser } from "@/server/session";
 
 export type OnboardingState = { error: string } | null;
@@ -12,16 +13,16 @@ export async function createPlayer(_prev: OnboardingState, form: FormData): Prom
   const taken = (await db().player.findMany({ where: { id: { not: user.id } }, select: { color: true } })).map((p) => p.color);
   const field = (name: string): string => String(form.get(name) ?? "");
   const result = validateOnboarding(
-    { pseudo: field("pseudo"), character: field("character"), color: field("color"), target: field("target"), deadline: field("deadline") },
+    { pseudo: field("pseudo"), character: field("character"), color: field("color"), deadline: (await partnerDeadline(user.id)) ?? field("deadline") },
     parisDay(new Date()),
     taken,
   );
   if (!result.ok) return { error: result.error };
-  const { pseudo, character, color, target, deadline } = result.value;
+  const { pseudo, character, color, deadline } = result.value;
   try {
     await db().$transaction([
       db().player.create({ data: { id: user.id, email: user.email, pseudo, character, color } }),
-      db().goal.create({ data: { playerId: user.id, target, deadline: new Date(`${deadline}T12:00:00Z`) } }),
+      db().goal.create({ data: { playerId: user.id, target: GOAL_TARGET, deadline: new Date(`${deadline}T12:00:00Z`) } }),
     ]);
   } catch {
     return { error: "Cette couleur vient d'être prise par ton binôme. Choisis-en une autre." };

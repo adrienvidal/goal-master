@@ -100,7 +100,10 @@ export default async function HomePage(): Promise<React.ReactElement> {
           </div>
           <GoalBlock view={me} />
           <AddApplication todayCount={me.today.count} />
-          <Link href="/succes" className="btn ghost !text-[10px]">Mes succès</Link>
+          <div className="grid grid-cols-2 gap-2">
+            <Link href="/succes" className="btn ghost !text-[10px]">Mes succès</Link>
+            <Link href="/reglages" className="btn ghost !text-[10px]">Réglages</Link>
+          </div>
           <p className="text-sm text-muted">
             Aujourd&apos;hui (<span className="num">{me.today.count}/15</span>)
             {me.today.companies.length ? <> : <b className="text-ink">{me.today.companies.join(", ")}</b></> : " : pas encore de candidature."}

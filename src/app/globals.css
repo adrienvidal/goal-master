@@ -108,3 +108,8 @@ body {
 @keyframes blink { 50% { box-shadow: inset -4px -4px 0 var(--gold-dk), 0 0 0 4px var(--ember); } }
 .btn[aria-disabled="true"] { cursor: default; }
 @media (prefers-reduced-motion: reduce) { .btn.blink { animation: none; box-shadow: inset -4px -4px 0 var(--gold-dk), 0 0 0 4px var(--ember); } }
+
+/* ---------- Paysage de fond (choisi dans les réglages) ---------- */
+.landscape { display: block; image-rendering: pixelated; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+.landscape-bg { position: fixed; inset: 0; z-index: -1; width: 100vw; height: 100dvh; aspect-ratio: auto; object-fit: cover; }
+.landscape-veil { position: fixed; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(22,19,42,.15), rgba(22,19,42,.55)); pointer-events: none; }

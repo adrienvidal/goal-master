@@ -26,6 +26,13 @@ enum Color {
   BLACK
 }
 
+enum Landscape {
+  CASTLE
+  BAMBOO
+  MOUNTAINS
+  PLAINS
+}
+
 enum GoalStatus {
   ACTIVE
   COMPLETED
@@ -40,6 +47,7 @@ model Player {
   pseudo       String
   character    Character
   color        Color                 @unique
+  landscape    Landscape             @default(CASTLE)
   createdAt    DateTime              @default(now())
   goals        Goal[]
   applications Application[]
