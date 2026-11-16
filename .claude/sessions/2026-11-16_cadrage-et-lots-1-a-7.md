@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      MVP en prod sur goal.viloris.io, intro, paysages, objectif et date communs
+✅ Fait      Décor, duel du vendredi et intro versionnée en prod
 ⛔ Bloqué    Rien
-🎯 Priorité  Adrien crée son profil (fixe la date), puis Nicolas se connecte
+🎯 Priorité  Vérifier le premier duel et son rappel (échéance 20/11)
 ```
 
 ## Réalisé
@@ -93,3 +93,35 @@
 - Objectif commun fixe (100) et date limite commune ; le premier joueur choisit la date
 - Fond d'écran propre à chaque joueur, intro vue une fois par appareil
 - NordVPN met en cache les réponses DNS négatives : le couper pour tester un domaine fraîchement créé
+
+---
+
+## Suite : branches Neon, fil du binôme, décor et duel
+
+### Réalisé
+- **Blocker levé** : aperçus Vercel « Resource provisioning failed » ; 9 branches Neon `preview/*` supprimées (limite gratuite de 10 atteinte), seule `main` reste. Les aperçus refonctionnent
+- Adrien a créé son profil en prod (date commune fixée au 14/02)
+- PR #29 carte et bandeau des notifications à 80 % d'opacité, le paysage se voit derrière
+- PR #31 fil du binôme : « Nicolas est devenu Novice ⚔️ », calculé en rejouant l'XP (rien de stocké)
+- Maquettes décor et duel validées : https://claude.ai/artifact/6i42Tj6uFKTxzp6QzukjtQ (`docs/maquettes/decor-et-duel.html`)
+- PR #33 lot décor et duel : vue décor (œil, héros qui se promènent selon l'humeur), boss de la semaine sur l'accueil (4 boss dessinés), écran `/duel` victoire / défaite, bandage après défaite, succès « Premier boss », cron du jeudi 18 h UTC (`CRON_SECRET` posé sur Vercel), 5e écran d'intro
+- Intro versionnée (`INTRO_STEP_COUNT`) : les nouveaux écrans s'affichent d'office à la prochaine ouverture, à partir du premier non vu ; règle ajoutée au CLAUDE.md, avec les règles du duel
+- PR #36 6e écran d'intro sur la vue décor
+- Mises en prod #30, #32, #34, #37 ; historique `dev`/`main` réaligné (PR #35, fusion « ours », aucun changement de contenu)
+
+### Reste à faire
+- Vendredi 20/11 18 h : vérifier le premier duel en prod (écran de résultat, succès ou bandage) ; jeudi 19/11 au soir : vérifier que la notification de rappel part
+- Écrans non vus en vrai : victoire, alerte du jeudi, boss K.O. avant vendredi (seule la défaite a été vue en local)
+- Nicolas se connecte sur https://goal.viloris.io (sur iPhone : ajouter à l'écran d'accueil)
+- Activer dans Vercel (Integrations > Neon) la suppression automatique des branches d'aperçu obsolètes, sinon la limite de 10 revient
+- Repasse responsive non faite sur `/connexion`, `/objectif/nouveau`, `/objectif/fin`
+
+### Blockers
+- Aucun
+
+### Décisions
+- **Mise en prod sur accord d'Adrien** désormais (l'autorisation automatique valait pour le MVP) ; les PR vers `dev` restent fusionnées par Claude dès les tests verts, avec le lien d'aperçu
+- Mise en prod `dev` → `main` en commit de fusion, jamais en squash (le squash fait diverger les historiques et bloque la livraison suivante)
+- Duel à deux contre un boss, pas l'un contre l'autre ; PV = rythme nécessaire pour tenir l'objectif ; +1 coup de grâce par tranche de 5 niveaux ; défaite visuelle uniquement
+- Semaine du vendredi 18 h au vendredi 18 h (les candidatures du week-end comptent pour le boss suivant) ; un joueur qui arrive en cours de semaine combat tout de suite, boss au prorata des jours ouvrés
+- Rappel du jeudi à 18 h UTC (19 h l'hiver, 20 h l'été)
