@@ -219,3 +219,6 @@ html[data-decor] main { visibility: hidden; }
 .switch:checked::after { left: 24px; background: var(--ok); }
 .switch:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .switch::after { transition: none; } }
+
+/* Défi : la couronne ajoute des lignes au-dessus de la tête, le bandage descend d'autant. */
+.sprite.has-crown .bandage { top: 28%; }
