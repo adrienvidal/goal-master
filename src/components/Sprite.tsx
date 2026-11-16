@@ -13,13 +13,15 @@ type Props = {
   px?: number;
   label?: string;
   className?: string;
+  /** Blessé après un duel perdu : bandeau et teinte pâle, purement visuel. */
+  hurt?: boolean;
 };
 
 // Avatar 8 bits : la taille suit la forme (le bébé est minuscule, le légendaire remplit la carte).
-export function Sprite({ character, color, form, mood = "normal", pose = "rest", px = 4, label, className = "" }: Props): React.ReactElement {
+export function Sprite({ character, color, form, mood = "normal", pose = "rest", px = 4, label, className = "", hurt = false }: Props): React.ReactElement {
   const s = sprite(character, color, form, mood, pose);
   const k = px * s.scale;
-  const classes = ["sprite", pose === "rest" ? "idle" : `pose-${pose}`, mood !== "normal" ? `mood-${mood}` : "", form === 6 && mood === "normal" ? "legend-glow" : "", className];
+  const classes = ["sprite", pose === "rest" ? "idle" : `pose-${pose}`, mood !== "normal" ? `mood-${mood}` : "", form === 6 && mood === "normal" ? "legend-glow" : "", hurt ? "hurt" : "", className];
   return (
     <span className={classes.filter(Boolean).join(" ")}>
       <svg viewBox={`0 0 ${s.width} ${s.height}`} width={s.width * k} height={s.height * k} shapeRendering="crispEdges" role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
@@ -27,6 +29,7 @@ export function Sprite({ character, color, form, mood = "normal", pose = "rest",
           <rect key={i} x={r.x} y={r.y} width={r.w} height={1} fill={r.fill} />
         ))}
       </svg>
+      {hurt ? <span className="bandage" aria-hidden /> : null}
     </span>
   );
 }

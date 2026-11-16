@@ -15,8 +15,8 @@ function daily(userId: string, firstDay: string, days: number, perDay = 1): Appl
 const base = { userId: "a", partnerId: "b", nudges: [] as Nudge[], goalsReached: 0, today: "2026-11-30", levelForm: 1 as const };
 
 describe("earnedAchievements", () => {
-  test("13 achievements are defined", () => {
-    expect(Object.keys(ACHIEVEMENTS)).toHaveLength(13);
+  test("14 achievements are defined", () => {
+    expect(Object.keys(ACHIEVEMENTS)).toHaveLength(14);
     expect(ACHIEVEMENTS.centurion.title).toBe("Centurion");
   });
 
@@ -72,4 +72,10 @@ describe("earnedAchievements", () => {
     ];
     expect(earnedAchievements({ ...base, apps, today: "2026-11-13", levelForm: 4 as never }).has("revenant")).toBe(true);
   });
+});
+
+test("first boss beaten", () => {
+  const base = { userId: "a", partnerId: "b", apps: [], nudges: [], goalsReached: 0, today: "2026-11-16", levelForm: 1 as const };
+  expect(earnedAchievements(base).has("first_boss")).toBe(false);
+  expect(earnedAchievements({ ...base, bossesBeaten: 1 }).has("first_boss")).toBe(true);
 });

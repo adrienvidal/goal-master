@@ -41,7 +41,7 @@ body {
 ::selection { background: var(--gold); color: #1a1626; }
 :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
-.device { background: rgb(34 30 64 / .8); border: 4px solid var(--edge); box-shadow: 4px 4px 0 #0c0a1a; padding: 20px 18px; }
+.device { position: relative; background: rgb(34 30 64 / .8); border: 4px solid var(--edge); box-shadow: 4px 4px 0 #0c0a1a; padding: 20px 18px; }
 .h-title { font-family: var(--font-press-start); font-size: 13px; line-height: 1.7; }
 .input { width: 100%; font: inherit; font-size: 18px; color: var(--ink); background: var(--night); border: 3px solid var(--edge); padding: 10px 12px; caret-color: var(--gold); }
 .input:focus { outline: none; border-color: var(--gold); }
@@ -143,4 +143,54 @@ body {
   .intro-act { opacity: 0; }
   .intro-evo > span:last-child, .intro-evo-names > span:last-child { opacity: 1; }
   .intro-xp i { width: 72%; }
+}
+
+/* ---------- Duel de fin de semaine (maquette decor-et-duel) ---------- */
+.boss-sprite { display: block; image-rendering: pixelated; }
+.boss-card { border: 3px solid #c9b8ff; background: rgb(22 19 42 / .92); padding: 12px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; align-items: center; }
+.boss-card .portrait { grid-row: span 3; animation: boss-float 1.4s steps(2) infinite; }
+.boss-card .hp { height: 16px; border: 3px solid #c9b8ff; background: var(--night); }
+.boss-card .hp i { display: block; height: 100%; background: var(--danger); }
+.boss-card.urgent { border-color: var(--danger); animation: boss-pulse 1s steps(2) infinite; }
+.boss-card.ko { border-color: var(--ok); }
+.boss-card.ko .portrait, .boss-down { animation: none; transform: rotate(90deg); filter: grayscale(1); opacity: .65; }
+.boss-float { display: block; animation: boss-float 1.4s steps(2) infinite; }
+@keyframes boss-float { 50% { transform: translateY(-3px); } }
+@keyframes boss-pulse { 50% { border-color: var(--ember); } }
+
+/* Blessé après un duel perdu : visuel uniquement */
+.hurt svg { filter: saturate(.5) brightness(.9); }
+.bandage { position: absolute; left: 22%; right: 22%; top: 12%; height: max(4px, 7%); background: #f4f0e6; box-shadow: 0 0 0 2px #6b5f4a, 4px 2px 0 -1px var(--danger); pointer-events: none; }
+
+/* ---------- Vue décor : la carte s'efface, les héros vivent dans le paysage ---------- */
+.eye-btn { position: absolute; top: -4px; right: -4px; z-index: 2; width: 40px; height: 40px; display: grid; place-items: center; background: var(--night); border: 4px solid var(--edge); cursor: pointer; }
+.eye-btn:hover { border-color: var(--gold); }
+html[data-decor] main { visibility: hidden; }
+.decor { position: fixed; inset: 0; z-index: 50; cursor: pointer; overflow: hidden; border: 0; padding: 0; background: transparent; width: 100%; color: inherit; font: inherit; text-align: left; }
+.walker { position: absolute; bottom: calc(9% + env(safe-area-inset-bottom, 0px)); left: var(--from); display: flex; flex-direction: column; align-items: center; gap: 6px; translate: -50% 0; animation: patrol var(--dur) steps(var(--steps)) infinite; animation-delay: var(--delay); }
+.walker .tag { font-family: var(--font-press-start); font-size: 9px; line-height: 1.5; background: rgb(22 19 42 / .85); border: 2px solid var(--edge); padding: 3px 6px; width: max-content; max-width: 44vw; text-align: center; }
+.walker .tag.sad { border-color: var(--danger); color: var(--danger); }
+.walker .facer { animation: face var(--dur) steps(1) infinite; animation-delay: var(--delay); }
+.walker .sizer { transform-origin: bottom center; animation: walk-bob .5s steps(2) infinite; }
+.walker.sitting { animation: none; }
+.walker.sitting .facer, .walker.sitting .sizer { animation: none; }
+@media (min-width: 768px) { .walker .sizer { transform: scale(1.5); } .walker { gap: 30px; } }
+@keyframes patrol { 0%, 8% { left: var(--from); } 45%, 55% { left: var(--to); } 92%, 100% { left: var(--from); } }
+@keyframes face { 0% { scale: var(--face) 1; } 50% { scale: calc(var(--face) * -1) 1; } }
+@keyframes walk-bob { 50% { translate: 0 -3px; } }
+.decor-hint { position: absolute; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); translate: -50% 0; font-family: var(--font-press-start); font-size: 9px; line-height: 1.6; background: rgb(22 19 42 / .85); border: 2px solid var(--edge); padding: 6px 10px; white-space: nowrap; animation: hint-blink 1.6s steps(2) infinite; }
+@keyframes hint-blink { 50% { opacity: .45; } }
+
+/* Résultat du duel */
+.duel-flash { position: fixed; inset: 0; background: #fff; pointer-events: none; animation: duel-flash .6s steps(3) forwards; }
+@keyframes duel-flash { 0% { opacity: .6; } 100% { opacity: 0; } }
+
+/* Intro : le boss perd ses points de vie */
+.intro-hp { display: block; height: 14px; background: var(--night); border: 3px solid #c9b8ff; }
+.intro-hp i { display: block; height: 100%; background: var(--danger); animation: intro-hp 4s steps(6) infinite; }
+@keyframes intro-hp { 0%, 10% { width: 100%; } 80%, 100% { width: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .boss-card .portrait, .boss-card.urgent, .walker, .walker .facer, .walker .sizer, .decor-hint, .intro-hp i, .duel-flash { animation: none; }
+  .duel-flash { display: none; }
 }
