@@ -11,10 +11,10 @@ const CHARACTER_INFO: Record<CharacterId, { name: string; line: string }> = {
   PANDA: { name: "Panda", line: "Du bébé panda au grand maître" },
 };
 
-type Props = { takenColor: string | null; partnerName: string | null; defaultTarget: number; defaultDeadline: string; minDeadline: string };
+type Props = { takenColor: string | null; partnerName: string | null; defaultDeadline: string; minDeadline: string };
 
 // Une seule page, étapes empilées (maquette « Bienvenue »). L'aperçu des avatars arrive au lot 4.
-export default function OnboardingForm({ takenColor, partnerName, defaultTarget, defaultDeadline, minDeadline }: Props): React.ReactElement {
+export default function OnboardingForm({ takenColor, partnerName, defaultDeadline, minDeadline }: Props): React.ReactElement {
   const [state, action, pending] = useActionState<OnboardingState, FormData>(createPlayer, null);
   const [character, setCharacter] = useState<CharacterId>("KNIGHT");
   const [color, setColor] = useState<ColorId>(COLORS.find((c) => c !== takenColor) ?? "BLUE");
@@ -72,8 +72,8 @@ export default function OnboardingForm({ takenColor, partnerName, defaultTarget,
         <span className="text-xs uppercase tracking-wider text-muted">3 · Ton objectif</span>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label htmlFor="target" className="text-sm text-muted">Candidatures</label>
-            <input id="target" name="target" className="input num" type="number" min={1} max={1000} defaultValue={defaultTarget} required />
+            <span className="text-sm text-muted">Candidatures</span>
+            <p className="input num !border-stone-2 text-muted" aria-label="Objectif commun">100 · commun</p>
           </div>
           <div>
             <label htmlFor="deadline" className="text-sm text-muted">Avant le</label>

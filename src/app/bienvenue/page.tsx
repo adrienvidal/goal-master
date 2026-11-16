@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { parisDay } from "@/game/calendar";
-import { defaultDeadline, DEFAULT_TARGET } from "@/lib/onboarding";
+import { defaultDeadline } from "@/lib/onboarding";
 import { db } from "@/server/db";
 import { requireUser } from "@/server/session";
 import OnboardingForm from "./OnboardingForm";
@@ -16,7 +16,6 @@ export default async function WelcomePage(): Promise<React.ReactElement> {
       <OnboardingForm
         takenColor={partner?.color ?? null}
         partnerName={partner?.pseudo ?? null}
-        defaultTarget={DEFAULT_TARGET}
         defaultDeadline={defaultDeadline(parisDay(new Date()))}
         minDeadline={parisDay(new Date())}
       />
