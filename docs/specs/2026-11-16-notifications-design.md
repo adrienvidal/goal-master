@@ -32,7 +32,7 @@ Maquette validée : https://claude.ai/artifact/T7UcytDdGCRdEMB4uwnFNu (`docs/maq
 
 ## Cron
 
-Un seul cron quotidien `/api/cron/daily` à `0 17 * * *` (UTC ; Hobby = une fois par jour, dans l'heure), soit 18 h–19 h Paris l'hiver, 19 h–20 h l'été : toujours après le duel du vendredi 18 h. Il remplace `/api/cron/duel-reminder`.
+Un seul cron quotidien `/api/cron/daily`, appelé par n8n (auto.webnrolls.com, workflow « Goal Master · cron quotidien ») chaque jour à 18 h 01 heure de Paris, avec l'en-tête `Authorization: Bearer CRON_SECRET` (identifiant n8n limité au domaine goal.viloris.io). Il remplace le cron Vercel, dont l'heure n'était précise qu'à l'heure près et en UTC.
 
 ## Dans l'app
 
