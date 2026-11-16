@@ -5,7 +5,7 @@
 ```
 ✅ Fait      Cadrage + maquettes validés, lots 1 (moteur), 2 (connexion), 3 (accueil) fusionnés
 ⛔ Bloqué    2e adresse e-mail autorisée (Adrien, quand son ami sera prêt)
-🎯 Priorité  Lot 4 : sprites Chevalier et Panda depuis docs/maquettes (6 formes, 3 poses, humeurs)
+🎯 Priorité  Base Postgres locale (Docker) pour le dev, puis lot 4 (sprites)
 ```
 
 ## Réalisé
@@ -15,6 +15,8 @@
 - Testé de bout en bout : code reçu dans contact@viloris.io, connexion, premier lancement, ajout/doublon/annulation
 
 ## Reste à faire
+- **D'abord** : base de test locale demandée par Adrien. Postgres dans Docker (`docker-compose.yml`), `DATABASE_URL` local dans un `.env.development.local` non écrasé par `vercel env pull` (ou script `npm run db`), `prisma migrate deploy` + `prisma generate` ; mettre à jour la ligne Stack du CLAUDE.md (Postgres local dans Docker, base en ligne réservée aux déploiements)
+- Annuler la candidature de test « doctolib » dans la base Neon (accord d'Adrien à demander) ou repartir de zéro en prod
 - Lot 4 avatars (sprites des maquettes : grilles CHARS/PFORMS, poses, humeurs, évolution animée)
 - Lot 5 Motiver (4 messages, 1/jour, bonus, Web Push + PWA)
 - Lot 6 page Succès, fin d'objectif (victoire, temps écoulé, changement de personnage)
@@ -28,4 +30,6 @@
 - Better Auth (comme viloris-studio) plutôt que Neon Auth ; adresse non autorisée → message explicite (cadrage §4.1)
 - Ninja et Guerrière en pause ; Chevalier et Panda au MVP ; poses Repos/Action/Victoire dessinées
 - Autorisation d'Adrien : fusionner les PR de lot et déployer en prod sans validation
-- La base de dev = la base Neon principale : le joueur « Adrien » et une candidature de test « doctolib » y existent
+- Aujourd'hui, la base de dev = la base Neon principale (l'intégration Vercel relie Development à main) : le joueur « Adrien » et une candidature de test « doctolib » y existent
+- Adrien veut une base de test **locale** (Docker), pas une branche Neon
+- `.gitignore` rangé (PR #6) ; `.env` vide de prisma init supprimé
