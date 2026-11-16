@@ -151,15 +151,17 @@ En anglais, à l'impératif, sans point final. Préfixe `feat:`, `fix:`, `test:`
 - **npm** comme gestionnaire de paquets, jamais pnpm, yarn ni bun : un seul
   lockfile (`package-lock.json`), et toute commande s'écrit `npm` / `npx`
 - Next.js App Router + TypeScript strict, RSC par défaut
-- Neon (Postgres serverless) en ligne : une branche de base pour la production,
+- Postgres local dans Docker pour le développement (`npm run db` : conteneur, migrations, generate ; adresse dans `.env.development.local`, qui prime sur `.env.local`)
+- Neon (Postgres serverless) en ligne, réservé aux déploiements : une branche de base pour la production,
   et une par déploiement de prévisualisation via l'intégration Vercel ; RLS non
   activé : la sécurité est applicative, toute requête filtre sur l'utilisateur
   courant
-- Authentification par code à usage unique envoyé par e-mail (email OTP de Neon
-  Auth), sans mot de passe, pas de lien magique ni d'autre fournisseur sans le
-  demander
+- Authentification par code à usage unique envoyé par e-mail avec Better Auth (greffon emailOTP), comme
+  viloris-studio ; codes envoyés depuis contact@viloris.io par le SMTP de Google Workspace (SMTP_USER,
+  SMTP_PASS) ; adresses autorisées dans ALLOWED_EMAILS. Variables récupérées en local par
+  `npx vercel env pull .env.local --environment=development`
 - Pas de notion d'organisation ni d'invitation, ne pas en prévoir
-- Prisma comme ORM : schema.prisma = source de vérité du schéma, migrations Prisma Migrate (jamais de SQL manuel via dashboard)
+- Prisma 7 comme ORM (adaptateur pg) : schema.prisma = source de vérité du schéma, migrations Prisma Migrate (jamais de SQL manuel via dashboard) ; `npx prisma generate` après chaque migration (Prisma 7 ne le fait plus)
 - Tailwind, icônes lucide-react
 - Vitest + Testing Library en TypeScript
 - Déploiement Vercel + Neon
@@ -176,3 +178,5 @@ Référence complète : `docs/specs/2026-11-16-goal-master-mvp-design.md`.
 - **Les jours se découpent à minuit, heure de Paris** (série, plafond, relance quotidienne).
 - **Un succès débloqué n'est jamais retiré**, même si une candidature est annulée ensuite.
 - **Une relance par jour et par personne.** Si le destinataire candidate dans les 24 h, +15 XP pour les deux, une seule fois par relance.
+- **La rétrogradation est visuelle uniquement** : l'inactivité (comptée en jours ouvrés) fait rouiller puis redescendre la forme affichée de l'avatar, sans jamais toucher à l'XP, au niveau ni aux succès. La forme affichée se calcule à partir du niveau et de l'inactivité, elle ne se stocke pas.
+- **Deux personnages au MVP (Chevalier, Panda)** ; Ninja et Guerrière sont en pause, décrits dans le cadrage pour plus tard,, avec les mêmes règles de formes et de niveaux. Le personnage se choisit au premier lancement et ne se change qu'au moment de fixer un nouvel objectif.

@@ -1,0 +1,896 @@
+<title>Goal Master Maquettes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Chiffres lisibles : le 5 de Pixelify Sans se lit comme un S, on prend les chiffres de VT323 */
+@font-face{font-family:"GM Digits";src:url(https://fonts.gstatic.com/s/vt323/v18/pxiKyp0ihIEF2isfFJXUdVNF.woff2) format("woff2");unicode-range:U+0030-0039;size-adjust:118%;font-display:swap}
+/* Layout : un fil vertical d'écrans, chacun annoncé par sa route ; univers « château de nuit » 8 bits, un seul thème sombre assumé. */
+:root{
+  color-scheme: dark;
+  --night:#16132a;      /* fond de page */
+  --stone:#221e40;      /* surface d'écran */
+  --stone-2:#2e2958;    /* surface relevée */
+  --edge:#4a4380;       /* bordures pixel */
+  --ink:#f1ecff;        /* texte */
+  --muted:#a39dcc;      /* texte secondaire */
+  --gold:#f2c14e;       /* XP, actions principales */
+  --gold-dk:#b9831c;
+  --ember:#ff7a45;      /* série */
+  --danger:#ff6b6b;
+  --ok:#6fd49a;
+  --font-display:"Press Start 2P", ui-monospace, monospace;
+  --font-ui:"GM Digits","Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-meta:"IBM Plex Mono", ui-monospace, monospace;
+  --px:4px;             /* unité pixel : bordures, ombres */
+}
+*{box-sizing:border-box}
+body{background:var(--night);color:var(--ink);font-family:var(--font-ui);font-size:16px;line-height:1.45;font-variant-ligatures:none;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--night)}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* ---------- bandeau de maquette ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--night);border-bottom:var(--px) solid var(--stone-2);
+  margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:12px max(16px,env(safe-area-inset-left,0px))}
+.top-in{max-width:1080px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.brand{font-family:var(--font-display);font-size:12px;color:var(--gold);letter-spacing:.04em}
+.nav{display:flex;flex-wrap:wrap;gap:6px}
+.nav a{font-family:var(--font-meta);font-size:12px;text-decoration:none;color:var(--muted);padding:4px 8px;border:2px solid var(--stone-2)}
+.nav a:hover{color:var(--ink);border-color:var(--edge)}
+.wrap{max-width:1080px;margin:0 auto}
+.intro{padding-block:32px 8px;max-width:68ch}
+.intro h1{font-family:var(--font-display);font-size:clamp(16px,3.4vw,24px);line-height:1.5;margin:0 0 12px;text-wrap:balance}
+.intro p{color:var(--muted);margin:0 0 8px}
+
+/* ---------- section d'écran ---------- */
+.screen{padding-block:40px 8px;scroll-margin-top:72px;border-top:2px dashed var(--stone-2);margin-top:32px}
+.meta{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin-bottom:16px}
+.route{font-family:var(--font-meta);font-size:13px;color:var(--gold);background:var(--stone);padding:3px 8px}
+.meta h2{font-family:var(--font-display);font-size:14px;margin:0;line-height:1.6}
+.meta p{flex-basis:100%;margin:0;color:var(--muted);max-width:70ch}
+.row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.state{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 300px;max-width:400px}
+.state.wide{max-width:none;flex-basis:100%}
+.tag{font-family:var(--font-meta);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- appareil ---------- */
+.device{background:var(--stone);border:var(--px) solid var(--edge);box-shadow:var(--px) var(--px) 0 #0c0a1a;padding:20px 18px;min-width:0;position:relative}
+.h-title{font-family:var(--font-display);font-size:13px;line-height:1.7;margin:0 0 6px;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 16px}
+.logo{display:flex;flex-direction:column;align-items:center;gap:10px;margin:8px 0 22px;text-align:center}
+.logo b{font-family:var(--font-display);font-size:16px;color:var(--gold)}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:6px}
+.input{width:100%;font:inherit;font-size:18px;color:var(--ink);background:var(--night);border:3px solid var(--edge);padding:10px 12px}
+.input:focus{outline:none;border-color:var(--gold)}
+.btn{display:flex;justify-content:center;align-items:center;gap:8px;width:100%;font-family:var(--font-display);font-size:12px;line-height:1.4;
+  text-decoration:none;text-align:center;color:#1a1626;background:var(--gold);border:0;padding:15px 12px;cursor:pointer;
+  box-shadow:inset -4px -4px 0 var(--gold-dk),var(--px) var(--px) 0 #0c0a1a}
+.btn:active{transform:translate(2px,2px);box-shadow:inset -4px -4px 0 var(--gold-dk)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 3px var(--edge)}
+.btn.small{font-size:11px;padding:10px 12px;width:auto}
+.btn.big{font-size:14px;padding:20px 12px}
+.link{font-size:14px;color:var(--muted);text-align:center;display:block;margin-top:12px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.err{color:var(--danger);font-size:14px;border-left:4px solid var(--danger);padding:4px 10px;background:#3a1b2a}
+.warn{font-size:15px;border:3px solid var(--gold-dk);background:#3a2f17;padding:10px 12px}
+.info{font-size:14px;color:var(--muted);border:3px dashed var(--edge);padding:10px 12px}
+
+/* code OTP */
+.otp{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.otp span{display:grid;place-items:center;aspect-ratio:3/4;max-width:100%;font-family:var(--font-display);font-size:16px;background:var(--night);border:3px solid var(--edge)}
+.otp span.on{border-color:var(--gold)}
+
+/* sprites */
+.sprite{display:inline-grid;place-items:end center;position:relative;line-height:0}
+.sprite svg{image-rendering:pixelated;display:block}
+.mood-sleep svg{filter:saturate(.55) brightness(.8);transform:rotate(-4deg);transform-origin:bottom center}
+.mood-sleep::after{content:"z Z";position:absolute;top:-6px;right:-14px;font-family:var(--font-display);font-size:10px;color:var(--muted);line-height:1;animation:zz 2.4s steps(4) infinite}
+@keyframes zz{0%{opacity:0;transform:translateY(6px)}40%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+.mood-party{animation:hop .6s steps(2) infinite}
+.mood-party::before,.mood-party::after{content:"";position:absolute;width:6px;height:6px;background:var(--gold);box-shadow:14px -10px 0 var(--ember),-10px 8px 0 var(--ok),22px 14px 0 var(--gold);top:0;left:-8px;animation:spark 1.2s steps(3) infinite}
+.mood-party::after{left:auto;right:-6px;top:10px;background:var(--ember)}
+@keyframes hop{50%{transform:translateY(-6px)}}
+@keyframes spark{50%{opacity:.2}}
+.legend-glow svg{filter:drop-shadow(0 0 6px rgba(242,193,78,.7));animation:aura 1.6s ease-in-out infinite}
+@keyframes aura{50%{filter:drop-shadow(0 0 14px rgba(242,193,78,.95))}}
+.mood-tired svg{transform:rotate(2deg);transform-origin:bottom center}
+.mood-exhausted svg{transform:translateY(3px) rotate(4deg) scaleY(.94);transform-origin:bottom center}
+.mood-exhausted::before{content:"";position:absolute;top:14%;right:18%;width:5px;height:7px;background:#8fd3ff;box-shadow:0 2px 0 #5aa9d6;animation:drip 1.8s steps(3) infinite}
+@keyframes drip{0%{transform:translateY(0);opacity:1}100%{transform:translateY(10px);opacity:0}}
+.btn.ghost[aria-pressed="true"]{box-shadow:inset 0 0 0 3px var(--gold);color:var(--gold)}
+
+/* barres */
+.bar{height:16px;background:var(--night);border:3px solid var(--edge);position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:repeating-linear-gradient(90deg,var(--gold) 0 8px,var(--gold-dk) 8px 10px)}
+.bar.green i{background:repeating-linear-gradient(90deg,var(--ok) 0 8px,#3e9f6a 8px 10px)}
+.num{font-variant-numeric:tabular-nums}
+
+/* accueil */
+.home{display:grid;gap:18px;grid-template-columns:1fr}
+@media (min-width:760px){.home{grid-template-columns:1.25fr 1fr}}
+.me-head{display:flex;gap:16px;align-items:flex-end}
+.me-head .who{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.lvl{font-family:var(--font-display);font-size:11px;line-height:1.6}
+.form-name{font-size:14px;color:var(--muted)}
+.streak{font-family:var(--font-display);font-size:11px;color:var(--ember);white-space:nowrap}
+.xpline{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.goal{background:var(--stone-2);padding:14px;display:flex;flex-direction:column;gap:8px}
+.goal-n{font-family:var(--font-display);font-size:20px}
+.goal-n small{font-size:11px;color:var(--muted)}
+.goal-meta{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);gap:8px;flex-wrap:wrap}
+.today{font-size:14px;color:var(--muted)}
+.today b{color:var(--ink);font-weight:600}
+.pal{background:var(--night);border:3px solid var(--stone-2);padding:14px;display:flex;flex-direction:column;gap:12px}
+.pal-head{display:flex;gap:14px;align-items:flex-end}
+.pal-head .who{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.idle{font-size:14px;color:var(--danger)}
+.btn.blink{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{box-shadow:inset -4px -4px 0 var(--gold-dk),0 0 0 4px var(--ember)}}
+.feed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.feed li{display:flex;justify-content:space-between;gap:10px;border-bottom:2px dotted var(--stone-2);padding-bottom:5px}
+.feed time{color:var(--muted);white-space:nowrap}
+.tabbar{display:flex;gap:8px;margin-top:4px}
+.tabbar a{flex:1;text-align:center;font-size:14px;text-decoration:none;padding:8px;border:3px solid var(--stone-2);color:var(--muted)}
+.tabbar a.on{border-color:var(--gold);color:var(--ink)}
+
+/* toast */
+.toast{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--night);border:3px solid var(--gold);padding:10px 12px;font-size:15px}
+.toast b{font-family:var(--font-display);font-size:11px;color:var(--gold)}
+.toast a{font-size:14px;color:var(--muted)}
+
+/* bienvenue */
+.step{display:flex;flex-direction:column;gap:8px;padding-bottom:14px;border-bottom:2px dotted var(--stone-2)}
+.step-n{font-family:var(--font-meta);font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.chars{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.char b{font-size:15px}
+.char{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 8px;background:var(--night);border:3px solid var(--edge);cursor:pointer;font:inherit;color:var(--ink);text-align:center;transition:border-color .15s ease-out,background-color .15s ease-out}
+.char:hover{border-color:var(--muted)}
+.char[aria-pressed="true"]{border-color:var(--gold);background:#2d2614}
+.char .pic{min-height:84px;display:flex;align-items:flex-end}
+.char small{color:var(--muted);font-size:13px;line-height:1.3}
+.swatches{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.sw{aspect-ratio:1;max-width:100%;border:3px solid var(--night);cursor:pointer;position:relative;padding:0}
+.sw[aria-pressed="true"]{outline:3px solid var(--gold);outline-offset:2px}
+.sw[disabled]{cursor:not-allowed;background-image:repeating-linear-gradient(45deg,rgba(22,19,42,.75) 0 4px,transparent 4px 8px)}
+.sw[disabled]::after{content:"Tom";position:absolute;inset:auto 0 -18px;font-size:11px;color:var(--muted)}
+.preview{display:flex;justify-content:center;padding:14px;background:var(--night);min-height:100px;align-items:flex-end}
+.toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:15px}
+.switch{width:46px;height:24px;background:var(--ok);position:relative;border:3px solid var(--night);flex:none}
+.switch::after{content:"";position:absolute;right:2px;top:2px;width:14px;height:14px;background:var(--ink)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* chips messages */
+.msgs{display:flex;flex-direction:column;gap:8px}
+.grp{font-family:var(--font-meta);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.msg{display:block;width:100%;text-align:left;font:inherit;font-size:16px;color:var(--ink);background:var(--night);border:3px solid var(--edge);padding:10px 12px;cursor:pointer}
+.msg[aria-pressed="true"]{border-color:var(--gold);background:#2d2614}
+.notif{background:#e9e6f5;color:#1a1626;padding:12px;display:flex;gap:10px;align-items:flex-start;font-family:system-ui,sans-serif;font-size:14px;border-radius:14px}
+.notif .ic{width:34px;height:34px;flex:none;background:var(--stone);display:grid;place-items:center;border-radius:8px}
+.notif b{display:block;font-size:13px}
+.notif small{color:#5a5670;font-size:12px}
+.banner{display:flex;gap:12px;align-items:flex-end;background:var(--stone-2);border:3px solid var(--ember);padding:10px 12px}
+.banner p{margin:0;font-size:15px}
+.banner b{color:var(--ember)}
+
+/* évolution */
+.evo{background:radial-gradient(circle at 50% 55%,#4b3f8f 0,var(--night) 70%);min-height:340px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+.evo .flash{animation:flash 2.4s steps(6) infinite}
+@keyframes flash{0%,20%{filter:brightness(0) invert(1)}40%{filter:brightness(1)}100%{filter:brightness(1)}}
+.ladder{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.rung{background:var(--stone);border:3px solid var(--stone-2);padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.rung .pic{min-height:140px;display:flex;align-items:flex-end}
+.rung b{font-size:15px}
+.rung small{font-size:13px;color:var(--muted)}
+.picker{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;font-size:14px;color:var(--muted)}
+.picker .sw{width:30px;height:30px}
+
+/* succès */
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.badge{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:12px 8px;background:var(--night);border:3px solid var(--stone-2)}
+.badge .em{width:48px;height:48px;display:grid;place-items:center;font-family:var(--font-display);font-size:11px;color:#1a1626;background:var(--gold);
+  clip-path:polygon(25% 0,75% 0,100% 25%,100% 75%,75% 100%,25% 100%,0 75%,0 25%)}
+.badge b{font-size:14px;line-height:1.2}
+.badge small{font-size:12px;color:var(--muted)}
+.badge.locked .em{background:var(--stone-2);color:var(--muted)}
+.badge.locked b{color:var(--muted)}
+
+/* fin */
+.end{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.stats div{background:var(--night);padding:10px 8px;display:flex;flex-direction:column;gap:2px}
+.stats b{font-family:var(--font-display);font-size:12px}
+.stats small{font-size:12px;color:var(--muted)}
+
+.note{font-family:var(--font-meta);font-size:12px;color:var(--muted);margin-top:4px}
+
+/* surfaces navigateur */
+::selection{background:var(--gold);color:#1a1626}
+html{scrollbar-color:var(--edge) var(--night)}
+.input{caret-color:var(--gold)}
+.btn{transition:filter .12s ease-out,transform .12s ease-out}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost:hover{box-shadow:inset 0 0 0 3px var(--gold)}
+.msg{transition:border-color .15s ease-out,background-color .15s ease-out}
+.msg:hover{border-color:var(--muted)}
+.tagrow{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.replay{font-family:var(--font-meta);font-size:12px;color:var(--muted);background:none;border:2px solid var(--stone-2);padding:4px 10px;cursor:pointer}
+.replay:hover{color:var(--ink);border-color:var(--edge)}
+
+/* vie des sprites : respiration en 2 images */
+.sprite.idle svg{animation:breathe 1.6s steps(2) infinite}
+@keyframes breathe{50%{transform:translateY(-2px)}}
+.mood-sleep.idle svg{animation:b-sleep 3.2s steps(2) infinite}
+@keyframes b-sleep{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(-4deg) translateY(1px)}}
+.mood-tired.idle svg{animation:b-tired 2.6s steps(2) infinite}
+@keyframes b-tired{0%,100%{transform:rotate(2deg)}50%{transform:rotate(2deg) translateY(1px)}}
+.mood-exhausted.idle svg{animation:b-exh 2.2s ease-in-out infinite}
+@keyframes b-exh{0%,100%{transform:translateY(3px) rotate(4deg) scaleY(.94)}50%{transform:translateY(4px) rotate(5deg) scaleY(.91)}}
+.legend-glow.idle svg{animation:breathe 1.6s steps(2) infinite,aura 1.6s ease-in-out infinite}
+.streak{display:inline-flex;gap:5px;align-items:center}
+.streak .ic-px{display:block;animation:flick .5s linear infinite}
+@keyframes flick{0%,49.9%{transform:none}50%,100%{transform:scaleX(-1)}}
+.otp span.on{animation:caret 1s steps(2) infinite}
+@keyframes caret{50%{border-color:var(--edge)}}
+
+/* gain d'XP, niveau */
+.xp-pop{position:absolute;left:50%;top:38%;transform:translateX(-50%);font-family:var(--font-display);font-size:14px;color:var(--gold);text-shadow:2px 2px 0 #0c0a1a;pointer-events:none;opacity:0;z-index:2}
+#xp-count{display:inline-block}
+#lvl-label{display:inline-block;transform-origin:left center}
+
+/* évolution et retour en grâce */
+.evo-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:1}
+.evo-stage{position:relative;display:grid;place-items:end center;min-height:170px}
+.evo-stage>.sprite{grid-area:1/1}
+.evo-burst{position:absolute;left:50%;bottom:45%;width:0;height:0;pointer-events:none}
+.evo-burst i{position:absolute;width:6px;height:6px;opacity:0}
+.evo-title{min-height:3.4em}
+
+/* confettis */
+.end{position:relative;overflow:hidden}
+.confetti{position:absolute;inset:0;pointer-events:none}
+.confetti i{position:absolute;top:-10px;width:6px;height:6px;opacity:0}
+
+/* ---------- responsive ---------- */
+@media (max-width:640px){
+  .top-in{flex-direction:column;align-items:stretch;gap:8px}
+  .top-in>*{min-width:0}
+  .nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;width:100%;max-width:calc(100vw - 32px)}
+  .nav::-webkit-scrollbar{display:none}
+  .nav a{white-space:nowrap}
+  .screen{padding-block:28px 4px;margin-top:20px}
+  .device{padding:16px 14px}
+  .row{gap:20px}
+  .state{flex-basis:100%;max-width:none}
+  .btn.big{font-size:13px;padding:18px 10px}
+  .goal-n{font-size:17px}
+  .otp{gap:4px}
+  .evo{min-height:300px}
+}
+@media (min-width:1100px){
+  .home{grid-template-columns:1.3fr 1fr;gap:28px}
+  .home .sprite svg{width:calc(var(--w)*6px);height:auto}
+  .state.wide>.device{padding:26px 24px}
+}
+@media (min-width:1440px){
+  .wrap,.top-in{max-width:1320px}
+  .state{max-width:420px}
+  .home{grid-template-columns:1.4fr 1fr;gap:36px}
+  .home .sprite svg{width:calc(var(--w)*7px)}
+  .goal-n{font-size:24px}
+  .ladder{grid-template-columns:repeat(6,1fr)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .sprite svg,.mood-party,.mood-sleep::after,.mood-party::before,.mood-party::after,.mood-exhausted::before,.streak .ic-px,.btn.blink,.otp span.on{animation:none!important}
+  .btn.blink{box-shadow:inset -4px -4px 0 var(--gold-dk),0 0 0 4px var(--ember)}
+  .btn{transition:none}
+}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <span class="brand">GOAL MASTER · MAQUETTES</span>
+    <nav class="nav" aria-label="Écrans">
+      <a href="#connexion">Connexion</a><a href="#code">Code</a><a href="#bienvenue">Bienvenue</a><a href="#accueil">Accueil</a>
+      <a href="#ajout">Candidature</a><a href="#motiver">Motiver</a><a href="#evolution">Évolution</a><a href="#retrogradation">Rétrogradation</a><a href="#succes">Succès</a><a href="#fin">Fin d'objectif</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="intro">
+    <h1>Goal Master, le parcours écran par écran</h1>
+    <p>Chaque bouton mène à l'écran suivant. Les états limites (erreur, code expiré, doublon, plafond, binôme endormi) sont posés à côté du chemin normal.</p>
+    <p>Données d'exemple : Adrien (chevalier bleu, 42 candidatures) et Tom (panda rouge, 31 candidatures, rien depuis 2 jours). Aujourd'hui : 16/11, objectif au 31/01.</p>
+  </section>
+
+  <!-- 1. CONNEXION -->
+  <section class="screen" id="connexion">
+    <div class="meta"><span class="route">/connexion</span><h2>Connexion</h2>
+      <p>On entre son email pour recevoir un code. Seules les deux adresses du duo sont acceptées.</p></div>
+    <div class="row">
+      <div class="state"><span class="tag">Normal</span>
+        <div class="device">
+          <div class="logo"><span class="sprite" data-form="5" data-color="bleu" data-px="4"></span><b>GOAL MASTER</b><span class="sub" style="margin:0">100 candidatures. Un chevalier.</span></div>
+          <form class="stack" onsubmit="event.preventDefault();location.hash='code'">
+            <div><label for="email">Ton email</label><input class="input" id="email" type="email" value="adrien@exemple.fr"></div>
+            <a class="btn" href="#code">Recevoir mon code</a>
+          </form>
+        </div>
+      </div>
+      <div class="state"><span class="tag">Adresse refusée</span>
+        <div class="device">
+          <div class="logo"><span class="sprite" data-form="5" data-color="bleu" data-px="4"></span><b>GOAL MASTER</b></div>
+          <div class="stack">
+            <div><label for="email2">Ton email</label><input class="input" id="email2" type="email" value="inconnu@exemple.fr"></div>
+            <p class="err">Cette adresse n'a pas accès à Goal Master.</p>
+            <a class="btn" href="#connexion">Recevoir mon code</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. CODE -->
+  <section class="screen" id="code">
+    <div class="meta"><span class="route">/connexion/code</span><h2>Code reçu par mail</h2>
+      <p>6 chiffres, valables 10 minutes. On reste ensuite connecté sur l'appareil.</p></div>
+    <div class="row">
+      <div class="state"><span class="tag">Normal</span>
+        <div class="device stack">
+          <p class="h-title">Vérifie ta boîte mail</p>
+          <p class="sub">Code envoyé à adrien@exemple.fr</p>
+          <div class="otp" aria-label="Code"><span>4</span><span>8</span><span>1</span><span>9</span><span class="on">_</span><span></span></div>
+          <a class="btn" href="#bienvenue">Entrer</a>
+          <a class="link" href="#connexion">Changer d'adresse</a>
+        </div>
+      </div>
+      <div class="state"><span class="tag">Code expiré</span>
+        <div class="device stack">
+          <p class="h-title">Vérifie ta boîte mail</p>
+          <div class="otp"><span>4</span><span>8</span><span>1</span><span>9</span><span>0</span><span>2</span></div>
+          <p class="err">Ce code a expiré. Demande un nouveau code.</p>
+          <a class="btn ghost" href="#code">Renvoyer un code</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. BIENVENUE -->
+  <section class="screen" id="bienvenue">
+    <div class="meta"><span class="route">/bienvenue</span><h2>Premier lancement</h2>
+      <p>Une seule page, quatre étapes : pseudo, personnage et couleur, objectif, notifications. Choisis un personnage (Chevalier ou Panda) et une couleur pour voir le bébé changer ; le rouge est déjà pris par Tom. Le personnage ne se change qu'au moment d'un nouvel objectif.</p></div>
+    <div class="row">
+      <div class="state"><span class="tag">Remplissage</span>
+        <div class="device stack">
+          <div class="step"><span class="step-n">1 · Pseudo</span><input class="input" id="pseudo" value="Adrien" aria-label="Pseudo"></div>
+          <div class="step"><span class="step-n">2 · Ton personnage et ta couleur</span>
+            <div class="chars" id="chars"></div>
+            <div class="preview"><span class="sprite" id="baby-preview" data-form="1" data-color="bleu" data-char="knight" data-px="7"></span></div>
+            <div class="swatches" id="swatches" style="margin-bottom:14px"></div>
+          </div>
+          <div class="step"><span class="step-n">3 · Ton objectif</span>
+            <div class="two">
+              <div><label for="cible">Candidatures</label><input class="input num" id="cible" value="100" inputmode="numeric"></div>
+              <div><label for="date">Avant le</label><input class="input num" id="date" value="31/01/2027"></div>
+            </div>
+          </div>
+          <div class="step" style="border:0;padding:0"><span class="step-n">4 · Relances</span>
+            <div class="toggle"><span>Recevoir les relances de Tom en notification</span><span class="switch" role="img" aria-label="Activé"></span></div>
+          </div>
+          <a class="btn" href="#accueil-vide">Commencer l'aventure</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. ACCUEIL -->
+  <section class="screen" id="accueil">
+    <div class="meta"><span class="route">/</span><h2>Accueil</h2>
+      <p>L'écran de tous les jours. En haut ma progression et le gros bouton ; à côté (ou en dessous sur mobile) mon binôme. Tom n'a rien fait depuis 2 jours : son avatar dort et le bouton Motiver clignote.</p></div>
+    <div class="row">
+      <div class="state wide"><span class="tag">En cours d'objectif</span>
+        <div class="device">
+          <div class="home">
+            <div class="stack">
+              <div class="me-head">
+                <span class="sprite" data-form="4" data-color="bleu" data-px="5"></span>
+                <div class="who">
+                  <div style="display:flex;justify-content:space-between;gap:8px"><span class="lvl">Adrien · Niv. 13</span><span class="streak"><span data-icon="flame"></span>5 j</span></div>
+                  <span class="form-name">Homme d'armes · série de 5 jours</span>
+                  <div class="bar"><i style="width:52%"></i></div>
+                  <div class="xpline num"><span>24 / 46 XP</span><span>Chevalier au niv. 16</span></div>
+                </div>
+              </div>
+              <div class="goal">
+                <div class="goal-n num">42 <small>/ 100 candidatures</small></div>
+                <div class="bar green"><i style="width:42%"></i></div>
+                <div class="goal-meta num"><span>Avant le 31/01</span><span>J-76 · il en reste 58</span></div>
+              </div>
+              <a class="btn big" href="#ajout">+ Candidature</a>
+              <p class="today">Aujourd'hui (<span class="num">3/15</span>) : <b>Doctolib</b>, <b>Qonto</b>, <b>Alan</b></p>
+              <div class="tabbar"><a class="on" href="#accueil">Quête</a><a href="#succes">Succès 7/13</a></div>
+            </div>
+            <div class="pal">
+              <div class="pal-head">
+                <span class="sprite mood-sleep" data-form="3" data-color="rouge" data-char="panda" data-px="5"></span>
+                <div class="who"><span class="lvl">Tom · Niv. 11</span><span class="form-name">Novice · série 0</span>
+                  <span class="idle">Rien depuis 2 jours</span></div>
+              </div>
+              <div class="bar green"><i style="width:31%"></i></div>
+              <div class="goal-meta num"><span>31 / 100</span><span>Avant le 15/02</span></div>
+              <a class="btn blink" href="#motiver">Motiver Tom</a>
+              <ul class="feed">
+                <li><span>Tom → <b>Swile</b></span><time>14/11</time></li>
+                <li><span>Tom → <b>Back Market</b></span><time>14/11</time></li>
+                <li><span>Tom est devenu <b>Novice</b></span><time>13/11</time></li>
+                <li><span>Tom → <b>Alan</b></span><time>12/11</time></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="state" id="accueil-vide"><span class="tag">Premier jour (vide)</span>
+        <div class="device stack">
+          <div class="me-head">
+            <span class="sprite" data-form="1" data-color="bleu" data-px="5"></span>
+            <div class="who"><span class="lvl">Adrien · Niv. 1</span><span class="form-name">Bébé · pas encore de série</span>
+              <div class="bar"><i style="width:0"></i></div><div class="xpline num"><span>0 / 22 XP</span><span>Gamin au niv. 4</span></div></div>
+          </div>
+          <div class="goal"><div class="goal-n num">0 <small>/ 100</small></div><div class="bar green"><i style="width:0"></i></div></div>
+          <p class="info">Ta première candidature fait grandir ton bébé. Une seule suffit pour aujourd'hui.</p>
+          <a class="btn big" href="#ajout">+ Candidature</a>
+        </div>
+      </div>
+      <div class="state"><span class="tag">Plafond du jour atteint</span>
+        <div class="device stack">
+          <div class="goal"><div class="goal-n num">57 <small>/ 100</small></div><div class="bar green"><i style="width:57%"></i></div></div>
+          <a class="btn big" href="#ajout">+ Candidature</a>
+          <p class="warn num">15/15 aujourd'hui. Les suivantes comptent pour ton objectif, sans XP. Reviens demain pour en regagner.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. AJOUT -->
+  <section class="screen" id="ajout">
+    <div class="meta"><span class="route">/ (fenêtre)</span><h2>+ Candidature : « Chez qui ? »</h2>
+      <p>Un champ, une validation. Le nom de l'entreprise est obligatoire et s'affiche dans le fil de Tom. Un doublon avertit sans bloquer.</p></div>
+    <div class="row">
+      <div class="state"><span class="tag">Saisie</span>
+        <div class="device stack">
+          <p class="h-title">Chez qui ?</p>
+          <input class="input" id="entreprise" value="Malt" aria-label="Entreprise">
+          <a class="btn" href="#ajout-ok">Valider · +10 XP</a>
+          <a class="link" href="#accueil">Fermer</a>
+        </div>
+      </div>
+      <div class="state"><span class="tag">Doublon</span>
+        <div class="device stack">
+          <p class="h-title">Chez qui ?</p>
+          <input class="input" id="entreprise2" value="Alan" aria-label="Entreprise">
+          <p class="warn">Tu as déjà candidaté chez Alan le 12/11. Tu la comptes quand même ?</p>
+          <div class="two"><a class="btn ghost" href="#ajout">Corriger</a><a class="btn" href="#ajout-ok">Compter</a></div>
+        </div>
+      </div>
+      <div class="state" id="ajout-ok"><div class="tagrow"><span class="tag">Validée, avec annulation</span><button class="replay" type="button" data-replay="ajout-ok">Rejouer</button></div>
+        <div class="device stack">
+          <span class="xp-pop" id="xp-pop">+10 XP</span>
+          <div class="goal"><div class="goal-n num"><span id="xp-count">43</span> <small>/ 100</small></div><div class="bar green"><i id="xp-bar" style="width:43%"></i></div></div>
+          <div class="toast" id="xp-toast"><span><b>+10 XP</b> Malt</span><a href="#accueil">Annuler</a></div>
+          <p class="note">Le lien Annuler reste quelques secondes, puis disparaît.</p>
+          <a class="btn ghost" href="#accueil">Retour à l'accueil</a>
+          <a class="link" href="#niveau">Exemple : cette candidature fait monter de niveau →</a>
+          <a class="link" style="margin-top:0" href="#evolution">Exemple : elle déclenche une évolution →</a>
+        </div>
+      </div>
+      <div class="state" id="niveau"><div class="tagrow"><span class="tag">Montée de niveau</span><button class="replay" type="button" data-replay="niveau">Rejouer</button></div>
+        <div class="device stack">
+          <div class="me-head">
+            <span class="sprite" data-form="4" data-color="bleu" data-px="5"></span>
+            <div class="who">
+              <span class="lvl" id="lvl-label">Niv. 14</span>
+              <span class="form-name">Homme d'armes</span>
+              <div class="bar"><i id="lvl-bar" style="width:100%;clip-path:inset(0 92% 0 0)"></i></div>
+              <div class="xpline num"><span id="lvl-xp">4 / 48 XP</span><span>Chevalier au niv. 16</span></div>
+            </div>
+          </div>
+          <p class="info">La barre se remplit, flashe, et le nouveau niveau s'imprime. Pas de plein écran : seules les évolutions de forme y ont droit.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. MOTIVER -->
+  <section class="screen" id="motiver">
+    <div class="meta"><span class="route">/ (fenêtre)</span><h2>Motiver Tom</h2>
+      <p>Un message préécrit, un clic, une relance par jour. Si Tom candidate dans les 24 h, +15 XP pour vous deux.</p></div>
+    <div class="row">
+      <div class="state"><span class="tag">Choix du message</span>
+        <div class="device stack">
+          <p class="h-title">Motiver Tom</p>
+          <div class="msgs" id="msgs">
+            <span class="grp">Bienveillant</span>
+            <button class="msg" type="button" aria-pressed="false">Juste une candidature aujourd'hui ?</button>
+            <button class="msg" type="button" aria-pressed="false">Allez, on lâche rien ! 💪</button>
+            <span class="grp">On se chambre</span>
+            <button class="msg" type="button" aria-pressed="true">Alors, on fait la sieste ? 😴</button>
+            <button class="msg" type="button" aria-pressed="false">Ton avatar prend la poussière…</button>
+          </div>
+          <a class="btn" href="#motiver-ok">Envoyer</a>
+          <p class="note">Bonus : +15 XP chacun si Tom candidate d'ici 24 h.</p>
+        </div>
+      </div>
+      <div class="state" id="motiver-ok"><div class="tagrow"><span class="tag">Relance envoyée</span><button class="replay" type="button" data-replay="motiver-ok">Rejouer</button></div>
+        <div class="device stack">
+          <div class="pal-head"><span class="sprite mood-sleep" id="send-tom" data-form="3" data-color="rouge" data-char="panda" data-px="5"></span>
+            <div class="who"><span class="lvl">Tom · Niv. 11</span><span class="idle">Rien depuis 2 jours</span></div></div>
+          <span class="btn ghost" id="send-btn" aria-disabled="true">Relance envoyée ✓</span>
+          <p class="note">Le bouton revient demain. Bonus en attente jusqu'au 17/11 à 10 h 42.</p>
+          <a class="link" href="#accueil">Retour à l'accueil</a>
+        </div>
+      </div>
+      <div class="state" id="motiver-recu"><span class="tag">Côté Tom : notification puis bandeau</span>
+        <div class="stack">
+          <div class="notif" id="recv-notif"><span class="ic"><span class="sprite" data-form="4" data-color="bleu" data-px="1"></span></span>
+            <div><b>Goal Master</b>⚔️ Adrien te motive : Alors, on fait la sieste ? 😴<br><small>maintenant</small></div></div>
+          <div class="device stack">
+            <div class="banner" id="recv-banner"><span class="sprite mood-party" data-form="4" data-color="bleu" data-px="3"></span>
+              <p><b>Adrien</b> te motive : « Alors, on fait la sieste ? 😴 »<br><span class="num" style="color:var(--muted);font-size:13px">Candidate avant demain 10 h 42 : +15 XP pour vous deux.</span></p></div>
+            <a class="btn" href="#ajout">+ Candidature</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. ÉVOLUTION -->
+  <section class="screen" id="evolution">
+    <div class="meta"><span class="route">/ (plein écran)</span><h2>Évolution de l'avatar</h2>
+      <p>Aux niveaux 4, 8, 12, 16 et 20 : flash, nouvelle forme, son nom. Tom le voit dans son fil. En dessous, les 6 formes : change le personnage, la couleur ou l'état (en forme, endormi, fatigué, épuisé) pour voir chaque version. Fatigués, le Chevalier et le Légendaire relèvent leur visière.</p></div>
+    <div class="row">
+      <div class="state"><div class="tagrow"><span class="tag">Moment d'évolution</span><button class="replay" type="button" data-replay="evolution">Rejouer</button></div>
+        <div class="device evo" id="evo-morph">
+          <div class="evo-flash m-flash"></div>
+          <div class="evo-stage">
+            <span class="sprite m-old" data-form="4" data-color="bleu" data-px="6" style="opacity:0"></span>
+            <span class="sprite m-new" data-form="5" data-color="bleu" data-px="6"></span>
+            <div class="evo-burst m-burst"></div>
+          </div>
+          <p class="h-title evo-title m-title" style="color:var(--gold)">Tu es devenu<br>Chevalier !</p>
+          <div class="stack m-after" style="align-items:center;gap:12px;width:100%">
+            <p class="sub" style="margin:0">Niveau 16 · 54 candidatures</p>
+            <a class="btn" href="#accueil" style="max-width:260px">Continuer</a>
+          </div>
+        </div>
+      </div>
+      <div class="state wide"><span class="tag">Les 6 formes de chaque personnage</span>
+        <div class="picker" id="ladder-char">Personnage :</div>
+        <div class="picker" id="ladder-picker">Couleur :</div>
+        <div class="picker" id="ladder-mood">État :</div>
+        <div class="ladder" id="ladder"></div>
+      </div>
+      <div class="state wide"><span class="tag">Les 3 poses dessinées</span>
+        <div class="ladder" id="poses"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 bis. RÉTROGRADATION -->
+  <section class="screen" id="retrogradation">
+    <div class="meta"><span class="route">/ (états de l'avatar)</span><h2>Rétrogradation</h2>
+      <p>Visuelle uniquement : l'XP, le niveau et les succès ne bougent jamais. Les jours d'arrêt se comptent du lundi au vendredi. 4 jours : fatigué (cernes, teint pâle) et armure rouillée, ou bambou fendu pour le panda. 7 jours : épuisé (joues creuses, voûté, sueur) et déchu, une forme de moins. 3 candidatures sur 2 jours d'affilée rendent la vraie forme.</p></div>
+    <div class="row">
+      <div class="state"><span class="tag">4 jours ouvrés : fatigué, bambou fendu (vu par Adrien)</span>
+        <div class="pal">
+          <div class="pal-head">
+            <span class="sprite mood-tired" data-form="3" data-color="rouge" data-char="panda" data-mood="tired" data-px="6"></span>
+            <div class="who"><span class="lvl">Tom · Niv. 11</span><span class="form-name">Novice fatigué</span>
+              <span class="idle">Rien depuis 4 jours ouvrés</span></div>
+          </div>
+          <a class="btn blink" href="#motiver">Motiver Tom</a>
+          <ul class="feed">
+            <li><span>Le bambou de Tom se fend</span><time>20/11</time></li>
+            <li><span>Tom → <b>Swile</b></span><time>14/11</time></li>
+          </ul>
+        </div>
+      </div>
+      <div class="state"><span class="tag">7 jours ouvrés : épuisé et déchu (vu par Tom)</span>
+        <div class="device stack">
+          <div class="me-head">
+            <span class="sprite mood-exhausted" data-form="2" data-color="rouge" data-char="panda" data-mood="exhausted" data-px="6"></span>
+            <div class="who"><span class="lvl">Tom · Niv. 11</span><span class="form-name">Novice déchu</span>
+              <div class="bar"><i style="width:36%"></i></div><div class="xpline num"><span>15 / 42 XP</span><span>Niveau conservé</span></div></div>
+          </div>
+          <div class="goal">
+            <span class="tag">Reconquête</span>
+            <div class="goal-n num">1 <small>/ 3 candidatures</small></div>
+            <div class="goal-meta"><span>Jour 1 sur 2</span><span>Avant demain soir</span></div>
+            <div class="bar green"><i style="width:33%"></i></div>
+          </div>
+          <p class="info">Ton niveau est intact. Encore 2 candidatures d'ici demain soir et tu redeviens Novice.</p>
+          <a class="btn big" href="#retour">+ Candidature</a>
+        </div>
+      </div>
+      <div class="state" id="retour"><div class="tagrow"><span class="tag">Retour en grâce</span><button class="replay" type="button" data-replay="retour">Rejouer</button></div>
+        <div class="device evo" id="retour-morph">
+          <div class="evo-flash m-flash"></div>
+          <div class="evo-stage">
+            <span class="sprite m-old mood-exhausted" data-form="2" data-color="rouge" data-char="panda" data-mood="exhausted" data-px="6" style="opacity:0"></span>
+            <span class="sprite m-new" data-form="3" data-color="rouge" data-char="panda" data-px="6"></span>
+            <div class="evo-burst m-burst"></div>
+          </div>
+          <p class="h-title evo-title m-title" style="color:var(--gold)">Retour en grâce !</p>
+          <div class="stack m-after" style="align-items:center;gap:12px;width:100%">
+            <p class="sub" style="margin:0">Tom redevient Novice · succès Revenant débloqué</p>
+            <a class="btn" href="#accueil" style="max-width:260px">Continuer</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. SUCCÈS -->
+  <section class="screen" id="succes">
+    <div class="meta"><span class="route">/succes</span><h2>Succès</h2>
+      <p>13 badges. Débloqués en couleur avec leur date, les autres verrouillés avec leur condition. Un succès gagné reste gagné.</p></div>
+    <div class="row">
+      <div class="state wide"><div class="device stack">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><p class="h-title" style="margin:0">Succès d'Adrien · 7/13</p><a class="btn small ghost" href="#accueil">Retour</a></div>
+        <div class="badges" id="badges"></div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 9. FIN -->
+  <section class="screen" id="fin">
+    <div class="meta"><span class="route">/objectif/fin</span><h2>Fin d'objectif</h2>
+      <p>Objectif atteint : victoire puis nouvel objectif. Date dépassée : pas de pénalité, on prolonge ou on repart. XP, niveau, avatar et succès sont toujours conservés.</p></div>
+    <div class="row">
+      <div class="state"><div class="tagrow"><span class="tag">Objectif atteint</span><button class="replay" type="button" data-replay="fin">Rejouer</button></div>
+        <div class="device end" id="win"><div class="confetti" id="confetti"></div>
+          <span class="sprite mood-party legend-glow" data-form="6" data-color="bleu" data-px="5"></span>
+          <p class="h-title" style="color:var(--gold)">Mission accomplie !</p>
+          <div class="stats num"><div><b>100</b><small>candidatures</small></div><div><b>Niv. 23</b><small>Légendaire</small></div><div><b>58 j</b><small>de quête</small></div></div>
+          <a class="btn" href="#bienvenue">Nouvel objectif</a>
+          <p class="note">Au nouvel objectif, tu peux changer de personnage.</p>
+        </div>
+      </div>
+      <div class="state"><span class="tag">Temps écoulé</span>
+        <div class="device end">
+          <span class="sprite" data-form="5" data-color="bleu" data-px="5"></span>
+          <p class="h-title">Temps écoulé</p>
+          <p class="sub" style="margin:0">87 candidatures sur 100 au 31/01. Ton chevalier garde tout ce qu'il a gagné.</p>
+          <a class="btn" href="#accueil">Prolonger jusqu'au 28/02</a>
+          <a class="btn ghost" href="#bienvenue">Nouvel objectif</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+const PAL={K:'#1a1626',E:'#1a1626',S:'#f4c7a1',R:'#e8838a',W:'#dfe6ee',G:'#8b93a7',T:'#c99a5b',B:'#7a4a26',Y:'#f2c14e',O:'#b9831c',L:'#fffbe0',C:'#7a5aa0',H:'#9c7f73',F:'#f3f1f6',N:'#26232f',I:'#ffffff',V:'#6fae4a',A:'#3b2b4a',D:'#2b2f4a',Z:'#a1402a'};
+const COLORS={bleu:'#3d7bd9',rouge:'#d94848',vert:'#3fa55b',violet:'#8a55d6',orange:'#e8892e',noir:'#4a4a5e'};
+const BABY=["..KGGGGGGK..",".KGWGGGGGGKK",".KGGGGGGGGK.",".KKKKKKKKKK.",".KSSSSSSSSK.",".KSESSSSESK.",".KSRSSSSRSK.","..KSSKKSSK..","..KKPPPPKK.Y",".KSKWWWWKSKY","..KWWWWWWK..","..KSK..KSK.."];
+const KID=["....KKKKKK....","...KTTTTTTK...","..KTTTTTTTTKB.","..KKKKKKKKKKB.","..KSSSSSSSSKB.","..KSESSSSESKB.","..KSSSKKSSSKB.","...KKSSSSKKBBB",".GGKTTPPTTKSB.","GGGGKTPPTKKSB.","GWGGKTTTTK....","GGGGKTTTTK....",".GGKKTTTTKK...","....KPPKPPK...","....KSK.KSK...","...KKK..KKK..."];
+const SQUIRE=["....KKKKKKK.....","...KBBBBBBBK....","..KBBBBBBBBBK...","..KBSSSSSSSBK.W.","..KSSESSSESSK.W.","..KSSSSSSSSSK.W.","...KSSSKKSSK..W.","....KKSSSSKK..W.","...KKPPPPPPKKYWY",".KKKPPPPPPPPKSB.","KPPPKPPYYPPPKSB.","KPYPKPPPPPPKKK..","KPPPKBBBBBBK....",".KKKKPPPPPPK....","....KPPKKPPK....","....KGGK.KGGK...","....KBBK.KBBK...","...KKKKK.KKKKK.."];
+const ARMS=[".....KKKKKK.....","....KGGWGGGK....","...KGGGGGGGGK...","...KGKKKKKKGK.W.","...KGSSSSSSGK.W.","...KGSESSESGK.W.","...KGSSSSSSGK.W.","...KGGSKKSGGK.W.","....KKGGGGKK.YWY","..KKKGPPPPGKKKB.",".KYYKGPYYPGKGSB.","KYPPYKPPPPKKGK..","KYPPYKPYYPKGGK..","KYPPYKPPPPK.KK..",".KYYKBBBBBBK....","..KK.KPPPPK.....",".....KGGKGGK....",".....KGGKGGK....","....KKBBKBBKK...","....KKKKKKKKK..."];
+const KNIGHT=["......KKKKKK......",".....KWWWWWGK.....","....KWWWWWWWGK..W.","....KWKKKKKKGK..W.","....KWWWWWWWGK..W.","....KWWKWKWWGK..W.","....KGWWWWWWGK..W.",".....KKGGGGKK...W.","..PKKWWWWWWKKP.YWY",".KKKKKWWGGWWKKWSB.","KPYYPKWWGGWWKWWKB.","KPYYPKWWWWWWKPK...","KYYYYKGGGGGGKPK...","KPYYPKWWWWWWKPK...","KPYYPKYYYYYYKPK...",".KPPKPWWWWWWKPPK..","..KK.PKWWKWWKPPPK.",".....PKWWKWWKPPPK.",".....PKGGKGGKPPPPK","......KWWKWWK.....",".....KWWWKWWWK....",".....KKKKKKKKKK..."];
+const P_BABY=["..KK....KK..",".KNNKKKKNNK.",".KNFFFFFFNK.","KFNNFFFFNNFK","KFNIFFFFNIFK","KFFFFKKFFFFK",".KFFFFFFVVV.","KNNKPPPPKNNK","KNNFFFFFFNNK",".KNNFFFFNNK.","..KKKKKKKK.."];
+const P_KID=["...KK......KK...","..KNNKKKKKKNNK..","..KPPPPPPPPPPKPP",".KFNNFFFFFFNNFK.",".KFNIFFFFFFNIFK.",".KFFFFFNNFFFFFK.","..KFFFFKKFFFFK..",".KNNKKFFFFKKNNV.","KNNKFFFFFFFFKNV.","KNNKFFFFFFFFFKV.","KNKFFFFFFFFFFKV.",".KKFFFFFFFFFFKV.","..KKFFFFFFFFKKV.","...KNNNKKNNNK...","...KNNNKKNNNK...","..KKKKK..KKKKK.."];
+const P_APP=["...KKK.....KKK...V","..KNNNKKKKKNNNK..V","..KNFFFFFFFFFNK..V",".KFNNNFFFFFNNNFK.V",".KFNINFFFFFNINFK.V",".KFFFFFFNFFFFFFK.V",".KFFFFFKKKFFFFFK.V","..KFFFFFFFFFFFK..V","..KNNKPPPPPPPKNNNV",".KNNKPPPPPPPPPKNNV","KNNKPPPPPPPPPPPKNV","KNNKPPPPPPPPPPPK.V",".KKKNNNNNNNNNNNK.V","...KPPPPPPPPPPPK.V","....KPPPPPPPPPK..V",".....KNNNKNNNK...V",".....KNNNKNNNK...V","....KKKKK.KKKKK..."];
+const P_TRAV=[".......KKKK.......",".....KKTTTTKK.....","...KKTTTTTTTTKK...",".KKTTTTTTTTTTTTKK.","..KFFFFFFFFFFFK..G",".KFNNNFFFFFNNNFK.V",".KFNINFFFFFNINFK.V",".KFFFFFFNFFFFFFK.V","..KFFFFKKKFFFFK..V","KPPKNKFFFFFFFKNNNV","KPPKNFFFFFFFFFKNNV","KPPKFFFFFFFFFFFKKV","KPPKFFFFFFFFFFFK.V","KPPKKKKKKKKKKKKK.V","KPPPKFFFFFFFFFK..V",".KPPKKFFFFFFFKK..V","..KPKNNNKKNNNK...V","....KNNNKKNNNK...V","....KTTTKKTTTK...V","...KKKKKKKKKKKK..."];
+const P_GUARD=["....KKK......KKK...Y","...KNNNKKKKKKNNNK..Y","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V",".KPPKKKKKKKKKKKKPPKV","KPPPKPPPPPPPPPPKNNNV","KPPKPPPPPPPPPPPPKNNV","KNNKKKKKKKKKKKKKK..V","KNNKPPPPPPPPPPPPK..V",".KKKPPPPPPPPPPPPK..V","...KYYYYYYYYYYYYK..V","...KPPPPPPPPPPPPK..V","....KPPPPPPPPPPK...V",".....KKKKKKKKKK....V",".....KNNNKKNNNK....V",".....KPPPKKPPPK....V","....KKKKKKKKKKKK...V","...................V"];
+const N_BABY=["..KAKAKAK...",".KAAAAAAAK..",".KDDDGGDDDKD",".KSSSSSSSSK.",".KSESSSSESK.",".KSRSSSSRSK.","..KSSKKSSK..","..KKPPPPKK..",".KSKPPPPKSKW","..KPPPPPPK..","..KPPPPPPK..","..KSK..KSK.."];
+const N_KID=["...KAK.KAK....","..KAAAKAAAAK..",".KAAAAAAAAAAK.",".KDDDDGGDDDDKD","..KSSSSSSSSK..","..KSESSSSESK..","..KSSSKKSSSK..","...KKSSSSKK..W","..KKPPPPPPKSKW",".KSKPPPPPPKSK.",".KSKPPKKPPK...","..KKPPPPPPK...","...KDDDDDDK...","...KDDKKDDK...","...KDDKKDDK...","..KKKK..KKKK.."];
+const N_NIN=["....KAK.KAK.KAK.","...KAAAKAAAKAAK.","..KAAAAAAAAAAAK.","..KDDDDDGGDDDDKD","..KASSSSSSSSAK..","..KSSESSSSESSK..","..KSSSSSSSSSSK..","...KSSSKKSSSK...","..KPPPPPPPPPPK..",".KPPKPPPPPPKPPPP","KSSKPPPPPPPPKSKW","KSSKPPPPPPPPKSKW",".KKKKKKKKKKKKK..","...KDDDDDDDDK...","...KDDDKKDDDK...","...KDDDKKDDDK...","...KGGGKKGGGK...","..KKKKK..KKKKK.."];
+const N_ELITE=[".....KAK.KAK.KAK..","....KAAAKAAAKAAK..","...KAAAAAAAAAAAK..","...KDDDDDGGDDDDKDD",".B.KASSSSSSSSAK...",".B.KSSESSSSESSK...",".BYKSSSSSSSSSSK...","..KKKSSSKKSSSKK...",".KPPPPPPPPPPPPPK..","KSKGGGPPPPPPGGGKSK","KSKGGGGPPPPGGGGKSK","KSKGGGGGGGGGGGGKSK",".KKKKKKKKKKKKKKKK.","...KDDDDDDDDDDK...","...KDDDDKKDDDDK...","...KDDDDKKDDDDK...","...KDDDK..KDDDK...","...KGGGK..KGGGK...","...KGGGK..KGGGK...","..KKKKKK..KKKKKK.."];
+const N_MASTER=["....KAK.KAK.KAKW..","...KAAAKAAAKAAKW..","..KAAAAAAAAAAAKW..","..KDDDDDGGDDDDKW..","..KASSSSSSSSAK.W..","..KSSESSSSESSK.W..","..KSSSSSSSSSSK.W..","...KSSSKKSSSK..W..",".KPPPPPPPPPPPKYWY.","KPPPPPPPPPPPPPKSK.","PPKDDDPPPPDDDKKSK.","PPKDDDDDDDDDDKSK..",".PKDDDDDDDDDDK....","..KPPPPPPPPPPK....","...KDDDDDDDDK.....","...KDDDKKDDDK.....","...KDDDKKDDDK.....","...KDDDKKDDDK.....","...KGGGKKGGGK.....","...KGGGKKGGGK.....","..KKKKK..KKKKK...."];
+const G_BABY=["...PPKPP....","..KZZZZZZK..",".KZZZZZZZZK.",".KZSSSSSSZK.",".KSESSSSESK.",".KSRSSSSRSK.","..KSSKKSSK..","..KKPPPPKK.B",".KSKPPPPKSKB","..KPPPPPPK..","..KPPPPPPK..","..KSK..KSK.."];
+const G_KID=["....KKKKKK.....","...KZZZZZZKZZ..","..KZZZZZZZZKZZ.","..KZSSSSSSZK.Z.","..KSESSSSESK...","..KSRSSSSRSK.B.","...KSSKKSSK..B.","....KKSSKK..BBB",".GGKPPPPPPKSSB.","GWGGKPPPPKKS...","GGGGKPPPPK.....",".GGKPPPPPPK....","...KPPPPPPK....","....KSK.KSK....","....KBK.KBK....","...KKKK.KKKK..."];
+const G_APP=["....KKKKKKK.....","...KZZZZZZZK....","..KZZZZZZZZZK.W.","..KZSSSSSSSZK.W.","..KSSESSSESSK.W.","..KZSRSSSRSZK.W.","..KZZSSKSSZZK.W.","..KZZKSSSKZZK.W.",".KZZKPPPPPKZZYWY",".KZKPPPPPPPKKSB.","..KKPPPPPPPK....","...KBBBYBBBK....","...KPPPPPPPK....","..KPPPPPPPPPK...","...KKSSKSSKK....","....KSSKSSK.....","....KBBKBBK.....","...KKKKKKKKK...."];
+const G_FIGHT=[".....KKKKKKK......","....KZZZZZZZK.....","...KZZZZZZZZZK..W.","...KZSSSSSSSZK..W.","...KSSESSSESSK..W.","...KZSRSSSRSZK..W.","..KZZZSSKSSZZZK.W.","..KZZZKSSSKZZZK.W.",".KZZKSSSSSSSKZZYWY","KZZKSKPPPPPKSKKSB.","KZKSSKYPPPYKSSKSB.",".KKSKKPPPPPKKSK...","....KYYBBBYYK.....","....KPPPPPPPK.....","...KPPYPPPYPPK....","....KSSKKKSSK.....","....KSSK.KSSK.....","....KBBK.KBBK.....","....KBBK.KBBK.....","...KKKKK.KKKKK...."];
+const G_WAR=["......YKYKY.......",".....KZZZZZZK.....","....KZZZZZZZZK..W.","...KZZSSSSSSZZK.W.","...KZSSESSESSZK.W.","...KZSRSSSSRSZK.W.","..KZZSSSKSSSZZK.W.","..KZZZKSSSKZZZK.W.",".PKZZWWKSKWWZZKYWY","PPKZWWWPPPWWWKSKB.","PPKSKWPPYPPWKSK...","PPKSKWWPPPWWKSK...","PPPKKKWWYWWKKK....","PPP.KYYBBBYYK.....",".PPKWWPPPPPWWK....",".PPKPPWPPPWPPK....","..PKSSKKKKSSK.....","..PPKWWK.KWWK.....","...PKWWK.KWWK.....","....KWWK.KWWK.....","....KGGK.KGGK.....","...KKKKK.KKKKK...."];
+function padLeg(g){return ["......................","...Y..............Y...","........Y......Y......"].concat(g.map(r=>'.'+r+'.'))}
+const N_LEG=["......KKKKKKK.......",".....KDDDDDDDK......","....KDDDDDDDDDK....L","....KDDDDDDDDDK...LL","....KDSSSSSSSDK...LL","....KDSESSSESDK..LLL","....KDSSSSSSSDK..LL.","....KDDDDDDDDDK.LL..",".....KDDDDDDDK..YY..","...KKPPPPPPPPPKKKSK.","..KPPKPPPPPPPKPPKSK.","..KPPKPPPPPPPKPPKK..","..KSSKDDDDDDDKSSK...","...KKKDDDDDDDKKK....","....KPPPPPPPPPK.....","....KPPPPKPPPPK.....","....KDDDDKDDDDK.....","....KPPPPKPPPPK.....","....KDDDDKDDDDK.....","...KKKKKK.KKKKKK...."];
+const G_LEG=["......KKKKKKK.....L.",".....KZZZZZZZK...LL.","....KZPPPPPPPZK..LL.","....KZSSSSSSSZK..LL.","...KZZSESSSESZZK.LL.","...KZZSRSSSRSZZK.LL.","..KZZZZSSKSSZZZZKLL.","..KZZZZKSSSKZZZZKYY.",".KZZKSSSSSSSSSKZKSK.",".KZKSSYYSSSYYSSKSSK.",".KZKSSYYSSSYYSKSK...","..KSYKSSSSSSSKYSK...","..KSSKSSSSSSSKSSK...","...KKKSSSKSSSKKK....","....KYYYYYYYYYK.....","....KPPPYYYPPPK.....","....KSPPPPPPPSK.....","....KSSKPPPKSSK.....","....KSSK...KSSK.....","....KBSK...KSBK.....","....KBBK...KBBK.....","...KKKKK...KKKKK...."];
+const P_LEG=["....KKK......KKK..LL","...KNNNKKKKKKNNNK.LL","...KNFFFFFFFFFNK...Y","..KFNNNFFFFFNNNFK..Y","..KFNINFFFFFNINFK..Y","..KFFFFFFNFFFFFFK..Y","..KFFFFFKKKFFFFFK..Y","...KFFFFFFFFFFFK...Y","..KNNFPPPPPFFFNNK.NY",".KNNKYPPPPPPFFFKNNNY","KNNKFYPPPPPPPFFFKNNY","KNNKFFYPPPPPPPFFK..Y","KNNKFFFYPPPPPPPFK..Y",".KKKPPPPPPPPPPPPK..Y","...KPPPPPPPPPPPPK..Y","...KYPPPPPPPPPPYK..Y","....KPPPPPPPPPPK...Y",".....KKKKKKKKKK....Y",".....KNNNKKNNNK....Y","....KKKKKKKKKKKK...Y"];
+function ninjaLegend(){return padLeg(N_LEG)}
+function ninjaLegendOld(){const top=["......................","...Y..............Y...","........Y......Y......"];
+  return top.concat(N_MASTER.map(r=>'..'+r+'..')).map(r=>r.split('').map(c=>c==='D'?'P':c==='P'?'Y':c==='W'?'L':c).join(''))}
+function warriorLegend(){return padLeg(G_LEG)}
+function warriorLegendOld(){const top=["......................","...Y..............Y...","........Y......Y......"];
+  const g=top.concat(G_WAR.map(r=>'..'+r+'..')).map(r=>r.split('').map(c=>c==='W'?'Y':c==='G'?'O':c));
+  for(let y=5;y<=11;y++)g[y][18]='L';
+  return g.map(r=>r.join(''))}
+const P_NOV=["....KKK......KKK....","...KNNNKKKKKKNNNK...","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNNFFFFFFFFFNNK.NV",".KNNKFFFFFFFFFKNNNNV","KNNKFFFFFFFFFFFKNNNV","KNNKFFFFFFFFFFFK...V","KNNKFFFFFFFFFFFK...V",".KKKBBBBBBBBBBBK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK....V","....KNNNK.KNNNK....V","...KKKKKK.KKKKKK...."];
+const P_VOY=["........KKKK........",".....KKTTTTTTKK.....","..KKTTTTTTTTTTTTKK..","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNNPFFFFFFFFNNK.NV",".KNNKFPFFFFFFFKNNNNV","KNNKFFFPFFFFFFFKNNNV","KNNKFFFFPFFFFFFK...V","KNNKFFFFFPFFFFFK...V",".KKKBBBBBBPBBBBK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK....V","....KNNNK.KNNNK....V","....KTTTK.KTTTK....V","...KKKKKK.KKKKKK...."];
+const P_GAR=["....KKK......KKK...Y","...KNNNKKKKKKNNNK..Y","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNPYBFFFFFBYPNK.NV",".KNNPYFBFFFBFYPKNNNV","KNNKPYFFBFBFFYPKNNNV","KNNKPYFFFYFFFYPK...V","KNNKPYFFFFFFFYPK...V",".KKKYYYYYYYYYYYK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK....V","....KPPPK.KPPPK....V","...KKKKKK.KKKKKK...."];
+const P_GM=[".....KKK......KKK...YYY.","....KNNNKKKKKKNNNK..Y.Y.","....KNFFFFFFFFFFNK..YYY.","...KFWWWFFFFFFWWWFK..Y..","...KFNINFFFFFFNINFK..Y..","...KFFFFFFNNFFFFFFK..Y..","...KFWWFFFKKFFFWWFK..Y..","....KWWWWWWWWWWWWK...Y..",".....KWWWWWWWWWWK....Y..","...KKKPKWWWWWWKPKKK.NY..","..KYYYPYYKWWKYYPYYYKNY..",".KNKYYPYYYYYYYYPYYKNNY..","KNNKYYPYYYYYYYYPYYK..Y..","KNNKYYPYYYYYYYYPYYK..Y..",".KKKOOPOOOOOOOOPOOK..Y..","...KYYPYYYYYYYYPYYK..Y..","..KYYYPYYYYYYYYPYYYK.Y..","..KYYYPYYYYYYYYPYYYK.Y..",".KYYYYPYYYYYYYYPYYYYKY..",".KYYYYPYYYYYYYYPYYYYKY..",".KOOOOOOOOOOOOOOOOOOKY..","..KKKKKKKKKKKKKKKKKK.Y..","....KNNNK....KNNNK...Y..","...KKKKKK...KKKKKK...Y.."];
+function pandaLegend(){return padLeg(P_LEG)}
+function pandaLegendGM(){return ["..........................","...Y..................Y...","........Y.........Y......."].concat(P_GM.map(r=>'.'+r+'.'))}
+function monk(k){const g=P_LEG.map(r=>r.split(''));
+  for(let y=0;y<2;y++){g[y][18]='.';g[y][19]=k==='gardien'?'Y':'.'}
+  for(let y=2;y<g.length;y++)if(g[y][19]==='Y')g[y][19]=(k==='gardien'&&y<3)?'Y':'V';
+  if(k!=='gardien'){g.forEach((r,y)=>r.forEach((c,x)=>{if(y>=7&&y<=8&&c==='B')r[x]='F';if(y>=8&&c==='Y'&&x<19)r[x]='P'}))}
+  let out=g.map(r=>r.join(''));
+  if(k==='voyageur'){out[0]=".....KKTTTTTTKK.....";out[1]="..KKTTTTTTTTTTTTKK..";out=["........KKKK........"].concat(out)}
+  return out}
+function pandaLegendOld(){
+  const top=["........................","....Y................Y..",".........Y.......Y......"];
+  const g=top.concat(P_GUARD.map(r=>'..'+r+'..')).map(r=>r.split('').map(c=>c==='P'?'Y':c==='Y'?'P':c==='V'?'L':c));
+  g[3][21]='L';g[4][21]='L';
+  return g.map(r=>r.join(''));
+}
+const KNIGHT_OPEN=KNIGHT.slice(0,2).concat(["....KKKKKKKKKK..W.","....KWSSSSSSGK..W.","....KWSESSESGK..W.","....KGSSSSSSGK..W.","....KGSSKKSSGK..W."],KNIGHT.slice(7));
+function legend(src,droop){
+  const plume=droop?["......................","..........KPPP........","........PPPPK........."]:["............PPP.......","...........PPPPK......","..........KPPK........"];
+  const g=plume.concat((src||KNIGHT).map(r=>'..'+r+'..')).map(r=>r.split('').map(c=>c==='W'?'Y':c==='G'?'O':c));
+  for(let y=0;y<=11;y++) g[y][18]='L';
+  return g.map(r=>r.join(''));
+}
+const FORMS=[null,
+  {g:BABY,name:'Bébé',lvl:1,n:0},{g:KID,name:'Gamin',lvl:4,n:7},{g:SQUIRE,name:'Écuyer',lvl:8,n:20},
+  {g:ARMS,name:"Homme d'armes",lvl:12,n:35},{g:KNIGHT,name:'Chevalier',lvl:16,n:54},{g:legend(),name:'Chevalier légendaire',lvl:20,n:75}];
+const OPEN={5:KNIGHT_OPEN,6:legend(KNIGHT_OPEN,true)};
+const PFORMS=[null,{g:P_BABY,name:'Bébé panda',lvl:1,n:0},{g:P_KID,name:'Panda curieux',lvl:4,n:7},{g:P_NOV,name:'Novice',lvl:8,n:20,sc:0.8},
+  {g:P_VOY,name:'Moine voyageur',lvl:12,n:35,sc:0.92},{g:P_GAR,name:'Moine gardien',lvl:16,n:54,sc:1.06},{g:pandaLegend(),name:'Grand maître',lvl:20,n:75,sc:1.2}];
+const NFORMS=[null,{g:N_BABY,name:'Bébé ninja',lvl:1,n:0},{g:N_KID,name:'Petit ninja',lvl:4,n:7},{g:N_NIN,name:'Ninja',lvl:8,n:20},
+  {g:N_ELITE,name:"Ninja d'élite",lvl:12,n:35},{g:N_MASTER,name:'Maître ninja',lvl:16,n:54},{g:ninjaLegend(),name:'Ninja légendaire',lvl:20,n:75}];
+const GFORMS=[null,{g:G_BABY,name:'Bébé guerrière',lvl:1,n:0},{g:G_KID,name:'Fillette',lvl:4,n:7},{g:G_APP,name:'Apprentie',lvl:8,n:20},
+  {g:G_FIGHT,name:'Combattante',lvl:12,n:35},{g:G_WAR,name:'Guerrière',lvl:16,n:54},{g:warriorLegend(),name:'Reine barbare',lvl:20,n:75}];
+const CHARS={knight:FORMS,panda:PFORMS,ninja:NFORMS,warrior:GFORMS};
+function pandaFace(g,mood){
+  if(!mood||mood==='rust')return g;
+  const a=g.map(r=>r.split('')),eyes=[];a.forEach((r,y)=>r.forEach((c,x)=>{if(c==='I')eyes.push([x,y])}));
+  if(!eyes.length)return g;
+  if(mood==='sleep'){eyes.forEach(([x,y])=>a[y][x]='N');return a.map(r=>r.join(''))}
+  eyes.forEach(([x,y])=>{const b=a[y+1];if(b&&b[x]==='F')b[x]='N';const c2=a[y+2];if(mood==='exhausted'&&c2&&c2[x]==='F')c2[x]='N'});
+  if(mood==='exhausted'){const ey=eyes[0][1];[ey+1,ey+2].forEach(y=>{const r=a[y];if(!r)return;const i=r.indexOf('F'),j=r.lastIndexOf('F');
+    if(i>0&&r[i-1]==='K'){r[i-1]='.';r[i]='K'}if(j>i&&r[j+1]==='K'){r[j+1]='.';r[j]='K'}})}
+  return a.map(r=>r.join(''));
+}
+const RUST={P:'#7d5a45',W:'#b3a58c',G:'#7b6f5e',Y:'#a88a4a',O:'#7b6f5e'};
+const RUSTY={rust:1,tired:1,exhausted:1};
+function col(c,P,mood,x,y,ch){const r=RUSTY[mood];
+  if(c==='F'&&mood==='tired')return '#cfcad6';if(c==='F'&&mood==='exhausted')return '#b7b1bf';if(c==='V'&&r)return '#9aa36a';
+  if(c==='S'&&mood==='tired')return '#dcc6b6';if(c==='S'&&mood==='exhausted')return '#c7b0a2';if(c==='C'&&mood==='exhausted')return '#4e3570';
+  if(r&&'PWGY'.includes(c)&&(x*7+y*3)%8===0)return ch==='panda'?'#2e261c':'#a4501f';if(r&&RUST[c])return RUST[c];return c==='P'?P:PAL[c]}
+function face(g,mood){
+  if(!mood||mood==='rust')return g;
+  const a=g.map(r=>r.split('')),ey=a.findIndex(r=>r.includes('E'));
+  if(ey<0)return g;
+  if(mood==='sleep'){a[ey].forEach((c,x)=>{if(c==='E'&&a[ey][x+1]==='S')a[ey][x+1]='K'});return a.map(r=>r.join(''))}
+  a.forEach(r=>r.forEach((c,x)=>{if(c==='R')r[x]='S'}));
+  a[ey].forEach((c,x)=>{const b=a[ey+1];if(c==='E'&&b&&b[x]==='S')b[x]='C'});
+  if(mood==='exhausted')[ey+1,ey+2].forEach(y=>{const r=a[y];if(!r)return;const i=r.indexOf('S'),j=r.lastIndexOf('S');if(i>=0)r[i]='H';if(j>i)r[j]='H'});
+  return a.map(r=>r.join(''));
+}
+function svg(form,color,px,mood,ch){
+  const T=CHARS[ch]||FORMS;
+  const g=ch==='panda'?pandaFace(T[form].g,mood):(ch==='ninja'||ch==='warrior')?face(T[form].g,mood):face(((mood==='tired'||mood==='exhausted')&&OPEN[form])||FORMS[form].g,mood),h=g.length,w=Math.max(...g.map(r=>r.length)),P=COLORS[color]||COLORS.bleu;
+  let r='';
+  g.forEach((row,y)=>{let x=0;while(x<row.length){if(row[x]==='.'){x++;continue}const f=col(row[x],P,mood,x,y,ch);let e=x+1;while(e<row.length&&row[e]!=='.'&&col(row[e],P,mood,e,y,ch)===f)e++;
+    r+=`<rect x="${x}" y="${y}" width="${e-x}" height="1" fill="${f}"/>`;x=e;}});
+  return `<svg style="--w:${w}" viewBox="0 0 ${w} ${h}" width="${w*px*(T[form].sc||1)}" height="${h*px*(T[form].sc||1)}" shape-rendering="crispEdges" role="img" aria-label="${T[form].name}">${r}</svg>`;
+}
+const ICONS={star:["....X....","...XXX...","XXXXXXXXX",".XXXXXXX.","..XXXXX..",".XXX.XXX.","XX.....XX"],
+ flame:["...X...","..XX...","..XXX.X",".XXXXXX","XXX.XXX","XX...XX","XX...XX",".XX.XX.","..XXX.."],
+ swords:["X.......X",".X.....X.","..X...X..","...X.X...","....X....","...X.X...","..X...X..",".X.....X."],
+ arrow:["...X...","..XXX..",".XXXXX.","XX.X.XX","...X...","...X...","..XXX..","..XXX.."]};
+function icon(n,px){const g=ICONS[n],w=g[0].length,h=g.length;let r='';g.forEach((row,y)=>[...row].forEach((c,x)=>{if(c==='X')r+=`<rect x="${x}" y="${y}" width="1" height="1"/>`}));
+  return `<svg class="ic-px" viewBox="0 0 ${w} ${h}" width="${w*px}" height="${h*px}" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`}
+document.querySelectorAll('[data-icon]').forEach(e=>e.innerHTML=icon(e.dataset.icon,2));
+function paint(el){if(!el.closest('.notif'))el.classList.add('idle');el.innerHTML=svg(+el.dataset.form,el.dataset.color,+el.dataset.px||4,el.dataset.mood||(el.classList.contains('mood-sleep')?'sleep':''),el.dataset.char)}
+document.querySelectorAll('.sprite[data-form]').forEach(paint);
+
+// personnage et couleur du premier lancement
+const sw=document.getElementById('swatches'),bp=document.getElementById('baby-preview'),chs=document.getElementById('chars');
+const CH=[['knight','Chevalier','Du bébé au chevalier légendaire'],['panda','Panda','Du bébé panda au grand maître']];
+function drawChars(){chs.innerHTML='';CH.forEach(([k,n,d])=>{const b=document.createElement('button');b.type='button';b.className='char';b.setAttribute('aria-pressed',bp.dataset.char===k);
+  b.innerHTML=`<span class="pic"><span class="sprite idle">${svg(5,bp.dataset.color,3,'',k)}</span></span><b>${n}</b><small>${d}</small>`;
+  b.onclick=()=>{bp.dataset.char=k;paint(bp);drawChars()};chs.appendChild(b)})}
+drawChars();
+Object.entries(COLORS).forEach(([k,v])=>{const b=document.createElement('button');b.type='button';b.className='sw';b.style.background=v;
+  b.setAttribute('aria-label',k);b.setAttribute('aria-pressed',k==='bleu');if(k==='rouge'){b.disabled=true;b.title='Déjà pris par Tom'}
+  b.onclick=()=>{sw.querySelectorAll('.sw').forEach(s=>s.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');bp.dataset.color=k;paint(bp);drawChars()};sw.appendChild(b)});
+
+// échelle des formes
+const ld=document.getElementById('ladder'),lp=document.getElementById('ladder-picker'),lm=document.getElementById('ladder-mood'),lc=document.getElementById('ladder-char');
+let LC='bleu',LM='',LCH='knight';
+const MOODS={'':'En forme',sleep:'Endormi',tired:'Fatigué',exhausted:'Épuisé'};
+function ladder(color){if(color)LC=color;ld.innerHTML=CHARS[LCH].slice(1).map((f,i)=>`<div class="rung"><div class="pic"><span class="sprite idle${i===5&&!LM?' legend-glow':''}${LM?' mood-'+LM:''}">${svg(i+1,LC,5,LM,LCH)}</span></div><b>${f.name}${LM==='tired'?' fatigué':LM==='exhausted'?' épuisé':''}</b><small>Niv. ${f.lvl} · ≈ ${f.n} candidatures</small></div>`).join('')}
+Object.entries(MOODS).forEach(([k,v])=>{const b=document.createElement('button');b.type='button';b.className='btn small ghost';b.textContent=v;b.setAttribute('aria-pressed',k==='');
+  b.onclick=()=>{lm.querySelectorAll('button').forEach(s=>s.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');LM=k;ladder()};lm.appendChild(b)});
+[['knight','Chevalier'],['panda','Panda']].forEach(([k,v])=>{const b=document.createElement('button');b.type='button';b.className='btn small ghost';b.textContent=v;b.setAttribute('aria-pressed',k==='knight');
+  b.onclick=()=>{lc.querySelectorAll('button').forEach(s=>s.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');LCH=k;ladder()};lc.appendChild(b)});
+Object.entries(COLORS).forEach(([k,v])=>{const b=document.createElement('button');b.type='button';b.className='sw';b.style.background=v;b.setAttribute('aria-label',k);
+  b.setAttribute('aria-pressed',k==='bleu');b.onclick=()=>{lp.querySelectorAll('.sw').forEach(s=>s.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');ladder(k)};lp.appendChild(b)});
+ladder('bleu');
+
+// messages
+document.querySelectorAll('#msgs .msg').forEach(m=>m.onclick=()=>{document.querySelectorAll('#msgs .msg').forEach(x=>x.setAttribute('aria-pressed','false'));m.setAttribute('aria-pressed','true')});
+
+// succès
+const B=[['1','Premier pas','1ʳᵉ candidature','02/11'],['10','En route','10 candidatures','05/11'],['25','Quart de quête','25 candidatures','10/11'],['50','Mi-parcours','50 candidatures',''],['100','Centurion','100 candidatures',''],
+ ['3j','Échauffement','Série de 3 jours','04/11'],['7j','Semaine de feu','Série de 7 jours',''],['30j','Machine','Série de 30 jours',''],['@star','Mission accomplie','Objectif atteint',''],
+ ['@swords','Duo','Candidater le même jour que Tom','03/11'],['5','Coach','5 relances suivies d\'effet',''],['@flame','Phénix','Candidater après une relance','08/11'],['@arrow','Revenant','Sortir de l\'état déchu','']];
+document.getElementById('badges').innerHTML=B.map(([i,n,c,d])=>`<div class="badge${d?'':' locked'}"><span class="em">${i[0]==='@'?icon(i.slice(1),3):i}</span><b>${n}</b><small>${d?'Obtenu le '+d:c}</small></div>`).join('');
+
+// ---------- poses ----------
+function gridSvg(g,color,px,ch){const P=COLORS[color],h=g.length,w=Math.max(...g.map(r=>r.length));let r='';
+  g.forEach((row,y)=>{let x=0;while(x<row.length){if(row[x]==='.'){x++;continue}const f=col(row[x],P,'',x,y,ch);let e=x+1;while(e<row.length&&row[e]!=='.'&&col(row[e],P,'',e,y,ch)===f)e++;
+    r+=`<rect x="${x}" y="${y}" width="${e-x}" height="1" fill="${f}"/>`;x=e}});
+  return `<svg style="--w:${w}" viewBox="0 0 ${w} ${h}" width="${w*px}" height="${h*px}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`}
+const blank=(n,w)=>Array.from({length:n},()=>Array(w).fill('.'));
+function poseKnight(k){let g=KNIGHT.map(r=>r.split(''));if(k==='repos')return g.map(r=>r.join(''));
+  if(k==='action'){g=g.map(r=>r.concat(Array(6).fill('.')));for(let y=0;y<=8;y++)for(let x=15;x<=17;x++)if('WY'.includes(g[y][x]))g[y][x]='.';
+    g[8][16]='Y';g[9][16]='Y';g[10][16]='Y';for(let x=17;x<23;x++)g[9][x]='W';return g.map(r=>r.join(''))}
+  g=blank(4,18).concat(g);for(let y=4;y<=12;y++)for(let x=15;x<=17;x++)if('WY'.includes(g[y][x]))g[y][x]='.';
+  for(let y=0;y<=6;y++)g[y][16]='W';g[7][15]='Y';g[7][16]='Y';g[7][17]='Y';g[8][16]='B';for(let y=9;y<=12;y++)g[y][16]='S';g[13][16]='.';g[14][16]='.';
+  return g.map(r=>r.join(''))}
+function posePanda(k){let g=P_GAR.map(r=>r.split(''));if(k==='repos')return g.map(r=>r.join(''));
+  const clr=()=>{for(let y=0;y<g.length;y++)if('VY'.includes(g[y][19]))g[y][19]='.'};
+  if(k==='action'){g=g.map(r=>r.concat(Array(8).fill('.')));clr();for(let x=19;x<27;x++)g[10][x]='V';g[10][27]='Y';return g.map(r=>r.join(''))}
+  g=blank(4,20).concat(g);clr();for(let y=0;y<=15;y++)g[y][19]=y<2?'Y':'V';for(let y=11;y<=14;y++)g[y][18]='N';return g.map(r=>r.join(''))}
+const PN={repos:'Repos',action:'Action',victoire:'Victoire'};
+document.getElementById('poses').innerHTML=[['knight','Chevalier',poseKnight],['panda','Moine gardien',posePanda]].flatMap(([ch,n,f])=>
+  ['repos','action','victoire'].map(k=>`<div class="rung"><div class="pic"><span class="sprite${k==='repos'?' idle':''}">${gridSvg(f(k),ch==='knight'?'bleu':'rouge',5,ch)}</span></div><b>${n} · ${PN[k]}</b></div>`)).join('');
+
+// ---------- animations ----------
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const EASE='cubic-bezier(0.16,1,0.3,1)',WHITE='brightness(0) invert(1)';
+const $=id=>document.getElementById(id);
+function runner(root){(root._a||[]).forEach(x=>x.cancel());root._a=[];
+  return (el,k,o)=>{if(!el||!el.animate)return null;const x=el.animate(k,Object.assign({easing:EASE,fill:'both'},o));root._a.push(x);return x}}
+function burst(b,delay,run){b.innerHTML='';const C=['#f2c14e','#ff7a45','#fffbe0'];
+  for(let i=0;i<14;i++){const p=document.createElement('i');p.style.background=C[i%3];b.appendChild(p);const t=i/14*Math.PI*2,r=60+(i%3)*24;
+    run(p,[{opacity:1,transform:'translate(0,0)'},{opacity:0,transform:`translate(${Math.cos(t)*r}px,${Math.sin(t)*r}px)`}],{duration:720,delay})}}
+function morph(root){if(!root)return;const run=runner(root),q=s=>root.querySelector(s);
+  const o=q('.m-old'),n=q('.m-new'),t=q('.m-title'),af=q('.m-after');
+  if(RM){run(o,[{opacity:1},{opacity:0}],{duration:400});run(n,[{opacity:0},{opacity:1}],{duration:400});run(t,[{opacity:0},{opacity:1}],{duration:300,delay:300});return}
+  const offs=[0,.12,.3,.44,.55,.64,.71,.77,.82,.86,.9,.93,.96,1],D=1600,L=offs.length-1;
+  run(o,offs.map((x,i)=>({offset:x,opacity:i===L?0:(i%2?0:1),filter:i?WHITE:'brightness(1)',easing:'steps(1,end)'})),{duration:D,easing:'linear'});
+  run(n,offs.map((x,i)=>({offset:x,opacity:i===L?1:(i%2?1:0),filter:WHITE,easing:'steps(1,end)'})),{duration:D,easing:'linear'});
+  run(q('.m-flash'),[{opacity:0},{opacity:.85,offset:.25},{opacity:0}],{duration:440,delay:D-80,easing:'ease-out'});
+  run(n,[{filter:WHITE,transform:'scale(1.14)'},{filter:'brightness(1)',transform:'scale(1)'}],{duration:540,delay:D,fill:'forwards'});
+  burst(q('.m-burst'),D,run);
+  run(t,[{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:640,delay:D+300,easing:'steps(16,end)'});
+  run(af,[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:420,delay:D+900});
+}
+function playXP(){const run=runner($('ajout-ok')),c=$('xp-count');
+  if(RM){c.textContent='43';run($('xp-toast'),[{opacity:0},{opacity:1}],{duration:250});return}
+  c.textContent='42';setTimeout(()=>{c.textContent='43'},260);
+  run($('xp-pop'),[{opacity:0,transform:'translate(-50%,0)'},{opacity:1,transform:'translate(-50%,-18px)',offset:.3},{opacity:0,transform:'translate(-50%,-48px)'}],{duration:900,fill:'none'});
+  run($('xp-bar'),[{clipPath:'inset(0 2.3% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:500,delay:150});
+  run(c,[{transform:'scale(1)'},{transform:'scale(1.35)',offset:.3},{transform:'scale(1)'}],{duration:360,delay:240,easing:'steps(3,end)'});
+  run($('xp-toast'),[{opacity:0,transform:'translateY(16px)'},{opacity:1,transform:'none'}],{duration:320,delay:120});
+}
+function playLevel(){const run=runner($('niveau')),l=$('lvl-label'),x=$('lvl-xp');
+  const end=()=>{l.textContent='Niv. 14';x.textContent='4 / 48 XP'};
+  if(RM){end();run(l,[{color:'#f2c14e'},{color:'#f1ecff'}],{duration:500});return}
+  l.textContent='Niv. 13';x.textContent='40 / 46 XP';setTimeout(end,800);
+  run($('lvl-bar'),[{clipPath:'inset(0 13% 0 0)'},{clipPath:'inset(0 0 0 0)',offset:.3},{clipPath:'inset(0 0 0 0)',filter:'brightness(2.2)',offset:.45},{clipPath:'inset(0 0 0 0)',filter:'brightness(1)',offset:.6},{clipPath:'inset(0 100% 0 0)',offset:.61},{clipPath:'inset(0 92% 0 0)'}],{duration:1400,easing:'linear'});
+  run(l,[{transform:'scale(1)',color:'#f1ecff'},{transform:'scale(1.8)',color:'#f2c14e',offset:.4},{transform:'scale(1)',color:'#f2c14e'}],{duration:520,delay:800,easing:'steps(4,end)'});
+}
+function playSend(){const run=runner($('motiver-ok')),rr=runner($('motiver-recu')),up=RM?'none':'translateY(-14px)';
+  run($('send-btn'),[{opacity:.3,transform:'scale(.92)'},{opacity:1,transform:'none'}],{duration:300});
+  if(!RM)run($('send-tom'),[{transform:'translateX(0)'},{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'translateX(-2px)'},{transform:'translateX(0)'}],{duration:420,delay:200,easing:'steps(4,end)',fill:'none'});
+  rr($('recv-notif'),[{opacity:0,transform:up},{opacity:1,transform:'none'}],{duration:420,delay:700});
+  rr($('recv-banner'),[{opacity:0,transform:up,borderColor:'#f2c14e'},{opacity:1,transform:'none',borderColor:'#f2c14e',offset:.6},{opacity:1,transform:'none',borderColor:'#ff7a45'}],{duration:900,delay:1100});
+}
+function playWin(){const run=runner($('win')),c=$('confetti');c.innerHTML='';if(RM)return;const C=['#f2c14e','#ff7a45','#6fd49a','#3d7bd9','#fffbe0'];
+  for(let i=0;i<28;i++){const p=document.createElement('i'),s=i%2?1:-1;p.style.left=(i*37%100)+'%';p.style.background=C[i%5];c.appendChild(p);
+    run(p,[{opacity:1,transform:'translateY(0) rotate(0)'},{opacity:1,transform:`translateY(${260+(i%4)*40}px) rotate(${s*180}deg)`,offset:.85},{opacity:0,transform:`translateY(${300+(i%4)*40}px) rotate(${s*200}deg)`}],{duration:1500+(i%5)*180,delay:(i%7)*90,easing:'cubic-bezier(.2,.6,.4,1)'})}}
+const PLAYS={'ajout-ok':playXP,niveau:playLevel,'motiver-ok':playSend,evolution:()=>morph($('evo-morph')),retour:()=>morph($('retour-morph')),fin:playWin};
+document.querySelectorAll('[data-replay]').forEach(b=>b.addEventListener('click',()=>PLAYS[b.dataset.replay]()));
+function route(){const f=PLAYS[location.hash.slice(1)];if(f)setTimeout(f,400)}
+addEventListener('hashchange',route);route();
+if('IntersectionObserver' in window){const seen=new Set(),io=new IntersectionObserver(es=>es.forEach(e=>{const k=e.target.dataset.autoplay;if(e.isIntersecting&&!seen.has(k)){seen.add(k);PLAYS[k]()}}),{threshold:.6});
+  [['evo-morph','evolution'],['retour-morph','retour'],['win','fin']].forEach(([id,k])=>{const el=$(id);if(el){el.dataset.autoplay=k;io.observe(el)}})}
+})();
+</script>
