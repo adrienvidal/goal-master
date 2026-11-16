@@ -1,47 +1,37 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# Dépendances
 /node_modules
-/.pnp
+.pnp
 .pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
 
-# testing
-/coverage
-
-# next.js
+# Next.js et build
 /.next/
 /out/
-
-# production
 /build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
 *.tsbuildinfo
 next-env.d.ts
 
-/src/generated/prisma
-
-# prisma client
+# Client Prisma généré (npx prisma generate, lancé par postinstall)
 /src/generated
+
+# Variables d'environnement : secrets, jamais commités (récupérés par vercel env pull)
+.env*
 !.env.example
+
+# Vercel
+.vercel
+
+# Tests et outils
+/coverage
+.playwright-mcp/
+.impeccable/hook.cache.json
+.claude/settings.local.json
+
+# Journaux
+*.log
+npm-debug.log*
+
+# Système et éditeurs
+.DS_Store
+*.pem
+.idea/
+.vscode/
