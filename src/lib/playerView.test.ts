@@ -20,7 +20,7 @@ test("counts today's applications and recent feed, ignoring cancelled ones", () 
   const apps = [app("2026-11-16T09:00:00Z", "Doctolib"), app("2026-11-16T10:00:00Z", "Qonto"), app("2026-11-16T11:00:00Z", "Alan", "a", true), app("2026-11-15T09:00:00Z", "Malt")];
   const v = buildPlayerView(player, apps, [], goal, now);
   expect(v.today).toEqual({ count: 2, companies: ["Doctolib", "Qonto"] });
-  expect(v.recent.map((r) => r.company)).toEqual(["Qonto", "Doctolib", "Malt"]);
+  expect(v.feed.map((r) => r.kind === "application" && r.company)).toEqual(["Qonto", "Doctolib", "Malt"]);
   expect(v.goal?.done).toBe(3);
   expect(v.streak).toBe(2);
 });
@@ -37,4 +37,19 @@ test("duplicate detection is case and space insensitive", () => {
   expect(findDuplicate("  alan ", "a", apps)?.company).toBe("Alan");
   expect(findDuplicate("Qonto", "a", apps)).toBeNull();
   expect(findDuplicate("Alan", "b", apps)).toBeNull();
+});
+
+test("feed shows when the player reached a new form, among recent applications", () => {
+  const apps = [
+    ...Array.from({ length: 7 }, (_, i) => app(`2026-11-13T0${i}:00:00Z`, `Boite ${i}`)),
+    app("2026-11-14T09:00:00Z", "Alan"),
+    app("2026-11-15T09:00:00Z", "Malt"),
+  ];
+  const v = buildPlayerView(player, apps, [], goal, now);
+  expect(v.feed.slice(0, 3)).toEqual([
+    { kind: "application", company: "Malt", day: "2026-11-15" },
+    { kind: "evolution", formName: "Gamin", day: "2026-11-14" },
+    { kind: "application", company: "Alan", day: "2026-11-14" },
+  ]);
+  expect(v.feed).toHaveLength(5);
 });

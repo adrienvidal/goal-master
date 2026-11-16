@@ -129,10 +129,14 @@ export default async function HomePage(): Promise<React.ReactElement> {
                 </p>
               ) : null}
               <ul className="flex flex-col gap-1.5 text-sm">
-                {partner.recent.length === 0 ? <li className="text-muted">Pas encore de candidature.</li> : null}
-                {partner.recent.map((r, i) => (
+                {partner.feed.length === 0 ? <li className="text-muted">Pas encore de candidature.</li> : null}
+                {partner.feed.map((r, i) => (
                   <li key={i} className="flex justify-between gap-2 border-b-2 border-dotted border-stone-2 pb-1">
-                    <span>{partner.pseudo} → <b>{r.company}</b></span>
+                    {r.kind === "evolution" ? (
+                      <span className="text-gold">{partner.pseudo} est devenu {r.formName} ⚔️</span>
+                    ) : (
+                      <span>{partner.pseudo} → <b>{r.company}</b></span>
+                    )}
                     <time className="text-muted">{shortDate(r.day)}</time>
                   </li>
                 ))}
