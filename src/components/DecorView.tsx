@@ -14,7 +14,7 @@ const PATHS = [
   { from: "76%", to: "42%", dur: 18, face: -1, delay: -3 },
 ];
 
-function EyeIcon(): React.ReactElement {
+export function EyeIcon(): React.ReactElement {
   return (
     <svg viewBox="0 0 10 10" width="20" height="20" shapeRendering="crispEdges" fill="#f1ecff" aria-hidden>
       <rect x="3" y="2" width="4" height="1" /><rect x="1" y="3" width="2" height="1" /><rect x="7" y="3" width="2" height="1" />

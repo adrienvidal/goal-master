@@ -7,6 +7,7 @@ test("reads how many intro screens this device has seen", () => {
   expect(introStepsSeen(undefined)).toBe(0);
   expect(introStepsSeen("1")).toBe(4);
   expect(introStepsSeen("5")).toBe(5);
+  expect(introStart(5)).toBe(5);
   expect(introStepsSeen("abc")).toBe(0);
 });
 
