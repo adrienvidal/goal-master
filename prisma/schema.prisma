@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Character {
+  KNIGHT
+  PANDA
+}
+
+enum Color {
+  BLUE
+  RED
+  GREEN
+  PURPLE
+  ORANGE
+  BLACK
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+}
+
+/// One of the two players. `id` is the Neon Auth user id.
+model Player {
+  id           String                @id
+  email        String                @unique
+  pseudo       String
+  character    Character
+  color        Color                 @unique
+  createdAt    DateTime              @default(now())
+  goals        Goal[]
+  applications Application[]
+  sentNudges   Nudge[]               @relation("sentNudges")
+  gotNudges    Nudge[]               @relation("receivedNudges")
+  achievements UnlockedAchievement[]
+}
+
+model Goal {
+  id        String     @id @default(cuid())
+  playerId  String
+  player    Player     @relation(fields: [playerId], references: [id])
+  target    Int        @default(100)
+  deadline  DateTime
+  status    GoalStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  closedAt  DateTime?
+
+  @@index([playerId, status])
+}
+
+model Application {
+  id          String    @id @default(cuid())
+  playerId    String
+  player      Player    @relation(fields: [playerId], references: [id])
+  company     String
+  createdAt   DateTime  @default(now())
+  cancelledAt DateTime?
+
+  @@index([playerId, createdAt])
+}
+
+/// `message` is the index (0-3) of the fixed nudge messages.
+model Nudge {
+  id          String   @id @default(cuid())
+  senderId    String
+  sender      Player   @relation("sentNudges", fields: [senderId], references: [id])
+  recipientId String
+  recipient   Player   @relation("receivedNudges", fields: [recipientId], references: [id])
+  message     Int
+  sentAt      DateTime @default(now())
+
+  @@index([senderId, sentAt])
+}
+
+/// Achievements are never removed once unlocked.
+model UnlockedAchievement {
+  playerId   String
+  player     Player   @relation(fields: [playerId], references: [id])
+  code       String
+  unlockedAt DateTime @default(now())
+
+  @@id([playerId, code])
+}
