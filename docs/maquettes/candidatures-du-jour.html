@@ -1,0 +1,211 @@
+<title>Goal Master · Candidatures du jour</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
+<style>
+/* Maquette : écrans empilés, chacun annoncé par sa route. Tokens = ceux de l'app (globals.css), un seul thème sombre assumé. */
+:root {
+  color-scheme: dark;
+  --night: #16132a; --stone: #221e40; --stone-2: #2e2958; --edge: #4a4380;
+  --ink: #f1ecff; --muted: #a39dcc; --gold: #f2c14e; --gold-dk: #b9831c;
+  --ember: #ff7a45; --danger: #ff6b6b; --ok: #6fd49a; --warn-bg: #3a2f17;
+  --page: #0e0c1d; --shadow: #0c0a1a;
+  --f-display: "Press Start 2P", ui-monospace, monospace;
+  --f-ui: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-num: "VT323", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--f-ui); font-size: 16px; margin: 0; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 980px; margin: 0 auto; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--page); padding: 14px 0 10px; border-bottom: 3px solid var(--edge); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--page); }
+.top h1 { font-family: var(--f-display); font-size: 12px; margin: 0 0 10px; line-height: 1.6; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: 13px; text-decoration: none; padding: 4px 8px; border: 2px solid var(--edge); color: var(--muted); }
+.toc a:hover { color: var(--ink); border-color: var(--gold); }
+.intro { color: var(--muted); max-width: 68ch; line-height: 1.5; margin: 22px 0 6px; }
+.rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 16px 0 8px; }
+.rules div { border: 2px dashed var(--edge); padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.rules b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+.screen { margin-top: 56px; scroll-margin-top: 150px; }
+.screen > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
+.route { font-family: var(--f-num); font-size: 22px; color: var(--gold); }
+.screen > header h2 { font-family: var(--f-display); font-size: 11px; margin: 0; line-height: 1.6; }
+.screen > header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 75ch; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.device { background: rgb(34 30 64 / .9); border: 4px solid var(--edge); box-shadow: 4px 4px 0 var(--shadow); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.device h4 { font-family: var(--f-display); font-size: 9px; line-height: 1.6; margin: 0; color: var(--gold); }
+.muted { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0; }
+.num { font-family: var(--f-num); font-size: 1.2em; }
+.btn { display: flex; justify-content: center; align-items: center; width: 100%; font-family: var(--f-display); font-size: 10px; line-height: 1.4; color: #1a1626; background: var(--gold); padding: 12px; box-shadow: inset -4px -4px 0 var(--gold-dk), 4px 4px 0 var(--shadow); text-decoration: none; border: 0; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 3px var(--edge); }
+.btn.danger { background: var(--danger); box-shadow: inset -4px -4px 0 #b84343, 4px 4px 0 var(--shadow); }
+.input { width: 100%; font: inherit; font-size: 18px; color: var(--ink); background: var(--night); border: 3px solid var(--edge); padding: 10px 12px; }
+.h-title { font-family: var(--f-display); font-size: 12px; line-height: 1.6; margin: 0; }
+
+/* Liste du jour */
+.today { display: flex; flex-direction: column; gap: 8px; }
+.today .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.today .head b { font-size: 14px; color: var(--muted); font-weight: 400; }
+.today ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.today li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 2px dotted var(--stone-2); }
+.today li:last-child { border-bottom: 0; }
+.today time { font-family: var(--f-num); font-size: 18px; color: var(--muted); }
+.today .co { font-weight: 600; font-size: 15px; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; }
+.today .co small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+.x { width: 32px; height: 32px; display: grid; place-items: center; border: 2px solid var(--edge); background: transparent; color: var(--muted); font-family: var(--f-display); font-size: 11px; text-decoration: none; cursor: pointer; }
+.x:hover { color: var(--danger); border-color: var(--danger); }
+.today li.confirm { grid-template-columns: 1fr; border: 3px solid var(--danger); background: #3a1b2a; padding: 10px; gap: 10px; margin: 4px 0; }
+.today li.confirm p { margin: 0; font-size: 15px; line-height: 1.45; }
+.today li.confirm .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.today li.gone { opacity: .45; text-decoration: line-through; }
+.toast { display: flex; justify-content: space-between; align-items: center; gap: 10px; border: 3px solid var(--edge); background: var(--night); padding: 8px 12px; font-size: 15px; }
+.toast b { font-family: var(--f-display); font-size: 10px; color: var(--danger); }
+.warn { border: 3px solid var(--gold-dk); background: var(--warn-bg); padding: 12px; font-size: 15px; line-height: 1.45; margin: 0; }
+.warn q { font-weight: 600; }
+.err { color: var(--danger); font-size: 14px; border-left: 4px solid var(--danger); padding: 4px 10px; background: #3a1b2a; margin: 0; }
+@media (min-width: 760px) { .wide { grid-column: span 2; } }
+@media (max-width: 420px) { .device { padding: 14px 12px; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Goal Master · Candidatures du jour</h1>
+    <nav class="toc" aria-label="Écrans">
+      <a href="#liste">Liste du jour</a>
+      <a href="#confirmer">Confirmer</a>
+      <a href="#retiree">Retirée</a>
+      <a href="#cas">Cas limites</a>
+      <a href="#doublon">Doublon</a>
+    </nav>
+  </div>
+
+  <p class="intro">Retirer une candidature saisie par erreur, le jour même. Remplace la ligne « Aujourd'hui (8/15) : … » sous les boutons de l'accueil. Les candidatures des jours précédents ne se retirent pas.</p>
+  <div class="rules">
+    <div><b>Le jour même seulement</b>Les doublons se voient tout de suite ; au-delà, on ne réécrit pas sa progression.</div>
+    <div><b>L'XP suit, les succès restent</b>L'XP de la candidature disparaît ; un succès déjà débloqué n'est jamais retiré.</div>
+    <div><b>Toujours confirmé</b>Un clic sur la croix demande confirmation dans la ligne, sans fenêtre.</div>
+  </div>
+
+  <section class="screen" id="liste">
+    <header>
+      <span class="route">/ (accueil, ma colonne)</span>
+      <h2>Aujourd'hui, avec une croix par candidature</h2>
+      <p>Heure de saisie, nom tel que saisi (sur deux lignes si long), croix « Retirer ». Même liste en mobile et sur ordinateur, dans la colonne de gauche.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <a class="btn" href="#doublon" style="font-size:12px;padding:18px">+ Candidature</a>
+        <div class="today">
+          <div class="head"><span class="h-title" style="font-size:10px">Aujourd'hui</span><b><span class="num">3/15</span></b></div>
+          <ul>
+            <li><time>16:01</time><span class="co">Licorn Society / Delibia<small>Développeur Front-End React &amp; Design System</small></span><a class="x" href="#confirmer" aria-label="Retirer Licorn Society / Delibia">✕</a></li>
+            <li><time>16:00</time><span class="co">Licorn society - Delibia<small>Développeur Front-End React &amp; Design System</small></span><a class="x" href="#confirmer" aria-label="Retirer Licorn society - Delibia">✕</a></li>
+            <li><time>14:32</time><span class="co">Whub<small>Développeur Front-End Senior React</small></span><a class="x" href="#confirmer" aria-label="Retirer Whub">✕</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="device">
+        <h4>Aucune candidature aujourd'hui</h4>
+        <p class="muted">Aujourd'hui (<span class="num">0/15</span>) : pas encore de candidature.</p>
+        <p class="muted">Inchangé : la liste n'apparaît qu'à la première candidature.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="confirmer">
+    <header>
+      <span class="route">/ · confirmation</span>
+      <h2>La ligne se change en confirmation</h2>
+      <p>Pas de fenêtre : la ligne s'ouvre, dit ce qui sera perdu, et propose Garder ou Retirer.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <div class="today">
+          <div class="head"><span class="h-title" style="font-size:10px">Aujourd'hui</span><b><span class="num">3/15</span></b></div>
+          <ul>
+            <li class="confirm">
+              <p>Retirer <b>Licorn Society / Delibia</b> ? Elle ne comptera plus, et ses <b>10 XP</b> disparaissent.</p>
+              <div class="actions"><a class="btn ghost" href="#liste">Garder</a><a class="btn danger" href="#retiree">Retirer</a></div>
+            </li>
+            <li><time>16:00</time><span class="co">Licorn society - Delibia<small>Développeur Front-End React &amp; Design System</small></span><a class="x" href="#confirmer" aria-label="Retirer">✕</a></li>
+            <li><time>14:32</time><span class="co">Whub<small>Développeur Front-End Senior React</small></span><a class="x" href="#confirmer" aria-label="Retirer">✕</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="retiree">
+    <header>
+      <span class="route">/ · après le retrait</span>
+      <h2>Retirée</h2>
+      <p>La ligne disparaît, le compteur et l'XP se mettent à jour, un message confirme. Le binôme voit son fil mis à jour au prochain rafraîchissement.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <div class="toast" role="status"><span><b>−10 XP</b> Licorn Society / Delibia retirée</span></div>
+        <div class="today">
+          <div class="head"><span class="h-title" style="font-size:10px">Aujourd'hui</span><b><span class="num">2/15</span></b></div>
+          <ul>
+            <li><time>16:00</time><span class="co">Licorn society - Delibia<small>Développeur Front-End React &amp; Design System</small></span><a class="x" href="#confirmer" aria-label="Retirer">✕</a></li>
+            <li><time>14:32</time><span class="co">Whub<small>Développeur Front-End Senior React</small></span><a class="x" href="#confirmer" aria-label="Retirer">✕</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="cas">
+    <header>
+      <span class="route">/ · cas limites</span>
+      <h2>Ce que le message de confirmation dit selon le cas</h2>
+      <p>L'XP perdue se calcule avant le retrait ; le message dit la vérité dans chaque cas.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>Au-delà de 15 dans la journée</h4>
+        <div class="today"><ul><li class="confirm"><p>Retirer <b>Alan</b> ? Elle ne comptera plus pour ton objectif. Elle ne rapportait pas d'XP.</p><div class="actions"><a class="btn ghost" href="#liste">Garder</a><a class="btn danger" href="#retiree">Retirer</a></div></li></ul></div>
+      </div>
+      <div class="device">
+        <h4>Celle qui a validé une relance</h4>
+        <div class="today"><ul><li class="confirm"><p>Retirer <b>Qonto</b> ? Ses <b>10 XP</b> disparaissent, et le bonus de relance aussi : <b>−15 XP pour Adrien et toi</b>, sauf si une autre candidature du jour la valide.</p><div class="actions"><a class="btn ghost" href="#liste">Garder</a><a class="btn danger" href="#retiree">Retirer</a></div></li></ul></div>
+      </div>
+      <div class="device">
+        <h4>Échec réseau</h4>
+        <div class="today"><ul><li class="confirm"><p>Retirer <b>Whub</b> ? Elle ne comptera plus, et ses <b>10 XP</b> disparaissent.</p><p class="err">Impossible de la retirer pour l'instant. Vérifie ta connexion et réessaie.</p><div class="actions"><a class="btn ghost" href="#liste">Garder</a><a class="btn danger" href="#retiree">Réessayer</a></div></li></ul></div>
+      </div>
+      <div class="device">
+        <h4>Ce qui ne change pas</h4>
+        <p class="muted">Les succès débloqués restent. La série du jour tombe seulement si c'était la seule candidature de la journée. Les candidatures d'hier n'ont pas de croix.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="doublon">
+    <header>
+      <span class="route">/ · + Candidature</span>
+      <h2>Doublon : sûr ou possible</h2>
+      <p>Deux niveaux. <b>Sûr</b> : même texte à la casse, aux accents et à la ponctuation près (le cas de Nicolas) ; l'action proposée d'abord est de ne pas l'ajouter. <b>Possible</b> : même entreprise, intitulé différent ; l'app demande s'il s'agit d'un autre poste. Dans les deux cas on peut compter quand même : un doublon avertit sans bloquer.</p>
+    </header>
+    <div class="grid">
+      <div class="device" id="doublon-sur">
+        <h4>Doublon sûr</h4>
+        <span class="h-title">Chez qui ?</span>
+        <div class="input">Licorn Society / Delibia - Développeur Front-End React &amp; Design System</div>
+        <p class="warn">Déjà ajoutée aujourd'hui à 16:00 : <q>Licorn society - Delibia - Développeur Front-End React &amp; Design System</q>. C'est sûrement la même.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><a class="btn" href="#liste">Ne pas l'ajouter</a><a class="btn ghost" href="#liste">Compter quand même</a></div>
+      </div>
+      <div class="device" id="doublon-possible">
+        <h4>Doublon possible</h4>
+        <span class="h-title">Chez qui ?</span>
+        <div class="input">Qonto · Développeur Frontend Senior</div>
+        <p class="warn">Même entreprise que <q>Qonto - Développeur Front-End</q>, le 12/11. C'est une autre candidature ?</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><a class="btn ghost" href="#liste">Non, la même</a><a class="btn" href="#liste">Oui, autre poste</a></div>
+        <p class="muted">« Non, la même » referme sans rien ajouter. « Oui, autre poste » compte la candidature, +10 XP.</p>
+      </div>
+    </div>
+  </section>
+</div>

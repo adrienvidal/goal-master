@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { ACTION_EVENT } from "@/components/MyAvatar";
-import { addApplication, cancelApplication } from "./actions";
+import { addApplication, cancelApplication, type DuplicateInfo } from "./actions";
 
 const UNDO_SECONDS = 5;
 const DAILY_CAP = 15;
@@ -14,7 +14,7 @@ type Toast = { id: string; company: string; xp: boolean };
 export default function AddApplication({ todayCount }: Props): React.ReactElement {
   const [open, setOpen] = useState(false);
   const [company, setCompany] = useState("");
-  const [duplicateOf, setDuplicateOf] = useState<string | null>(null);
+  const [duplicateOf, setDuplicateOf] = useState<DuplicateInfo | null>(null);
   const [error, setError] = useState("");
   const [toast, setToast] = useState<Toast | null>(null);
   const [pending, startTransition] = useTransition();
@@ -40,8 +40,8 @@ export default function AddApplication({ todayCount }: Props): React.ReactElemen
         setCompany("");
         setDuplicateOf(null);
         setOpen(false);
-      } else if ("duplicateOf" in result) {
-        setDuplicateOf(result.duplicateOf);
+      } else if ("duplicate" in result) {
+        setDuplicateOf(result.duplicate);
       } else {
         setError(result.error);
       }
@@ -80,13 +80,22 @@ export default function AddApplication({ todayCount }: Props): React.ReactElemen
             }}
           />
           {duplicateOf ? (
+            // Doublon sûr : ne pas l'ajouter d'abord. Possible : on demande si c'est un autre poste. Jamais bloquant.
             <>
               <p className="border-[3px] border-[#b9831c] bg-[#3a2f17] p-3">
-                Tu as déjà candidaté chez {company.trim()} le {duplicateOf}. Tu la comptes quand même ?
+                {duplicateOf.sure ? (
+                  <>Déjà ajoutée {duplicateOf.when} : <b className="break-words">« {duplicateOf.company} »</b>. C&apos;est sûrement la même.</>
+                ) : (
+                  <>Même entreprise que <b className="break-words">« {duplicateOf.company} »</b>, {duplicateOf.when}. C&apos;est une autre candidature ?</>
+                )}
               </p>
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" className="btn ghost" onClick={() => { setDuplicateOf(null); input.current?.focus(); }}>Corriger</button>
-                <button type="button" className="btn" disabled={pending} onClick={() => submit(true)}>Compter</button>
+                <button type="button" className={`btn ${duplicateOf.sure ? "" : "ghost"} !text-[10px]`} onClick={() => { setDuplicateOf(null); setCompany(""); setOpen(false); }}>
+                  {duplicateOf.sure ? "Ne pas l'ajouter" : "Non, la même"}
+                </button>
+                <button type="button" className={`btn ${duplicateOf.sure ? "ghost" : ""} !text-[10px]`} disabled={pending} onClick={() => submit(true)}>
+                  {duplicateOf.sure ? "Compter quand même" : "Oui, autre poste"}
+                </button>
               </div>
             </>
           ) : (
