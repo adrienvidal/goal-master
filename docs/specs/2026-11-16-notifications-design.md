@@ -55,3 +55,20 @@ ntfy, Telegram, résumé hebdomadaire, choix du canal par catégorie.
 5. Réglages : section Notifications, `PushSetup` factorisé, catégories.
 6. Bandeaux : relance (croix, réussite), nouvelle version.
 7. Vérification responsive 375 / 1280, `npm test`, PR.
+
+## Addendum : e-mails 8 bits
+
+Maquette : section E-mail de https://claude.ai/artifact/T7UcytDdGCRdEMB4uwnFNu.
+
+- **Images PNG générées par l'app**, sans dépendance : un encodeur PNG maison (`zlib`), un canevas de pixels qui imite `fillRect` pour réutiliser `drawLandscape`, les sprites (`sprite()`), les boss (`bossSprite()`) et l'épée.
+  - `GET /api/email/header` : paysage Château de nuit recadré, épée, « GOAL MASTER » en police bitmap 5 × 7 dorée.
+  - `GET /api/email/scene?s=…` : acteurs côte à côte sur fond pierre. Jetons : `hero.PERSONNAGE.COULEUR.FORME.POSE[.rust|.hurt]`, `boss.N[.down]`. Validation stricte, sinon 400. Images publiques (aucune donnée privée), cache d'un an.
+- **Rouille** : sprite en humeur fatiguée (palette rouille de l'app). **Blessé** : désaturé comme le filtre `.hurt`. **Boss vaincu** : en gris.
+- **Scène par événement** : relance → l'expéditeur en victoire ; relance réussie, évolution → le binôme en victoire ; K.O. → binôme + boss à terre ; rappel → le boss ; duel gagné → les deux en victoire + boss à terre ; perdu → les deux blessés + boss ; rouille → son propre avatar rouillé ; nouveauté → les deux héros.
+- **HTML** : 560 px max, largeur fluide, images `width:100%` sur mobile ; titres en Press Start 2P (Apple Mail), sinon Courier ; bouton doré à relief en bordures.
+
+### Plan
+1. Encodeur PNG + canevas de pixels + police bitmap, testés.
+2. Images d'en-tête et de scène, jetons validés, deux routes.
+3. Scène par événement (pure, testée) et gabarit HTML 8 bits.
+4. Vérification : rendu des e-mails en 375 et 1280 px, `npm test`, PR.

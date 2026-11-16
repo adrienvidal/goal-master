@@ -3,8 +3,13 @@
 import { parisDay } from "@/game/calendar";
 import { parisTime } from "@/game/duel";
 import { keyOf, pushBody, ruleOf, shouldSend, textOf, type NotificationEvent } from "@/game/notifications";
+import { formForLevel, levelFromXp } from "@/game/levels";
+import { totalXp } from "@/game/xp";
+import { pngSize, sceneToken, scenePng } from "@/lib/emailArt";
+import { sceneFor, type Hero } from "@/lib/emailScene";
 import { db } from "./db";
-import { notificationMail, sendMail } from "./mail";
+import { loadGame } from "./game";
+import { notificationMail, sendMail, type MailScene } from "./mail";
 import { pushTo } from "./push";
 
 function isDuplicate(error: unknown): boolean {
@@ -24,11 +29,27 @@ export async function notify(playerId: string, event: NotificationEvent, now = n
     throw error;
   }
   const text = textOf(event);
+  const scene = await mailScene(playerId, event).catch(() => null);
   const results = await Promise.allSettled([
     pushTo(playerId, { title: text.title, body: pushBody(text, event), url: text.url }),
-    sendMail(notificationMail(player.email, text, ruleOf(event).category)),
+    sendMail(notificationMail(player.email, text, ruleOf(event).category, scene)),
   ]);
   for (const r of results) if (r.status === "rejected") console.error("Échec d'envoi de notification", keyOf(event), r.reason);
+}
+
+/** Image de l'e-mail : les héros à leur forme actuelle (calculée, jamais stockée), selon l'événement. */
+async function mailScene(playerId: string, event: NotificationEvent): Promise<MailScene | null> {
+  const game = await loadGame();
+  const heroOf = (id: string): Hero | null => {
+    const p = game.players.find((x) => x.id === id);
+    return p ? { character: p.character, color: p.color, form: formForLevel(levelFromXp(totalXp(p.id, game.apps, game.nudges)).level) } : null;
+  };
+  const me = heroOf(playerId);
+  if (!me) return null;
+  const partnerId = game.players.find((p) => p.id !== playerId)?.id;
+  const actors = sceneFor(event, me, partnerId ? heroOf(partnerId) : null);
+  if (actors.length === 0) return null;
+  return { query: actors.map(sceneToken).join(","), ...pngSize(scenePng(actors)) };
 }
 
 /** Plusieurs notifications d'affilée, sans qu'un échec n'arrête les suivantes. */
