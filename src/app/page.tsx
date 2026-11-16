@@ -8,6 +8,7 @@ import { BossCard } from "@/components/BossCard";
 import { DecorView } from "@/components/DecorView";
 import { NudgeBanner, NudgeWinBanner } from "@/components/Banners";
 import { DuelWatcher } from "@/components/DuelWatcher";
+import { LiveRefresh } from "@/components/LiveRefresh";
 import { bossInSentence, currentDuel, pastDuels, type Duel } from "@/game/duel";
 import { parisDay } from "@/game/calendar";
 import { justWonNudge, NUDGE_MESSAGES, pendingNudge, sentToday } from "@/game/nudges";
@@ -118,6 +119,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
+      <LiveRefresh />
       {lastDuel ? <DuelWatcher id={lastDuel.id} /> : null}
       <div className="device grid gap-6 md:grid-cols-[1.3fr_1fr]">
         <DecorView walkers={walkers} />
