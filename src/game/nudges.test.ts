@@ -31,6 +31,11 @@ describe("justWonNudge", () => {
   it("rend la relance validée il y a moins de 2 minutes", () => {
     expect(justWonNudge("b", [n], [app("2026-11-16T10:00:00Z")], new Date("2026-11-16T10:01:00Z"))?.id).toBe("n1");
   });
+  it("rend la plus récente quand plusieurs relances viennent d'être validées", () => {
+    const older = { ...nudge("2026-11-16T09:58:00Z"), id: "n0" };
+    const apps = [app("2026-11-16T09:59:00Z"), app("2026-11-16T10:00:30Z")];
+    expect(justWonNudge("b", [older, { ...nudge("2026-11-16T10:00:00Z"), id: "n2" }], apps, new Date("2026-11-16T10:01:00Z"))?.id).toBe("n2");
+  });
   it("oublie une réussite plus ancienne", () => {
     expect(justWonNudge("b", [n], [app("2026-11-16T10:00:00Z")], new Date("2026-11-16T10:05:00Z"))).toBeNull();
   });

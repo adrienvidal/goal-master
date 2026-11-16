@@ -50,9 +50,12 @@ export function NudgeWinBanner({ id, partner }: { id: string; partner: string })
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (read(WIN_KEY) === id) return;
-    write(WIN_KEY, id);
     setOpen(true);
-    const timer = setTimeout(() => setOpen(false), WIN_MS);
+    // Noté « vu » seulement une fois affiché jusqu'au bout : un remontage pendant le rafraîchissement ne l'efface pas.
+    const timer = setTimeout(() => {
+      write(WIN_KEY, id);
+      setOpen(false);
+    }, WIN_MS);
     return () => clearTimeout(timer);
   }, [id]);
   if (!open) return null;

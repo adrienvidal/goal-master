@@ -33,6 +33,7 @@ export function justWonNudge(recipientId: string, nudges: NudgeRow[], apps: Appl
   return (
     nudges
       .filter((n) => n.recipientId === recipientId && nudgeSucceeded(n, mine))
+      .sort((a, b) => b.sentAt.getTime() - a.sentAt.getTime())
       .find((n) => {
         const first = mine.filter((a) => a.createdAt > n.sentAt).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
         return first !== undefined && now.getTime() - first.createdAt.getTime() <= windowMs;
