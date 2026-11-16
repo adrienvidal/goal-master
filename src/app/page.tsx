@@ -2,6 +2,10 @@ import { MyAvatar } from "@/components/MyAvatar";
 import { Sprite } from "@/components/Sprite";
 import { Bar } from "@/components/Bar";
 import { Flame } from "@/components/Flame";
+import { NudgeButton } from "@/components/NudgeButton";
+import { PushSetup } from "@/components/PushSetup";
+import { parisDay } from "@/game/calendar";
+import { NUDGE_MESSAGES, pendingNudge, sentToday } from "@/game/nudges";
 import { formName } from "@/lib/forms";
 import { buildPlayerView, type PlayerView } from "@/lib/playerView";
 import { db } from "@/server/db";
@@ -59,11 +63,21 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const me = buildPlayerView(player, game.apps, game.nudges, await goalFor(player.id), now);
   const partnerRow = game.players.find((p) => p.id !== player.id);
   const partner = partnerRow ? buildPlayerView(partnerRow, game.apps, game.nudges, await goalFor(partnerRow.id), now) : null;
+  const received = partner ? pendingNudge(player.id, game.nudges, game.apps, now) : null;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
       <div className="device grid gap-6 md:grid-cols-[1.3fr_1fr]">
         <section className="flex flex-col gap-4" aria-label="Ma quête">
+          {received && partner ? (
+            <div role="status" className="flex items-end gap-3 border-[3px] border-ember bg-stone-2 px-3 py-2">
+              <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} pose="victory" px={2} />
+              <p className="text-[15px]">
+                <b className="text-ember">{partner.pseudo} te motive :</b> {NUDGE_MESSAGES[received.message]}
+                <br /><small className="text-muted">Candidate dans les 24 h : +15 XP pour vous deux.</small>
+              </p>
+            </div>
+          ) : null}
           <div className="flex items-end gap-4">
             <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} level={me.level} mood={me.mood} fallen={me.fallen} />
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -111,12 +125,14 @@ export default async function HomePage(): Promise<React.ReactElement> {
                   </li>
                 ))}
               </ul>
+              <NudgeButton partnerName={partner.pseudo} sentToday={sentToday(player.id, game.nudges, parisDay(now))} blink={partner.idleWorkdays >= 2} />
             </>
           ) : (
             <p className="text-muted">Ton binôme ne s&apos;est pas encore connecté. Sa carte apparaîtra ici dès son premier lancement.</p>
           )}
         </section>
       </div>
+      <div className="mt-4"><PushSetup /></div>
     </main>
   );
 }

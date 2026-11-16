@@ -103,3 +103,8 @@ body {
   .evo-new, .evo-title, .evo-after { opacity: 1; clip-path: none; animation: none; }
   .evo-new svg { filter: none; animation: none; }
 }
+
+.btn.blink { animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { box-shadow: inset -4px -4px 0 var(--gold-dk), 0 0 0 4px var(--ember); } }
+.btn[aria-disabled="true"] { cursor: default; }
+@media (prefers-reduced-motion: reduce) { .btn.blink { animation: none; box-shadow: inset -4px -4px 0 var(--gold-dk), 0 0 0 4px var(--ember); } }

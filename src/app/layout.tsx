@@ -9,6 +9,7 @@ const vt323 = VT323({ weight: "400", subsets: ["latin"], variable: "--font-vt323
 export const metadata: Metadata = {
   title: "Goal Master",
   description: "100 candidatures. Un chevalier.",
+  appleWebApp: { capable: true, title: "Goal Master", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = { themeColor: "#16132a" };
