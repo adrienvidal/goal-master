@@ -176,3 +176,5 @@ Référence complète : `docs/specs/2026-11-16-goal-master-mvp-design.md`.
 - **Les jours se découpent à minuit, heure de Paris** (série, plafond, relance quotidienne).
 - **Un succès débloqué n'est jamais retiré**, même si une candidature est annulée ensuite.
 - **Une relance par jour et par personne.** Si le destinataire candidate dans les 24 h, +15 XP pour les deux, une seule fois par relance.
+- **La rétrogradation est visuelle uniquement** : l'inactivité (comptée en jours ouvrés) fait rouiller puis redescendre la forme affichée de l'avatar, sans jamais toucher à l'XP, au niveau ni aux succès. La forme affichée se calcule à partir du niveau et de l'inactivité, elle ne se stocke pas.
+- **Deux personnages au MVP (Chevalier, Panda)** ; Ninja et Guerrière sont en pause, décrits dans le cadrage pour plus tard,, avec les mêmes règles de formes et de niveaux. Le personnage se choisit au premier lancement et ne se change qu'au moment de fixer un nouvel objectif.
