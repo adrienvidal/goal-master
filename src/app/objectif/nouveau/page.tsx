@@ -5,6 +5,7 @@ import { defaultDeadline } from "@/lib/onboarding";
 import { db } from "@/server/db";
 import { loadGame } from "@/server/game";
 import { requirePlayer } from "@/server/session";
+import { partnerDeadline } from "@/server/sharedGoal";
 import NewGoalForm from "./NewGoalForm";
 
 export default async function NewGoalPage(): Promise<React.ReactElement> {
@@ -23,6 +24,7 @@ export default async function NewGoalPage(): Promise<React.ReactElement> {
         form={me.levelForm}
         defaultDeadline={defaultDeadline(today)}
         minDeadline={addDays(today, 1)}
+        sharedDeadline={await partnerDeadline(player.id)}
       />
     </main>
   );

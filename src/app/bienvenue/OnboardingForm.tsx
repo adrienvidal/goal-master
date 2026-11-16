@@ -11,10 +11,10 @@ const CHARACTER_INFO: Record<CharacterId, { name: string; line: string }> = {
   PANDA: { name: "Panda", line: "Du bébé panda au grand maître" },
 };
 
-type Props = { takenColor: string | null; partnerName: string | null; defaultDeadline: string; minDeadline: string };
+type Props = { takenColor: string | null; partnerName: string | null; defaultDeadline: string; minDeadline: string; sharedDeadline: string | null };
 
 // Une seule page, étapes empilées (maquette « Bienvenue »). L'aperçu des avatars arrive au lot 4.
-export default function OnboardingForm({ takenColor, partnerName, defaultDeadline, minDeadline }: Props): React.ReactElement {
+export default function OnboardingForm({ takenColor, partnerName, defaultDeadline, minDeadline, sharedDeadline }: Props): React.ReactElement {
   const [state, action, pending] = useActionState<OnboardingState, FormData>(createPlayer, null);
   const [character, setCharacter] = useState<CharacterId>("KNIGHT");
   const [color, setColor] = useState<ColorId>(COLORS.find((c) => c !== takenColor) ?? "BLUE");
@@ -76,8 +76,14 @@ export default function OnboardingForm({ takenColor, partnerName, defaultDeadlin
             <p className="input num !border-stone-2 text-muted" aria-label="Objectif commun">100 · commun</p>
           </div>
           <div>
-            <label htmlFor="deadline" className="text-sm text-muted">Avant le</label>
-            <input id="deadline" name="deadline" className="input num" type="date" min={minDeadline} defaultValue={defaultDeadline} required />
+            <label htmlFor={sharedDeadline ? undefined : "deadline"} className="text-sm text-muted">Avant le</label>
+            {sharedDeadline ? (
+              <p className="input num !border-stone-2 text-muted" aria-label="Date limite commune">
+                {sharedDeadline.slice(8, 10)}/{sharedDeadline.slice(5, 7)}/{sharedDeadline.slice(0, 4)} · commune
+              </p>
+            ) : (
+              <input id="deadline" name="deadline" className="input num" type="date" min={minDeadline} defaultValue={defaultDeadline} required />
+            )}
           </div>
         </div>
       </section>

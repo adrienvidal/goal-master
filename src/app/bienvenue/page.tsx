@@ -3,6 +3,7 @@ import { parisDay } from "@/game/calendar";
 import { defaultDeadline } from "@/lib/onboarding";
 import { db } from "@/server/db";
 import { requireUser } from "@/server/session";
+import { partnerDeadline } from "@/server/sharedGoal";
 import OnboardingForm from "./OnboardingForm";
 
 export default async function WelcomePage(): Promise<React.ReactElement> {
@@ -18,6 +19,7 @@ export default async function WelcomePage(): Promise<React.ReactElement> {
         partnerName={partner?.pseudo ?? null}
         defaultDeadline={defaultDeadline(parisDay(new Date()))}
         minDeadline={parisDay(new Date())}
+        sharedDeadline={await partnerDeadline(user.id)}
       />
     </main>
   );
