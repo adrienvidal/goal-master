@@ -11,7 +11,9 @@ import { bossInSentence, currentDuel, pastDuels, type Duel } from "@/game/duel";
 import { parisDay } from "@/game/calendar";
 import { NUDGE_MESSAGES, pendingNudge, sentToday } from "@/game/nudges";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { INTRO_COOKIE, INTRO_STEP_COUNT, introStepsSeen } from "@/lib/intro";
 import { devLogout } from "./connexion/dev-actions";
 import { devLoginEnabled } from "@/lib/devLogin";
 import { formName } from "@/lib/forms";
@@ -90,6 +92,8 @@ function GoalBlock({ view }: { view: PlayerView }): React.ReactElement | null {
 
 export default async function HomePage(): Promise<React.ReactElement> {
   const player = await requirePlayer();
+  // Un nouvel écran d'intro (nouvelle fonctionnalité) s'affiche d'office à la prochaine ouverture.
+  if (introStepsSeen((await cookies()).get(INTRO_COOKIE)?.value) < INTRO_STEP_COUNT) redirect("/intro");
   const game = await loadGame();
   const now = new Date();
   const myGoal = await goalFor(player.id);

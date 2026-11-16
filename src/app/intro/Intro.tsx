@@ -81,8 +81,8 @@ const STEPS: Step[] = [
 ];
 
 // Intro du premier lancement (maquettes validées) : 5 écrans, « Passer » à tout moment.
-export default function Intro(): React.ReactElement {
-  const [i, setI] = useState(0);
+export default function Intro({ start = 0 }: { start?: number }): React.ReactElement {
+  const [i, setI] = useState(start);
   const step = STEPS[i];
   const last = i === STEPS.length - 1;
   return (
@@ -100,6 +100,7 @@ export default function Intro(): React.ReactElement {
       <div key={i} className="device grid min-h-[280px] place-items-end justify-center !bg-night !pb-8 md:min-h-[380px]">{step.stage}</div>
       <div className="flex flex-col gap-4">
         <div className="device flex flex-col gap-3" aria-live="polite">
+          {start > 0 && i >= start ? <span className="font-display text-[9px] text-ember">Nouveau</span> : null}
           <h1 className="h-title text-gold text-balance">{step.title}</h1>
           <p className="text-[16px]">{step.text}</p>
         </div>
@@ -110,7 +111,7 @@ export default function Intro(): React.ReactElement {
         ) : (
           <button type="button" className="btn" onClick={() => setI(i + 1)}>Suivant</button>
         )}
-        {i > 0 ? <button type="button" className="text-sm text-muted underline" onClick={() => setI(i - 1)}>Retour</button> : null}
+        {i > start ? <button type="button" className="text-sm text-muted underline" onClick={() => setI(i - 1)}>Retour</button> : null}
       </div>
     </main>
   );
