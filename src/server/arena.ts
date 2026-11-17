@@ -15,7 +15,7 @@ export function turnSummary(from: string, entries: LogEntry[]): string {
   if (healed > 0) parts.push(`s'est soigné de ${healed}`);
   if (entries.some((e) => e.kind === "PARRY" || e.kind === "TIMEOUT")) parts.push("s'est mis en garde");
   if (entries.some((e) => e.kind === "WHIRL")) parts.push("t'a étourdi");
-  if (parts.length === 0) return `${from} a passé son tour.`;
+  if (parts.length === 0) return entries.some((e) => e.kind === "STUCK") ? `${from} est à court d'énergie : tu reprends la main.` : `${from} a passé son tour.`;
   const last = parts.pop()!;
   return `${from} ${parts.length ? `${parts.join(", ")} et ${last}` : last}.`;
 }

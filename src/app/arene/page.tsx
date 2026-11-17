@@ -32,6 +32,8 @@ function logLine(e: LogEntry, meId: string, foeName: string): string {
       return me ? "Tu passes la main." : `${who} passe la main.`;
     case "TIMEOUT":
       return me ? "Tu n'as pas joué en 24 h : Parade automatique." : `${who} n'a pas joué en 24 h : Parade automatique.`;
+    case "STUCK":
+      return me ? `Plus d'énergie : ${foeName} reprend la main.` : `${who} est à court d'énergie : tu reprends la main.`;
     case "ENERGY":
       return me ? `Tu gagnes ${e.amount} ⚡ (candidature).` : `${who} gagne ${e.amount} ⚡ (candidature).`;
     case "POTION_GAIN":
@@ -134,7 +136,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
               {log.map((e, i) => (
                 <li key={i} className="grid grid-cols-[52px_1fr] gap-2">
                   <time className="num text-muted">{TIME.format(e.at)}</time>
-                  <span className={e.kind === "ENERGY" || e.kind === "POTION_GAIN" || e.kind === "TIMEOUT" ? "italic text-muted" : e.playerId === player.id ? "text-[#5aa9ff]" : "text-[#e5533d]"}>{logLine(e, player.id, foe.pseudo)}</span>
+                  <span className={e.kind === "ENERGY" || e.kind === "POTION_GAIN" || e.kind === "TIMEOUT" || e.kind === "STUCK" ? "italic text-muted" : e.playerId === player.id ? "text-[#5aa9ff]" : "text-[#e5533d]"}>{logLine(e, player.id, foe.pseudo)}</span>
                 </li>
               ))}
             </ol>
