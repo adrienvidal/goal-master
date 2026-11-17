@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COLOR_HEX, crowned, sprite } from "./sprites";
+import { COLOR_HEX, crowned, poseGrid, sprite } from "./sprites";
 
 describe("sprite", () => {
   it("dessine chaque forme des deux personnages", () => {
@@ -27,6 +27,37 @@ describe("sprite", () => {
     const rest = sprite("KNIGHT", "BLUE", 5, "normal");
     expect(sprite("KNIGHT", "BLUE", 5, "normal", "action").width).toBeGreaterThan(rest.width);
     expect(sprite("PANDA", "BLUE", 5, "normal", "victory").height).toBeGreaterThan(sprite("PANDA", "BLUE", 5, "normal").height);
+  });
+
+  const islands = (g: string[]) => {
+    const seen = new Set<string>();
+    let n = 0;
+    g.forEach((row, y) => [...row].forEach((c, x) => {
+      if (c === "." || seen.has(`${y},${x}`)) return;
+      n++;
+      const stack = [[y, x]];
+      while (stack.length) {
+        const [yy, xx] = stack.pop()!;
+        if (seen.has(`${yy},${xx}`) || (g[yy]?.[xx] ?? ".") === ".") continue;
+        seen.add(`${yy},${xx}`);
+        stack.push([yy - 1, xx], [yy + 1, xx], [yy, xx - 1], [yy, xx + 1]);
+      }
+    }));
+    return n;
+  };
+  const count = (g: string[], chars: string) => g.join("").split("").filter((c) => chars.includes(c)).length;
+
+  it("garde l'arme dans le poing, sans pixel détaché, en action comme en victoire", () => {
+    for (const c of ["KNIGHT", "PANDA"] as const)
+      for (const f of [2, 3, 4, 5, 6] as const) {
+        const rest = poseGrid(c, f, "rest");
+        for (const pose of ["action", "victory"] as const) expect(islands(poseGrid(c, f, pose)), `${c} ${f} ${pose}`).toBeLessThanOrEqual(islands(rest));
+      }
+  });
+
+  it("brandit l'arme en victoire sans l'allonger", () => {
+    for (const c of ["KNIGHT", "PANDA"] as const)
+      for (const f of [3, 5] as const) expect(count(poseGrid(c, f, "victory"), "WV")).toBe(count(poseGrid(c, f, "rest"), "WV"));
   });
 });
 

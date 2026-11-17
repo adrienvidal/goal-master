@@ -132,40 +132,87 @@ function colorOf(c: string, player: string, mood: Mood, x: number, y: number, ch
   return c === "P" ? player : PAL[c];
 }
 
-/** Colonne de l'arme tenue à droite : on la retire pour la redessiner pointée ou levée. */
-function weaponColumn(g: string[][]): number {
-  const w = Math.max(...g.map((r) => r.length));
-  for (let x = w - 1; x >= w - 4; x--) {
-    const n = g.filter((r) => "WVY".includes(r[x] ?? ".")).length;
-    if (n >= 4) return x;
+const WEAPON = "WVYLB";
+type Weapon = { col: number; hy: number; guard: string | null; grip: string | null; blade: string; len: number; cells: [number, number][] };
+
+/**
+ * Arme tenue à droite : colonne d'arme dans les 4 dernières colonnes, puis toute l'arme (lame, garde, poignée,
+ * ornement) par remplissage depuis cette colonne. La main (`hy`) est la première case du corps collée à l'arme.
+ */
+function weaponOf(a: string[][]): Weapon | null {
+  const w = a[0].length;
+  let col = -1;
+  for (let x = w - 1; x >= w - 4 && col < 0; x--) if (a.filter((r) => WEAPON.includes(r[x])).length >= 4) col = x;
+  if (col < 0) return null;
+  const seen = new Set<string>();
+  const cells: [number, number][] = [];
+  const stack: [number, number][] = [];
+  a.forEach((r, y) => { if (WEAPON.includes(r[col])) stack.push([y, col]); });
+  while (stack.length) {
+    const [y, x] = stack.pop()!;
+    const k = `${y},${x}`;
+    if (seen.has(k) || y < 0 || y >= a.length || x < col - 1 || x > col + 1 || !WEAPON.includes(a[y][x])) continue;
+    seen.add(k);
+    cells.push([y, x]);
+    stack.push([y - 1, x], [y + 1, x], [y, x - 1], [y, x + 1]);
   }
-  return -1;
+  const inWeapon = (y: number, x: number) => seen.has(`${y},${x}`);
+  const colRows = cells.filter(([, x]) => x === col).map(([y]) => y).sort((p, q) => p - q);
+  const hy = colRows.find((y) => a[y][col - 1] !== "." && a[y][col - 1] !== "K" && !inWeapon(y, col - 1)) ?? colRows[colRows.length - 1];
+  const guardRow = colRows.find((y) => inWeapon(y, col - 1) && inWeapon(y, col + 1));
+  const guard = guardRow !== undefined ? a[guardRow][col - 1] : null;
+  const grip = a[hy][col] === "B" ? "B" : null;
+  const bladeRows = colRows.filter((y) => y < (guardRow ?? hy) && "WVY".includes(a[y][col]));
+  const counts = new Map<string, number>();
+  bladeRows.forEach((y) => counts.set(a[y][col], (counts.get(a[y][col]) ?? 0) + 1));
+  const blade = [...counts.entries()].sort((p, q) => q[1] - p[1])[0]?.[0] ?? (a[hy][col] || "W");
+  const len = Math.max(5, Math.min(7, bladeRows.length || 6));
+  return { col, hy, guard, grip, blade, len, cells };
 }
 
-/** Poses Action (arme pointée) et Victoire (arme levée), dérivées de la pose Repos (cadrage §6.3 sexies). */
+/** Action : l'arme pivote autour du poing. Poignée dans la main, garde à la verticale, lame à l'horizontale. */
+function pointWeapon(a: string[][], i: Weapon): Grid {
+  i.cells.forEach(([y, x]) => { a[y][x] = "."; });
+  let x = i.col;
+  a.forEach((r) => { while (r.length < x + i.len + 3) r.push("."); });
+  if (i.grip) a[i.hy][x++] = i.grip;
+  if (i.guard) {
+    for (const y of [i.hy - 1, i.hy, i.hy + 1]) if (a[y]) a[y][x] = i.guard;
+    x++;
+  }
+  for (let k = 0; k < i.len; k++) a[i.hy][x + k] = i.blade;
+  return a.map((r) => r.join(""));
+}
+
+/** Victoire : l'arme garde sa taille, le bras monte et la porte 4 cases plus haut. */
+function raiseWeapon(a: string[][], i: Weapon): Grid {
+  const lift = 4;
+  const o = Array.from({ length: lift }, () => Array<string>(a[0].length).fill(".")).concat(a);
+  const moved = i.cells.map(([y, x]) => [y + lift, x, a[y][x]] as const);
+  moved.forEach(([y, x]) => { o[y][x] = "."; });
+  moved.forEach(([y, x, c]) => { o[y - lift][x] = c; });
+  const hand = i.col - 1;
+  const hy = i.hy + lift;
+  const fist = o[hy][hand] === "N" ? "N" : "S";
+  const sleeve = fist === "N" ? "N" : "P";
+  if (o[i.hy][hand] === ".") o[i.hy][hand] = fist;
+  for (let y = i.hy + 1; y < hy; y++) if (o[y][hand] === ".") o[y][hand] = sleeve;
+  for (let y = hy; y < hy + 2; y++) if (o[y][hand] === "S") o[y][hand] = sleeve;
+  return o.map((r) => r.join(""));
+}
+
 function posed(g: Grid, pose: Pose): Grid {
   if (pose === "rest") return g;
-  const a = g.map((r) => r.split(""));
-  const width = Math.max(...a.map((r) => r.length));
-  a.forEach((r) => { while (r.length < width) r.push("."); });
-  const col = weaponColumn(a);
-  if (col < 0) return g;
-  const blade = a.find((r) => "WV".includes(r[col]))?.[col] ?? "W";
-  const rows = a.map((r, y) => ("WVYL".includes(r[col]) ? y : -1)).filter((y) => y >= 0);
-  const [top, bottom] = [rows[0], rows[rows.length - 1]];
-  for (const y of rows) a[y][col] = ".";
-  if (pose === "action") {
-    const y = Math.min(bottom, top + Math.floor((bottom - top) / 2) + 1);
-    a.forEach((r) => r.push(".", ".", ".", ".", ".", "."));
-    a[y][col] = "Y";
-    for (let x = col + 1; x < col + 7; x++) a[y][x] = blade;
-    return a.map((r) => r.join(""));
-  }
-  const lift = 4;
-  const out = Array.from({ length: lift }, () => Array<string>(width).fill(".")).concat(a);
-  for (let y = 0; y < bottom - top + 1; y++) out[y][col] = blade;
-  out[bottom - top + 1][col] = "Y";
-  return out.map((r) => r.join(""));
+  const width = Math.max(...g.map((r) => r.length));
+  const a = g.map((r) => r.padEnd(width, ".").split(""));
+  const i = weaponOf(a);
+  if (!i) return g;
+  return pose === "action" ? pointWeapon(a, i) : raiseWeapon(a, i);
+}
+
+/** Grille d'une pose, pour les tests. */
+export function poseGrid(character: CharacterId, form: Form, pose: Pose): Grid {
+  return posed(GRIDS[character][form], pose);
 }
 
 export function sprite(character: CharacterId, color: ColorId, form: Form, mood: Mood, pose: Pose = "rest", crown = false): SpriteData {
