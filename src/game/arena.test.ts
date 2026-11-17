@@ -85,11 +85,17 @@ describe("deadline and phases", () => {
 });
 
 describe("energy and potions", () => {
-  test("each active application after acceptance gives 1, capped at 6; a cancelled one gives nothing", () => {
+  test("each active application after acceptance gives 2, capped at 6; a cancelled one gives nothing", () => {
     const r = arena();
     const apps = [app("a", -2), app("a", 1), app("a", 2, 3), ...[4, 5, 6, 7, 8, 9].map((h) => app("a", h / 10 + 4))];
     expect(state(r, [], 10, apps).energy.a).toBe(6);
-    expect(state(r, [], 1.5, apps).energy.a).toBe(3);
+    expect(state(r, [], 1.5, apps).energy.a).toBe(4);
+  });
+
+  test("the log shows the energy actually gained when the reserve caps it", () => {
+    const s = state(arena({ challengerEnergy: 5 }), [], 2, [app("a", 1)]);
+    expect(s.energy.a).toBe(6);
+    expect(s.log.at(-1)).toMatchObject({ kind: "ENERGY", amount: 1 });
   });
 
   test("a successful nudge during the fight gives each fighter a potion, 2 at most", () => {
@@ -106,7 +112,7 @@ describe("turns", () => {
     const apps = [app("a", 0.5)];
     const s = state(r, [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 6), act("a", "PARRY", 1.2)], 2, apps);
     expect(s.hp.n).toBe(34 - 11);
-    expect(s.energy.a).toBe(0);
+    expect(s.energy.a).toBe(1);
     expect(s.turn).toMatchObject({ playerId: "n", number: 2, used: 0, max: 3 });
   });
 

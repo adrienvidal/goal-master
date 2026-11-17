@@ -85,7 +85,7 @@ export async function cancelArena(id: string): Promise<ArenaResult> {
 const REFUSED: Record<"over" | "turn" | "energy" | "potion", string> = {
   over: "Le combat est terminé.",
   turn: "Ce n'est pas ton tour.",
-  energy: "Pas assez d'énergie : une candidature te donne 1 ⚡.",
+  energy: "Pas assez d'énergie : une candidature te donne 2 ⚡.",
   potion: "Plus de potion : une relance réussie t'en donne une.",
 };
 

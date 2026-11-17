@@ -187,7 +187,7 @@ function ArenaCard({ input, meId, views, now }: { input: ArenaInput; meId: strin
         <span className="mr-1.5 text-[13px] uppercase tracking-wider text-muted">Ton énergie</span>
         {cells.map((on, i) => <i key={i} className={`energy-cell ${on ? "" : "empty"}`} />)}
       </div>
-      {mine && s.energy[meId] === 0 ? <p className="text-sm text-muted">Envoie une candidature pour recharger 1 ⚡. Sinon, tu peux finir ton tour.</p> : null}
+      {mine && s.energy[meId] === 0 ? <p className="text-sm text-muted">Envoie une candidature pour recharger 2 ⚡. Sinon, tu peux finir ton tour.</p> : null}
       <span className="btn arena">{mine ? "Entrer et jouer" : "Entrer dans l'Arène"}</span>
     </Link>
   );
