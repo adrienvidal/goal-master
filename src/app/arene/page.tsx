@@ -33,7 +33,7 @@ function logLine(e: LogEntry, meId: string, foeName: string): string {
     case "TIMEOUT":
       return me ? "Tu n'as pas joué en 24 h : Parade automatique." : `${who} n'a pas joué en 24 h : Parade automatique.`;
     case "ENERGY":
-      return me ? "Tu gagnes 1 ⚡ (candidature)." : `${who} gagne 1 ⚡ (candidature).`;
+      return me ? `Tu gagnes ${e.amount} ⚡ (candidature).` : `${who} gagne ${e.amount} ⚡ (candidature).`;
     case "POTION_GAIN":
       return "Relance réussie : une potion chacun.";
   }
@@ -115,7 +115,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
                   ? potions > 1
                     ? `Plus d'énergie. Il te reste ${potions} potions : bois-en une ou finis ton tour.`
                     : "Plus d'énergie. Il te reste une potion : bois-la ou finis ton tour."
-                  : `Chaque candidature te donne 1 ⚡. Tu peux en envoyer une et revenir : ton tour t'attend jusqu'à ${turnEnds}.`}
+                  : `Chaque candidature te donne 2 ⚡. Tu peux en envoyer une et revenir : ton tour t'attend jusqu'à ${turnEnds}.`}
               </p>
             ) : null}
             <ArenaMoves id={input.arena.id} moves={moves} used={s.turn?.used ?? 0} max={s.turn?.max ?? 3} myTurn={myTurn} />

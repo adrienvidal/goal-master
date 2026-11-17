@@ -50,7 +50,7 @@ export function ArenaPanel({ partnerName, compare, onClose }: { partnerName: str
       <p className="text-sm text-muted">
         {outsider ? `${outsider} ` : ""}
         {compare.partnerRusty ? `${partnerName} est rouillé : il entrera sans énergie. ` : ""}
-        Chaque candidature te donne 1 ⚡. Fin au K.O., ou vendredi 18 h : le plus de PV restants gagne.
+        Chaque candidature te donne 2 ⚡. Fin au K.O., ou vendredi 18 h : le plus de PV restants gagne.
       </p>
       <button type="button" className="btn arena" disabled={pending} onClick={() => run(provokeArena)}>Envoyer la provocation</button>
       <button type="button" className="btn ghost" onClick={onClose}>Fermer</button>

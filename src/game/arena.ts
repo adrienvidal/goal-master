@@ -10,6 +10,8 @@ const H = 60 * 60 * 1000;
 export const ANSWER_WITHIN_MS = 24 * H;
 export const TURN_TIMEOUT_MS = 24 * H;
 export const MAX_ENERGY = 6;
+/** Énergie gagnée par candidature : de quoi jouer presque un tour entier (2 actions sur 3). */
+export const ENERGY_PER_APP = 2;
 export const MAX_POTIONS = 2;
 export const ACTIONS_PER_TURN = 3;
 export const POTION_HEAL = 6;
@@ -159,8 +161,9 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
     timeouts(e.at);
     if (e.kind === "energy") {
       const id = e.playerId!;
-      s.energy[id] = Math.min(MAX_ENERGY, s.energy[id] + 1);
-      s.log.push({ at: e.at, playerId: id, kind: "ENERGY", amount: 1 });
+      const gained = Math.min(MAX_ENERGY, s.energy[id] + ENERGY_PER_APP) - s.energy[id];
+      s.energy[id] += gained;
+      s.log.push({ at: e.at, playerId: id, kind: "ENERGY", amount: gained });
       continue;
     }
     if (e.kind === "potion") {
