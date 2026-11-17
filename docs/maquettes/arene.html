@@ -1,0 +1,1046 @@
+<title>Goal Master · Arène</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
+<style>
+/* Maquette : écrans empilés, chacun annoncé par sa route. Tokens = ceux de l'app (globals.css), un seul thème sombre assumé.
+   Ajout du lot : --hp (vie), --hp-low, --energy (énergie), --arena-floor (sol de l'arène). */
+:root {
+  color-scheme: dark;
+  --night: #16132a; --stone: #221e40; --stone-2: #2e2958; --edge: #4a4380;
+  --ink: #f1ecff; --muted: #a39dcc; --gold: #f2c14e; --gold-dk: #b9831c;
+  --ember: #ff7a45; --danger: #ff6b6b; --ok: #6fd49a; --warn-bg: #3a2f17;
+  --page: #0e0c1d; --shadow: #0c0a1a;
+  --p1: #5aa9ff; --p1-dk: #2f6fc0; --p2: #e5533d; --p2-dk: #a1301f; --crown: #ffd84a;
+  --hp: #6fd49a; --hp-low: #ff6b6b; --energy: #7fe3ff; --energy-dk: #2a8fb0;
+  --arena-floor: #2a2340; --arena-sky: #1c1838; --magic: #c58cff;
+  --f-display: "Press Start 2P", ui-monospace, monospace;
+  --f-ui: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-num: "VT323", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--f-ui); font-size: 16px; margin: 0; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 1040px; margin: 0 auto; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--page); padding: 14px 0 10px; border-bottom: 3px solid var(--edge); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--page); }
+.top h1 { font-family: var(--f-display); font-size: 12px; margin: 0 0 10px; line-height: 1.6; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: 13px; text-decoration: none; padding: 4px 8px; border: 2px solid var(--edge); color: var(--muted); }
+.toc a:hover { color: var(--ink); border-color: var(--gold); }
+.intro { color: var(--muted); max-width: 70ch; line-height: 1.5; margin: 22px 0 6px; }
+.rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin: 16px 0 8px; }
+.rules div { border: 2px dashed var(--edge); padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.rules b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+.screen { margin-top: 56px; scroll-margin-top: 150px; }
+.screen > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
+.route { font-family: var(--f-num); font-size: 22px; color: var(--gold); }
+.screen > header h2 { font-family: var(--f-display); font-size: 11px; margin: 0; line-height: 1.6; }
+.screen > header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 78ch; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.device { background: rgb(34 30 64 / .9); border: 4px solid var(--edge); box-shadow: 4px 4px 0 var(--shadow); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.device h4 { font-family: var(--f-display); font-size: 9px; line-height: 1.6; margin: 0; color: var(--gold); }
+.muted { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0; }
+.num { font-family: var(--f-num); font-size: 1.2em; }
+.btn { display: flex; justify-content: center; align-items: center; gap: 6px; text-align: center; width: 100%; font-family: var(--f-display); font-size: 10px; line-height: 1.4; color: #1a1626; background: var(--gold); padding: 12px; box-shadow: inset -4px -4px 0 var(--gold-dk), 4px 4px 0 var(--shadow); text-decoration: none; border: 0; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 3px var(--edge); }
+.btn.ember { background: var(--ember); box-shadow: inset -4px -4px 0 #b8512b, 4px 4px 0 var(--shadow); }
+.btn.arena { background: var(--magic); box-shadow: inset -4px -4px 0 #7a4fb0, 4px 4px 0 var(--shadow); }
+.btn.off { background: var(--stone-2); color: var(--muted); box-shadow: inset 0 0 0 3px var(--edge); cursor: not-allowed; }
+.h-title { font-family: var(--f-display); font-size: 12px; line-height: 1.6; margin: 0; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.err { border-left: 4px solid var(--danger); padding: 6px 10px; background: #3a1b2a; color: var(--ink); font-size: 14px; line-height: 1.45; margin: 0; }
+@media (min-width: 760px) { .wide { grid-column: 1 / -1; } }
+@media (max-width: 420px) { .device { padding: 14px 12px; } }
+
+/* Avatars pixel */
+.av { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
+.av svg { display: block; image-rendering: pixelated; }
+.av .crown { position: relative; left: -3px; margin-bottom: -3px; z-index: 1; }
+.av.flip .body { transform: scaleX(-1); }
+.av.ko .body { transform: rotate(90deg) translateX(30%); opacity: .7; }
+.av.hit .body { filter: brightness(2.2) saturate(0); }
+.av .stars { position: absolute; top: -6px; font-size: 13px; letter-spacing: 2px; color: var(--crown); }
+
+/* Carte du binôme */
+.partner { display: flex; gap: 12px; align-items: center; }
+.partner .who { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.partner .name { font-weight: 600; font-size: 17px; }
+.partner .meta { color: var(--muted); font-size: 14px; }
+.bar { height: 12px; background: var(--night); border: 2px solid var(--edge); position: relative; }
+.bar i { position: absolute; inset: 0 auto 0 0; background: var(--gold); }
+.bar.p2 i { background: var(--p2); }
+.actions3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.actions3 .btn { font-size: 9px; padding: 12px 6px; flex-direction: column; }
+.actions3 .btn .ico { font-size: 16px; font-family: var(--f-ui); }
+
+/* Bandeaux et cartes d'accueil */
+.banner { border: 3px solid var(--magic); background: #261c3a; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.banner .line { display: flex; gap: 10px; align-items: center; }
+.banner p { margin: 0; font-size: 15px; line-height: 1.45; }
+.banner.calm { border-color: var(--edge); background: var(--night); }
+.banner.calm .x { margin-left: auto; color: var(--muted); text-decoration: none; font-family: var(--f-display); font-size: 10px; }
+.pending { border: 3px dashed var(--magic); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.pending p { margin: 0; font-size: 15px; line-height: 1.45; }
+.mini { border: 3px solid var(--magic); background: var(--night); padding: 12px; display: flex; flex-direction: column; gap: 10px; text-decoration: none; }
+.mini .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.mini .tag { font-family: var(--f-num); font-size: 22px; color: var(--magic); }
+.mini .tag.go { color: var(--gold); animation: blink 1.2s steps(2) infinite; }
+.mini .vs { display: grid; grid-template-columns: auto 1fr auto 1fr auto; gap: 8px; align-items: center; }
+.mini .hpn { font-family: var(--f-num); font-size: 20px; }
+@keyframes blink { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .mini .tag.go, .dmg { animation: none !important; } }
+
+/* Arène */
+.arena { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .arena { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; } }
+.arena .col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.stage { position: relative; border: 3px solid var(--edge); background:
+  linear-gradient(to bottom, var(--arena-sky) 0 62%, var(--arena-floor) 62% 100%);
+  padding: 12px 12px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; overflow: hidden; }
+.stage::after { content: ""; position: absolute; left: 0; right: 0; top: 62%; height: 4px; background: repeating-linear-gradient(90deg, var(--edge) 0 12px, transparent 12px 20px); }
+.fighter { display: flex; flex-direction: column; gap: 8px; min-width: 0; z-index: 1; }
+.fighter.right { align-items: flex-end; text-align: right; }
+.fighter .tag { font-size: 14px; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.fighter.right .tag { justify-content: flex-end; }
+.fighter .tag b { font-weight: 600; }
+.fighter .tag span { color: var(--muted); font-size: 13px; }
+.hp { width: 100%; max-width: 180px; }
+.hp .bar { height: 14px; }
+.hp .bar i { background: var(--hp); }
+.hp.low .bar i { background: var(--hp-low); }
+.hp .val { font-family: var(--f-num); font-size: 20px; line-height: 1; }
+.fighter .sprite { min-height: 72px; display: flex; align-items: flex-end; position: relative; }
+.dmg { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); font-family: var(--f-display); font-size: 12px; color: var(--danger); text-shadow: 2px 2px 0 var(--shadow); animation: rise 1.4s ease-out infinite; }
+.dmg.heal { color: var(--hp); }
+@keyframes rise { 0% { transform: translate(-50%, 6px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -14px); opacity: 0; } }
+.shield { position: absolute; right: -10px; bottom: 6px; font-size: 18px; }
+.turnline { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; border: 3px solid var(--gold); background: var(--warn-bg); padding: 8px 12px; }
+.turnline.wait { border-color: var(--edge); background: var(--night); }
+.turnline .who { font-family: var(--f-display); font-size: 10px; line-height: 1.6; }
+.turnline .clock { font-family: var(--f-num); font-size: 20px; color: var(--muted); }
+.energy { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.energy .lbl { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-right: 6px; }
+.energy i { width: 18px; height: 18px; background: var(--energy); box-shadow: inset -3px -3px 0 var(--energy-dk); display: inline-block; }
+.energy i.empty { background: var(--night); box-shadow: inset 0 0 0 2px var(--edge); }
+.energy .n { font-family: var(--f-num); font-size: 22px; margin-left: 6px; }
+.moves { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.move { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; text-decoration: none; padding: 10px; border: 3px solid var(--edge); background: var(--stone); box-shadow: 3px 3px 0 var(--shadow); min-width: 0; }
+.move:hover { border-color: var(--gold); }
+.move b { font-family: var(--f-display); font-size: 9px; line-height: 1.5; }
+.move span { font-size: 13px; color: var(--muted); line-height: 1.3; }
+.move .cost { font-family: var(--f-num); font-size: 18px; color: var(--energy); }
+.move.special { border-color: var(--magic); background: #2a1f42; }
+.move.off { opacity: .45; cursor: not-allowed; }
+.move.off:hover { border-color: var(--edge); }
+.turnfoot { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.turnfoot .cnt { font-family: var(--f-num); font-size: 20px; color: var(--muted); }
+.turnfoot .btn { width: auto; padding: 10px 16px; }
+.log { border: 3px solid var(--edge); background: var(--night); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.log .lt { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.log ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; font-size: 14px; line-height: 1.35; }
+.log li { display: grid; grid-template-columns: 48px 1fr; gap: 8px; }
+.log time { font-family: var(--f-num); font-size: 17px; color: var(--muted); }
+.log .me { color: var(--p1); } .log .him { color: var(--p2); }
+.log .sys { color: var(--muted); font-style: italic; }
+.note { border-left: 4px solid var(--energy); padding: 6px 10px; background: #13283a; font-size: 14px; line-height: 1.45; margin: 0; }
+
+/* Résultat */
+.result { text-align: center; align-items: center; }
+.result .big-t { font-family: var(--f-display); font-size: 16px; line-height: 1.6; margin: 0; text-wrap: balance; }
+.result .big-t.win { color: var(--crown); }
+.result .big-t.lose { color: var(--muted); }
+.result .score { font-family: var(--f-num); font-size: 30px; line-height: 1.1; margin: 0; }
+.result .score .s1 { color: var(--p1); } .result .score .s2 { color: var(--p2); }
+.duo { display: flex; gap: 20px; justify-content: center; align-items: end; min-height: 110px; }
+.badge { display: flex; gap: 10px; align-items: center; border: 3px solid var(--gold-dk); background: var(--warn-bg); padding: 8px 12px; text-align: left; }
+.badge b { font-family: var(--f-display); font-size: 9px; color: var(--gold); display: block; margin-bottom: 4px; }
+.badge span { font-size: 14px; }
+.stats { display: grid; grid-template-columns: 1fr auto auto; gap: 4px 14px; font-size: 14px; text-align: left; width: 100%; max-width: 300px; }
+.stats .h { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.stats .v { font-family: var(--f-num); font-size: 19px; text-align: right; }
+
+/* Notification push */
+.push { background: #2b2840; border-radius: 14px; padding: 10px 12px; display: grid; grid-template-columns: 28px 1fr; gap: 4px 10px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; line-height: 1.35; }
+.push .ic { width: 28px; height: 28px; border-radius: 6px; background: var(--stone-2); display: grid; place-items: center; grid-row: span 2; font-family: var(--f-display); font-size: 8px; color: var(--gold); }
+.push b { font-weight: 600; }
+
+/* Succès */
+.ach { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.ach div { border: 3px solid var(--edge); padding: 10px; display: flex; flex-direction: column; gap: 6px; align-items: center; text-align: center; font-size: 13px; color: var(--muted); }
+.ach div.got { border-color: var(--gold-dk); background: var(--warn-bg); color: var(--ink); }
+.ach div.new { outline: 3px solid var(--crown); outline-offset: 2px; }
+.ach b { font-family: var(--f-display); font-size: 8px; line-height: 1.6; color: var(--gold); }
+.ach div:not(.got) b { color: var(--muted); }
+
+/* Intro */
+.introscreen { align-items: center; text-align: center; }
+.introscreen .steps { font-family: var(--f-num); font-size: 18px; color: var(--muted); }
+.introscreen ol { text-align: left; margin: 0; padding-left: 22px; line-height: 1.55; font-size: 15px; }
+
+/* Sprites du combat */
+.sheet-wrap { overflow-x: auto; }
+.sheet { border-collapse: collapse; width: 100%; min-width: 660px; }
+.sheet th, .sheet td { border: 2px solid var(--stone-2); padding: 10px 8px 8px; text-align: center; vertical-align: bottom; }
+.sheet thead th { font-size: 13px; color: var(--muted); font-weight: 400; vertical-align: middle; }
+.sheet th.st { text-align: left; color: var(--ink); font-weight: 600; font-size: 14px; vertical-align: middle; white-space: nowrap; }
+.cell { display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-end; min-height: 92px; position: relative; padding-top: 14px; }
+.cell svg, .scene svg, .fxcard svg, .auras svg { display: block; image-rendering: pixelated; }
+.bob svg.body { animation: bob 1s steps(2) infinite; }
+.lunge svg.body { animation: lunge 1.2s steps(2) infinite; }
+.flash svg.body { animation: flash .8s steps(2) infinite; }
+.tilt svg.body { transform: rotate(-7deg); }
+.jump svg.body { animation: jump .9s steps(2) infinite; }
+@keyframes jump { 50% { transform: translateY(-9px); } }
+.ov { position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+.ov svg { animation: spin .6s steps(2) infinite; }
+@keyframes bob { 50% { transform: translateY(-3px); } }
+@keyframes lunge { 50% { transform: translateX(5px); } }
+@keyframes flash { 50% { filter: brightness(3) saturate(0); transform: translateX(-3px); } }
+@keyframes spin { 50% { transform: scaleX(-1); } }
+.scene { position: relative; height: 180px; border: 3px solid var(--edge); background: linear-gradient(to bottom, var(--arena-sky) 0 72%, var(--arena-floor) 72% 100%); overflow: hidden; }
+.scene.mini { height: 96px; width: 150px; border-width: 2px; }
+.scene .f { position: absolute; bottom: 14%; }
+.scene .fl { left: 8%; }
+.scene .fr { right: 8%; }
+.scene .fr svg.body { transform: scaleX(-1); }
+.scene .fr .hitflash svg.body { transform: scaleX(-1); filter: brightness(3) saturate(0); }
+.scene .hitflash svg.body { filter: brightness(3) saturate(0); }
+.scene .tiltc svg.body { transform: rotate(-7deg); }
+.scene .fx { position: absolute; }
+.scene .txt { position: absolute; font-family: var(--f-display); text-shadow: 2px 2px 0 var(--shadow); }
+.frames { display: flex; gap: 8px; flex-wrap: wrap; }
+.frames figure { margin: 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.frames figcaption { font-size: 13px; color: var(--muted); }
+.frames figure.on .scene { border-color: var(--gold); }
+.auras { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.auras figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; border: 2px solid var(--stone-2); padding: 12px 8px 8px; }
+.auras figcaption { font-size: 13px; color: var(--muted); text-align: center; }
+.aura svg.body { animation: aura .8s steps(2) infinite; filter: drop-shadow(2px 0 0 var(--magic)) drop-shadow(-2px 0 0 var(--magic)) drop-shadow(0 2px 0 var(--magic)) drop-shadow(0 -2px 0 var(--magic)); }
+@keyframes aura { 50% { filter: drop-shadow(2px 0 0 var(--gold)) drop-shadow(-2px 0 0 var(--gold)) drop-shadow(0 2px 0 var(--gold)) drop-shadow(0 -2px 0 var(--gold)); } }
+.fxgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.fxcard { border: 2px solid var(--stone-2); background: var(--night); padding: 12px 10px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.fxcard .pic { min-height: 48px; display: flex; align-items: center; justify-content: center; }
+.fxcard b { font-weight: 600; font-size: 14px; }
+.fxcard span { font-size: 13px; color: var(--muted); line-height: 1.35; }
+.fxcard .numfx { font-family: var(--f-display); font-size: 14px; text-shadow: 2px 2px 0 var(--shadow); display: flex; gap: 12px; }
+@media (prefers-reduced-motion: reduce) { .bob svg.body, .lunge svg.body, .flash svg.body, .jump svg.body, .ov svg, .aura svg.body { animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Goal Master · Arène</h1>
+    <nav class="toc" aria-label="Écrans">
+      <a href="#stats">0 · Stats</a>
+      <a href="#carte">1 · Carte du binôme</a>
+      <a href="#provoquer">2 · Provoquer</a>
+      <a href="#recu">3 · Provocation reçue</a>
+      <a href="#accueil">4 · Combat sur l'accueil</a>
+      <a href="#combat">5 · Combat, à toi</a>
+      <a href="#attendre">6 · Combat, à lui</a>
+      <a href="#resultat">7 · Résultat</a>
+      <a href="#intro">8 · Intro</a>
+      <a href="#succes">9 · Succès</a>
+      <a href="#sprites">10 · Sprites</a>
+    </nav>
+  </div>
+
+  <p class="intro">Un combat au tour par tour entre Adrien (Chevalier, bleu) et Nicolas (Panda, rouge). Chacun joue quand il veut. Les candidatures donnent l'énergie, et l'énergie paie les coups. Le Défi (la course) reste à côté, sans changement. Ici, Adrien provoque, Nicolas accepte.</p>
+  <div class="rules">
+    <div><b>Stats selon l'évolution</b>30 à 40 PV, dégâts et Botte qui montent avec l'évolution réelle (le niveau), jamais avec la rouille. Figées au lancement du combat.</div>
+    <div><b>1 candidature = 1 ⚡</b>Pendant le combat, 6 ⚡ au plus en réserve. Chacun démarre avec 2 ⚡, +1 ⚡ pour le moins évolué (outsider), 0 ⚡ pour un héros rouillé.</div>
+    <div><b>Un tour = 3 actions au plus</b>Puis la main passe. 24 h sans jouer : le tour passe tout seul en Parade.</div>
+    <div><b>Aucune XP en jeu</b>La couronne au gagnant jusqu'au lendemain minuit, et deux succès. Les candidatures comptent aussi pour l'XP, le boss et un Défi en cours.</div>
+  </div>
+
+  <section class="screen" id="stats">
+    <header>
+      <span class="route">Règle (pas un écran)</span>
+      <h2>0 · Stats selon l'évolution</h2>
+      <p>Écarts modestes : deux évolutions d'écart valent environ 4 PV et 1 point de dégâts, rattrapables en deux candidatures. L'évolution prise en compte est celle du niveau, pas la forme affichée : la rouille ne change pas les stats.</p>
+    </header>
+    <div class="grid">
+      <div class="device wide" style="overflow-x:auto">
+        <div class="stats" style="max-width:none;grid-template-columns:auto auto auto 1fr 1fr">
+          <span class="h">Évol.</span><span class="h">PV</span><span class="h">Attaque</span><span class="h">Coup d'estoc (Chevalier)</span><span class="h">Bambou tourbillon (Panda)</span>
+          <span>1 · niv. 1-3</span><span class="v">30</span><span class="v">4-6</span><span>12 dégâts</span><span>+8 PV, adversaire −1 action</span>
+          <span>2 · niv. 4-7</span><span class="v">32</span><span class="v">4-6</span><span>12 dégâts</span><span>+8 PV, adversaire −1 action</span>
+          <span>3 · niv. 8-11</span><span class="v">34</span><span class="v">5-7</span><span>14 dégâts</span><span>+10 PV, adversaire −1 action</span>
+          <span>4 · niv. 12-15</span><span class="v">36</span><span class="v">5-7</span><span>14 dégâts</span><span>+10 PV, adversaire −1 action</span>
+          <span>5 · niv. 16-19</span><span class="v">38</span><span class="v">6-8</span><span>16 dégâts, perce la Parade</span><span>+12 PV, adversaire −2 actions</span>
+          <span>6 · niv. 20+</span><span class="v">40</span><span class="v">6-8</span><span>16 dégâts, perce la Parade</span><span>+12 PV, adversaire −2 actions</span>
+        </div>
+        <p class="note">Outsider : si les évolutions diffèrent, le moins évolué commence avec 3 ⚡ au lieu de 2. Héros rouillé ou déchu au moment d'entrer : 0 ⚡, sa première candidature le relance (et fait partir la rouille).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1 -->
+  <section class="screen" id="carte">
+    <header>
+      <span class="route">/ (accueil, carte du binôme)</span>
+      <h2>1 · Trois boutons : Motiver, Défier, Arène</h2>
+      <p>Les trois boutons partagent la ligne, icône au-dessus du mot pour tenir sur mobile. « Arène » est grisé si une Arène est déjà en attente ou en cours, ou si on en a déjà lancé une aujourd'hui, avec la raison écrite dessous. Un Défi en cours ne bloque pas l'Arène.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>Disponible</h4>
+        <div class="partner"><div class="av" data-sprite="panda" data-color="p2"></div><div class="who"><span class="name">Nicolas · Niv. 9 <span style="color:var(--ember)">🔥3</span></span><span class="meta"><span class="num">38/100</span> · +2 aujourd'hui</span></div></div>
+        <div class="bar p2"><i style="width:38%"></i></div>
+        <div class="actions3">
+          <a class="btn" href="#carte"><span class="ico">⚔️</span>Motiver</a>
+          <a class="btn ember" href="#carte"><span class="ico">🏁</span>Défier</a>
+          <a class="btn arena" href="#provoquer"><span class="ico">🛡️</span>Arène</a>
+        </div>
+      </div>
+      <div class="device">
+        <h4>Arène indisponible</h4>
+        <div class="partner"><div class="av" data-sprite="panda" data-color="p2"></div><div class="who"><span class="name">Nicolas · Niv. 9 <span style="color:var(--ember)">🔥3</span></span><span class="meta"><span class="num">38/100</span> · +2 aujourd'hui</span></div></div>
+        <div class="bar p2"><i style="width:38%"></i></div>
+        <div class="actions3">
+          <a class="btn" href="#carte"><span class="ico">⚔️</span>Motiver</a>
+          <a class="btn ember" href="#carte"><span class="ico">🏁</span>Défier</a>
+          <span class="btn off" aria-disabled="true"><span class="ico">🛡️</span>Arène</span>
+        </div>
+        <p class="muted">Selon le cas : « Un combat est déjà en cours » · « Tu as déjà ouvert une Arène aujourd'hui, reviens demain ».</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="screen" id="provoquer">
+    <header>
+      <span class="route">/ · Arène (dans la carte)</span>
+      <h2>2 · Provoquer, puis attendre la réponse</h2>
+      <p>Rien à régler : les règles sont fixes, le panneau les rappelle et envoie. Le combat dure jusqu'au K.O. ou jusqu'au vendredi 18 h qui suit. Un vendredi après 18 h, il dure toute la semaine suivante. Un combat refusé ou laissé sans réponse 24 h ne compte pas comme lancé.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>Panneau</h4>
+        <div class="banner">
+          <span class="h-title" style="font-size:10px">Provoquer Nicolas</span>
+          <div class="stats" style="max-width:none">
+            <span class="h"></span><span class="h">Toi</span><span class="h">Nicolas</span>
+            <span>Évolution</span><span class="v">3</span><span class="v">2</span>
+            <span>PV</span><span class="v">34</span><span class="v">32</span>
+            <span>Attaque</span><span class="v">5-7</span><span class="v">4-6</span>
+            <span>Énergie au départ</span><span class="v">2 ⚡</span><span class="v">3 ⚡</span>
+          </div>
+          <p class="muted">Nicolas est moins évolué : il part avec 1 ⚡ de plus. Chaque candidature te donne 1 ⚡ pour frapper, parer ou lancer ta Botte.</p>
+          <p class="muted">Fin au K.O., ou vendredi 18 h (dans 3 j) : le plus de PV restants gagne.</p>
+          <a class="btn arena" href="#provoquer-attente">Envoyer la provocation</a>
+          <a class="btn ghost" href="#carte">Fermer</a>
+        </div>
+        <h4>Échec réseau</h4>
+        <p class="err">La provocation n'est pas partie. Vérifie ta connexion et réessaie.</p>
+      </div>
+      <div class="device" id="provoquer-attente">
+        <h4>En attente (accueil d'Adrien)</h4>
+        <div class="pending">
+          <p>🛡️ Provocation envoyée à Nicolas.</p>
+          <p class="muted">Il a reçu une notification. Sans réponse d'ici demain 14:20, elle s'efface.</p>
+          <a class="btn ghost" href="#carte">Retirer la provocation</a>
+        </div>
+        <a class="btn ghost" href="#accueil">(Nicolas accepte → combat)</a>
+        <h4>Refusée</h4>
+        <div class="banner calm"><div class="line"><div class="av" data-sprite="panda" data-color="p2"></div><p>Nicolas décline l'Arène pour cette fois. Tu peux en ouvrir une autre.</p><a class="x" href="#carte" aria-label="Fermer">✕</a></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="screen" id="recu">
+    <header>
+      <span class="route">/ (accueil de Nicolas) + notification</span>
+      <h2>3 · « Adrien te provoque en Arène »</h2>
+      <p>La notification part toujours (catégorie Duel, hors plafond). Celui qui accepte joue en second : Adrien ouvre le combat. Si les deux se provoquent en même temps, la première provocation gagne et le second voit le bandeau à la place du panneau.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>Notification</h4>
+        <div class="push"><span class="ic">GM</span><b>🛡️ Adrien te provoque en Arène</b><span>30 PV chacun, tes candidatures font tes coups. Fin vendredi 18 h.</span></div>
+        <h4>Accueil de Nicolas</h4>
+        <div class="banner">
+          <div class="line"><div class="av" data-sprite="knight" data-color="p1"></div><p><b>Adrien te provoque en Arène.</b> Tour par tour, tes candidatures font tes coups.</p></div>
+          <div class="row2"><a class="btn ghost" href="#provoquer-attente">Pas cette fois</a><a class="btn arena" href="#attendre">Entrer dans l'Arène</a></div>
+        </div>
+      </div>
+      <div class="device">
+        <h4>Nicolas est rouillé</h4>
+        <div class="push"><span class="ic">GM</span><b>🛡️ Adrien te provoque en Arène</b><span>Ton héros est rouillé : il entre sans énergie. Une candidature et il reprend les armes.</span></div>
+        <div class="banner">
+          <div class="line"><div class="av" data-sprite="knight" data-color="p1"></div><p><b>Adrien te provoque en Arène.</b> Ton héros est rouillé : il entre sans énergie. Une candidature et il reprend les armes.</p></div>
+          <div class="row2"><a class="btn ghost" href="#provoquer-attente">Pas cette fois</a><a class="btn arena" href="#combat-vide">Entrer quand même</a></div>
+        </div>
+        <h4>Provocation retirée entre-temps</h4>
+        <div class="banner calm"><div class="line"><p>Adrien a retiré sa provocation.</p><a class="x" href="#carte" aria-label="Fermer">✕</a></div></div>
+        <h4>Défi et Arène en même temps</h4>
+        <p class="muted">Possible : une candidature fait avancer la course du Défi et donne 1 ⚡ dans l'Arène, en plus de l'XP et du coup contre le boss. Les deux cartes s'empilent sur l'accueil, l'Arène en dessous.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="screen" id="accueil">
+    <header>
+      <span class="route">/ (accueil des deux)</span>
+      <h2>4 · Le combat sur l'accueil</h2>
+      <p>Une carte compacte au-dessus de « + Candidature » : les deux PV, l'énergie, et à qui de jouer. Toute la carte mène à <span class="num">/arene</span>. Quand c'est à toi, « À toi de jouer » clignote doucement. Sans énergie, la carte pousse vers « + Candidature ».</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>À toi de jouer</h4>
+        <a class="mini" href="#combat">
+          <div class="head"><span class="h-title" style="font-size:10px">🛡️ Arène</span><span class="tag go">À toi de jouer</span></div>
+          <div class="vs">
+            <div class="av" data-sprite="knight" data-color="p1" data-px="2"></div>
+            <div class="hp"><div class="bar"><i style="width:65%"></i></div><span class="hpn">22/34</span></div>
+            <span class="muted">VS</span>
+            <div class="hp low"><div class="bar"><i style="width:28%"></i></div><span class="hpn">9/32</span></div>
+            <div class="av flip" data-sprite="panda" data-color="p2" data-px="2"></div>
+          </div>
+          <div class="energy"><span class="lbl">Ton énergie</span><i></i><i></i><i></i><i></i><i class="empty"></i><i class="empty"></i><span class="n">4</span></div>
+        </a>
+        <a class="btn" href="#accueil" style="font-size:12px;padding:18px">+ Candidature</a>
+      </div>
+      <div class="device">
+        <h4>À lui de jouer</h4>
+        <a class="mini" href="#attendre">
+          <div class="head"><span class="h-title" style="font-size:10px">🛡️ Arène</span><span class="tag">Nicolas réfléchit…</span></div>
+          <div class="vs">
+            <div class="av" data-sprite="knight" data-color="p1" data-px="2"></div>
+            <div class="hp"><div class="bar"><i style="width:65%"></i></div><span class="hpn">22/34</span></div>
+            <span class="muted">VS</span>
+            <div class="hp"><div class="bar"><i style="width:44%"></i></div><span class="hpn">14/32</span></div>
+            <div class="av flip" data-sprite="panda" data-color="p2" data-px="2"></div>
+          </div>
+          <p class="muted">Tes candidatures d'ici là rechargent ton énergie pour ton prochain tour.</p>
+        </a>
+      </div>
+      <div class="device">
+        <h4>À toi, mais plus d'énergie</h4>
+        <a class="mini" href="#combat-vide">
+          <div class="head"><span class="h-title" style="font-size:10px">🛡️ Arène</span><span class="tag go">À toi de jouer</span></div>
+          <div class="energy"><span class="lbl">Ton énergie</span><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><span class="n">0</span></div>
+          <p class="muted">Envoie une candidature pour recharger 1 ⚡. Sinon, tu peux passer ton tour en Parade.</p>
+        </a>
+        <a class="btn" href="#accueil" style="font-size:12px;padding:18px">+ Candidature</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="screen" id="combat">
+    <header>
+      <span class="route">/arene · ton tour</span>
+      <h2>5 · L'Arène, à toi de jouer</h2>
+      <p>Mobile : la scène, la ligne de tour, l'énergie, les quatre actions, puis le journal. Ordinateur : le journal passe dans une colonne à droite. Chaque action se joue tout de suite, avec son animation (chiffre qui monte, sprite qui clignote). Le tour s'arrête à 3 actions ou sur « Finir mon tour ».</p>
+    </header>
+    <div class="grid">
+      <div class="device wide">
+        <h4>Tour d'Adrien, 1 action jouée</h4>
+        <div class="arena">
+          <div class="col">
+            <div class="stage">
+              <div class="fighter">
+                <div class="tag"><b>Toi</b><span>Chevalier · Niv. 9 · Évol. 3</span></div>
+                <div class="hp"><div class="bar"><i style="width:65%"></i></div><span class="val">22/34</span></div>
+                <div class="sprite"><div class="av" data-sprite="knight" data-color="p1" data-px="4"></div></div>
+              </div>
+              <div class="fighter right">
+                <div class="tag"><b>Nicolas</b><span>Panda · Niv. 6 · Évol. 2</span></div>
+                <div class="hp low"><div class="bar"><i style="width:28%"></i></div><span class="val">9/32</span></div>
+                <div class="sprite"><div class="av flip hit" data-sprite="panda" data-color="p2" data-px="4"></div><span class="dmg">-5</span></div>
+              </div>
+            </div>
+            <div class="turnline"><span class="who">À toi de jouer</span><span class="clock">Fin vendredi 18 h · 3 j</span></div>
+            <div class="energy"><span class="lbl">Énergie</span><i></i><i></i><i></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><span class="n">3</span></div>
+            <div class="moves">
+              <a class="move" href="#combat"><span class="cost">1 ⚡</span><b>⚔️ Attaque</b><span>5 à 7 dégâts (Évol. 3)</span></a>
+              <a class="move" href="#combat"><span class="cost">1 ⚡</span><b>🛡️ Parade</b><span>Le prochain coup reçu est divisé par deux</span></a>
+              <a class="move special" href="#combat"><span class="cost">3 ⚡</span><b>✨ Coup d'estoc</b><span>Botte renforcée (Évol. 3) : 14 dégâts</span></a>
+              <a class="move" href="#combat"><span class="cost">×1</span><b>🧪 Potion</b><span>+6 PV · gagnée par ta relance réussie</span></a>
+            </div>
+            <div class="turnfoot"><span class="cnt">Actions 1/3</span><a class="btn ghost" href="#attendre">Finir mon tour</a></div>
+          </div>
+          <div class="log">
+            <span class="lt">Journal</span>
+            <ol>
+              <li><time>14:32</time><span class="me">Tu attaques : 5 dégâts.</span></li>
+              <li><time>11:05</time><span class="him">Nicolas lance Bambou tourbillon : +8 PV, tu perds une action.</span></li>
+              <li><time>11:04</time><span class="him">Nicolas attaque : 6 dégâts.</span></li>
+              <li><time>hier</time><span class="me">Tu lances Coup d'estoc : 14 dégâts.</span></li>
+              <li><time>hier</time><span class="sys">Tu gagnes 1 ⚡ (candidature Doctolib).</span></li>
+              <li><time>lun.</time><span class="sys">Nicolas entre dans l'Arène. Tu ouvres le combat.</span></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+      <div class="device" id="combat-vide">
+        <h4>Plus d'énergie en plein tour</h4>
+        <div class="energy"><span class="lbl">Énergie</span><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><span class="n">0</span></div>
+        <div class="moves">
+          <span class="move off"><span class="cost">1 ⚡</span><b>⚔️ Attaque</b><span>4 à 6 dégâts</span></span>
+          <span class="move off"><span class="cost">1 ⚡</span><b>🛡️ Parade</b><span>Divise le prochain coup</span></span>
+        </div>
+        <p class="note">Chaque candidature te donne 1 ⚡. Tu peux en envoyer une et revenir : ton tour t'attend jusqu'à demain 14:32.</p>
+        <a class="btn" href="#combat">+ Candidature</a>
+        <a class="btn ghost" href="#attendre">Finir mon tour</a>
+      </div>
+      <div class="device">
+        <h4>Étourdi par le Panda</h4>
+        <div class="stage" style="grid-template-columns:1fr">
+          <div class="fighter"><div class="sprite"><div class="av" data-sprite="knight" data-color="p1" data-px="4"><span class="stars">★ ★ ★</span></div></div></div>
+        </div>
+        <p class="note">Bambou tourbillon t'a étourdi : ce tour, 2 actions au plus.</p>
+        <div class="turnfoot"><span class="cnt">Actions 0/2</span></div>
+        <h4>Action refusée</h4>
+        <p class="err">Ton coup n'est pas parti. Vérifie ta connexion : ton énergie n'a pas été dépensée.</p>
+      </div>
+      <div class="device">
+        <h4>Botte du Panda (vue par Nicolas)</h4>
+        <div class="moves" style="grid-template-columns:1fr">
+          <a class="move special" href="#combat"><span class="cost">3 ⚡</span><b>✨ Bambou tourbillon</b><span>Botte du Panda : +8 PV, et l'adversaire perd une action à son prochain tour</span></a>
+        </div>
+        <p class="muted">Chaque personnage a sa Botte : le Chevalier frappe fort, le Panda tient la distance. À tester sur quelques combats pour l'équilibre.</p>
+        <h4>Potion</h4>
+        <p class="muted">Une relance réussie (le binôme candidate dans les 24 h) donne une potion à chacun, 2 en réserve au plus. Sans potion, la case reste visible et grisée : « Une relance réussie t'en donne une ».</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="screen" id="attendre">
+    <header>
+      <span class="route">/arene · tour de l'adversaire</span>
+      <h2>6 · L'Arène, au tour de Nicolas</h2>
+      <p>Les actions sont grisées, le journal montre ce qu'on vient de faire. Quand Nicolas a joué, Adrien reçoit « À toi de jouer » avec le résumé du tour. Sans réponse en 24 h, le tour passe tout seul en Parade.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>Attente</h4>
+        <div class="stage">
+          <div class="fighter">
+            <div class="tag"><b>Toi</b></div>
+            <div class="hp"><div class="bar"><i style="width:65%"></i></div><span class="val">22/34</span></div>
+            <div class="sprite"><div class="av" data-sprite="knight" data-color="p1" data-px="3"></div><span class="shield">🛡️</span></div>
+          </div>
+          <div class="fighter right">
+            <div class="tag"><b>Nicolas</b></div>
+            <div class="hp low"><div class="bar"><i style="width:13%"></i></div><span class="val">4/32</span></div>
+            <div class="sprite"><div class="av flip" data-sprite="panda" data-color="p2" data-px="3"></div></div>
+          </div>
+        </div>
+        <div class="turnline wait"><span class="who">Nicolas réfléchit…</span><span class="clock">jusqu'à demain 14:40</span></div>
+        <p class="muted">Ton tour : Attaque 5, Parade. Tu es protégé pour son prochain coup.</p>
+        <a class="btn" href="#attendre">+ Candidature</a>
+      </div>
+      <div class="device">
+        <h4>Notifications</h4>
+        <div class="push"><span class="ic">GM</span><b>🛡️ À toi de jouer</b><span>Nicolas t'a infligé 6 dégâts et s'est soigné de 8. Il te reste 16 PV sur 34.</span></div>
+        <div class="push"><span class="ic">GM</span><b>🛡️ Tour passé</b><span>Tu n'as pas joué en 24 h : ton tour est passé en Parade.</span></div>
+        <h4>Tour passé tout seul (journal)</h4>
+        <div class="log"><ol>
+          <li><time>15:02</time><span class="sys">Nicolas n'a pas joué en 24 h : Parade automatique.</span></li>
+        </ol></div>
+        <p class="muted">Pas de notification pour chaque action, seulement à la fin d'un tour, pour ne pas en envoyer trois d'affilée.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="screen" id="resultat">
+    <header>
+      <span class="route">/arene/resultat</span>
+      <h2>7 · Résultat</h2>
+      <p>Ouvert une fois d'office à la prochaine visite après la fin, comme <span class="num">/duel</span> et <span class="num">/defi</span>. La notification de résultat part chez les deux. La défaite rappelle ce que les candidatures ont rapporté.</p>
+    </header>
+    <div class="grid">
+      <div class="device result">
+        <h4>Victoire par K.O.</h4>
+        <div class="duo"><div class="av" data-sprite="knight" data-color="p1" data-crown="1" data-px="5"></div><div class="av flip ko" data-sprite="panda" data-color="p2" data-px="4"></div></div>
+        <p class="big-t win">K.O. ! Tu as battu Nicolas.</p>
+        <p class="muted">Coup d'estoc final, mercredi 16:12.</p>
+        <div class="stats">
+          <span class="h"></span><span class="h">Toi</span><span class="h">Nicolas</span>
+          <span>PV restants</span><span class="v">16</span><span class="v">0</span>
+          <span>Candidatures</span><span class="v">7</span><span class="v">5</span>
+          <span>Dégâts infligés</span><span class="v">38</span><span class="v">22</span>
+        </div>
+        <div class="badge"><div class="av" data-sprite="crown-only"></div><div><b>Succès débloqué</b><span>Coup de maître · K.O. avec ta Botte</span></div></div>
+        <a class="btn" href="#carte">Continuer</a>
+      </div>
+      <div class="device result">
+        <h4>Défaite</h4>
+        <div class="duo"><div class="av ko" data-sprite="knight" data-color="p1" data-px="4"></div><div class="av flip" data-sprite="panda" data-color="p2" data-crown="1" data-px="5"></div></div>
+        <p class="big-t lose">Nicolas l'emporte.</p>
+        <p class="muted">Tes 5 candidatures t'ont quand même rapporté 50 XP et 5 coups contre le Golem ATS.</p>
+        <a class="btn" href="#carte">Continuer</a>
+      </div>
+      <div class="device result">
+        <h4>Fin au temps (vendredi 18 h)</h4>
+        <div class="duo"><div class="av" data-sprite="knight" data-color="p1" data-crown="1" data-px="5"></div><div class="av flip" data-sprite="panda" data-color="p2" data-px="4"></div></div>
+        <p class="big-t win">Victoire aux points</p>
+        <p class="score"><span class="s1">18 PV</span> – <span class="s2">11 PV</span></p>
+        <p class="muted">Personne n'est tombé : tu gagnes avec plus de PV restants. À égalité de PV, c'est un nul, sans couronne.</p>
+        <a class="btn" href="#carte">Continuer</a>
+      </div>
+      <div class="device">
+        <h4>Notifications de résultat</h4>
+        <div class="push"><span class="ic">GM</span><b>👑 K.O. ! Arène gagnée</b><span>Ton Coup d'estoc a mis Nicolas au tapis.</span></div>
+        <div class="push"><span class="ic">GM</span><b>🛡️ Nicolas l'emporte</b><span>Tes candidatures comptent quand même pour l'XP et le boss.</span></div>
+        <p class="muted">La couronne est la même que celle du Défi, jusqu'au lendemain minuit. Si les deux gagnent une couronne le même jour, chacun garde la sienne.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="screen" id="intro">
+    <header>
+      <span class="route">/intro (nouvel écran)</span>
+      <h2>8 · Écran d'intro « L'Arène »</h2>
+      <p>Ajouté en fin d'intro : <span class="num">INTRO_STEP_COUNT</span> passe à 8, <span class="num">LATEST_NEWS</span> devient « l'Arène ». Chacun le voit à sa prochaine ouverture.</p>
+    </header>
+    <div class="grid">
+      <div class="device introscreen">
+        <span class="steps">Nouveauté</span>
+        <div class="duo"><div class="av" data-sprite="knight" data-color="p1" data-px="5"></div><div class="av flip" data-sprite="panda" data-color="p2" data-px="5"></div></div>
+        <p class="h-title">L'Arène</p>
+        <ol>
+          <li>Sur la carte de ton binôme, touche <b>Arène</b> pour le provoquer.</li>
+          <li>Chaque candidature te donne 1 ⚡. À ton tour, dépense-la : attaque, parade, potion ou Botte secrète.</li>
+          <li>Premier K.O. perdu, sinon le plus de PV vendredi 18 h. Le gagnant porte la couronne.</li>
+        </ol>
+        <p class="muted">Aucune XP en jeu : tes candidatures comptent aussi pour l'XP et pour le boss.</p>
+        <a class="btn" href="#carte">Compris</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="screen" id="succes">
+    <header>
+      <span class="route">/succes</span>
+      <h2>9 · Deux succès de plus</h2>
+      <p>Écran existant, deux cases ajoutées en fin de grille.</p>
+    </header>
+    <div class="grid">
+      <div class="device wide">
+        <div class="ach">
+          <div class="got"><b>Premier boss</b>Vaincre un boss en duel</div>
+          <div class="got"><b>Duelliste</b>Gagner un défi</div>
+          <div><b>Invaincu</b>Gagner 3 défis d'affilée</div>
+          <div class="got new"><b>Gladiateur</b>Gagner une Arène</div>
+          <div class="got new"><b>Coup de maître</b>Gagner par K.O. avec ta Botte</div>
+        </div>
+        <a class="btn ghost" href="#carte" style="width:auto;align-self:flex-start;padding:10px 16px">Retour</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="screen" id="sprites">
+    <header>
+      <span class="route">/arene · sprites du combat</span>
+      <h2>10 · Sprites des actions et des états</h2>
+      <p>Les poses sont calculées à partir de la pose Repos de chaque évolution, comme les poses Action et Victoire actuelles : un seul code pour les 6 évolutions des deux personnages. Ici, les évolutions 2, 3 et 5 montrent que la dérivation tient d'une forme à l'autre. Seuls les effets et les images des Bottes sont dessinés à la main. Animations en 2 ou 3 images, saccadées façon 8 bits ; figées si l'appareil demande moins d'animations.</p>
+    </header>
+    <div class="grid">
+      <div class="device wide">
+        <h4>Poses du héros (dérivées par le code)</h4>
+        <div class="sheet-wrap"><table class="sheet" id="sheet"></table></div>
+        <p class="muted">En garde respire d'un pixel. Attaque avance vers l'adversaire. Touché recule et clignote en blanc. Étourdi penche, les étoiles tournent. K.O. couche le héros, l'arme posée au sol. La rouille garde ces poses, avec la teinte rouille de l'app.</p>
+      </div>
+      <div class="device wide">
+        <h4>Une attaque en scène (4 images)</h4>
+        <div class="scene" id="scene-attack"></div>
+        <div class="frames" id="frames-attack"></div>
+      </div>
+      <div class="device">
+        <h4>Botte du Chevalier · Coup d'estoc</h4>
+        <div class="scene" id="scene-estoc"></div>
+        <div class="frames" id="frames-estoc"></div>
+        <p class="muted">Il recule, s'élance, et l'épée s'allonge en une traînée dorée qui traverse la scène.</p>
+      </div>
+      <div class="device">
+        <h4>Botte du Panda · Bambou tourbillon</h4>
+        <div class="scene" id="scene-bambou"></div>
+        <div class="frames" id="frames-bambou"></div>
+        <p class="muted">Le bambou se lève, tourne des deux côtés dans une volée de feuilles, le Panda se soigne et l'adversaire voit des étoiles.</p>
+      </div>
+      <div class="device wide">
+        <h4>Aura des Bottes, évolutions 5 et 6</h4>
+        <div class="auras" id="auras"></div>
+        <p class="muted">À l'évolution 5, la Botte gagne un effet (le Coup d'estoc perce la Parade, le Bambou tourbillon retire 2 actions) : une aura violette et or clignote autour du héros pendant la Botte.</p>
+      </div>
+      <div class="device wide">
+        <h4>Effets (dessinés une fois, communs aux deux)</h4>
+        <div class="fxgrid" id="fx"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// Sprites réels de l'app (src/lib/spriteGrids.ts), forme 3 : Écuyer et Novice. P = couleur du joueur (COLOR_HEX).
+const PAL = {K:'#1a1626',E:'#1a1626',S:'#f4c7a1',R:'#e8838a',W:'#dfe6ee',G:'#8b93a7',T:'#c99a5b',B:'#7a4a26',Y:'#f2c14e',O:'#b9831c',L:'#fffbe0',C:'#7a5aa0',H:'#9c7f73',F:'#f3f1f6',N:'#26232f',I:'#ffffff',V:'#6fae4a',A:'#3b2b4a',D:'#2b2f4a',Z:'#a1402a',g:'#ffd84a',y:'#c99a1a',r:'#e8838a'};
+const PLAYER = { p1: "#3d7bd9", p2: "#d94848" };
+const SQUIRE = ["....KKKKKKK.....","...KBBBBBBBK....","..KBBBBBBBBBK...","..KBSSSSSSSBK.W.","..KSSESSSESSK.W.","..KSSSSSSSSSK.W.","...KSSSKKSSK..W.","....KKSSSSKK..W.","...KKPPPPPPKKYWY",".KKKPPPPPPPPKSB.","KPPPKPPYYPPPKSB.","KPYPKPPPPPPKKK..","KPPPKBBBBBBK....",".KKKKPPPPPPK....","....KPPKKPPK....","....KGGK.KGGK...","....KBBK.KBBK...","...KKKKK.KKKKK.."];
+const P_NOV = ["....KKK......KKK....","...KNNNKKKKKKNNNK...","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNNFFFFFFFFFNNK.NV",".KNNKFFFFFFFFFKNNNNV","KNNKFFFFFFFFFFFKNNNV","KNNKFFFFFFFFFFFK...V","KNNKFFFFFFFFFFFK...V",".KKKBBBBBBBBBBBK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK....V","....KNNNK.KNNNK....V","...KKKKKK.KKKKKK...."];
+const CROWN = ["g..g..g","gg.g.gg","ggggggg","gyrgryg"];
+function svg(grid, player, px, cls) {
+  const w = grid[0].length, h = grid.length;
+  let r = "";
+  grid.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${ch === "P" ? player : PAL[ch]}"/>`;
+  }));
+  return `<svg class="${cls}" width="${w * px}" height="${h * px}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+document.querySelectorAll("[data-sprite]").forEach((el) => {
+  const px = Number(el.dataset.px || 3);
+  if (el.dataset.sprite === "crown-only") { el.innerHTML = svg(CROWN, PLAYER.p1, 6, "body"); return; }
+  const grid = el.dataset.sprite === "panda" ? P_NOV : SQUIRE;
+  const crown = el.dataset.crown ? svg(CROWN, PLAYER.p1, px, "crown") : "";
+  el.insertAdjacentHTML("afterbegin", crown + svg(grid, PLAYER[el.dataset.color || "p1"], px, "body"));
+});
+</script>
+<script>
+// Sprites du combat : grilles réelles de l'app (src/lib/spriteGrids.ts), poses dérivées par le code.
+(function () {
+// Grilles des sprites 8 bits, reprises telles quelles des maquettes validées (docs/maquettes).
+// Chaque lettre est une couleur de PAL ; « P » prend la couleur du joueur ; « . » est transparent.
+
+const PAL = {K:'#1a1626',E:'#1a1626',S:'#f4c7a1',R:'#e8838a',W:'#dfe6ee',G:'#8b93a7',T:'#c99a5b',B:'#7a4a26',Y:'#f2c14e',O:'#b9831c',L:'#fffbe0',C:'#7a5aa0',H:'#9c7f73',F:'#f3f1f6',N:'#26232f',I:'#ffffff',V:'#6fae4a',A:'#3b2b4a',D:'#2b2f4a',Z:'#a1402a'};
+const BABY = ["..KGGGGGGK..",".KGWGGGGGGKK",".KGGGGGGGGK.",".KKKKKKKKKK.",".KSSSSSSSSK.",".KSESSSSESK.",".KSRSSSSRSK.","..KSSKKSSK..","..KKPPPPKK.Y",".KSKWWWWKSKY","..KWWWWWWK..","..KSK..KSK.."];
+const KID = ["....KKKKKK....","...KTTTTTTK...","..KTTTTTTTTKB.","..KKKKKKKKKKB.","..KSSSSSSSSKB.","..KSESSSSESKB.","..KSSSKKSSSKB.","...KKSSSSKKBBB",".GGKTTPPTTKSB.","GGGGKTPPTKKSB.","GWGGKTTTTK....","GGGGKTTTTK....",".GGKKTTTTKK...","....KPPKPPK...","....KSK.KSK...","...KKK..KKK..."];
+const SQUIRE = ["....KKKKKKK.....","...KBBBBBBBK....","..KBBBBBBBBBK...","..KBSSSSSSSBK.W.","..KSSESSSESSK.W.","..KSSSSSSSSSK.W.","...KSSSKKSSK..W.","....KKSSSSKK..W.","...KKPPPPPPKKYWY",".KKKPPPPPPPPKSB.","KPPPKPPYYPPPKSB.","KPYPKPPPPPPKKK..","KPPPKBBBBBBK....",".KKKKPPPPPPK....","....KPPKKPPK....","....KGGK.KGGK...","....KBBK.KBBK...","...KKKKK.KKKKK.."];
+const ARMS = [".....KKKKKK.....","....KGGWGGGK....","...KGGGGGGGGK...","...KGKKKKKKGK.W.","...KGSSSSSSGK.W.","...KGSESSESGK.W.","...KGSSSSSSGK.W.","...KGGSKKSGGK.W.","....KKGGGGKK.YWY","..KKKGPPPPGKKKB.",".KYYKGPYYPGKGSB.","KYPPYKPPPPKKGK..","KYPPYKPYYPKGGK..","KYPPYKPPPPK.KK..",".KYYKBBBBBBK....","..KK.KPPPPK.....",".....KGGKGGK....",".....KGGKGGK....","....KKBBKBBKK...","....KKKKKKKKK..."];
+const KNIGHT = ["......KKKKKK......",".....KWWWWWGK.....","....KWWWWWWWGK..W.","....KWKKKKKKGK..W.","....KWWWWWWWGK..W.","....KWWKWKWWGK..W.","....KGWWWWWWGK..W.",".....KKGGGGKK...W.","..PKKWWWWWWKKP.YWY",".KKKKKWWGGWWKKWSB.","KPYYPKWWGGWWKWWKB.","KPYYPKWWWWWWKPK...","KYYYYKGGGGGGKPK...","KPYYPKWWWWWWKPK...","KPYYPKYYYYYYKPK...",".KPPKPWWWWWWKPPK..","..KK.PKWWKWWKPPPK.",".....PKWWKWWKPPPK.",".....PKGGKGGKPPPPK","......KWWKWWK.....",".....KWWWKWWWK....",".....KKKKKKKKKK..."];
+const P_BABY = ["..KK....KK..",".KNNKKKKNNK.",".KNFFFFFFNK.","KFNNFFFFNNFK","KFNIFFFFNIFK","KFFFFKKFFFFK",".KFFFFFFVVV.","KNNKPPPPKNNK","KNNFFFFFFNNK",".KNNFFFFNNK.","..KKKKKKKK.."];
+const P_KID = ["...KK......KK...","..KNNKKKKKKNNK..","..KPPPPPPPPPPKPP",".KFNNFFFFFFNNFK.",".KFNIFFFFFFNIFK.",".KFFFFFNNFFFFFK.","..KFFFFKKFFFFK..",".KNNKKFFFFKKNNV.","KNNKFFFFFFFFKNV.","KNNKFFFFFFFFFKV.","KNKFFFFFFFFFFKV.",".KKFFFFFFFFFFKV.","..KKFFFFFFFFKKV.","...KNNNKKNNNK...","...KNNNKKNNNK...","..KKKKK..KKKKK.."];
+const P_NOV = ["....KKK......KKK....","...KNNNKKKKKKNNNK...","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNNFFFFFFFFFNNK.NV",".KNNKFFFFFFFFFKNNNNV","KNNKFFFFFFFFFFFKNNNV","KNNKFFFFFFFFFFFK...V","KNNKFFFFFFFFFFFK...V",".KKKBBBBBBBBBBBK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK....V","....KNNNK.KNNNK....V","...KKKKKK.KKKKKK...."];
+const P_VOY = ["........KKKK........",".....KKTTTTTTKK.....","..KKTTTTTTTTTTTTKK..","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNNPFFFFFFFFNNK.NV",".KNNKFPFFFFFFFKNNNNV","KNNKFFFPFFFFFFFKNNNV","KNNKFFFFPFFFFFFK...V","KNNKFFFFFPFFFFFK...V",".KKKBBBBBBPBBBBK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK....V","....KNNNK.KNNNK....V","....KTTTK.KTTTK....V","...KKKKKK.KKKKKK...."];
+const P_GAR = ["....KKK......KKK...Y","...KNNNKKKKKKNNNK..Y","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNPYBFFFFFBYPNK.NV",".KNNPYFBFFFBFYPKNNNV","KNNKPYFFBFBFFYPKNNNV","KNNKPYFFFYFFFYPK...V","KNNKPYFFFFFFFYPK...V",".KKKYYYYYYYYYYYK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK....V","....KPPPK.KPPPK....V","...KKKKKK.KKKKKK...."];
+const P_LEG = ["....KKK......KKK..LL","...KNNNKKKKKKNNNK.LL","...KNFFFFFFFFFNK...Y","..KFNNNFFFFFNNNFK..Y","..KFNINFFFFFNINFK..Y","..KFFFFFFNFFFFFFK..Y","..KFFFFFKKKFFFFFK..Y","...KFFFFFFFFFFFK...Y","..KNNFPPPPPFFFNNK.NY",".KNNKYPPPPPPFFFKNNNY","KNNKFYPPPPPPPFFFKNNY","KNNKFFYPPPPPPPFFK..Y","KNNKFFFYPPPPPPPFK..Y",".KKKPPPPPPPPPPPPK..Y","...KPPPPPPPPPPPPK..Y","...KYPPPPPPPPPPYK..Y","....KPPPPPPPPPPK...Y",".....KKKKKKKKKK....Y",".....KNNNKKNNNK....Y","....KKKKKKKKKKKK...Y"];
+
+const PALX = Object.assign({}, PAL, { J: "#e8364a", M: "#a8e07a", Q: "#7fe3ff", q: "#2a8fb0" });
+const BLUE = "#3d7bd9", RED = "#d94848";
+const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function render(grid, player, px, cls) {
+  const w = Math.max(...grid.map((r) => r.length)), h = grid.length;
+  let r = "";
+  grid.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${ch === "P" ? player : PALX[ch]}"/>`;
+  }));
+  return `<svg class="${cls || ""}" width="${w * px}" height="${h * px}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+
+const norm = (g) => { const w = Math.max(...g.map((r) => r.length)); return g.map((r) => r.padEnd(w, ".").split("")); };
+const out = (a) => a.map((r) => r.join(""));
+const widen = (a, n) => a.forEach((r) => { while (r.length < n) r.push("."); });
+
+// Arme : colonne d'arme dans les 4 dernières colonnes, puis toute l'arme (lame, garde, poignée, ornement)
+// par remplissage depuis cette colonne. La main = première case du corps collée à l'arme.
+const WEAPON = "WVYLB";
+function weapon(a) {
+  const w = a[0].length;
+  let col = -1;
+  for (let x = w - 1; x >= w - 4 && col < 0; x--) if (a.filter((r) => WEAPON.includes(r[x])).length >= 4) col = x;
+  if (col < 0) return null;
+  const seen = new Set(), cells = [], stack = [];
+  a.forEach((r, y) => { if (WEAPON.includes(r[col])) stack.push([y, col]); });
+  while (stack.length) {
+    const [y, x] = stack.pop(), k = y + "," + x;
+    if (seen.has(k) || y < 0 || y >= a.length || x < col - 1 || x > col + 1 || !WEAPON.includes(a[y][x])) continue;
+    seen.add(k); cells.push([y, x]);
+    stack.push([y - 1, x], [y + 1, x], [y, x - 1], [y, x + 1]);
+  }
+  const inWeapon = (y, x) => seen.has(y + "," + x);
+  const colRows = cells.filter(([, x]) => x === col).map(([y]) => y).sort((p, q) => p - q);
+  const hy = colRows.find((y) => a[y][col - 1] !== "." && a[y][col - 1] !== "K" && !inWeapon(y, col - 1)) ?? colRows[colRows.length - 1];
+  const guardRow = colRows.find((y) => inWeapon(y, col - 1) && inWeapon(y, col + 1));
+  const guard = guardRow !== undefined ? a[guardRow][col - 1] : null;
+  const grip = a[hy][col] === "B" ? "B" : null;
+  const bladeCells = colRows.filter((y) => y < (guardRow ?? hy) && "WVY".includes(a[y][col]));
+  const counts = {};
+  bladeCells.forEach((y) => { counts[a[y][col]] = (counts[a[y][col]] || 0) + 1; });
+  const blade = Object.keys(counts).sort((p, q) => counts[q] - counts[p])[0] || a[hy][col] || "W";
+  const len = Math.max(5, Math.min(7, bladeCells.length || 6));
+  return { col, hy, guard, grip, blade, len, cells };
+}
+const erase = (a, i) => i.cells.forEach(([y, x]) => { a[y][x] = "."; });
+
+// Attaque : l'arme pivote autour de la main. Poignée dans le poing, garde à la verticale, lame à l'horizontale.
+function action(g) {
+  const a = norm(g), i = weapon(a); if (!i) return g;
+  erase(a, i);
+  let x = i.col;
+  widen(a, x + i.len + 3);
+  if (i.grip) a[i.hy][x++] = i.grip;
+  if (i.guard) { for (const y of [i.hy - 1, i.hy, i.hy + 1]) if (a[y]) a[y][x] = i.guard; x++; }
+  for (let k = 0; k < i.len; k++) a[i.hy][x + k] = i.blade;
+  return out(a);
+}
+// Arme levée (élan des Bottes, Victoire) : l'arme garde sa taille, le bras monte et la porte 4 cases plus haut.
+function raise(g) {
+  const a = norm(g), i = weapon(a); if (!i) return g;
+  const lift = 4, w = a[0].length;
+  const o = Array.from({ length: lift }, () => Array(w).fill(".")).concat(a);
+  const cells = i.cells.map(([y, x]) => [y + lift, x, a[y][x]]);
+  cells.forEach(([y, x]) => { o[y][x] = "."; });
+  cells.forEach(([y, x, c]) => { o[y - lift][x] = c; });
+  const hand = i.col - 1, hy = i.hy + lift;
+  if (o[hy - lift][hand] === ".") o[hy - lift][hand] = "S";               // le poing, en haut
+  for (let y = hy - lift + 1; y < hy; y++) if (o[y][hand] === ".") o[y][hand] = "P";   // la manche
+  for (let y = hy; y < hy + 2; y++) if (o[y][hand] === "S") o[y][hand] = "P";
+  return out(o);
+}
+const blank = (w) => Array(w).fill(".");
+const padRows = (a, n) => { for (let k = 0; k < n; k++) a.unshift(blank(a[0].length)); };
+const padLeft = (a, n) => a.forEach((r) => r.unshift(...blank(n)));
+const headTop = (a, skipCol) => a.findIndex((r) => r.some((c, x) => c !== "." && Math.abs(x - skipCol) > 1));
+// Contour cyan de la Parade autour d'un ensemble de cases
+function glow(a, cells) {
+  const set = new Set(cells.map(([y, x]) => y + "," + x));
+  cells.forEach(([y, x]) => [[y - 1, x], [y + 1, x], [y, x - 1], [y, x + 1]].forEach(([yy, xx]) => {
+    if (a[yy] && a[yy][xx] === "." && !set.has(yy + "," + xx)) a[yy][xx] = "Q";
+  }));
+}
+// Bouclier du Chevalier : bloc à gauche du corps (colonnes 0 à sw-1), sw = première colonne de contour commune.
+function shield(a) {
+  const core = a.map((r, y) => (r[0] !== "." ? y : -1)).filter((y) => y >= 0);
+  if (core.length < 2) return null;
+  let sw = -1;
+  for (let x = 3; x <= 6 && sw < 0; x++) if (core.every((y) => a[y][x] === "K")) sw = x;
+  if (sw < 0) return null;
+  const has = (y) => a[y] && a[y].slice(0, sw).some((c) => c !== ".");
+  let y0 = core[0], y1 = core[core.length - 1];
+  if (has(y0 - 1)) y0--;
+  if (has(y1 + 1)) y1++;
+  const block = [];
+  for (let y = y0; y <= y1; y++) block.push(a[y].slice(0, sw));
+  return { y0, y1, sw, block };
+}
+
+// Parade : le Chevalier passe son propre bouclier devant lui, le Panda moine tient son bambou en travers.
+function parry(g, kind) {
+  const a = norm(g), i = weapon(a); if (!i) return g;
+  if (kind === "P") {
+    erase(a, i);
+    const y = Math.min(a.length - 4, i.hy + 1);
+    widen(a, i.col + 2);
+    padLeft(a, 2);
+    const cells = [];
+    for (let x = 0; x < a[0].length; x++) { a[y][x] = i.blade; cells.push([y, x]); }
+    [[y, 1], [y, a[0].length - 3]].forEach(([yy, xx]) => { a[yy - 1][xx] = "N"; a[yy + 1][xx] = "N"; });
+    glow(a, cells.filter(([, x]) => x < 2 || x > a[0].length - 3));
+    return out(a);
+  }
+  const s = shield(a); if (!s) return g;
+  for (let y = s.y0; y <= s.y1; y++) { for (let x = 0; x < s.sw; x++) a[y][x] = "."; if (a[y][s.sw] !== ".") a[y][s.sw] = "K"; }
+  const bh = s.y1 - s.y0 + 1, top = Math.max(0, i.hy - Math.floor(bh / 2)), x0 = i.col - 1;
+  widen(a, x0 + s.sw + 2);
+  padRows(a, 1);
+  const cells = [];
+  s.block.forEach((row, dy) => row.slice().reverse().forEach((c, dx) => {
+    if (c !== ".") { a[top + 1 + dy][x0 + dx] = c; cells.push([top + 1 + dy, x0 + dx]); }
+  }));
+  glow(a, cells);
+  return out(a);
+}
+
+// Potion : une vraie fiole (bouchon, goulot, panse rouge, reflet), portée à la bouche, deux bulles au-dessus.
+const FLASK = ["..B..", ".KLK.", ".KLK.", "KJJJK", "KJLJK", "KJJJK", ".KKK."];
+function potion(g) {
+  const a = norm(g), i = weapon(a); if (!i) return g;
+  erase(a, i);
+  padRows(a, 3);
+  const eye = a.findIndex((r) => r.includes("E") || r.includes("I"));
+  const mouth = eye >= 0 ? eye + 1 : Math.round(a.length * 0.3);
+  const top = Math.max(2, mouth - 2), x0 = i.col - 2;
+  widen(a, x0 + 6);
+  FLASK.forEach((row, dy) => [...row].forEach((c, dx) => { if (c !== ".") a[top + dy][x0 + dx] = c; }));
+  for (let y = top + FLASK.length; y < i.hy + 3 && y < a.length; y++) if (a[y][x0 + 2] === ".") a[y][x0 + 2] = "P";
+  a[top - 2][x0 + 3] = "Q"; a[top - 3][x0 + 1] = "Q"; a[top - 1][x0 + 4] = "M";
+  return out(a);
+}
+
+// Victoire : arme brandie, couronne sur la tête, gerbe d'étincelles (et un saut en animation).
+const VCROWN = ["Y..Y..Y", "YY.Y.YY", "YYYYYYY", "YORYROY"];
+function crownOn(a, t, skipCol) {
+  const xs = a[t].map((c, x) => (c !== "." && Math.abs(x - skipCol) > 1 ? x : -1)).filter((x) => x >= 0);
+  const cx = Math.round((xs[0] + xs[xs.length - 1]) / 2) - 3;
+  VCROWN.forEach((row, dy) => [...row].forEach((c, dx) => { const y = t - 4 + dy; if (c !== "." && a[y] && a[y][cx + dx] === ".") a[y][cx + dx] = c; }));
+}
+function sparkles(a) {
+  padLeft(a, 3); widen(a, a[0].length + 3); padRows(a, 1);
+  const w = a[0].length, h = a.length;
+  [[1, 1, "Y"], [0, 4, "L"], [4, 0, "L"], [Math.floor(h / 2), 1, "Y"], [2, w - 2, "Y"], [0, w - 5, "L"], [Math.floor(h / 2) - 2, w - 1, "L"], [Math.floor(h / 2) + 3, w - 2, "Y"]]
+    .forEach(([y, x, c]) => { if (a[y] && a[y][x] === ".") a[y][x] = c; });
+}
+function victory(g, kind) {
+  let a;
+  const i = weapon(norm(g));
+  if (kind === "P" && i) {
+    // Le moine brandit son bambou à l'horizontale au-dessus de la tête, à deux pattes.
+    a = norm(g); erase(a, i);
+    for (let y = i.hy; y < i.hy + 5 && y < a.length; y++) {
+      const r = a[y];
+      let x = 0; while (x < r.length && r[x] === ".") x++;
+      if (r[x] === "K") r[x++] = "."; while (r[x] === "N") r[x++] = ".";
+      if (r[x] === "F") r[x - 1] = "K";
+      x = i.col - 1; while (x > 0 && "N.".includes(r[x])) r[x--] = ".";
+      if (r[x] === "F") r[x + 1] = "K";
+    }
+    const lastK = a[i.hy + 1].lastIndexOf("K");
+    padRows(a, 8);
+    const hy = i.hy + 8, t = headTop(a, -9), staff = t - 6, rx = lastK + 1;
+    for (let x = 0; x <= Math.max(i.col, rx + 3); x++) a[staff][x] = i.blade;
+    for (let y = staff + 1; y <= hy; y++) for (const x of [1, 2, rx, rx + 1]) if (a[y][x] === ".") a[y][x] = "N";
+    crownOn(a, t, -9);
+  } else {
+    a = norm(raise(g));
+    const j = weapon(a), skip = j ? j.col : -9;
+    padRows(a, 4);
+    crownOn(a, headTop(a, skip), skip);
+  }
+  sparkles(a);
+  return out(a);
+}
+const closedEyes = (g) => g.map((r) => r.replace(/I/g, "N").replace(/E/g, "S"));
+function ko(g) {
+  const a = norm(g), i = weapon(a); if (i) erase(a, i);
+  const h = a.length, w = a[0].length;
+  let r = Array.from({ length: w }, (_, y) => Array.from({ length: h }, (_, x) => a[h - 1 - x][y]));
+  r = r.filter((row) => row.some((c) => c !== "."));
+  const ground = Array(h).fill(".");
+  if (i) {
+    let x = 1;
+    if (i.grip) ground[x++] = i.grip;
+    if (i.guard) ground[x++] = i.guard;
+    for (let k = 0; k < i.len && x < h; k++) ground[x++] = i.blade;
+  }
+  r.push(ground);
+  return closedEyes(out(r));
+}
+// Bottes : dernière image dérivée de la pose Attaque, sur la ligne de la main.
+function estoc(g) {
+  const i = weapon(norm(g)); if (!i) return g;
+  const a = norm(action(g)), y = i.hy, w = a[0].length;
+  widen(a, w + 11);
+  "LLLLYYY.Y.Y".split("").forEach((c, k) => { a[y][w + k] = c; });
+  [y - 1, y + 1].forEach((yy) => { if (a[yy]) [1, 4, 8].forEach((k) => { a[yy][w + k] = "L"; }); });
+  return out(a);
+}
+function tourbillon(g) {
+  const i = weapon(norm(g)); if (!i) return g;
+  const a = norm(action(g));
+  const b = a.map((r) => Array(6).fill(".").concat(r));
+  for (let x = 0; x < 6; x++) b[i.hy][x] = i.blade;
+  return out(b);
+}
+
+// Effets dessinés
+const FX = {
+  slash: [".....LL", "...LWW.", "..WW...", ".LW....", ".W.....", "LW.....", "W......"],
+  impact: ["...Y...", ".Y.L.Y.", "..LLL..", "YLLILLY", "..LLL..", ".Y.L.Y.", "...Y..."],
+  glow: [".QQ", "Q.q", "Q..", "Q..", "Q..", "Q..", "Q.q", ".QQ"],
+  stars: ["..Y...Y..", "Y.....L..", "...L...Y."],
+  heal: ["M.....M", "...V...", "...V...", ".VVVVV.", "...V...", "...V...", "M.....M"],
+  leaves: ["..MV....V.", ".......MV.", "MV........", "........MV", ".V..MV....", "......V..."],
+  rust: ["Z...T..", "..Z...Z", ".T..Z..", "Z...T..", "...Z..T"],
+};
+
+const K = { 2: KID, 3: SQUIRE, 5: KNIGHT }, P = { 2: P_KID, 3: P_NOV, 5: P_GAR };
+
+// 1. Planche des poses
+const ROWS = [
+  ["En garde", (g) => g, "bob"],
+  ["⚔️ Attaque", action, "lunge"],
+  ["🛡️ Parade", parry, ""],
+  ["🧪 Potion", potion, ""],
+  ["💥 Touché", (g) => g, "flash"],
+  ["💫 Étourdi", closedEyes, "tilt", true],
+  ["💀 K.O.", ko, ""],
+  ["👑 Victoire", victory, "jump"],
+];
+const sheet = document.getElementById("sheet");
+if (sheet) {
+  let html = "<thead><tr><th></th>" + [2, 3, 5].map((f) => `<th>Chevalier · Évol. ${f}</th>`).join("") + [2, 3, 5].map((f) => `<th>Panda · Évol. ${f}</th>`).join("") + "</tr></thead><tbody>";
+  ROWS.forEach(([label, fn, cls, stars]) => {
+    html += `<tr><th class="st">${label}</th>`;
+    [[K, BLUE, "K"], [P, RED, "P"]].forEach(([set, col, kind]) => [2, 3, 5].forEach((f) => {
+      const ov = stars ? `<div class="ov">${render(FX.stars, col, 2)}</div>` : "";
+      html += `<td><div class="cell ${cls}">${ov}${render(fn(set[f], kind), col, 3, "body")}</div></td>`;
+    }));
+    html += "</tr>";
+  });
+  sheet.innerHTML = html + "</tbody>";
+}
+
+// 2. Scènes animées
+function scene(fr, px) {
+  const s = px / 4;
+  const side = (who, d, col) => d ? `<div class="f ${who}" style="transform:translateX(${(d.dx || 0) * px}px)"><div class="${d.cls || ""}">${render(d.g, col, px, "body")}</div></div>` : "";
+  let h = side("fl", fr.l, BLUE) + side("fr", fr.r, RED);
+  (fr.fx || []).forEach((e) => { h += `<div class="fx" style="left:${e.left}%;bottom:${e.bottom * s}px">${render(e.g, BLUE, Math.max(2, px - 1))}</div>`; });
+  if (fr.txt) h += `<div class="txt" style="left:${fr.txt.left}%;bottom:${fr.txt.bottom * s}px;color:${fr.txt.color};font-size:${Math.round(12 * s + 3)}px">${fr.txt.t}</div>`;
+  return h;
+}
+function play(id, frames) {
+  const main = document.getElementById("scene-" + id), strip = document.getElementById("frames-" + id);
+  if (!main) return;
+  strip.innerHTML = frames.map((f, k) => `<figure data-k="${k}"><div class="scene mini">${scene(f, 2)}</div><figcaption>${k + 1} · ${f.cap}</figcaption></figure>`).join("");
+  let k = 0;
+  const show = () => {
+    main.innerHTML = scene(frames[k], 4);
+    strip.querySelectorAll("figure").forEach((el, j) => el.classList.toggle("on", j === k));
+  };
+  show();
+  if (!reduced) setInterval(() => { k = (k + 1) % frames.length; show(); }, 650);
+}
+const SQ = SQUIRE, PN = P_NOV;
+play("attack", [
+  { cap: "En garde", l: { g: SQ }, r: { g: PN } },
+  { cap: "Élan", l: { g: action(SQ), dx: 8 }, r: { g: PN }, fx: [{ g: FX.slash, left: 46, bottom: 60 }] },
+  { cap: "Impact", l: { g: action(SQ), dx: 8 }, r: { g: PN, dx: 3, cls: "hitflash" }, fx: [{ g: FX.impact, left: 62, bottom: 50 }], txt: { t: "-5", left: 74, bottom: 120, color: "var(--danger)" } },
+  { cap: "Retour", l: { g: SQ }, r: { g: PN }, txt: { t: "-5", left: 74, bottom: 140, color: "var(--danger)" } },
+]);
+play("estoc", [
+  { cap: "Recul", l: { g: raise(SQ), dx: -3 }, r: { g: PN } },
+  { cap: "Fente", l: { g: action(SQ), dx: 10 }, r: { g: PN } },
+  { cap: "Estoc", l: { g: estoc(SQ), dx: 10 }, r: { g: PN, dx: 4, cls: "hitflash" }, fx: [{ g: FX.impact, left: 66, bottom: 50 }], txt: { t: "-14", left: 72, bottom: 125, color: "var(--danger)" } },
+]);
+play("bambou", [
+  { cap: "Bambou levé", l: { g: SQ }, r: { g: raise(PN) } },
+  { cap: "Tourbillon", l: { g: SQ, cls: "hitflash" }, r: { g: tourbillon(PN), dx: -8 }, fx: [{ g: FX.leaves, left: 38, bottom: 95 }, { g: FX.leaves, left: 60, bottom: 40 }] },
+  { cap: "Soin, étourdi", l: { g: closedEyes(SQ), cls: "tiltc" }, r: { g: PN }, fx: [{ g: FX.stars, left: 13, bottom: 125 }, { g: FX.heal, left: 78, bottom: 120 }], txt: { t: "+10", left: 62, bottom: 140, color: "var(--hp)" } },
+]);
+
+// 3. Auras
+const auras = document.getElementById("auras");
+if (auras) auras.innerHTML = [
+  [estoc(SQUIRE), BLUE, "", "Coup d'estoc · Évol. 3"],
+  [estoc(KNIGHT), BLUE, "aura", "Coup d'estoc · Évol. 5, perce la Parade"],
+  [tourbillon(P_NOV), RED, "", "Bambou tourbillon · Évol. 3"],
+  [tourbillon(P_GAR), RED, "aura", "Bambou tourbillon · Évol. 5, −2 actions"],
+].map(([g, c, cls, cap]) => `<figure><div class="${cls}">${render(g, c, 3, "body")}</div><figcaption>${cap}</figcaption></figure>`).join("");
+
+// 4. Effets
+const fx = document.getElementById("fx");
+if (fx) fx.innerHTML = [
+  [FX.slash, "Traînée d'épée", "Attaque du Chevalier"],
+  [FX.impact, "Éclat d'impact", "Sur celui qui reçoit le coup"],
+  [FX.glow, "Bouclier lumineux", "Parade active, jusqu'au prochain coup reçu"],
+  [FX.stars, "Étoiles", "Étourdi, tournent au-dessus de la tête"],
+  [FX.heal, "Soin", "Potion et Bambou tourbillon"],
+  [FX.leaves, "Feuilles", "Attaque et Botte du Panda"],
+  [FX.rust, "Poussière de rouille", "Tombe au premier coup après la candidature qui dérouille"],
+].map(([g, t, d]) => `<div class="fxcard"><div class="pic">${render(g, BLUE, 5)}</div><b>${t}</b><span>${d}</span></div>`).join("")
+  + `<div class="fxcard"><div class="pic numfx"><span style="color:var(--danger)">-5</span><span style="color:var(--hp)">+6</span></div><b>Chiffres</b><span>Dégâts en rouge, soin en vert, montent puis s'effacent</span></div>`;
+})();
+</script>
