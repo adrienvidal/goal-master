@@ -5,10 +5,10 @@ export const INTRO_COOKIE = "gm-intro-seen";
  * Nombre d'écrans de l'intro. Ajouter un écran pour une nouvelle fonctionnalité suffit à le montrer
  * d'office à la prochaine ouverture, à partir du premier écran pas encore vu.
  */
-export const INTRO_STEP_COUNT = 7;
+export const INTRO_STEP_COUNT = 8;
 
 /** Ce qu'annonce la notification « Nouveauté » : à changer en même temps que INTRO_STEP_COUNT. */
-export const LATEST_NEWS = "le Défi";
+export const LATEST_NEWS = "l'Arène";
 
 /** L'ancienne valeur « 1 » date de l'intro à 4 écrans. */
 export function introStepsSeen(cookie: string | undefined): number {

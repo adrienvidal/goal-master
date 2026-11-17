@@ -2,12 +2,13 @@
 import { useEffect, useState, useTransition } from "react";
 import { cancelChallenge, launchChallenge, respondChallenge, type ChallengeResult } from "@/app/defi-actions";
 import { CHALLENGE_TARGETS, type ChallengeWhen } from "@/game/challenge";
+import { ArenaPanel, type ArenaLaunch } from "./Arena";
 import { NudgeButton } from "./NudgeButton";
 
 // Défi (maquette docs/maquettes/defi.html) : bouton et panneau dans la carte du binôme, bandeaux sur l'accueil.
 
 export type LaunchState = { ok: true; tonightLeft: string | null; fridayLeft: string } | { ok: false; reason: string };
-type Props = { partnerName: string; nudgeSentToday: boolean; blink: boolean; launch: LaunchState };
+type Props = { partnerName: string; nudgeSentToday: boolean; blink: boolean; launch: LaunchState; arena: ArenaLaunch };
 
 function useAction(): [boolean, string, (run: () => Promise<ChallengeResult>) => void] {
   const [pending, startTransition] = useTransition();
@@ -21,22 +22,29 @@ function useAction(): [boolean, string, (run: () => Promise<ChallengeResult>) =>
   return [pending, error, run];
 }
 
-/** « Motiver » et « Défier » côte à côte ; un seul panneau ouvert à la fois, sur toute la largeur. */
-export function PartnerActions({ partnerName, nudgeSentToday, blink, launch }: Props): React.ReactElement {
-  const [panel, setPanel] = useState<"nudge" | "challenge" | null>(null);
+/** « Motiver », « Défier » et « Arène » côte à côte ; un seul panneau ouvert à la fois, sur toute la largeur. */
+export function PartnerActions({ partnerName, nudgeSentToday, blink, launch, arena }: Props): React.ReactElement {
+  const [panel, setPanel] = useState<"nudge" | "challenge" | "arena" | null>(null);
   if (panel === "nudge") return <NudgeButton partnerName={partnerName} sentToday={nudgeSentToday} blink={blink} open onOpenChange={(o) => setPanel(o ? "nudge" : null)} />;
   if (panel === "challenge" && launch.ok) return <ChallengePanel partnerName={partnerName} launch={launch} onClose={() => setPanel(null)} />;
+  if (panel === "arena" && arena.ok) return <ArenaPanel partnerName={partnerName} compare={arena.compare} onClose={() => setPanel(null)} />;
   return (
     <div className="flex flex-col gap-2">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="partner-actions grid grid-cols-3 gap-2">
         <NudgeButton partnerName={partnerName} sentToday={nudgeSentToday} blink={blink} open={false} onOpenChange={(o) => setPanel(o ? "nudge" : null)} />
         {launch.ok ? (
           <button type="button" className="btn ember" onClick={() => setPanel("challenge")}>🏁 Défier</button>
         ) : (
           <span className="btn off" aria-disabled="true">🏁 Défier</span>
         )}
+        {arena.ok ? (
+          <button type="button" className="btn arena" onClick={() => setPanel("arena")}>🛡️ Arène</button>
+        ) : (
+          <span className="btn off" aria-disabled="true">🛡️ Arène</span>
+        )}
       </div>
       {launch.ok ? null : <p className="text-sm text-muted">{launch.reason}</p>}
+      {arena.ok ? null : <p className="text-sm text-muted">{arena.reason}</p>}
     </div>
   );
 }
@@ -110,15 +118,15 @@ export function ChallengePending({ id, partnerName, target, until }: { id: strin
 const CLOSED_KEY = "gm-challenge-closed";
 
 /** Défi refusé ou expiré : prévient le lanceur, se ferme d'une croix (retenu sur cet appareil). */
-export function ChallengeClosedBanner({ id, text }: { id: string; text: string }): React.ReactElement | null {
+export function ChallengeClosedBanner({ id, text, storageKey = CLOSED_KEY }: { id: string; text: string; storageKey?: string }): React.ReactElement | null {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     try {
-      setOpen(localStorage.getItem(CLOSED_KEY) !== id);
+      setOpen(localStorage.getItem(storageKey) !== id);
     } catch {
       setOpen(true);
     }
-  }, [id]);
+  }, [id, storageKey]);
   if (!open) return null;
   return (
     <div role="status" className="flex items-start gap-3 border-[3px] border-edge bg-night py-2 pl-3 pr-2">
@@ -129,7 +137,7 @@ export function ChallengeClosedBanner({ id, text }: { id: string; text: string }
         className="grid size-8 shrink-0 place-items-center border-2 border-edge font-display text-[11px] text-muted hover:border-gold hover:text-ink"
         onClick={() => {
           try {
-            localStorage.setItem(CLOSED_KEY, id);
+            localStorage.setItem(storageKey, id);
           } catch {
             // stockage indisponible : le bandeau reviendra, sans gravité
           }

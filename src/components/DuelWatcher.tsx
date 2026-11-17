@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 
 export const DUEL_SEEN_KEY = "gm-duel-seen";
 export const CHALLENGE_SEEN_KEY = "gm-challenge-seen";
+export const ARENA_SEEN_KEY = "gm-arena-seen";
 
 function readSeen(key: string): string | null {
   try {
@@ -68,4 +69,12 @@ export function ChallengeWatcher({ id }: { id: string }): React.ReactElement {
 
 export function ChallengeContinue({ id }: { id: string }): React.ReactElement {
   return <ResultContinue id={id} storageKey={CHALLENGE_SEEN_KEY} />;
+}
+
+export function ArenaWatcher({ id }: { id: string }): React.ReactElement {
+  return <ResultWatcher id={id} storageKey={ARENA_SEEN_KEY} href="/arene/resultat" />;
+}
+
+export function ArenaContinue({ id }: { id: string }): React.ReactElement {
+  return <ResultContinue id={id} storageKey={ARENA_SEEN_KEY} />;
 }
