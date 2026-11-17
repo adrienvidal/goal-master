@@ -7,7 +7,9 @@ import { PushSetup } from "@/components/PushSetup";
 import { BossCard } from "@/components/BossCard";
 import { DecorView } from "@/components/DecorView";
 import { NudgeBanner, NudgeWinBanner } from "@/components/Banners";
-import { ChallengeWatcher, DuelWatcher } from "@/components/DuelWatcher";
+import { ArenaWatcher, ChallengeWatcher, DuelWatcher } from "@/components/DuelWatcher";
+import { ArenaIncoming, ArenaPending, type ArenaLaunch } from "@/components/Arena";
+import { ANSWER_WITHIN_MS, arenaCrowns, arenaPhase, arenaState, canProvoke, finishedArenas, MAX_ENERGY, openArena, startEnergy, statsFor, type ArenaEntry, type ArenaInput } from "@/game/arena";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { canLaunch, challengeScore, crownHolder, deadlineFor, lastFinished, openChallenge, phaseOf, timeLeft, untilLabel, type ChallengeRow } from "@/game/challenge";
 import { bossInSentence, currentDuel, pastDuels, type Duel } from "@/game/duel";
@@ -25,7 +27,7 @@ import { goalOutcome } from "@/lib/goal";
 import { buildPlayerView, removalImpact, splitCompany, type FeedItem, type PlayerView } from "@/lib/playerView";
 import { DAILY_XP_CAP } from "@/game/levels";
 import { db } from "@/server/db";
-import { loadDuelInput, loadGame } from "@/server/game";
+import { arenaInputs, loadDuelInput, loadGame } from "@/server/game";
 import { requirePlayer } from "@/server/session";
 import AddApplication from "./AddApplication";
 import TodayList, { type TodayItem } from "./TodayList";
@@ -128,6 +130,69 @@ function ChallengeRace({ challenge, views, apps, now }: { challenge: ChallengeRo
   );
 }
 
+/** Ma dernière provocation refusée ou effacée dans les 48 dernières heures, à signaler tant qu'aucune Arène n'est ouverte. */
+function closedArena(playerId: string, partnerName: string, entries: ArenaEntry[], now: Date): { id: string; text: string } | null {
+  const last = entries.find((e) => e.arena.challengerId === playerId);
+  if (!last || now.getTime() - last.arena.createdAt.getTime() >= 2 * DAY_MS) return null;
+  const phase = arenaPhase(last.arena, last.actions, now);
+  if (phase === "declined") return { id: last.arena.id, text: `${partnerName} décline l'Arène pour cette fois. Tu peux en ouvrir une autre.` };
+  if (phase === "expired") return { id: last.arena.id, text: `Ta provocation s'est effacée : ${partnerName} n'a pas répondu dans les 24 h.` };
+  return null;
+}
+
+/** Ce que le bouton « Arène » propose : les stats comparées, ou la raison du refus. */
+function arenaLaunch(me: PlayerView, partner: PlayerView, entries: ArenaEntry[], now: Date): ArenaLaunch {
+  const check = canProvoke(me.id, entries, now);
+  if (!check.ok) {
+    if (check.reason === "today") return { ok: false, reason: "Tu as déjà ouvert une Arène aujourd'hui, reviens demain." };
+    const open = openArena(entries, now);
+    const waiting = open !== null && arenaPhase(open.arena, open.actions, now) === "pending";
+    return waiting ? { ok: false, reason: "Une provocation attend une réponse." } : { ok: false, reason: "Un combat est en cours.", enter: true };
+  }
+  const rusty = (v: PlayerView) => v.mood === "tired" || v.mood === "exhausted";
+  const [a, b] = [statsFor(me.levelForm), statsFor(partner.levelForm)];
+  return {
+    ok: true,
+    compare: {
+      myForm: me.levelForm, theirForm: partner.levelForm, myHp: a.maxHp, theirHp: b.maxHp,
+      myAttack: `${a.attack[0]}-${a.attack[1]}`, theirAttack: `${b.attack[0]}-${b.attack[1]}`,
+      myEnergy: startEnergy(me.levelForm, partner.levelForm, rusty(me)), theirEnergy: startEnergy(partner.levelForm, me.levelForm, rusty(partner)),
+      partnerRusty: rusty(partner),
+    },
+  };
+}
+
+/** Carte compacte du combat en cours, au-dessus de « + Candidature » : toute la carte mène à /arene. */
+function ArenaCard({ input, meId, views, now }: { input: ArenaInput; meId: string; views: PlayerView[]; now: Date }): React.ReactElement {
+  const s = arenaState(input, now);
+  const mine = s.turn?.playerId === meId;
+  const foe = views.find((v) => v.id !== meId);
+  const cells = Array.from({ length: MAX_ENERGY }, (_, i) => i < s.energy[meId]);
+  return (
+    <Link href="/arene" className="flex flex-col gap-2.5 border-[3px] border-magic bg-night p-3 no-underline" aria-label="Arène en cours">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="h-title !text-[10px]">🛡️ Arène</span>
+        <span className={`num ${mine ? "arena-go text-gold" : "text-magic"}`}>{mine ? "À toi de jouer" : `${foe?.pseudo ?? "Ton binôme"} réfléchit…`}</span>
+      </div>
+      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+        {views.map((v) => (
+          <span key={v.id} className="contents">
+            <span className="text-sm">{v.id === meId ? "Toi" : v.pseudo}</span>
+            <Bar value={s.hp[v.id]} max={s.maxHp[v.id]} tone="green" label={`PV : ${v.id === meId ? "toi" : v.pseudo}`} />
+            <span className="num">{s.hp[v.id]}/{s.maxHp[v.id]}</span>
+          </span>
+        ))}
+      </div>
+      <div className="flex items-center gap-1" aria-label={`Ton énergie : ${s.energy[meId]}`}>
+        <span className="mr-1.5 text-[13px] uppercase tracking-wider text-muted">Ton énergie</span>
+        {cells.map((on, i) => <i key={i} className={`energy-cell ${on ? "" : "empty"}`} />)}
+      </div>
+      {mine && s.energy[meId] === 0 ? <p className="text-sm text-muted">Envoie une candidature pour recharger 2 ⚡. Sinon, tu peux finir ton tour.</p> : null}
+      <span className="btn arena">{mine ? "Entrer et jouer" : "Entrer dans l'Arène"}</span>
+    </Link>
+  );
+}
+
 async function goalFor(playerId: string): Promise<{ target: number; deadline: Date; createdAt: Date } | null> {
   return db().goal.findFirst({ where: { playerId, status: "ACTIVE" }, orderBy: { createdAt: "desc" }, select: { target: true, deadline: true, createdAt: true } });
 }
@@ -167,7 +232,15 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const duel = currentDuel(duelInput, now);
   const lastDuel = pastDuels(duelInput, now)[0] ?? null;
   const wounded = lastDuel ? !lastDuel.won : false;
-  const crownId = crownHolder(game.challenges, now);
+  const arenas = arenaInputs(game);
+  const crownIds = new Set([crownHolder(game.challenges, now), ...arenaCrowns(arenas, now)].filter((id): id is string => id !== null));
+  const openFight = openArena(game.arenas, now);
+  const fightPhase = openFight ? arenaPhase(openFight.arena, openFight.actions, now) : null;
+  const arenaIncoming = openFight && fightPhase === "pending" && openFight.arena.opponentId === player.id ? openFight.arena : null;
+  const arenaOutgoing = openFight && fightPhase === "pending" && openFight.arena.challengerId === player.id ? openFight.arena : null;
+  const arenaRunning = openFight && fightPhase === "running" ? arenas.find((a) => a.arena.id === openFight.arena.id) ?? null : null;
+  const lastArena = finishedArenas(arenas, now)[0] ?? null;
+  const arenaClosed = openFight ? null : closedArena(player.id, partnerRow?.pseudo ?? "Ton binôme", game.arenas, now);
   const open = openChallenge(game.challenges, now);
   const openPhase = open ? phaseOf(open, now) : null;
   const incoming = open && openPhase === "pending" && open.opponentId === player.id ? open : null;
@@ -178,7 +251,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const lastChallenge = lastFinished(game.challenges, now);
   const names = Object.fromEntries(game.players.map((p) => [p.id, p.pseudo]));
   const walkers = [me, ...(partner ? [partner] : [])].map((v) => ({
-    pseudo: v.pseudo, level: v.level, character: v.character, color: v.color, form: v.displayedForm, mood: v.mood, hurt: wounded, crown: v.id === crownId,
+    pseudo: v.pseudo, level: v.level, character: v.character, color: v.color, form: v.displayedForm, mood: v.mood, hurt: wounded, crown: crownIds.has(v.id),
     status: v.idleWorkdays >= 2 ? partnerStatus(v) : null,
   }));
   const todayItems: TodayItem[] = me.today.items.map((a) => {
@@ -197,6 +270,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
       <LiveRefresh />
       {lastDuel ? <DuelWatcher id={lastDuel.id} /> : null}
       {lastChallenge ? <ChallengeWatcher id={lastChallenge.id} /> : null}
+      {lastArena ? <ArenaWatcher id={lastArena.input.arena.id} /> : null}
       <div className="device grid gap-6 md:grid-cols-[1.3fr_1fr]">
         <DecorView walkers={walkers} />
         <section className="flex flex-col gap-4" aria-label="Ma quête">
@@ -212,15 +286,24 @@ export default async function HomePage(): Promise<React.ReactElement> {
           {won && partner ? <NudgeWinBanner id={won.id} partner={partner.pseudo} /> : null}
           {incoming && partner ? (
             <ChallengeIncoming id={incoming.id}>
-              <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} pose="victory" px={2} crown={partner.id === crownId} />
+              <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} pose="victory" px={2} crown={crownIds.has(partner.id)} />
               <p className="min-w-0 text-[15px]">
                 <b className="text-ember">{partner.pseudo} te défie :</b> le premier à {incoming.target} candidatures avant {untilLabel(incoming.deadline)} gagne la couronne.
               </p>
             </ChallengeIncoming>
           ) : null}
           {closed ? <ChallengeClosedBanner id={closed.id} text={closed.text} /> : null}
+          {arenaIncoming && partner ? (
+            <ArenaIncoming id={arenaIncoming.id} rusty={me.mood === "tired" || me.mood === "exhausted"}>
+              <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} pose="action" px={2} crown={crownIds.has(partner.id)} />
+              <p className="min-w-0 text-[15px]">
+                <b className="text-magic">{partner.pseudo} te provoque en Arène.</b> Tour par tour, tes candidatures font tes coups.
+              </p>
+            </ArenaIncoming>
+          ) : null}
+          {arenaClosed ? <ChallengeClosedBanner id={arenaClosed.id} text={arenaClosed.text} storageKey="gm-arena-closed" /> : null}
           <div className="flex items-end gap-4 pr-9">
-            <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} level={me.level} mood={me.mood} fallen={me.fallen} hurt={wounded} crown={me.id === crownId} />
+            <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} level={me.level} mood={me.mood} fallen={me.fallen} hurt={wounded} crown={crownIds.has(me.id)} />
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-display text-[11px] leading-relaxed">{me.pseudo} · Niv. {me.level}</span>
@@ -235,6 +318,8 @@ export default async function HomePage(): Promise<React.ReactElement> {
           {duel ? <BossCard duel={duel} names={names} meId={player.id} wounded={wounded} now={now} /> : null}
           {outgoing && partner ? <ChallengePending id={outgoing.id} partnerName={partner.pseudo} target={outgoing.target} until={untilLabel(outgoing.deadline)} /> : null}
           {running && partner ? <ChallengeRace challenge={running} views={[me, partner]} apps={game.apps} now={now} /> : null}
+          {arenaOutgoing && partner ? <ArenaPending id={arenaOutgoing.id} partnerName={partner.pseudo} expires={`demain ${TIME.format(new Date(arenaOutgoing.createdAt.getTime() + ANSWER_WITHIN_MS))}`} /> : null}
+          {arenaRunning && partner ? <ArenaCard input={arenaRunning} meId={player.id} views={[me, partner]} now={now} /> : null}
           <AddApplication todayCount={me.today.count} />
           <div className="grid grid-cols-2 gap-2">
             <Link href="/succes" className="btn ghost !text-[10px]">Mes succès</Link>
@@ -247,7 +332,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
           {partner ? (
             <>
               <div className="flex items-end gap-3">
-                <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} mood={partner.mood} px={3} label={partner.title} hurt={wounded} crown={partner.id === crownId} />
+                <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} mood={partner.mood} px={3} label={partner.title} hurt={wounded} crown={crownIds.has(partner.id)} />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="font-display text-[11px] leading-relaxed">{partner.pseudo} · Niv. {partner.level}</span>
                   <span className="text-sm text-muted">{partner.title} · {wounded ? "blessé" : `série ${partner.streak}`}</span>
@@ -270,7 +355,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
                   </li>
                 ))}
               </ul>
-              <PartnerActions partnerName={partner.pseudo} nudgeSentToday={sentToday(player.id, game.nudges, parisDay(now))} blink={partner.idleWorkdays >= 2} launch={launch} />
+              <PartnerActions partnerName={partner.pseudo} nudgeSentToday={sentToday(player.id, game.nudges, parisDay(now))} blink={partner.idleWorkdays >= 2} launch={launch} arena={arenaLaunch(me, partner, game.arenas, now)} />
             </>
           ) : (
             <p className="text-muted">Ton binôme ne s&apos;est pas encore connecté. Sa carte apparaîtra ici dès son premier lancement.</p>
@@ -280,7 +365,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
       <div className="mt-4"><PushSetup /></div>
       {devLoginEnabled(process.env) ? (
         <form action={devLogout} className="mt-4 text-right">
-          <button type="submit" className="text-sm text-muted underline">Changer de joueur (local)</button>
+          <button type="submit" className="text-sm text-muted underline">Changer de joueur (test)</button>
         </form>
       ) : null}
     </main>

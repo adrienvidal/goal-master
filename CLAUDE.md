@@ -151,7 +151,7 @@ En anglais, à l'impératif, sans point final. Préfixe `feat:`, `fix:`, `test:`
 - **npm** comme gestionnaire de paquets, jamais pnpm, yarn ni bun : un seul
   lockfile (`package-lock.json`), et toute commande s'écrit `npm` / `npx`
 - Next.js App Router + TypeScript strict, RSC par défaut
-- Postgres local dans Docker pour le développement (`npm run db` : conteneur, migrations, generate ; adresse dans `.env.development.local`, qui prime sur `.env.local`) ; en local, connexion directe sans code (choix d'une adresse de ALLOWED_EMAILS), jamais en production ni sur Vercel ; en local, tous les e-mails partent vers DEV_MAIL_TO (dans `.env.development.local`), sinon ils ne partent pas
+- Postgres local dans Docker pour le développement (`npm run db` : conteneur, migrations, generate ; adresse dans `.env.development.local`, qui prime sur `.env.local`) ; en local, connexion directe sans code (choix d'une adresse de ALLOWED_EMAILS) ; sur les aperçus Vercel aussi, quand PREVIEW_DIRECT_LOGIN=1 est posé pour Preview (le retirer pour revenir aux codes, par exemple quand le vrai Nicolas teste) ; jamais en production, coupée par VERCEL_ENV ; en local, tous les e-mails partent vers DEV_MAIL_TO (dans `.env.development.local`), sinon ils ne partent pas ; sur les aperçus Vercel, DEV_MAIL_TO (posé pour l'environnement Preview) détourne aussi tous les e-mails, codes de connexion compris, pour tester seul les deux joueurs ; jamais en production
 - Neon (Postgres serverless) en ligne, réservé aux déploiements : une branche de base pour la production,
   et une par déploiement de prévisualisation via l'intégration Vercel ; RLS non
   activé : la sécurité est applicative, toute requête filtre sur l'utilisateur
@@ -161,6 +161,11 @@ En anglais, à l'impératif, sans point final. Préfixe `feat:`, `fix:`, `test:`
   Claude supprime lui-même les branches `preview/*` (`npx neonctl branches list`
   puis `delete`), sans demander : c'est l'exception à « toute suppression se
   confirme ». Jamais la branche de production `main`. Le noter dans « Réalisé »
+- Déploiements Vercel réservés aux branches longues : `vercel.json` porte
+  `git.deploymentEnabled` avec `"**": false`, puis `main` et `dev` à `true`. Une
+  branche de lot ne crée ni aperçu ni branche Neon : l'offre gratuite plafonne à
+  100 déploiements par 24 h pour tout le compte. Ce qui ne se teste pas en local
+  (push, PWA, vrai e-mail) se teste sur l'aperçu de `dev`
 - Authentification par code à usage unique envoyé par e-mail avec Better Auth (greffon emailOTP), comme
   viloris-studio ; codes envoyés depuis contact@viloris.io par le SMTP de Google Workspace (SMTP_USER,
   SMTP_PASS) ; adresses autorisées dans ALLOWED_EMAILS. Variables récupérées en local par

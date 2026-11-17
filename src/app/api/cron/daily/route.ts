@@ -1,11 +1,13 @@
 // Cron quotidien, appelé par n8n (workflow « Goal Master · cron quotidien » sur auto.webnrolls.com) à 18 h 01, heure de Paris :
 // juste après le duel du vendredi 18 h. Chaque envoi est dédoublonné, un second appel ne renvoie rien.
-// Jeudi : rappel si le boss tient encore. Vendredi : résultat du duel. Chaque jour : rouille et nouveauté.
+// Jeudi : rappel si le boss tient encore. Vendredi : résultat du duel. Chaque jour : Arène, rouille et nouveauté.
+import { arenaPhase, arenaState } from "@/game/arena";
 import { parisDay, type Day } from "@/game/calendar";
 import { currentDuel, pastDuels } from "@/game/duel";
 import { rustDue, type NotificationEvent } from "@/game/notifications";
 import { INTRO_STEP_COUNT, LATEST_NEWS } from "@/lib/intro";
-import { loadDuelInput, loadGame } from "@/server/game";
+import { arenaEvents } from "@/server/arena";
+import { arenaInputs, loadDuelInput, loadGame } from "@/server/game";
 import { notifyAll } from "@/server/notify";
 
 const HERO = { KNIGHT: "chevalier", PANDA: "panda" } as const;
@@ -35,6 +37,12 @@ export async function GET(request: Request): Promise<Response> {
     if (last?.id === today) {
       for (const f of last.fighters) items.push({ playerId: f.playerId, event: { kind: "duel", friday: last.id, won: last.won, boss: last.boss, total: last.hits + last.bonus, hp: last.hp } });
     }
+  }
+  // Arène : tours passés au temps (« À toi de jouer ») et fins au temps ; déjà envoyés = ignorés.
+  for (const input of arenaInputs(game)) {
+    if (arenaPhase(input.arena, input.actions, now) === "running") items.push(...arenaEvents(input, game, now));
+    const over = arenaState(input, now).over;
+    if (over && now.getTime() - over.at.getTime() < 7 * 24 * 60 * 60 * 1000) items.push(...arenaEvents(input, game, now));
   }
   // Plafonnés ensuite : la rouille passe avant la nouveauté.
   for (const p of game.players) {

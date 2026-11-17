@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Défi entre les deux joueurs en prod (course, couronne, succès)
-⛔ Bloqué    Rien
-🎯 Priorité  Vérifier le cron n8n et le premier duel (échéance 20/11)
+✅ Fait      Push fiabilisé et en prod, nouveau secret du cron inclus (19 h 03)
+⛔ Bloqué    Fusion de #57 : quota Vercel (Vercel, libre le 17/11 à 12 h 38)
+🎯 Priorité  Vérifier le cron et le test push sur téléphone (échéance 17/11 18 h 01)
 ```
 
 ## Réalisé
@@ -193,3 +193,54 @@
 - Victoire enregistrée une fois (`winnerId`, `wonAt`), jamais retirée ; score figé à la fin
 - Pas de notification pour un nul, une expiration, un refus ou une annulation (fins souvent à minuit)
 - Sur ordinateur, la course reste dans la colonne du joueur (écart avec la maquette)
+
+---
+
+## Suite : cron en échec, quota Vercel, déploiements limités
+
+### Réalisé
+- PR #55 (push fiabilisé : urgence haute, TTL 24 h, réabonnement à l'ouverture, bouton de test, badge épée Android) fusionnée dans `dev`, puis #56 en prod (déploiement de 19 h 03 prêt)
+- Cron de 18 h 01 diagnostiqué : n8n a bien appelé `/api/cron/daily`, l'app a répondu 401 (secret différent). `NotificationLog` vide en prod depuis toujours : aucune notification n'est jamais partie par le cron
+- Nouveau `CRON_SECRET` posé sur Vercel (Production seulement) et dans l'identifiant n8n « Goal Master · cron » (`Bearer <secret>`, limité à goal.viloris.io), par l'API n8n
+- Redéploiement refusé : 100 déploiements sur 24 h atteints sur tout le compte (goal-master 92 dont 75 aperçus)
+- PR #57 : `vercel.json` ne déploie plus que `main` et `dev` (`git.deploymentEnabled`), règle ajoutée au CLAUDE.md ; même règle ajoutée au skill `wnr-init-claude` (gabarit et variante deux environnements)
+- Deux e-mails de test envoyés à Nicolas avec le gabarit des notifications, hors journal
+
+### Reste à faire
+- **Demain 17/11 après 12 h 40, avant 18 h 01** : fusionner #57, redéployer la prod (`vercel redeploy`), puis appeler le cron une fois (secret dans le scratchpad de la session, sinon en régénérer un) et vérifier `news:7` dans `NotificationLog` et l'e-mail « Nouveauté » dans Gmail
+- Le 17/11 à 18 h 01 : vérifier l'exécution n8n (onglet Executions, workflow `w3IWGR9ybegbfSZN`)
+- Jeudi 19/11 et vendredi 20/11 à 18 h 01 : rappel du boss, puis résultat du duel
+- Les autres points de la section « Défi » restent ouverts (premier vrai défi, Android, textes du boss, base locale)
+
+### Blockers
+- Quota Vercel : aucun déploiement possible sur le compte avant le 17/11 à 12 h 38. Si rien n'est redéployé avant 18 h 01, le cron reprend un 401 (n8n a le nouveau secret, la prod l'ancien)
+
+### Décisions
+- Plus d'aperçu par branche de lot : les tests sur appareil réel (push, PWA, e-mail) se font sur l'aperçu de `dev`
+- Logs Vercel limités à 30 min en offre gratuite : pour le cron, lire l'exécution n8n (API, clé dans la config MCP n8n de viloris-studio) et `NotificationLog`
+
+---
+
+## Suite : notifications push fiabilisées
+
+### Réalisé
+- Diagnostic push en prod : 3 abonnements (2 Adrien, 1 Nicolas, tous Chrome/FCM), clés VAPID identiques partout, envois directs acceptés par FCM (201). Test en priorité haute reçu sur le Samsung d'Adrien ; rien sur son Mac (réglage macOS non vérifié, laissé de côté à sa demande)
+- Cause trouvée : `pushTo` envoyait en priorité normale (défaut web-push), qu'Android retient tant que le téléphone dort
+- PR #55 : urgence haute + TTL 24 h, bouton « M'envoyer un test » dans Réglages › Notifications, réabonnement automatique à l'ouverture (clé changée ou abonnement perdu), badge Android `public/badge-96.png` (épée en silhouette blanche) ; 140 tests verts
+- Aperçu de #55 en échec (limite de 10 branches Neon) : 8 branches `preview/*` de PR fusionnées supprimées, `preview/dev` gardée
+- PR #56 dev → main fusionnée ; déploiement auto refusé (quota Vercel), aperçu de #56 promu en prod (`vercel promote`, déploiement `dpl_GT22qL77jS6xABfTyXymXJRTZ4Ct` créé à 19 h 03, `badge-96.png` et nouveau `sw.js` servis)
+- **Blocker levé** : la prod a le nouveau `CRON_SECRET` (modifié sur Vercel à 19 h 01, avant la promotion de 19 h 03). Plus besoin de redéployer avant 18 h 01 demain ; non vérifié par un appel du cron (il enverrait de vraies notifications)
+
+### Reste à faire
+- Adrien et Nicolas : ouvrir l'app, Réglages › Notifications › « M'envoyer un test » ; sur Android, Chrome › Batterie › « Non restreinte »
+- 17/11 à 18 h 01 : vérifier l'exécution n8n (200 attendu, plus 401) et `NotificationLog` (premières lignes)
+- Fusionner #57 après 12 h 38 le 17/11 (ne déploie plus que `main` et `dev`)
+- Mac d'Adrien : Chrome ne montre rien (Réglages Système › Notifications › Google Chrome à vérifier), hors priorité
+
+### Blockers
+- Quota Vercel jusqu'au 17/11 à 12 h 38 : seulement pour fusionner #57, la prod est à jour
+
+### Décisions
+- Push toujours en priorité haute, durée de vie 24 h
+- Chaque joueur vérifie ses appareils lui-même avec le bouton de test, plutôt qu'un envoi manuel depuis le poste de dev
+- Quota de déploiements atteint : `vercel promote` d'un aperçu déjà construit passe et met la prod à jour

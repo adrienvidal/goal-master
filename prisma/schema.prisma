@@ -64,6 +64,9 @@ model Player {
   gotNudges       Nudge[]               @relation("receivedNudges")
   sentChallenges  Challenge[]           @relation("sentChallenges")
   gotChallenges   Challenge[]           @relation("receivedChallenges")
+  sentArenas      Arena[]               @relation("sentArenas")
+  gotArenas       Arena[]               @relation("receivedArenas")
+  arenaActions    ArenaAction[]
   achievements    UnlockedAchievement[]
   pushSubs        PushSubscription[]
   notifications   NotificationLog[]
@@ -230,4 +233,54 @@ model NotificationLog {
 
   @@unique([playerId, key])
   @@index([playerId, sentAt])
+}
+
+enum ArenaStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+}
+
+enum ArenaKind {
+  ATTACK
+  PARRY
+  THRUST
+  WHIRL
+  POTION
+  END
+}
+
+/// Arène : combat au tour par tour (docs/specs/2026-11-17-arene-design.md). Formes et énergie de départ figées à l'acceptation.
+model Arena {
+  id               String        @id @default(cuid())
+  challengerId     String
+  challenger       Player        @relation("sentArenas", fields: [challengerId], references: [id])
+  opponentId       String
+  opponent         Player        @relation("receivedArenas", fields: [opponentId], references: [id])
+  status           ArenaStatus   @default(PENDING)
+  createdAt        DateTime      @default(now())
+  acceptedAt       DateTime?
+  deadline         DateTime?
+  challengerForm   Int?
+  opponentForm     Int?
+  challengerEnergy Int?
+  opponentEnergy   Int?
+  actions          ArenaAction[]
+
+  @@index([createdAt])
+}
+
+/// Une action jouée dans l'Arène ; `value` = dégâts ou soin tirés au moment de l'action.
+model ArenaAction {
+  id        String    @id @default(cuid())
+  arenaId   String
+  arena     Arena     @relation(fields: [arenaId], references: [id], onDelete: Cascade)
+  playerId  String
+  player    Player    @relation(fields: [playerId], references: [id])
+  kind      ArenaKind
+  value     Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  @@index([arenaId, createdAt])
 }
