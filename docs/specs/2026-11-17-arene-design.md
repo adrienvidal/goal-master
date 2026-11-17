@@ -23,9 +23,9 @@ Pourquoi : Adrien veut **piloter son héros** contre celui de Nicolas, en RPG, c
 - **Tour** : le lanceur ouvre. 3 actions au plus (moins en cas d'étourdissement, jamais moins de 1), puis « Finir mon tour », ou fin automatique à la dernière action. 24 h sans action : le tour passe tout seul en Parade (calculé, rien de stocké). Un tour commencé mais pas fini au bout de 24 h se termine tel quel.
 - **Actions** : Attaque (1 ⚡, dégâts tirés dans la fourchette) ; Parade (1 ⚡, le prochain coup reçu est divisé par deux, arrondi au-dessous ; ne se cumule pas) ; Botte (3 ⚡) ; Potion (+6 PV, sans énergie). PV jamais au-dessus du maximum.
 - **Potions** : chaque relance réussie (le destinataire candidate dans les 24 h) pendant le combat en donne une à chacun, 2 en réserve au plus.
-- **Victoire** : enregistrée une fois (`winnerId`, `wonAt`), jamais retirée. Couronne du Défi sur le gagnant jusqu'à la fin du lendemain ; si les deux ont une couronne le même jour, chacun garde la sienne. **Aucune XP en jeu.**
+- **Victoire** : déduite des actions seules (PV, temps morts, parades), donc figée dès le K.O. ou l'échéance : un retrait de candidature ne change que l'énergie, jamais un coup déjà porté. Couronne du Défi sur le gagnant jusqu'à la fin du lendemain ; si les deux ont une couronne le même jour, chacun garde la sienne. **Aucune XP en jeu.**
 
-Tout se déduit de l'Arène, de ses actions, des candidatures et des relances ; seuls la provocation, la réponse, les actions (avec leur valeur tirée) et le gagnant sont stockés.
+Tout se déduit de l'Arène, de ses actions, des candidatures et des relances ; seuls la provocation, la réponse et les actions (avec leur valeur tirée) sont stockés.
 
 ## Succès
 
@@ -46,8 +46,8 @@ Une seule notification par tour, jamais une par action.
 
 ## Données (une migration)
 
-- `Arena { id, challengerId, opponentId, status (PENDING | ACCEPTED | DECLINED | CANCELLED), createdAt, acceptedAt?, deadline?, closedAt?, winnerId?, wonAt?, challengerForm?, opponentForm?, challengerEnergy?, opponentEnergy? }` ; les formes et l'énergie de départ sont figées à l'acceptation, le personnage vient du joueur (il ne change qu'avec un nouvel objectif).
-- `ArenaAction { id, arenaId, playerId, kind (ATTACK | PARRY | BOTTE | POTION | END), value, createdAt }` ; `value` = dégâts ou soin tirés.
+- `Arena { id, challengerId, opponentId, status (PENDING | ACCEPTED | DECLINED | CANCELLED), createdAt, acceptedAt?, deadline?, challengerForm?, opponentForm?, challengerEnergy?, opponentEnergy? }` ; les formes et l'énergie de départ sont figées à l'acceptation, le personnage vient du joueur (il ne change qu'avec un nouvel objectif).
+- `ArenaAction { id, arenaId, playerId, kind (ATTACK | PARRY | THRUST | WHIRL | POTION | END), value, createdAt }` ; `value` = dégâts ou soin tirés. La Botte est stockée sous son nom (Coup d'estoc = THRUST, Bambou tourbillon = WHIRL) pour que le rejeu n'ait pas besoin du personnage.
 
 ## Écrans
 
