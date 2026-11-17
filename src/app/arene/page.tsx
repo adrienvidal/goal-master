@@ -79,7 +79,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   const turnEnds = s.turn ? `${DAY.format(s.turn.endsAt)} ${TIME.format(s.turn.endsAt)}` : "";
   const log = [...s.log].reverse().slice(0, 12);
   const stageOf = (v: PlayerView): StageFighter => ({
-    id: v.id, name: v.pseudo, levelForm: v.levelForm, character: v.character, color: v.color, displayedForm: v.displayedForm, mood: v.mood, title: v.title,
+    id: v.id, name: v.pseudo, levelForm: (v.id === input.arena.challengerId ? input.arena.challengerForm : input.arena.opponentForm) ?? v.levelForm, character: v.character, color: v.color, displayedForm: v.displayedForm, mood: v.mood, title: v.title,
     hp: s.hp[v.id], maxHp: s.maxHp[v.id], parry: s.parry[v.id], stunned: s.turn?.playerId === v.id && s.turn.max < 3,
   });
   const lastHit = lastMove(s);
@@ -119,7 +119,11 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
               </p>
             ) : null}
             <ArenaMoves id={input.arena.id} moves={moves} used={s.turn?.used ?? 0} max={s.turn?.max ?? 3} myTurn={myTurn} />
-            {!myTurn ? <p className="text-sm text-muted">Tes candidatures d&apos;ici là rechargent ton énergie pour ton prochain tour.</p> : null}
+            {!myTurn ? (
+              <p className="text-sm text-muted">
+                {s.previous?.playerId === player.id ? "Tour terminé : 3 actions au plus par tour. Ton énergie restante est gardée pour ton prochain tour, et tes candidatures d'ici là la rechargent." : "Tes candidatures d'ici là rechargent ton énergie pour ton prochain tour."}
+              </p>
+            ) : null}
             <Link href="/" className="btn">+ Candidature</Link>
           </div>
           </ArenaLive>
