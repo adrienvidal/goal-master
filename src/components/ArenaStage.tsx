@@ -122,10 +122,10 @@ export function StageFighterView({ f, right, isMe }: { f: StageFighter; right: b
         <span className="num">{f.hp}/{f.maxHp}</span>
       </div>
       <div className="relative flex min-h-[72px] items-end">
-        <span key={st.moving ? fx?.n : "still"} className={body}>
+        <span key={st.moving ? `body-${fx?.n}` : "body"} className={body}>
           <Sprite character={f.character} color={f.color} form={f.displayedForm} mood={f.mood} pose={st.pose} px={4} label={f.title} />
         </span>
-        {st.float ? <span key={fx?.n} className={`arena-dmg ${st.float.heal ? "heal" : ""}`}>{st.float.text}</span> : null}
+        {st.float ? <span key={`float-${fx?.n}`} className={`arena-dmg ${st.float.heal ? "heal" : ""}`}>{st.float.text}</span> : null}
       </div>
     </div>
   );
