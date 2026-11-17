@@ -365,7 +365,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
       <div className="mt-4"><PushSetup /></div>
       {devLoginEnabled(process.env) ? (
         <form action={devLogout} className="mt-4 text-right">
-          <button type="submit" className="text-sm text-muted underline">Changer de joueur (local)</button>
+          <button type="submit" className="text-sm text-muted underline">Changer de joueur (test)</button>
         </form>
       ) : null}
     </main>
