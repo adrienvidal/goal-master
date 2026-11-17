@@ -2,10 +2,12 @@
 import { useState, useTransition } from "react";
 import { cancelArena, playArena, provokeArena, respondArena, type ArenaResult } from "@/app/arene-actions";
 import type { ArenaKind } from "@/game/arena";
+import { usePlayFx } from "./ArenaStage";
 
 // Arène (maquette docs/maquettes/arene.html) : panneau de provocation, bandeaux et actions du combat.
 
-export type ArenaLaunch = { ok: true; compare: ArenaCompare } | { ok: false; reason: string };
+/** `enter` : un combat est en cours, le bouton mène à l'Arène au lieu d'être grisé. */
+export type ArenaLaunch = { ok: true; compare: ArenaCompare } | { ok: false; reason: string; enter?: boolean };
 export type ArenaCompare = { myForm: number; theirForm: number; myHp: number; theirHp: number; myAttack: string; theirAttack: string; myEnergy: number; theirEnergy: number; partnerRusty: boolean };
 
 function useArenaAction(): [boolean, string, (run: () => Promise<ArenaResult>) => void] {
@@ -91,11 +93,15 @@ export type Move = { kind: ArenaKind; label: string; cost: string; detail: strin
 /** Les actions du tour : chaque coup part tout de suite ; « Finir mon tour » passe la main. */
 export function ArenaMoves({ id, moves, used, max, myTurn }: { id: string; moves: Move[]; used: number; max: number; myTurn: boolean }): React.ReactElement {
   const [pending, error, run] = useArenaAction();
+  const playFx = usePlayFx();
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-2">
         {moves.map((m) => (
-          <button key={m.kind} type="button" className={`arena-move ${m.special ? "special" : ""}`} disabled={!myTurn || m.disabled || pending} onClick={() => run(() => playArena(id, m.kind))}>
+          <button key={m.kind} type="button" className={`arena-move ${m.special ? "special" : ""}`} disabled={!myTurn || m.disabled || pending} onClick={() => {
+            playFx(m.kind);
+            run(() => playArena(id, m.kind));
+          }}>
             <span className="num text-energy">{m.cost}</span>
             <b className="font-display text-[9px] leading-relaxed">{m.label}</b>
             <span className="text-[13px] leading-snug text-muted">{m.detail}</span>

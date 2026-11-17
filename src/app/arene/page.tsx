@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArenaMoves, type Move } from "@/components/Arena";
-import { Bar } from "@/components/Bar";
+import { ArenaLive, StageFighterView, type StageFighter, type StageHit } from "@/components/ArenaStage";
 import { LiveRefresh } from "@/components/LiveRefresh";
-import { Sprite } from "@/components/Sprite";
 import { arenaPhase, arenaState, canPlay, finishedArenas, MAX_ENERGY, POTION_HEAL, statsFor, type ArenaState, type LogEntry } from "@/game/arena";
 import { timeLeft } from "@/game/challenge";
 import { buildPlayerView, type PlayerView } from "@/lib/playerView";
-import type { Pose } from "@/lib/sprites";
 import { arenaInputs, loadGame } from "@/server/game";
 import { requirePlayer } from "@/server/session";
 
@@ -41,40 +39,10 @@ function logLine(e: LogEntry, meId: string, foeName: string): string {
   }
 }
 
-/** Pose et effet de chaque héros d'après le dernier coup joué. */
-function staging(s: ArenaState, id: string): { pose: Pose; className: string; float: { text: string; heal: boolean } | null } {
-  const last = [...s.log].reverse().find((e) => e.kind !== "ENERGY" && e.kind !== "POTION_GAIN");
-  const stunned = s.turn?.playerId === id && s.turn.max < 3;
-  const base = { pose: (s.parry[id] ? "parry" : "rest") as Pose, className: stunned ? "arena-stun" : "", float: null };
-  if (!last) return base;
-  if (last.playerId === id) {
-    if (last.kind === "ATTACK" || last.kind === "THRUST" || last.kind === "WHIRL") return { ...base, pose: "action", float: last.kind === "WHIRL" ? { text: `+${last.amount}`, heal: true } : null };
-    if (last.kind === "POTION") return { ...base, pose: "potion", float: { text: `+${last.amount}`, heal: true } };
-    return base;
-  }
-  if (last.kind === "ATTACK" || last.kind === "THRUST") return { ...base, className: `${base.className} arena-hit`, float: { text: `-${last.amount}`, heal: false } };
-  return base;
-}
-
-function Fighter({ view, s, right, isMe }: { view: PlayerView; s: ArenaState; right: boolean; isMe: boolean }): React.ReactElement {
-  const st = staging(s, view.id);
-  const low = s.hp[view.id] <= s.maxHp[view.id] / 3;
-  return (
-    <div className={`flex flex-col gap-2 ${right ? "items-end text-right" : ""}`}>
-      <div className={`flex flex-wrap items-baseline gap-1.5 text-sm ${right ? "justify-end" : ""}`}>
-        <b>{isMe ? "Toi" : view.pseudo}</b>
-        <span className="text-[13px] text-muted">Évol. {view.levelForm}</span>
-      </div>
-      <div className="w-full max-w-[180px]">
-        <Bar value={s.hp[view.id]} max={s.maxHp[view.id]} tone="green" color={low ? "#ff6b6b" : undefined} label={`PV : ${isMe ? "toi" : view.pseudo}`} />
-        <span className="num">{s.hp[view.id]}/{s.maxHp[view.id]}</span>
-      </div>
-      <div className={`relative flex min-h-[72px] items-end ${right ? "arena-flip" : ""} ${st.className}`}>
-        <Sprite character={view.character} color={view.color} form={view.displayedForm} mood={view.mood} pose={st.pose} px={4} label={view.title} />
-        {st.float ? <span className={`arena-dmg ${st.float.heal ? "heal" : ""}`}>{st.float.text}</span> : null}
-      </div>
-    </div>
-  );
+/** Le dernier coup visible (ni énergie, ni potion gagnée, ni fin de tour), pour l'animer une fois. */
+function lastMove(s: ArenaState): StageHit | null {
+  const e = [...s.log].reverse().find((x): x is LogEntry & { kind: StageHit["kind"] } => ["ATTACK", "THRUST", "WHIRL", "PARRY", "POTION"].includes(x.kind));
+  return e ? { key: `${e.at.toISOString()}-${e.playerId}-${e.kind}`, by: e.playerId, kind: e.kind, amount: e.amount, at: e.at.toISOString() } : null;
 }
 
 // Le combat (maquette arene, écrans 5 et 6) : scène, tour, énergie, actions, journal.
@@ -110,20 +78,26 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   ];
   const turnEnds = s.turn ? `${DAY.format(s.turn.endsAt)} ${TIME.format(s.turn.endsAt)}` : "";
   const log = [...s.log].reverse().slice(0, 12);
+  const stageOf = (v: PlayerView): StageFighter => ({
+    id: v.id, name: v.pseudo, levelForm: v.levelForm, character: v.character, color: v.color, displayedForm: v.displayedForm, mood: v.mood, title: v.title,
+    hp: s.hp[v.id], maxHp: s.maxHp[v.id], parry: s.parry[v.id], stunned: s.turn?.playerId === v.id && s.turn.max < 3,
+  });
+  const lastHit = lastMove(s);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
-      <LiveRefresh />
+      <LiveRefresh every={myTurn ? undefined : 3000} />
       <div className="device flex flex-col gap-4">
         <div className="flex items-baseline justify-between gap-3">
           <h1 className="h-title">🛡️ Arène</h1>
           <Link href="/" className="text-sm text-muted underline">Accueil</Link>
         </div>
         <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:items-start">
+          <ArenaLive meId={player.id} last={lastHit}>
           <div className="flex min-w-0 flex-col gap-3">
             <div className="arena-stage">
-              <Fighter view={me} s={s} right={false} isMe />
-              <Fighter view={foe} s={s} right isMe={false} />
+              <StageFighterView f={stageOf(me)} right={false} isMe />
+              <StageFighterView f={stageOf(foe)} right isMe={false} />
             </div>
             <div className={`flex flex-wrap items-center justify-between gap-2 border-[3px] px-3 py-2 ${myTurn ? "border-gold bg-[#3a2f17]" : "border-edge bg-night"}`}>
               <span className="font-display text-[10px] leading-relaxed">{myTurn ? "À toi de jouer" : `${foe.pseudo} réfléchit…`}</span>
@@ -140,6 +114,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
             {!myTurn ? <p className="text-sm text-muted">Tes candidatures d&apos;ici là rechargent ton énergie pour ton prochain tour.</p> : null}
             <Link href="/" className="btn">+ Candidature</Link>
           </div>
+          </ArenaLive>
           <div className="flex flex-col gap-1.5 border-[3px] border-edge bg-night px-3 py-2.5">
             <span className="text-[13px] uppercase tracking-wider text-muted">Journal</span>
             <ol className="flex flex-col gap-1.5 text-sm">

@@ -111,7 +111,7 @@ const STEPS: Step[] = [
     stage: (
       <div className="flex items-end justify-center gap-6">
         <Sprite character="KNIGHT" color="BLUE" form={3} pose="action" px={5} label="Ton héros attaque" />
-        <span className="arena-flip"><Sprite character="PANDA" color="RED" form={3} pose="parry" px={5} label="Le héros du binôme pare" /></span>
+        <span className="arena-body flip"><Sprite character="PANDA" color="RED" form={3} pose="parry" px={5} label="Le héros du binôme pare" /></span>
       </div>
     ),
   },
