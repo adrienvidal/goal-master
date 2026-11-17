@@ -7,7 +7,11 @@ import { ARMS, BABY, KID, KNIGHT, PAL, P_BABY, P_GAR, P_KID, P_LEG, P_NOV, P_VOY
 
 export const COLOR_HEX: Record<ColorId, string> = { BLUE: "#3d7bd9", RED: "#d94848", GREEN: "#3fa55b", PURPLE: "#8a55d6", ORANGE: "#e8892e", BLACK: "#4a4a5e" };
 
-export type Pose = "rest" | "action" | "victory";
+export type Pose = "rest" | "action" | "victory" | "parry" | "potion" | "ko";
+/** Poses de l'Arène : gardées même rouillé (le héros combat quand même). */
+const COMBAT_POSES: Pose[] = ["parry", "potion", "ko"];
+/** Couleurs propres à l'Arène : fiole rouge, contour cyan de la parade, feuille claire. */
+const ARENA_PAL: Record<string, string> = { J: "#e8364a", Q: "#7fe3ff", M: "#a8e07a" };
 export type Rect = { x: number; y: number; w: number; fill: string };
 export type SpriteData = { width: number; height: number; scale: number; rects: Rect[] };
 
@@ -129,7 +133,7 @@ function colorOf(c: string, player: string, mood: Mood, x: number, y: number, ch
   if (c === "C" && mood === "exhausted") return "#4e3570";
   if (rusty && "PWGY".includes(c) && (x * 7 + y * 3) % 8 === 0) return character === "PANDA" ? "#2e261c" : "#a4501f";
   if (rusty && RUST[c]) return RUST[c];
-  return c === "P" ? player : PAL[c];
+  return c === "P" ? player : (PAL[c] ?? ARENA_PAL[c]);
 }
 
 const WEAPON = "WVYLB";
@@ -201,25 +205,131 @@ function raiseWeapon(a: string[][], i: Weapon): Grid {
   return o.map((r) => r.join(""));
 }
 
-function posed(g: Grid, pose: Pose): Grid {
+const blankRow = (w: number): string[] => Array<string>(w).fill(".");
+const widen = (a: string[][], n: number): void => a.forEach((r) => { while (r.length < n) r.push("."); });
+
+/** Contour cyan de la Parade autour d'un ensemble de cases. */
+function glow(a: string[][], cells: [number, number][]): void {
+  const set = new Set(cells.map(([y, x]) => `${y},${x}`));
+  for (const [y, x] of cells)
+    for (const [yy, xx] of [[y - 1, x], [y + 1, x], [y, x - 1], [y, x + 1]])
+      if (a[yy]?.[xx] === "." && !set.has(`${yy},${xx}`)) a[yy][xx] = "Q";
+}
+
+/** Bouclier du Chevalier : bloc à gauche du corps, jusqu'à la première colonne de contour commune. */
+function shieldOf(a: string[][]): { y0: number; y1: number; sw: number; block: string[][] } | null {
+  const core = a.map((r, y) => (r[0] !== "." ? y : -1)).filter((y) => y >= 0);
+  if (core.length < 2) return null;
+  let sw = -1;
+  for (let x = 3; x <= 6 && sw < 0; x++) if (core.every((y) => a[y][x] === "K")) sw = x;
+  if (sw < 0) return null;
+  const has = (y: number) => (a[y] ?? []).slice(0, sw).some((c) => c !== ".");
+  let y0 = core[0];
+  let y1 = core[core.length - 1];
+  if (has(y0 - 1)) y0--;
+  if (has(y1 + 1)) y1++;
+  const block: string[][] = [];
+  for (let y = y0; y <= y1; y++) block.push(a[y].slice(0, sw));
+  return { y0, y1, sw, block };
+}
+
+/** Parade : le Chevalier passe son propre bouclier devant lui ; le Panda moine tient son bambou en travers. */
+function parryPose(a: string[][], i: Weapon, character: CharacterId): Grid {
+  if (character === "PANDA") {
+    i.cells.forEach(([y, x]) => { a[y][x] = "."; });
+    const y = Math.min(a.length - 4, i.hy + 1);
+    widen(a, i.col + 2);
+    a.forEach((r) => r.unshift(".", "."));
+    const w = a[0].length;
+    for (let x = 0; x < w; x++) a[y][x] = i.blade;
+    for (const x of [1, w - 3]) { a[y - 1][x] = "N"; a[y + 1][x] = "N"; }
+    const ends: [number, number][] = [[y, 0], [y, 1], [y, w - 2], [y, w - 1]];
+    glow(a, ends);
+    return a.map((r) => r.join(""));
+  }
+  const s = shieldOf(a);
+  if (!s) return a.map((r) => r.join(""));
+  for (let y = s.y0; y <= s.y1; y++) {
+    for (let x = 0; x < s.sw; x++) a[y][x] = ".";
+    if (a[y][s.sw] !== ".") a[y][s.sw] = "K";
+  }
+  const top = Math.max(0, i.hy - Math.floor((s.y1 - s.y0 + 1) / 2)) + 1;
+  const x0 = i.col - 1;
+  widen(a, x0 + s.sw + 2);
+  a.unshift(blankRow(a[0].length));
+  const cells: [number, number][] = [];
+  s.block.forEach((row, dy) => [...row].reverse().forEach((c, dx) => {
+    if (c === ".") return;
+    a[top + dy][x0 + dx] = c;
+    cells.push([top + dy, x0 + dx]);
+  }));
+  glow(a, cells);
+  return a.map((r) => r.join(""));
+}
+
+/** Potion : une fiole (bouchon, goulot, panse rouge, reflet) portée à la bouche, deux bulles au-dessus. */
+const FLASK = ["..B..", ".KLK.", ".KLK.", "KJJJK", "KJLJK", "KJJJK", ".KKK."];
+function potionPose(a: string[][], i: Weapon): Grid {
+  i.cells.forEach(([y, x]) => { a[y][x] = "."; });
+  for (let k = 0; k < 3; k++) a.unshift(blankRow(a[0].length));
+  const eye = a.findIndex((r) => r.includes("E") || r.includes("I"));
+  const top = Math.max(3, (eye >= 0 ? eye + 1 : Math.round(a.length * 0.3)) - 2);
+  const x0 = i.col - 2;
+  widen(a, x0 + 6);
+  FLASK.forEach((row, dy) => [...row].forEach((c, dx) => { if (c !== ".") a[top + dy][x0 + dx] = c; }));
+  for (let y = top + FLASK.length; y < i.hy + 3 && y < a.length; y++) if (a[y][x0 + 2] === ".") a[y][x0 + 2] = "P";
+  a[top - 2][x0 + 3] = "Q";
+  a[top - 3][x0 + 1] = "Q";
+  a[top - 1][x0 + 4] = "M";
+  return a.map((r) => r.join(""));
+}
+
+/** K.O. : le héros couché, yeux fermés, l'arme posée au sol. */
+function koPose(a: string[][], i: Weapon | null): Grid {
+  if (i) i.cells.forEach(([y, x]) => { a[y][x] = "."; });
+  const h = a.length;
+  const w = a[0].length;
+  const lying = Array.from({ length: w }, (_, y) => Array.from({ length: h }, (_, x) => a[h - 1 - x][y])).filter((r) => r.some((c) => c !== "."));
+  const ground = blankRow(h);
+  if (i) {
+    let x = 1;
+    if (i.grip) ground[x++] = i.grip;
+    if (i.guard) ground[x++] = i.guard;
+    for (let k = 0; k < i.len && x < h; k++) ground[x++] = i.blade;
+  }
+  lying.push(ground);
+  return lying.map((r) => r.join("").replace(/I/g, "N").replace(/E/g, "S"));
+}
+
+function posed(g: Grid, pose: Pose, character: CharacterId = "KNIGHT"): Grid {
   if (pose === "rest") return g;
   const width = Math.max(...g.map((r) => r.length));
   const a = g.map((r) => r.padEnd(width, ".").split(""));
   const i = weaponOf(a);
+  if (pose === "ko") return koPose(a, i);
   if (!i) return g;
-  return pose === "action" ? pointWeapon(a, i) : raiseWeapon(a, i);
+  switch (pose) {
+    case "action":
+      return pointWeapon(a, i);
+    case "victory":
+      return raiseWeapon(a, i);
+    case "parry":
+      return parryPose(a, i, character);
+    case "potion":
+      return potionPose(a, i);
+  }
 }
 
 /** Grille d'une pose, pour les tests. */
 export function poseGrid(character: CharacterId, form: Form, pose: Pose): Grid {
-  return posed(GRIDS[character][form], pose);
+  return posed(GRIDS[character][form], pose, character);
 }
 
 export function sprite(character: CharacterId, color: ColorId, form: Form, mood: Mood, pose: Pose = "rest", crown = false): SpriteData {
   const tired = mood === "tired" || mood === "exhausted";
   const base = character === "KNIGHT" && tired && OPEN_HELMET[form] ? OPEN_HELMET[form]! : GRIDS[character][form];
   const faced = character === "PANDA" ? pandaFace(base, mood) : knightFace(base, mood);
-  const posedGrid = posed(faced, mood === "normal" ? pose : "rest");
+  const posedGrid = posed(faced, mood === "normal" || COMBAT_POSES.includes(pose) ? pose : "rest", character);
   const g = crown ? crowned(posedGrid) : posedGrid;
   const player = COLOR_HEX[color];
   const rects: Rect[] = [];

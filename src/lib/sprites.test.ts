@@ -79,3 +79,24 @@ describe("challenge crown", () => {
     expect(g[3]).toContain("QJXJXJQ");
   });
 });
+
+describe("arena poses", () => {
+  it("draws parry, potion and knock-out for every form, rust included", () => {
+    for (const c of ["KNIGHT", "PANDA"] as const)
+      for (const f of [1, 2, 3, 4, 5, 6] as const)
+        for (const pose of ["parry", "potion", "ko"] as const) expect(sprite(c, "BLUE", f, "tired", pose).rects.length, `${c} ${f} ${pose}`).toBeGreaterThan(10);
+  });
+
+  it("moves the knight's own shield to the front instead of adding one", () => {
+    const parry = poseGrid("KNIGHT", 3, "parry");
+    const rest = poseGrid("KNIGHT", 3, "rest");
+    expect(parry.every((r) => r.slice(0, 4) === "...." || r.slice(0, 4).trim() !== "")).toBe(true);
+    expect(rest.some((r) => r[0] !== ".")).toBe(true);
+    expect(parry.some((r) => r[0] !== ".")).toBe(false);
+  });
+
+  it("lays the hero down on a knock-out: wider than tall", () => {
+    const ko = poseGrid("KNIGHT", 5, "ko");
+    expect(ko[0].length).toBeGreaterThan(ko.length);
+  });
+});

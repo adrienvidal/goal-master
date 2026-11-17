@@ -105,9 +105,19 @@ const STEPS: Step[] = [
       </div>
     ),
   },
+  {
+    title: "Entre dans l'Arène.",
+    text: "Sur la carte de ton binôme, touche « Arène » pour le provoquer. Chaque candidature te donne 1 ⚡ ; à ton tour, dépense-la : attaque, parade, potion ou Botte secrète. Premier K.O. perdu, sinon le plus de PV vendredi 18 h. Le gagnant porte la couronne. Aucune XP en jeu.",
+    stage: (
+      <div className="flex items-end justify-center gap-6">
+        <Sprite character="KNIGHT" color="BLUE" form={3} pose="action" px={5} label="Ton héros attaque" />
+        <span className="arena-flip"><Sprite character="PANDA" color="RED" form={3} pose="parry" px={5} label="Le héros du binôme pare" /></span>
+      </div>
+    ),
+  },
 ];
 
-// Intro du premier lancement (maquettes validées) : 7 écrans, « Passer » à tout moment.
+// Intro du premier lancement (maquettes validées) : 8 écrans, « Passer » à tout moment.
 export default function Intro({ start = 0 }: { start?: number }): React.ReactElement {
   const [i, setI] = useState(start);
   const step = STEPS[i];
