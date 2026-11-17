@@ -185,3 +185,13 @@ describe("end of the fight", () => {
     expect(arenaCrowns([input], new Date("2026-11-19T22:00:00Z"))).toEqual([]);
   });
 });
+
+describe("masterstroke", () => {
+  test("a knock-out in the same turn as the panda's whirl counts", () => {
+    const r = arena({ challengerForm: 1, opponentForm: 1, challengerEnergy: 6 });
+    const apps = [app("a", 0.1), app("a", 0.2), app("a", 0.3), app("a", 0.4)];
+    const first = [act("a", "ATTACK", 1, 6), act("a", "ATTACK", 1.1, 6), act("a", "ATTACK", 1.2, 6), act("n", "END", 2)];
+    const last = [act("a", "WHIRL", 3, 8), act("a", "ATTACK", 3.1, 6), act("a", "ATTACK", 3.2, 6)];
+    expect(state(r, [...first, ...last], 4, apps).over).toMatchObject({ winnerId: "a", ko: true, byBotte: true });
+  });
+});

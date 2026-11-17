@@ -32,7 +32,7 @@ Tout se déduit de l'Arène, de ses actions, des candidatures et des relances ; 
 | Code | Titre | Condition |
 |---|---|---|
 | `gladiator` | Gladiateur | Gagner une Arène |
-| `masterstroke` | Coup de maître | Gagner par K.O. avec sa Botte |
+| `masterstroke` | Coup de maître | Gagner par K.O. dans le tour où l'on a joué sa Botte (le Bambou tourbillon soigne : le Panda y a droit aussi) |
 
 ## Notifications (catégorie Duel, hors plafond)
 

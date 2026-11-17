@@ -64,6 +64,7 @@ export function arenaDeadline(acceptedAt: Date): Date {
 
 export type LogEntry = { at: Date; playerId: string; kind: ArenaKind | "TIMEOUT" | "ENERGY" | "POTION_GAIN"; amount: number };
 export type Turn = { playerId: string; number: number; startedAt: Date; used: number; max: number; endsAt: Date };
+/** `byBotte` : K.O. porté pendant le tour où le gagnant a joué sa Botte (Coup de maître, à la portée des deux personnages). */
 export type Over = { winnerId: string | null; ko: boolean; byBotte: boolean; at: Date };
 export type ArenaState = {
   maxHp: Record<string, number>;
@@ -72,6 +73,8 @@ export type ArenaState = {
   potions: Record<string, number>;
   parry: Record<string, boolean>;
   turn: Turn | null;
+  /** Le tour qui vient de se terminer, pour résumer ce qu'a fait l'adversaire. */
+  previous: { playerId: string; startedAt: Date; endedAt: Date } | null;
   over: Over | null;
   log: LogEntry[];
 };
@@ -103,6 +106,7 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
     potions: Object.fromEntries(ids.map((id) => [id, 0])),
     parry: Object.fromEntries(ids.map((id) => [id, false])),
     turn: null,
+    previous: null,
     over: null,
     log: [],
   };
@@ -113,7 +117,10 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
   const stun: Record<string, number> = Object.fromEntries(ids.map((id) => [id, 0]));
   let turn: Turn = { playerId: r.challengerId, number: 1, startedAt: start, used: 0, max: ACTIONS_PER_TURN, endsAt: new Date(start.getTime() + TURN_TIMEOUT_MS) };
 
+  let botteInTurn = false;
   const passTurn = (at: Date) => {
+    botteInTurn = false;
+    s.previous = { playerId: turn.playerId, startedAt: turn.startedAt, endedAt: at };
     const next = other(turn.playerId);
     const max = Math.max(1, ACTIONS_PER_TURN - stun[next]);
     stun[next] = 0;
@@ -179,8 +186,9 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
       stun[foe] = stats[me].stun;
     }
     s.log.push({ at: a.createdAt, playerId: me, kind: a.kind, amount });
+    if (a.kind === "THRUST" || a.kind === "WHIRL") botteInTurn = true;
     if (s.hp[foe] === 0) {
-      s.over = { winnerId: me, ko: true, byBotte: a.kind === "THRUST", at: a.createdAt };
+      s.over = { winnerId: me, ko: true, byBotte: botteInTurn, at: a.createdAt };
       return s;
     }
     if (a.kind === "END") passTurn(a.createdAt);

@@ -19,7 +19,9 @@ export type AchievementId =
   | "revenant"
   | "first_boss"
   | "duelist"
-  | "unbeaten";
+  | "unbeaten"
+  | "gladiator"
+  | "masterstroke";
 
 export const ACHIEVEMENTS: Record<AchievementId, { title: string; condition: string }> = {
   first_step: { title: "Premier pas", condition: "1ʳᵉ candidature" },
@@ -38,6 +40,8 @@ export const ACHIEVEMENTS: Record<AchievementId, { title: string; condition: str
   first_boss: { title: "Premier boss", condition: "Vaincre un boss en duel" },
   duelist: { title: "Duelliste", condition: "Gagner un défi" },
   unbeaten: { title: "Invaincu", condition: "Gagner 3 défis d'affilée" },
+  gladiator: { title: "Gladiateur", condition: "Gagner une Arène" },
+  masterstroke: { title: "Coup de maître", condition: "Gagner par K.O. dans le tour de ta Botte" },
 };
 
 const APPLICATION_MILESTONES: [number, AchievementId][] = [
@@ -66,8 +70,11 @@ export function earnedAchievements(input: {
   bossesBeaten?: number;
   /** Plus longue suite de défis gagnés (src/game/challenge.ts). */
   challengeWinStreak?: number;
+  /** Arènes gagnées, et gagnées par K.O. avec la Botte (src/game/arena.ts). */
+  arenaWins?: number;
+  arenaBotteKos?: number;
 }): Set<AchievementId> {
-  const { userId, partnerId, apps, nudges, goalsReached, today, levelForm, bossesBeaten = 0, challengeWinStreak = 0 } = input;
+  const { userId, partnerId, apps, nudges, goalsReached, today, levelForm, bossesBeaten = 0, challengeWinStreak = 0, arenaWins = 0, arenaBotteKos = 0 } = input;
   const active = activeApplications(apps);
   const mine = active.filter((a) => a.userId === userId);
   const myCounts = countsByDay(mine);
@@ -80,6 +87,8 @@ export function earnedAchievements(input: {
   if (bossesBeaten >= 1) earned.add("first_boss");
   if (challengeWinStreak >= 1) earned.add("duelist");
   if (challengeWinStreak >= UNBEATEN_WINS) earned.add("unbeaten");
+  if (arenaWins >= 1) earned.add("gladiator");
+  if (arenaBotteKos >= 1) earned.add("masterstroke");
 
   const partnerDays = countsByDay(active.filter((a) => a.userId === partnerId));
   if ([...myCounts.keys()].some((d) => partnerDays.has(d))) earned.add("duo");

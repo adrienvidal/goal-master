@@ -36,7 +36,10 @@ export type NotificationEvent =
   | { kind: "rust"; lastDay: Day; idle: number; hero: string }
   | { kind: "news"; step: number; title: string }
   | { kind: "challenge"; challengeId: string; from: string; target: number; until: string }
-  | { kind: "challenge-end"; challengeId: string; won: boolean; partner: string; mine: number; theirs: number };
+  | { kind: "challenge-end"; challengeId: string; won: boolean; partner: string; mine: number; theirs: number }
+  | { kind: "arena"; arenaId: string; from: string; rusty: boolean }
+  | { kind: "arena-turn"; arenaId: string; turn: number; partner: string; summary: string; hp: number }
+  | { kind: "arena-end"; arenaId: string; won: boolean | null; ko: boolean; partner: string };
 
 const RULES: Record<NotificationEvent["kind"], { category: Category; capped: boolean }> = {
   nudge: { category: "nudges", capped: false },
@@ -49,6 +52,9 @@ const RULES: Record<NotificationEvent["kind"], { category: Category; capped: boo
   news: { category: "news", capped: true },
   challenge: { category: "duel", capped: false },
   "challenge-end": { category: "duel", capped: false },
+  arena: { category: "duel", capped: false },
+  "arena-turn": { category: "duel", capped: false },
+  "arena-end": { category: "duel", capped: false },
 };
 
 export function ruleOf(event: NotificationEvent): { category: Category; capped: boolean } {
@@ -74,6 +80,11 @@ export function keyOf(event: NotificationEvent): string {
     case "challenge":
     case "challenge-end":
       return `${event.kind}:${event.challengeId}`;
+    case "arena":
+    case "arena-end":
+      return `${event.kind}:${event.arenaId}`;
+    case "arena-turn":
+      return `arena-turn:${event.arenaId}:${event.turn}`;
   }
 }
 
@@ -114,6 +125,20 @@ export function textOf(event: NotificationEvent): NotificationText {
       return event.won
         ? t(`Défi gagné ! Tu as battu ${event.partner} ${event.mine} à ${event.theirs}.`, "La couronne est à toi jusqu'à demain soir.", "/defi")
         : t(`${event.partner} l'emporte ${event.theirs} à ${event.mine}.`, "Tes candidatures comptent quand même pour l'XP et pour le boss.", "/defi");
+    case "arena":
+      return {
+        title: `🛡️ ${event.from} te provoque en Arène`,
+        headline: `${event.from} te provoque en Arène.`,
+        detail: event.rusty ? "Ton héros est rouillé : il entre sans énergie. Une candidature et il reprend les armes." : "Tour par tour, tes candidatures font tes coups.",
+        url: "/",
+      };
+    case "arena-turn":
+      return { title: "🛡️ À toi de jouer", headline: `${event.summary} Il te reste ${event.hp} PV.`, detail: "Ton tour t'attend 24 h dans l'Arène.", url: "/arene" };
+    case "arena-end":
+      if (event.won === null) return t(`Arène : match nul contre ${event.partner}.`, "Même nombre de PV vendredi 18 h, pas de couronne cette fois.", "/arene/resultat");
+      return event.won
+        ? t(event.ko ? `K.O. ! Tu as battu ${event.partner} dans l'Arène.` : `Victoire aux points contre ${event.partner} !`, "La couronne est à toi jusqu'à demain soir.", "/arene/resultat")
+        : t(`${event.partner} l'emporte dans l'Arène.`, "Tes candidatures comptent quand même pour l'XP et pour le boss.", "/arene/resultat");
   }
 }
 
@@ -121,6 +146,7 @@ export function textOf(event: NotificationEvent): NotificationText {
 export function pushBody(text: NotificationText, event: NotificationEvent): string {
   if (event.kind === "nudge") return NUDGE_MESSAGES[event.message];
   if (event.kind === "challenge") return `${event.target} candidatures avant ${event.until}. ${text.detail}`;
+  if (event.kind === "arena" || event.kind === "arena-turn") return `${event.kind === "arena" ? "" : text.headline + " "}${text.detail}`.trim();
   return `${text.headline} ${text.detail}`;
 }
 

@@ -15,8 +15,8 @@ function daily(userId: string, firstDay: string, days: number, perDay = 1): Appl
 const base = { userId: "a", partnerId: "b", nudges: [] as Nudge[], goalsReached: 0, today: "2026-11-30", levelForm: 1 as const };
 
 describe("earnedAchievements", () => {
-  test("16 achievements are defined", () => {
-    expect(Object.keys(ACHIEVEMENTS)).toHaveLength(16);
+  test("18 achievements are defined", () => {
+    expect(Object.keys(ACHIEVEMENTS)).toHaveLength(18);
     expect(ACHIEVEMENTS.centurion.title).toBe("Centurion");
   });
 
@@ -86,4 +86,13 @@ test("challenge wins: duelist, then unbeaten after 3 in a row", () => {
   expect(earnedAchievements({ ...base, challengeWinStreak: 1 }).has("duelist")).toBe(true);
   expect(earnedAchievements({ ...base, challengeWinStreak: 2 }).has("unbeaten")).toBe(false);
   expect(earnedAchievements({ ...base, challengeWinStreak: 3 }).has("unbeaten")).toBe(true);
+});
+
+describe("arena achievements", () => {
+  const base = { userId: "a", partnerId: "b", apps: [], nudges: [], goalsReached: 0, today: "2026-11-17", levelForm: 1 as const };
+  test("Gladiator for a won arena, Masterstroke for a knock-out in the turn of the special move", () => {
+    expect(earnedAchievements({ ...base, arenaWins: 1 }).has("gladiator")).toBe(true);
+    expect(earnedAchievements({ ...base, arenaWins: 1 }).has("masterstroke")).toBe(false);
+    expect(earnedAchievements({ ...base, arenaWins: 1, arenaBotteKos: 1 }).has("masterstroke")).toBe(true);
+  });
 });
