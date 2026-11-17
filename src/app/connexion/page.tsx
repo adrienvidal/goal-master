@@ -16,7 +16,7 @@ export default async function LoginPage(): Promise<React.ReactElement> {
         </div>
         {devLoginEnabled(process.env) ? (
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-muted">Base locale : connexion directe, sans code.</p>
+          <p className="text-sm text-muted">Version de test : connexion directe, sans code.</p>
           {parseAllowedEmails(process.env.ALLOWED_EMAILS).map((email) => (
             <form key={email} action={devLogin.bind(null, email)}>
               <button type="submit" className="btn ghost !text-[10px]">{email}</button>
