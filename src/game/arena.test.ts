@@ -5,6 +5,7 @@ import {
   arenaPhase,
   arenaState,
   canProvoke,
+  mustPass,
   openArena,
   startEnergy,
   statsFor,
@@ -193,5 +194,22 @@ describe("masterstroke", () => {
     const first = [act("a", "ATTACK", 1, 6), act("a", "ATTACK", 1.1, 6), act("a", "ATTACK", 1.2, 6), act("n", "END", 2)];
     const last = [act("a", "WHIRL", 3, 8), act("a", "ATTACK", 3.1, 6), act("a", "ATTACK", 3.2, 6)];
     expect(state(r, [...first, ...last], 4, apps).over).toMatchObject({ winnerId: "a", ko: true, byBotte: true });
+  });
+});
+
+describe("automatic end of turn", () => {
+  test("a player with no energy and no potion left must pass", () => {
+    const s = state(arena(), [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 5)], 2);
+    expect(s.turn).toMatchObject({ playerId: "a", used: 2 });
+    expect(mustPass(s, "a")).toBe(true);
+  });
+
+  test("energy left keeps the hand", () => {
+    expect(mustPass(state(arena(), [act("a", "ATTACK", 1, 5)], 2), "a")).toBe(false);
+  });
+
+  test("only the player whose turn it is can be forced to pass", () => {
+    const s = state(arena({ opponentEnergy: 0 }), [], 1);
+    expect(mustPass(s, "n")).toBe(false);
   });
 });

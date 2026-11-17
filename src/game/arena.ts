@@ -264,6 +264,11 @@ export function canPlay(state: ArenaState, playerId: string, kind: ArenaKind): M
   return { ok: true };
 }
 
+/** Plus rien à jouer ce tour (ni énergie ni potion) : le tour se termine tout seul, l'autre n'attend pas. */
+export function mustPass(state: ArenaState, playerId: string): boolean {
+  return !state.over && state.turn?.playerId === playerId && state.energy[playerId] < 1 && state.potions[playerId] < 1;
+}
+
 /** Valeur tirée d'une action : dégâts d'attaque dans la fourchette, Botte et potion fixes. */
 export function rollValue(kind: ArenaKind, form: number, random: () => number = Math.random): number {
   const st = statsFor(form);

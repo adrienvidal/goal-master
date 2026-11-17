@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { cancelChallenge, launchChallenge, respondChallenge, type ChallengeResult } from "@/app/defi-actions";
 import { CHALLENGE_TARGETS, type ChallengeWhen } from "@/game/challenge";
@@ -39,12 +40,14 @@ export function PartnerActions({ partnerName, nudgeSentToday, blink, launch, are
         )}
         {arena.ok ? (
           <button type="button" className="btn arena" onClick={() => setPanel("arena")}>🛡️ Arène</button>
+        ) : arena.enter ? (
+          <Link href="/arene" className="btn arena no-underline">🛡️ Entrer</Link>
         ) : (
           <span className="btn off" aria-disabled="true">🛡️ Arène</span>
         )}
       </div>
       {launch.ok ? null : <p className="text-sm text-muted">{launch.reason}</p>}
-      {arena.ok ? null : <p className="text-sm text-muted">{arena.reason}</p>}
+      {arena.ok || arena.enter ? null : <p className="text-sm text-muted">{arena.reason}</p>}
     </div>
   );
 }

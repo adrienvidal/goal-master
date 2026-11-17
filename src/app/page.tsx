@@ -147,7 +147,7 @@ function arenaLaunch(me: PlayerView, partner: PlayerView, entries: ArenaEntry[],
     if (check.reason === "today") return { ok: false, reason: "Tu as déjà ouvert une Arène aujourd'hui, reviens demain." };
     const open = openArena(entries, now);
     const waiting = open !== null && arenaPhase(open.arena, open.actions, now) === "pending";
-    return { ok: false, reason: waiting ? "Une provocation attend une réponse." : "Un combat est déjà en cours." };
+    return waiting ? { ok: false, reason: "Une provocation attend une réponse." } : { ok: false, reason: "Un combat est en cours.", enter: true };
   }
   const rusty = (v: PlayerView) => v.mood === "tired" || v.mood === "exhausted";
   const [a, b] = [statsFor(me.levelForm), statsFor(partner.levelForm)];
@@ -188,6 +188,7 @@ function ArenaCard({ input, meId, views, now }: { input: ArenaInput; meId: strin
         {cells.map((on, i) => <i key={i} className={`energy-cell ${on ? "" : "empty"}`} />)}
       </div>
       {mine && s.energy[meId] === 0 ? <p className="text-sm text-muted">Envoie une candidature pour recharger 1 ⚡. Sinon, tu peux finir ton tour.</p> : null}
+      <span className="btn arena">{mine ? "Entrer et jouer" : "Entrer dans l'Arène"}</span>
     </Link>
   );
 }
