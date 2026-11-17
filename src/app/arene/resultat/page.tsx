@@ -55,7 +55,11 @@ export default async function ArenaResultPage(): Promise<React.ReactElement> {
           <span>Dégâts infligés</span><span className="num text-right">{dealt(me.id)}</span><span className="num text-right">{dealt(partner.id)}</span>
         </div>
         {outcome === "won" ? <p className="text-sm text-muted">Ta couronne reste sur ton avatar jusqu&apos;à demain minuit.</p> : null}
-        {outcome === "lost" ? <p className="text-sm text-muted">Tes {myApps} candidature{myApps > 1 ? "s" : ""} pendant le combat comptent quand même pour ton XP et pour le boss.</p> : null}
+        {outcome === "lost" ? (
+          <p className="text-sm text-muted">
+            {myApps === 0 ? "Aucune candidature pendant ce combat : au prochain, chacune te donne 1 ⚡." : `${myApps === 1 ? "Ta candidature" : `Tes ${myApps} candidatures`} pendant le combat ${myApps === 1 ? "compte" : "comptent"} quand même pour ton XP et pour le boss.`}
+          </p>
+        ) : null}
         {outcome === "draw" ? <p className="text-sm text-muted">Même nombre de PV : pas de couronne cette fois.</p> : null}
         {badge ? <p className="border-[3px] border-gold px-3 py-2 text-sm">🏆 Succès débloqué : {badge}</p> : null}
         <ArenaContinue id={input.arena.id} />

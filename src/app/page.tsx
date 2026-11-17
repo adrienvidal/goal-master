@@ -130,6 +130,16 @@ function ChallengeRace({ challenge, views, apps, now }: { challenge: ChallengeRo
   );
 }
 
+/** Ma dernière provocation refusée ou effacée dans les 48 dernières heures, à signaler tant qu'aucune Arène n'est ouverte. */
+function closedArena(playerId: string, partnerName: string, entries: ArenaEntry[], now: Date): { id: string; text: string } | null {
+  const last = entries.find((e) => e.arena.challengerId === playerId);
+  if (!last || now.getTime() - last.arena.createdAt.getTime() >= 2 * DAY_MS) return null;
+  const phase = arenaPhase(last.arena, last.actions, now);
+  if (phase === "declined") return { id: last.arena.id, text: `${partnerName} décline l'Arène pour cette fois. Tu peux en ouvrir une autre.` };
+  if (phase === "expired") return { id: last.arena.id, text: `Ta provocation s'est effacée : ${partnerName} n'a pas répondu dans les 24 h.` };
+  return null;
+}
+
 /** Ce que le bouton « Arène » propose : les stats comparées, ou la raison du refus. */
 function arenaLaunch(me: PlayerView, partner: PlayerView, entries: ArenaEntry[], now: Date): ArenaLaunch {
   const check = canProvoke(me.id, entries, now);
@@ -165,8 +175,8 @@ function ArenaCard({ input, meId, views, now }: { input: ArenaInput; meId: strin
         <span className={`num ${mine ? "arena-go text-gold" : "text-magic"}`}>{mine ? "À toi de jouer" : `${foe?.pseudo ?? "Ton binôme"} réfléchit…`}</span>
       </div>
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-        {views.map((v, i) => (
-          <span key={v.id} className={i === 0 ? "contents" : "contents"}>
+        {views.map((v) => (
+          <span key={v.id} className="contents">
             <span className="text-sm">{v.id === meId ? "Toi" : v.pseudo}</span>
             <Bar value={s.hp[v.id]} max={s.maxHp[v.id]} tone="green" label={`PV : ${v.id === meId ? "toi" : v.pseudo}`} />
             <span className="num">{s.hp[v.id]}/{s.maxHp[v.id]}</span>
@@ -229,16 +239,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const arenaOutgoing = openFight && fightPhase === "pending" && openFight.arena.challengerId === player.id ? openFight.arena : null;
   const arenaRunning = openFight && fightPhase === "running" ? arenas.find((a) => a.arena.id === openFight.arena.id) ?? null : null;
   const lastArena = finishedArenas(arenas, now)[0] ?? null;
-  const myLastArena = game.arenas.find((e) => e.arena.challengerId === player.id) ?? null;
-  const arenaClosed = !openFight && myLastArena && now.getTime() - myLastArena.arena.createdAt.getTime() < 2 * DAY_MS
-    ? (() => {
-        const phase = arenaPhase(myLastArena.arena, myLastArena.actions, now);
-        const who = partnerRow?.pseudo ?? "Ton binôme";
-        if (phase === "declined") return { id: myLastArena.arena.id, text: `${who} décline l'Arène pour cette fois. Tu peux en ouvrir une autre.` };
-        if (phase === "expired") return { id: myLastArena.arena.id, text: `Ta provocation s'est effacée : ${who} n'a pas répondu dans les 24 h.` };
-        return null;
-      })()
-    : null;
+  const arenaClosed = openFight ? null : closedArena(player.id, partnerRow?.pseudo ?? "Ton binôme", game.arenas, now);
   const open = openChallenge(game.challenges, now);
   const openPhase = open ? phaseOf(open, now) : null;
   const incoming = open && openPhase === "pending" && open.opponentId === player.id ? open : null;

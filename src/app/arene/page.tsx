@@ -16,16 +16,16 @@ const DAY = new Intl.DateTimeFormat("fr-FR", { weekday: "short", timeZone: "Euro
 const BOTTE = { KNIGHT: "Coup d'estoc", PANDA: "Bambou tourbillon" } as const;
 
 /** Une ligne du journal, vue par `meId`. */
-function logLine(e: LogEntry, meId: string, names: Record<string, string>): string {
+function logLine(e: LogEntry, meId: string, foeName: string): string {
   const me = e.playerId === meId;
-  const who = me ? "Tu" : names[e.playerId];
+  const who = me ? "Tu" : foeName;
   switch (e.kind) {
     case "ATTACK":
       return me ? `Tu attaques : ${e.amount} dégâts.` : `${who} attaque : ${e.amount} dégâts.`;
     case "THRUST":
-      return `${who} ${me ? "lances" : "lance"} Coup d'estoc : ${e.amount} dégâts.`;
+      return me ? `Tu lances Coup d'estoc : ${e.amount} dégâts.` : `${who} lance Coup d'estoc : ${e.amount} dégâts.`;
     case "WHIRL":
-      return `${who} ${me ? "lances" : "lance"} Bambou tourbillon : +${e.amount} PV, ${me ? `${names[Object.keys(names).find((id) => id !== meId)!]} perd` : "tu perds"} une action.`;
+      return me ? `Tu lances Bambou tourbillon : +${e.amount} PV, ${foeName} est étourdi.` : `${who} lance Bambou tourbillon : +${e.amount} PV, tu es étourdi.`;
     case "PARRY":
       return me ? "Tu te mets en garde." : `${who} se met en garde.`;
     case "POTION":
@@ -89,7 +89,6 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   const views = game.players.map((p) => buildPlayerView(p, game.apps, game.nudges, null, now));
   const me = views.find((v) => v.id === player.id)!;
   const foe = views.find((v) => v.id !== player.id)!;
-  const names = Object.fromEntries(views.map((v) => [v.id, v.pseudo]));
   const myForm = (player.id === input.arena.challengerId ? input.arena.challengerForm : input.arena.opponentForm) ?? 1;
   const st = statsFor(myForm);
   const myTurn = s.turn?.playerId === player.id;
@@ -148,7 +147,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
               {log.map((e, i) => (
                 <li key={i} className="grid grid-cols-[52px_1fr] gap-2">
                   <time className="num text-muted">{TIME.format(e.at)}</time>
-                  <span className={e.kind === "ENERGY" || e.kind === "POTION_GAIN" || e.kind === "TIMEOUT" ? "italic text-muted" : e.playerId === player.id ? "text-[#5aa9ff]" : "text-[#e5533d]"}>{logLine(e, player.id, names)}</span>
+                  <span className={e.kind === "ENERGY" || e.kind === "POTION_GAIN" || e.kind === "TIMEOUT" ? "italic text-muted" : e.playerId === player.id ? "text-[#5aa9ff]" : "text-[#e5533d]"}>{logLine(e, player.id, foe.pseudo)}</span>
                 </li>
               ))}
             </ol>
