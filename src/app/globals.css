@@ -243,7 +243,18 @@ html[data-decor] main { visibility: hidden; }
 .arena-stage > * { position: relative; z-index: 1; min-width: 0; }
 /* Le retournement et l'étourdissement se posent sur l'enveloppe, jamais sur le svg : les animations du sprite
    (respiration, frappe) réécrivent son transform, et le héros de droite se retournait à chaque pas. */
-.arena-body { display: inline-flex; }
+.arena-body { position: relative; display: inline-flex; }
+/* Effets des Bottes : posés dans l'enveloppe, ils suivent le retournement du héros de droite. */
+.arena-fx { position: absolute; pointer-events: none; image-rendering: pixelated; animation: arena-fx .9s steps(4) forwards; }
+.arena-fx.at-front { left: 85%; bottom: 30%; }
+.arena-fx.at-body { left: 10%; bottom: 25%; }
+.arena-fx.at-head { left: 50%; top: -14px; margin-left: -13px; animation-name: arena-fx-stars; animation-duration: 1.4s; }
+.arena-fx.at-around { left: -20%; top: -10%; animation-name: arena-fx-spin; }
+.arena-fx.at-around-2 { right: -25%; bottom: 0; animation-name: arena-fx-spin; animation-direction: reverse; }
+.arena-fx.at-side { right: -30%; top: 0; }
+@keyframes arena-fx { 0% { opacity: 0; } 20%, 70% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes arena-fx-stars { 0% { opacity: 0; } 15%, 80% { opacity: 1; } 50% { translate: 0 -3px; } 100% { opacity: 0; } }
+@keyframes arena-fx-spin { 0% { opacity: 0; translate: 0 0; } 30% { opacity: 1; translate: 6px -4px; } 70% { opacity: 1; translate: -6px 4px; } 100% { opacity: 0; translate: 0 0; } }
 .arena-body.flip { transform: scaleX(-1); }
 .arena-body.stun { transform: rotate(-7deg); }
 .arena-body.flip.stun { transform: scaleX(-1) rotate(-7deg); }
@@ -262,6 +273,6 @@ html[data-decor] main { visibility: hidden; }
 .arena-go { animation: arena-blink 1.2s steps(2) infinite; }
 @keyframes arena-rise { 0% { transform: translate(-50%, 6px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -18px); opacity: 0; } }
 @keyframes arena-blink { 50% { opacity: .35; } }
-@media (prefers-reduced-motion: reduce) { .arena-body, .arena-dmg, .arena-go { animation: none; } .arena-dmg { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .arena-body, .arena-dmg, .arena-go { animation: none; } .arena-fx { animation: arena-fx .9s steps(1) forwards; } .arena-dmg { transform: translateX(-50%); } }
 /* Trois boutons sur la carte du binôme : l'icône au-dessus du mot pour tenir sur mobile */
 .partner-actions .btn { flex-direction: column; gap: 6px; font-size: 9px; padding: 12px 6px; }
