@@ -64,7 +64,7 @@ export function arenaDeadline(acceptedAt: Date): Date {
   return end.getTime() - acceptedAt.getTime() < 48 * H ? parisTime(addDays(friday, 7), DUEL_HOUR) : end;
 }
 
-export type LogEntry = { at: Date; playerId: string; kind: ArenaKind | "TIMEOUT" | "ENERGY" | "POTION_GAIN"; amount: number };
+export type LogEntry = { at: Date; playerId: string; kind: ArenaKind | "TIMEOUT" | "STUCK" | "ENERGY" | "POTION_GAIN"; amount: number };
 export type Turn = { playerId: string; number: number; startedAt: Date; used: number; max: number; endsAt: Date };
 /** `byBotte` : K.O. porté pendant le tour où le gagnant a joué sa Botte (Coup de maître, à la portée des deux personnages). */
 export type Over = { winnerId: string | null; ko: boolean; byBotte: boolean; at: Date };
@@ -128,6 +128,18 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
     stun[next] = 0;
     turn = { playerId: next, number: turn.number + 1, startedAt: at, used: 0, max, endsAt: new Date(at.getTime() + TURN_TIMEOUT_MS) };
   };
+  // Tour injouable : sans énergie (une potion seule ne retient la main que si l'autre n'a pas d'énergie non plus),
+  // la main passe dès que l'autre a de quoi jouer. Personne n'attend 24 h un joueur qui ne peut rien faire.
+  // Le nouveau joueur a toujours de quoi jouer : la main ne fait jamais d'allers-retours.
+  const unstick = (at: Date) => {
+    const me = turn.playerId;
+    const foe = other(me);
+    const stuck = s.energy[me] < 1 && (s.potions[me] < 1 || s.energy[foe] >= 1);
+    const foeCanPlay = s.energy[foe] >= 1 || s.potions[foe] >= 1;
+    if (!stuck || !foeCanPlay) return;
+    s.log.push({ at, playerId: me, kind: "STUCK", amount: 0 });
+    passTurn(at);
+  };
   const timeouts = (until: Date) => {
     while (turn.endsAt <= until) {
       if (turn.used === 0) {
@@ -135,6 +147,7 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
         s.log.push({ at: turn.endsAt, playerId: turn.playerId, kind: "TIMEOUT", amount: 0 });
       }
       passTurn(turn.endsAt);
+      unstick(turn.startedAt);
     }
   };
   const hit = (target: string, amount: number, pierce: boolean) => {
@@ -157,6 +170,7 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
       .map((a) => ({ at: a.createdAt, order: 2, kind: "action" as const, action: a })),
   ].sort((x, y) => x.at.getTime() - y.at.getTime() || x.order - y.order);
 
+  unstick(start);
   for (const e of events) {
     timeouts(e.at);
     if (e.kind === "energy") {
@@ -164,15 +178,22 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
       const gained = Math.min(MAX_ENERGY, s.energy[id] + ENERGY_PER_APP) - s.energy[id];
       s.energy[id] += gained;
       s.log.push({ at: e.at, playerId: id, kind: "ENERGY", amount: gained });
+      unstick(e.at);
       continue;
     }
     if (e.kind === "potion") {
       for (const id of ids) s.potions[id] = Math.min(MAX_POTIONS, s.potions[id] + 1);
       s.log.push({ at: e.at, playerId: r.challengerId, kind: "POTION_GAIN", amount: 1 });
+      unstick(e.at);
       continue;
     }
     const a = e.action!;
-    if (a.playerId !== turn.playerId) continue;
+    // Un coup enregistré a été validé à l'écriture : si le rejeu donne la main à l'autre (candidature retirée
+    // depuis, qui avait fait passer un tour injouable), le coup garde sa main, il n'est jamais effacé.
+    if (a.playerId !== turn.playerId) {
+      s.log.push({ at: a.createdAt, playerId: turn.playerId, kind: "STUCK", amount: 0 });
+      passTurn(a.createdAt);
+    }
     const me = a.playerId;
     const foe = other(me);
     s.energy[me] = Math.max(0, s.energy[me] - COST[a.kind]);
@@ -196,6 +217,7 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
     }
     if (a.kind === "END") passTurn(a.createdAt);
     else if (++turn.used >= turn.max) passTurn(a.createdAt);
+    unstick(a.createdAt);
   }
   timeouts(end);
   if (now >= r.deadline) {

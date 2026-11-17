@@ -1,13 +1,15 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
+import { arenaState } from "@/game/arena";
 import { parisDay } from "@/game/calendar";
 import { currentDuel } from "@/game/duel";
 import { formReached, koCrossed, nudgesJustSucceeded, type NotificationEvent } from "@/game/notifications";
 import { formName } from "@/lib/forms";
 import { findDuplicate, removalImpact } from "@/lib/playerView";
 import { db } from "@/server/db";
-import { loadDuelInput, loadGame, syncAchievements, type GameData } from "@/server/game";
+import { arenaInputs, loadDuelInput, loadGame, syncAchievements, type GameData } from "@/server/game";
+import { arenaEvents } from "@/server/arena";
 import { settleChallenge } from "@/server/challenge";
 import { notifyAll } from "@/server/notify";
 import { requirePlayer } from "@/server/session";
@@ -87,6 +89,12 @@ async function applicationEvents(playerId: string, before: GameData, updated: Ga
   const [duelBefore, duelAfter] = await Promise.all([before, updated].map(async (g) => currentDuel(await loadDuelInput(g), now)));
   if (duelAfter && koCrossed(duelBefore, duelAfter)) {
     items.push({ playerId: partner.id, event: { kind: "ko", friday: duelAfter.id, partner: me.pseudo, boss: duelAfter.boss } });
+  }
+  // Une candidature peut faire passer un tour injouable de l'Arène : « À toi de jouer » part tout de suite.
+  for (const input of arenaInputs(updated)) {
+    const prior = arenaInputs(before).find((i) => i.arena.id === input.arena.id);
+    const turn = arenaState(input, now).turn;
+    if (prior && turn && turn.number !== arenaState(prior, now).turn?.number) items.push(...arenaEvents(input, updated, now));
   }
   return items;
 }

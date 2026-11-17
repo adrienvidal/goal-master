@@ -138,9 +138,8 @@ describe("turns", () => {
     const actions = [act("a", "ATTACK", 1, 5), act("a", "END", 1.1), act("n", "WHIRL", 2, 10)];
     const s = state(r, actions, 3);
     expect(s.hp.n).toBe(34);
-    expect(s.turn).toMatchObject({ playerId: "n" });
-    const s2 = state(r, [...actions, act("n", "END", 2.1)], 3);
-    expect(s2.turn).toMatchObject({ playerId: "a", max: 2 });
+    // n n'a plus d'énergie, a en a : la main passe aussitôt, avec un tour raccourci par l'étourdissement.
+    expect(s.turn).toMatchObject({ playerId: "a", max: 2 });
   });
 
   test("24 h without playing: automatic parry and the hand passes", () => {
@@ -196,7 +195,7 @@ describe("end of the fight", () => {
 describe("masterstroke", () => {
   test("a knock-out in the same turn as the panda's whirl counts", () => {
     const r = arena({ challengerForm: 1, opponentForm: 1, challengerEnergy: 6 });
-    const apps = [app("a", 0.1), app("a", 0.2), app("a", 0.3), app("a", 0.4)];
+    const apps = [app("a", 0.1), app("a", 0.2), app("a", 0.3), app("a", 0.4), app("a", 2.5)];
     const first = [act("a", "ATTACK", 1, 6), act("a", "ATTACK", 1.1, 6), act("a", "ATTACK", 1.2, 6), act("n", "END", 2)];
     const last = [act("a", "WHIRL", 3, 8), act("a", "ATTACK", 3.1, 6), act("a", "ATTACK", 3.2, 6)];
     expect(state(r, [...first, ...last], 4, apps).over).toMatchObject({ winnerId: "a", ko: true, byBotte: true });
@@ -205,7 +204,7 @@ describe("masterstroke", () => {
 
 describe("automatic end of turn", () => {
   test("a player with no energy and no potion left must pass", () => {
-    const s = state(arena(), [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 5)], 2);
+    const s = state(arena({ opponentEnergy: 0 }), [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 5)], 2);
     expect(s.turn).toMatchObject({ playerId: "a", used: 2 });
     expect(mustPass(s, "a")).toBe(true);
   });
@@ -218,4 +217,54 @@ describe("automatic end of turn", () => {
     const s = state(arena({ opponentEnergy: 0 }), [], 1);
     expect(mustPass(s, "n")).toBe(false);
   });
+});
+
+describe("stuck turn", () => {
+  test("the hand goes to the other as soon as they can play", () => {
+    const r = arena({ challengerEnergy: 0, opponentEnergy: 0 });
+    const s = state(r, [], 3, [app("n", 2)]);
+    expect(s.turn).toMatchObject({ playerId: "n", number: 2, used: 0 });
+    expect(s.turn!.startedAt).toEqual(at(2));
+    expect(s.log.at(-1)).toMatchObject({ playerId: "a", kind: "STUCK" });
+    expect(s.parry.a).toBe(false);
+  });
+
+  test("nobody moves when neither can play", () => {
+    const s = state(arena({ challengerEnergy: 0, opponentEnergy: 0 }), [], 3);
+    expect(s.turn).toMatchObject({ playerId: "a", number: 1 });
+  });
+
+  test("running out of energy mid-turn hands over at once when the other can play", () => {
+    const s = state(arena(), [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 5)], 2);
+    expect(s.turn).toMatchObject({ playerId: "n", number: 2, used: 0 });
+    expect(s.turn!.startedAt).toEqual(at(1.1));
+  });
+
+  test("a potion alone no longer keeps the hand when the other has energy", () => {
+    // a relance n, n candidate à 1 h : potion pour chacun, 2 ⚡ pour n. a frappe à 1,5 h : plus d'énergie, il lui reste sa potion.
+    const nudge: Nudge = { id: "u1", senderId: "a", recipientId: "n", sentAt: at(0.5) };
+    const s = state(arena({ challengerEnergy: 1, opponentEnergy: 0 }), [act("a", "ATTACK", 1.5, 5)], 2, [app("n", 1)], [nudge]);
+    expect(s.potions.a).toBe(1);
+    expect(s.turn).toMatchObject({ playerId: "n", number: 2 });
+  });
+
+  test("a potion keeps the hand when the other has no energy", () => {
+    // n relance a, a candidate à 1 h : potion pour chacun, 2 ⚡ pour a, qui les dépense.
+    const nudge: Nudge = { id: "u2", senderId: "n", recipientId: "a", sentAt: at(0.5) };
+    const s = state(arena({ challengerEnergy: 0, opponentEnergy: 0 }), [act("a", "ATTACK", 1.5, 5), act("a", "ATTACK", 1.6, 5)], 2, [app("a", 1)], [nudge]);
+    expect(s.turn).toMatchObject({ playerId: "a", used: 2 });
+  });
+
+  test("the hand never bounces back and forth", () => {
+    const r = arena({ challengerEnergy: 0, opponentEnergy: 0 });
+    const s = state(r, [act("n", "ATTACK", 2.5, 5), act("n", "ATTACK", 2.6, 5)], 3, [app("n", 2)]);
+    expect(s.turn).toMatchObject({ playerId: "n", used: 2 });
+  });
+});
+
+test("a hit played after a stuck turn passed stays when the application is removed", () => {
+  const r = arena({ challengerEnergy: 0, opponentEnergy: 0 });
+  const hits = [act("n", "ATTACK", 2.5, 5)];
+  expect(state(r, hits, 3, [app("n", 2)]).hp.a).toBe(29);
+  expect(state(r, hits, 3, [app("n", 2, 2.8)]).hp.a).toBe(29);
 });
