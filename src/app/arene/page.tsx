@@ -109,7 +109,15 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
               <span className="num ml-1.5">{s.energy[player.id]}</span>
             </div>
             {myTurn && s.turn && s.turn.max < 3 ? <p className="border-l-4 border-energy bg-[#13283a] px-2.5 py-1.5 text-sm">Bambou tourbillon t&apos;a étourdi : ce tour, {s.turn.max} action{s.turn.max > 1 ? "s" : ""} au plus.</p> : null}
-            {myTurn && s.energy[player.id] === 0 ? <p className="border-l-4 border-energy bg-[#13283a] px-2.5 py-1.5 text-sm">Chaque candidature te donne 1 ⚡. Tu peux en envoyer une et revenir : ton tour t&apos;attend jusqu&apos;à {turnEnds}.</p> : null}
+            {myTurn && s.energy[player.id] === 0 ? (
+              <p className="border-l-4 border-energy bg-[#13283a] px-2.5 py-1.5 text-sm">
+                {potions > 0
+                  ? potions > 1
+                    ? `Plus d'énergie. Il te reste ${potions} potions : bois-en une ou finis ton tour.`
+                    : "Plus d'énergie. Il te reste une potion : bois-la ou finis ton tour."
+                  : `Chaque candidature te donne 1 ⚡. Tu peux en envoyer une et revenir : ton tour t'attend jusqu'à ${turnEnds}.`}
+              </p>
+            ) : null}
             <ArenaMoves id={input.arena.id} moves={moves} used={s.turn?.used ?? 0} max={s.turn?.max ?? 3} myTurn={myTurn} />
             {!myTurn ? <p className="text-sm text-muted">Tes candidatures d&apos;ici là rechargent ton énergie pour ton prochain tour.</p> : null}
             <Link href="/" className="btn">+ Candidature</Link>
