@@ -157,12 +157,12 @@ export function PushChannel(): React.ReactElement {
       ) : null}
       {state === "ask" ? (
         <>
-          <p className="text-sm text-muted">Tu reçois tout par e-mail. Active le push pour être prévenu tout de suite.</p>
+          <p className="text-sm text-muted">Tu reçois un bilan par e-mail chaque soir. Active le push pour être prévenu tout de suite.</p>
           <button type="button" className="btn !text-[10px]" onClick={enable}>Activer</button>
         </>
       ) : null}
       {state === "denied" ? (
-        <p className="text-sm text-muted">Ton navigateur bloque les notifications de Goal Master. Autorise-les dans ses réglages du site, puis reviens ici. Les e-mails continuent d&apos;arriver.</p>
+        <p className="text-sm text-muted">Ton navigateur bloque les notifications de Goal Master. Autorise-les dans ses réglages du site, puis reviens ici. Le bilan du soir continue d&apos;arriver.</p>
       ) : null}
       {state === "ios" ? (
         <>
@@ -173,7 +173,7 @@ export function PushChannel(): React.ReactElement {
         </>
       ) : null}
       {state === "unsupported" ? (
-        <p className="text-sm text-muted">Ce navigateur ne gère pas les notifications. Ouvre Goal Master dans Chrome, Edge ou Firefox pour les activer. Les e-mails continuent d&apos;arriver.</p>
+        <p className="text-sm text-muted">Ce navigateur ne gère pas les notifications. Ouvre Goal Master dans Chrome, Edge ou Firefox pour les activer. Le bilan du soir continue d&apos;arriver.</p>
       ) : null}
     </div>
   );

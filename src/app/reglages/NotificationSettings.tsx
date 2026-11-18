@@ -3,7 +3,7 @@ import { useOptimistic, useState, useTransition } from "react";
 import { CATEGORIES, CATEGORY_INFO, type Category } from "@/game/notifications";
 import { setCategoryMuted } from "./actions";
 
-// Un interrupteur par catégorie ; il vaut pour le push et pour l'e-mail.
+// Un interrupteur par catégorie ; il vaut pour le push et pour le bilan du jour par e-mail.
 export function NotificationSettings({ muted }: { muted: Category[] }): React.ReactElement {
   const [optimistic, setOptimistic] = useOptimistic(muted, (current: Category[], change: { category: Category; muted: boolean }) =>
     change.muted ? [...current, change.category] : current.filter((c) => c !== change.category),
@@ -15,7 +15,7 @@ export function NotificationSettings({ muted }: { muted: Category[] }): React.Re
     startTransition(async () => {
       setOptimistic({ category, muted: !on });
       await setCategoryMuted(category, !on);
-      setToast(`${CATEGORY_INFO[category].label} : ${on ? "activé" : "coupé, en push comme par e-mail"}.`);
+      setToast(`${CATEGORY_INFO[category].label} : ${on ? "activé" : "coupé, en push comme dans le bilan du soir"}.`);
     });
   }
 

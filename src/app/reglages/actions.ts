@@ -13,7 +13,7 @@ export async function setLandscape(landscape: string): Promise<void> {
   revalidatePath("/", "layout");
 }
 
-/** Coupe ou rétablit une catégorie de notifications, sur les deux canaux (push et e-mail). */
+/** Coupe ou rétablit une catégorie de notifications, sur les deux canaux (push et bilan du jour). */
 export async function setCategoryMuted(category: string, muted: boolean): Promise<void> {
   const player = await requirePlayer();
   if (!isCategory(category)) return;

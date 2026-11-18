@@ -4,7 +4,7 @@ Maquette validée : https://claude.ai/artifact/T7UcytDdGCRdEMB4uwnFNu (`docs/maq
 
 ## Règles
 
-- Chaque notification part **en Web Push** (appareils abonnés) **et par e-mail** (sans interrupteur propre), sauf le tour d'Arène « À toi de jouer », en push seul pour ne pas noyer la boîte mail pendant un combat (décision du 18/11, `sendsEmail` dans `src/game/notifications.ts`).
+- Chaque notification part **en Web Push** (appareils abonnés), tout de suite. **L'e-mail est remplacé par le bilan du jour** (un seul e-mail à 18 h 01) : voir `2026-11-18-bilan-du-jour-design.md`.
 - Cinq catégories, coupables dans `/reglages` ; une catégorie coupée se tait sur les deux canaux.
 - **Plafond : 2 notifications « plafonnées » par jour (Paris) et par personne.** Hors plafond : relance reçue, rappel du jeudi, résultat du duel. Au-delà, abandon (jamais reporté).
 - Chaque notification a une **clé** unique par joueur : elle n'est envoyée qu'une fois, même si l'événement se rejoue (annulation puis nouvel ajout, cron relancé).
