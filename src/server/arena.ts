@@ -9,7 +9,7 @@ type Item = { playerId: string; event: NotificationEvent };
 export function turnSummary(from: string, entries: LogEntry[]): string {
   const sum = (kinds: string[]) => entries.filter((e) => kinds.includes(e.kind)).reduce((n, e) => n + e.amount, 0);
   const parts: string[] = [];
-  const dealt = sum(["ATTACK", "THRUST"]);
+  const dealt = sum(["ATTACK", "THRUST"]) + entries.reduce((n, e) => n + (e.dealt ?? 0), 0);
   const healed = sum(["WHIRL", "POTION"]);
   if (dealt > 0) parts.push(`t'a infligé ${dealt} dégât${dealt > 1 ? "s" : ""}`);
   if (healed > 0) parts.push(`s'est soigné de ${healed}`);

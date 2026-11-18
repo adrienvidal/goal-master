@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
-import { ANSWER_WITHIN_MS, arenaDeadline, arenaState, canPlay, canProvoke, mustPass, openArena, rollValue, type ArenaKind } from "@/game/arena";
+import { ANSWER_WITHIN_MS, arenaDeadline, arenaState, canPlay, canProvoke, mustPass, openArena, rollValue, rulesFor, type ArenaKind } from "@/game/arena";
 import { buildPlayerView } from "@/lib/playerView";
 import { arenaEvents } from "@/server/arena";
 import { db } from "@/server/db";
@@ -94,7 +94,7 @@ export async function playArena(id: string, kind: ArenaKind): Promise<ArenaResul
         const check = canPlay(state, player.id, kind);
         if (!check.ok) throw new Error(check.reason);
         const form = (player.id === arena.challengerId ? arena.challengerForm : arena.opponentForm) ?? 1;
-        const played = await tx.arenaAction.create({ data: { arenaId: id, playerId: player.id, kind, value: rollValue(kind, form), createdAt: now } });
+        const played = await tx.arenaAction.create({ data: { arenaId: id, playerId: player.id, kind, value: rollValue(kind, form, rulesFor(arena.rules)), createdAt: now } });
         const next = arenaState({ arena, actions: [...actions, played] }, now);
         if (mustPass(next, player.id)) {
           await tx.arenaAction.create({ data: { arenaId: id, playerId: player.id, kind: "END", value: 0, createdAt: new Date(now.getTime() + 1) } });

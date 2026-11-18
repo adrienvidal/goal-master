@@ -16,11 +16,9 @@ export const ENERGY_PER_TURN = 3;
 export const PARRY_REFUND = 1;
 export const START_POTIONS = 2;
 export const ACTIONS_PER_TURN = 3;
-export const POTION_HEAL = 6;
-export const COST = { ATTACK: 1, PARRY: 1, THRUST: 3, WHIRL: 3, POTION: 0, END: 0 } as const;
 
 export type ArenaStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "CANCELLED";
-export type ArenaKind = keyof typeof COST;
+export type ArenaKind = "ATTACK" | "PARRY" | "THRUST" | "WHIRL" | "POTION" | "END";
 export type ArenaRow = {
   id: string;
   challengerId: string;
@@ -33,29 +31,85 @@ export type ArenaRow = {
   opponentForm: number | null;
   challengerEnergy: number | null;
   opponentEnergy: number | null;
+  /** Version des règles du combat, figée à la création : un combat ne change jamais de règles en cours de route. */
+  rules: number;
 };
 export type ArenaActionRow = { id: string; arenaId: string; playerId: string; kind: ArenaKind; value: number; createdAt: Date };
 export type ArenaEntry = { arena: ArenaRow; actions: ArenaActionRow[] };
 export type ArenaInput = ArenaEntry;
 
-export type Stats = { maxHp: number; attack: [number, number]; thrust: number; pierce: boolean; whirl: number; stun: number };
+/** `whirlHit` : dégâts du Bambou tourbillon, en plus du soin (`whirl`). */
+export type Stats = { maxHp: number; attack: [number, number]; thrust: [number, number]; pierce: boolean; whirl: number; whirlHit: number; stun: number };
 
-/** Stats d'une évolution : écarts modestes, trois paliers (évolutions 1-2, 3-4, 5-6). */
-export function statsFor(form: number): Stats {
-  const tier = Math.ceil(form / 2);
-  return {
-    maxHp: 28 + 2 * form,
-    attack: [3 + tier, 5 + tier],
-    thrust: 10 + 2 * tier,
-    pierce: tier === 3,
-    whirl: 6 + 2 * tier,
-    stun: tier === 3 ? 2 : 1,
-  };
+export type Rules = {
+  version: number;
+  cost: Record<ArenaKind, number>;
+  potionHeal: number;
+  /** Actions du premier tour du lanceur, qui ouvre le combat. */
+  openerActions: number;
+  /** PA en réserve au départ pour celui qui répond à la provocation. */
+  responderBonus: number;
+  stats(form: number): Stats;
+  /** PA en réserve au départ selon l'écart d'évolution (outsider). */
+  startBonus(form: number, otherForm: number): number;
+};
+
+const tierOf = (form: number) => Math.ceil(form / 2);
+
+/** v2 (18/11) : stats qui montent avec l'évolution, +1 PA pour l'outsider. Gardée pour rejouer les combats commencés avant la v3. */
+const V2: Rules = {
+  version: 2,
+  cost: { ATTACK: 1, PARRY: 1, THRUST: 3, WHIRL: 3, POTION: 0, END: 0 },
+  potionHeal: 6,
+  openerActions: ACTIONS_PER_TURN,
+  responderBonus: 0,
+  stats: (form) => {
+    const tier = tierOf(form);
+    return { maxHp: 28 + 2 * form, attack: [3 + tier, 5 + tier], thrust: [10 + 2 * tier, 10 + 2 * tier], pierce: tier === 3, whirl: 6 + 2 * tier, whirlHit: 0, stun: tier === 3 ? 2 : 1 };
+  },
+  startBonus: (form, otherForm) => (form < otherForm ? 1 : 0),
+};
+
+/**
+ * v3 (équilibrage du 18/11) : l'évolution change le style plus que la force (Parade percée au dernier palier),
+ * celui qui ouvre n'a que 2 actions au premier tour et l'autre part avec 1 PA, la Botte coûte 2 PA,
+ * le Bambou tourbillon blesse aussi, et les coups varient davantage pour que rien ne soit joué d'avance.
+ * Cibles convenues avec Adrien, vérifiées par arena-balance.test.ts.
+ */
+const V3: Rules = {
+  version: 3,
+  cost: { ATTACK: 1, PARRY: 1, THRUST: 2, WHIRL: 2, POTION: 0, END: 0 },
+  potionHeal: 6,
+  openerActions: 2,
+  responderBonus: 1,
+  stats: (form) => {
+    const tier = tierOf(form);
+    return { maxHp: 48 + form, attack: [2, 8], thrust: [2 + tier, 10 + tier], pierce: tier === 3, whirl: 2 + tier, whirlHit: 4, stun: 1 };
+  },
+  startBonus: (form, otherForm) => Math.max(0, Math.ceil((otherForm - form) / 2)),
+};
+
+const ALL_RULES: Record<number, Rules> = { 2: V2, 3: V3 };
+export const CURRENT_RULES = V3;
+
+/** Règles d'une version ; une version inconnue retombe sur les règles actuelles. */
+export function rulesFor(version: number | null | undefined): Rules {
+  return (version != null && ALL_RULES[version]) || CURRENT_RULES;
 }
 
-/** PA en réserve au départ : +1 pour le moins évolué (outsider), avant les 3 de son premier tour. */
-export function startBonus(form: Form | number, otherForm: Form | number): number {
-  return form < otherForm ? 1 : 0;
+/** PA en réserve au départ : bonus d'outsider, plus le bonus de celui qui répond (le lanceur ouvre). */
+export function startEnergy(rules: Rules, form: number, otherForm: number, responder: boolean): number {
+  return Math.min(MAX_ENERGY, rules.startBonus(form, otherForm) + (responder ? rules.responderBonus : 0));
+}
+
+/** Stats d'une évolution selon les règles (actuelles par défaut). */
+export function statsFor(form: number, rules: Rules = CURRENT_RULES): Stats {
+  return rules.stats(form);
+}
+
+/** PA en réserve au départ pour l'outsider, selon les règles (actuelles par défaut). */
+export function startBonus(form: Form | number, otherForm: Form | number, rules: Rules = CURRENT_RULES): number {
+  return rules.startBonus(form, otherForm);
 }
 
 /** Vendredi 18 h (Paris) qui suit l'acceptation ; le suivant s'il reste moins de 48 h. */
@@ -66,11 +120,13 @@ export function arenaDeadline(acceptedAt: Date): Date {
 }
 
 /** `hp` : les PV des deux après la ligne, pour rejouer le combat pas à pas. ENERGY = PA du début de tour, REFUND = PA rendu par la Parade. */
-export type LogEntry = { at: Date; playerId: string; kind: ArenaKind | "TIMEOUT" | "ENERGY" | "REFUND"; amount: number; hp: Record<string, number> };
+export type LogEntry = { at: Date; playerId: string; kind: ArenaKind | "TIMEOUT" | "ENERGY" | "REFUND"; amount: number; hp: Record<string, number>; dealt?: number };
 export type Turn = { playerId: string; number: number; startedAt: Date; used: number; max: number; endsAt: Date };
 /** `byBotte` : K.O. porté pendant le tour où le gagnant a joué sa Botte (Coup de maître, à la portée des deux personnages). */
 export type Over = { winnerId: string | null; ko: boolean; byBotte: boolean; at: Date };
 export type ArenaState = {
+  /** Version des règles du combat (voir `rulesFor`). */
+  rulesVersion: number;
   maxHp: Record<string, number>;
   hp: Record<string, number>;
   energy: Record<string, number>;
@@ -89,11 +145,13 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
   const ids = [r.challengerId, r.opponentId];
   const other = (id: string) => (id === r.challengerId ? r.opponentId : r.challengerId);
   const form = (id: string) => (id === r.challengerId ? r.challengerForm : r.opponentForm) ?? 1;
-  const stats = Object.fromEntries(ids.map((id) => [id, statsFor(form(id))]));
+  const rules = rulesFor(r.rules);
+  const stats = Object.fromEntries(ids.map((id) => [id, statsFor(form(id), rules)]));
   const s: ArenaState = {
+    rulesVersion: rules.version,
     maxHp: Object.fromEntries(ids.map((id) => [id, stats[id].maxHp])),
     hp: Object.fromEntries(ids.map((id) => [id, stats[id].maxHp])),
-    energy: Object.fromEntries(ids.map((id) => [id, startBonus(form(id), form(other(id)))])),
+    energy: Object.fromEntries(ids.map((id) => [id, startEnergy(rules, form(id), form(other(id)), id === r.opponentId)])),
     potions: Object.fromEntries(ids.map((id) => [id, START_POTIONS])),
     parry: Object.fromEntries(ids.map((id) => [id, false])),
     turn: null,
@@ -103,7 +161,8 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
   };
   if (r.status !== "ACCEPTED" || !r.acceptedAt || !r.deadline) return s;
 
-  const log = (at: Date, playerId: string, kind: LogEntry["kind"], amount: number) => s.log.push({ at, playerId, kind, amount, hp: { ...s.hp } });
+  const log = (at: Date, playerId: string, kind: LogEntry["kind"], amount: number, dealt?: number) =>
+    s.log.push({ at, playerId, kind, amount, hp: { ...s.hp }, ...(dealt ? { dealt } : {}) });
   const gain = (id: string, n: number) => {
     const got = Math.min(MAX_ENERGY, s.energy[id] + n) - s.energy[id];
     s.energy[id] += got;
@@ -112,7 +171,7 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
   const start = r.acceptedAt;
   const end = now < r.deadline ? now : r.deadline;
   const stun: Record<string, number> = Object.fromEntries(ids.map((id) => [id, 0]));
-  let turn: Turn = { playerId: r.challengerId, number: 1, startedAt: start, used: 0, max: ACTIONS_PER_TURN, endsAt: new Date(start.getTime() + TURN_TIMEOUT_MS) };
+  let turn: Turn = { playerId: r.challengerId, number: 1, startedAt: start, used: 0, max: rules.openerActions, endsAt: new Date(start.getTime() + TURN_TIMEOUT_MS) };
   log(start, turn.playerId, "ENERGY", gain(turn.playerId, ENERGY_PER_TURN));
 
   let botteInTurn = false;
@@ -149,9 +208,11 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
     if (a.playerId !== turn.playerId) passTurn(a.createdAt);
     const me = a.playerId;
     const foe = other(me);
-    s.energy[me] = Math.max(0, s.energy[me] - COST[a.kind]);
+    s.energy[me] = Math.max(0, s.energy[me] - rules.cost[a.kind]);
     let amount = a.value;
     let refund = 0;
+    /** Dégâts du Bambou tourbillon (v3), en plus de son soin. */
+    let whirlDealt = 0;
     if (a.kind === "ATTACK" || a.kind === "THRUST") ({ dealt: amount, refund } = hit(foe, a.value, a.kind === "THRUST" && stats[me].pierce));
     if (a.kind === "PARRY") s.parry[me] = true;
     if (a.kind === "POTION") {
@@ -161,8 +222,9 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
     if (a.kind === "WHIRL") {
       s.hp[me] = Math.min(s.maxHp[me], s.hp[me] + a.value);
       stun[foe] = stats[me].stun;
+      if (stats[me].whirlHit) ({ dealt: whirlDealt, refund } = hit(foe, stats[me].whirlHit, false));
     }
-    log(a.createdAt, me, a.kind, amount);
+    log(a.createdAt, me, a.kind, amount, whirlDealt);
     if (refund) log(a.createdAt, foe, "REFUND", refund);
     if (a.kind === "THRUST" || a.kind === "WHIRL") botteInTurn = true;
     if (s.hp[foe] === 0) {
@@ -238,7 +300,7 @@ export function canPlay(state: ArenaState, playerId: string, kind: ArenaKind): M
   if (state.over || !state.turn) return { ok: false, reason: "over" };
   if (state.turn.playerId !== playerId) return { ok: false, reason: "turn" };
   if (kind === "POTION" && state.potions[playerId] < 1) return { ok: false, reason: "potion" };
-  if (state.energy[playerId] < COST[kind]) return { ok: false, reason: "energy" };
+  if (state.energy[playerId] < rulesFor(state.rulesVersion).cost[kind]) return { ok: false, reason: "energy" };
   return { ok: true };
 }
 
@@ -248,11 +310,12 @@ export function mustPass(state: ArenaState, playerId: string): boolean {
 }
 
 /** Valeur tirée d'une action : dégâts d'attaque dans la fourchette, Botte et potion fixes. */
-export function rollValue(kind: ArenaKind, form: number, random: () => number = Math.random): number {
-  const st = statsFor(form);
-  if (kind === "ATTACK") return st.attack[0] + Math.floor(random() * (st.attack[1] - st.attack[0] + 1));
-  if (kind === "THRUST") return st.thrust;
+export function rollValue(kind: ArenaKind, form: number, rules: Rules = CURRENT_RULES, random: () => number = Math.random): number {
+  const st = statsFor(form, rules);
+  const roll = ([min, max]: [number, number]) => min + Math.floor(random() * (max - min + 1));
+  if (kind === "ATTACK") return roll(st.attack);
+  if (kind === "THRUST") return roll(st.thrust);
   if (kind === "WHIRL") return st.whirl;
-  if (kind === "POTION") return POTION_HEAL;
+  if (kind === "POTION") return rules.potionHeal;
   return 0;
 }
