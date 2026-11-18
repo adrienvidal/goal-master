@@ -55,7 +55,7 @@ export default async function SettingsPage(): Promise<React.ReactElement> {
                   <span className="border-2 border-current px-2 py-1 font-display text-[10px] leading-none text-[var(--ok)]">CHAQUE SOIR</span>
                 </div>
                 <span className="num break-all text-lg">{player.email}</span>
-                <p className="text-sm text-muted">Un bilan par jour, à 18 h, regroupe tes notifications de la journée. Pas d'e-mail les jours sans nouvelle.</p>
+                <p className="text-sm text-muted">Un bilan par jour, à 18 h, regroupe tes notifications de la journée. Pas d&apos;e-mail les jours sans nouvelle.</p>
               </div>
             </div>
             <div className="flex min-w-0 flex-col gap-1">
