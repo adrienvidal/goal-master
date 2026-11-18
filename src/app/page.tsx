@@ -80,7 +80,7 @@ function FeedText({ line, pseudo }: { line: FeedLine; pseudo: string }): React.R
     case "application":
       return <span>{pseudo} → <b>{line.company}</b></span>;
     case "quest":
-      return <span className="text-gold">{pseudo} a réussi sa quête{line.companion ? <> et adopté {COMPANION_NAMES[line.companion].the}</> : null}</span>;
+      return <span className="text-gold">{pseudo} a réussi sa quête{line.companion ? <> et adopté {line.name ?? COMPANION_NAMES[line.companion].the}</> : null}</span>;
   }
 }
 

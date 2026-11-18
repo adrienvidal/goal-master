@@ -5,6 +5,7 @@ export const XP_QUEST_DONE = 20;
 export const XP_QUEST_GIVEN = 5;
 export const QUEST_TEXT_MAX = 120;
 export const CHEST_OFFER_SIZE = 3;
+export const COMPANION_NAME_MAX = 16;
 export const COMPANION_IDS = ["cat", "dog", "fox", "owl", "rabbit", "dragon"] as const;
 export type CompanionId = (typeof COMPANION_IDS)[number];
 /** Nom affiché, avec son article défini (« le renard »). */
@@ -27,6 +28,7 @@ export type QuestRow = {
   status: QuestStatus;
   offer: string[];
   companion: string | null;
+  companionName: string | null;
   createdAt: Date;
   doneAt: Date | null;
   validatedAt: Date | null;
@@ -113,6 +115,19 @@ export function questXp(playerId: string, quests: QuestRow[], at?: Date): number
     if (q.giverId === playerId) xp += XP_QUEST_GIVEN;
   }
   return xp;
+}
+
+/** Nom choisi pour un compagnon : vide ou identique à l'espèce = pas de nom propre (null). */
+export function checkCompanionName(raw: string, id: CompanionId): { ok: true; name: string | null } | { ok: false; error: string } {
+  const name = raw.trim();
+  if (name.length > COMPANION_NAME_MAX) return { ok: false, error: `${COMPANION_NAME_MAX} caractères au plus.` };
+  return { ok: true, name: name && name !== COMPANION_NAMES[id].name ? name : null };
+}
+
+/** Nom affiché d'un compagnon du joueur : celui qu'il lui a donné, sinon l'espèce. */
+export function companionLabel(playerId: string, id: CompanionId, quests: QuestRow[]): string {
+  const q = validatedFor(playerId, quests).find((x) => x.companion === id);
+  return q?.companionName ?? COMPANION_NAMES[id].name;
 }
 
 export function questsGivenValidated(playerId: string, quests: QuestRow[]): number {

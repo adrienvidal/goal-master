@@ -29,7 +29,7 @@ export type PlayerView = {
 export type FeedItem =
   | { kind: "application"; company: string; day: Day }
   | { kind: "evolution"; formName: string; day: Day }
-  | { kind: "quest"; text: string; companion: CompanionId | null; day: Day };
+  | { kind: "quest"; text: string; companion: CompanionId | null; name: string | null; day: Day };
 
 const FEED_SIZE = 5;
 
@@ -101,7 +101,7 @@ export function buildPlayerView(player: PlayerRow, apps: Application[], nudges: 
       ...mine.map((a) => ({ at: a.createdAt, rank: 0, item: { kind: "application", company: a.company, day: parisDay(a.createdAt) } as FeedItem })),
       ...quests
         .filter((q) => q.receiverId === player.id && q.status === "VALIDATED" && q.validatedAt)
-        .map((q) => ({ at: q.validatedAt as Date, rank: 0, item: { kind: "quest", text: q.text, companion: q.companion && isCompanion(q.companion) ? q.companion : null, day: parisDay(q.validatedAt as Date) } as FeedItem })),
+        .map((q) => ({ at: q.validatedAt as Date, rank: 0, item: { kind: "quest", text: q.text, companion: q.companion && isCompanion(q.companion) ? q.companion : null, name: q.companionName, day: parisDay(q.validatedAt as Date) } as FeedItem })),
     ]
       .sort((a, b) => b.at.getTime() - a.at.getTime() || b.rank - a.rank)
       .slice(0, FEED_SIZE)
