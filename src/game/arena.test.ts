@@ -4,24 +4,21 @@ import {
   arenaDeadline,
   arenaPhase,
   arenaState,
+  canPlay,
   canProvoke,
   mustPass,
   openArena,
-  startEnergy,
+  startBonus,
   statsFor,
   type ArenaActionRow,
   type ArenaRow,
 } from "./arena";
-import type { Application, Nudge } from "./xp";
 
 let seq = 0;
 const H = 60 * 60 * 1000;
 const T0 = new Date("2026-11-17T09:00:00Z"); // mardi 10 h à Paris
 const at = (h: number) => new Date(T0.getTime() + h * H);
 
-function app(userId: string, h: number, cancelledH: number | null = null): Application {
-  return { id: `a${seq++}`, userId, company: "Acme", createdAt: at(h), cancelledAt: cancelledH === null ? null : at(cancelledH) };
-}
 function arena(over: Partial<ArenaRow> = {}): ArenaRow {
   return {
     id: `r${seq++}`,
@@ -33,16 +30,15 @@ function arena(over: Partial<ArenaRow> = {}): ArenaRow {
     deadline: arenaDeadline(at(0)),
     challengerForm: 3,
     opponentForm: 3,
-    challengerEnergy: 2,
-    opponentEnergy: 2,
+    challengerEnergy: null,
+    opponentEnergy: null,
     ...over,
   };
 }
 function act(playerId: string, kind: ArenaActionRow["kind"], h: number, value = 0): ArenaActionRow {
   return { id: `x${seq++}`, arenaId: "r", playerId, kind, value, createdAt: at(h) };
 }
-const state = (r: ArenaRow, actions: ArenaActionRow[], nowH: number, apps: Application[] = [], nudges: Nudge[] = []) =>
-  arenaState({ arena: r, actions, apps, nudges }, at(nowH));
+const state = (r: ArenaRow, actions: ArenaActionRow[], nowH: number) => arenaState({ arena: r, actions }, at(nowH));
 
 describe("stats", () => {
   test("grow modestly with the evolution", () => {
@@ -53,11 +49,10 @@ describe("stats", () => {
     expect(statsFor(5)).toMatchObject({ maxHp: 38, whirl: 12, stun: 2 });
   });
 
-  test("start energy: 2, +1 for the outsider, 0 when rusty", () => {
-    expect(startEnergy(3, 3, false)).toBe(2);
-    expect(startEnergy(2, 3, false)).toBe(3);
-    expect(startEnergy(3, 2, false)).toBe(2);
-    expect(startEnergy(2, 3, true)).toBe(0);
+  test("start bonus: +1 action point for the less evolved hero only", () => {
+    expect(startBonus(3, 3)).toBe(0);
+    expect(startBonus(2, 3)).toBe(1);
+    expect(startBonus(3, 2)).toBe(0);
   });
 });
 
@@ -84,61 +79,73 @@ describe("deadline and phases", () => {
   });
 });
 
-describe("energy and potions", () => {
-  test("each active application after acceptance gives 2, capped at 6; a cancelled one gives nothing", () => {
-    const r = arena();
-    const apps = [app("a", -2), app("a", 1), app("a", 2, 3), ...[4, 5, 6, 7, 8, 9].map((h) => app("a", h / 10 + 4))];
-    expect(state(r, [], 10, apps).energy.a).toBe(6);
-    expect(state(r, [], 1.5, apps).energy.a).toBe(4);
+describe("action points and potions", () => {
+  test("each turn gives 3 action points; the outsider gets 1 more at the start", () => {
+    expect(state(arena(), [], 1).energy).toEqual({ a: 3, n: 0 });
+    const s = state(arena({ challengerForm: 4, opponentForm: 2 }), [act("a", "END", 1)], 2);
+    expect(s.energy).toEqual({ a: 3, n: 4 });
+    expect(s.log.at(-1)).toMatchObject({ kind: "ENERGY", playerId: "n", amount: 3 });
   });
 
-  test("the log shows the energy actually gained when the reserve caps it", () => {
-    const s = state(arena({ challengerEnergy: 5 }), [], 2, [app("a", 1)]);
+  test("unspent action points carry over, capped at 6", () => {
+    const actions = [act("a", "END", 1), act("n", "END", 2), act("a", "END", 3), act("n", "END", 4)];
+    expect(state(arena(), actions.slice(0, 2), 2.5).energy.a).toBe(6);
+    const s = state(arena(), actions, 5);
     expect(s.energy.a).toBe(6);
-    expect(s.log.at(-1)).toMatchObject({ kind: "ENERGY", amount: 1 });
+    expect(s.log.at(-1)).toMatchObject({ kind: "ENERGY", playerId: "a", amount: 0 });
   });
 
-  test("a successful nudge during the fight gives each fighter a potion, 2 at most", () => {
-    const r = arena();
-    const nudges = [1, 2, 3].map((h) => ({ id: `n${h}`, senderId: "a", recipientId: "n", sentAt: at(h) }));
-    const apps = [app("n", 1.5), app("n", 2.5), app("n", 3.5)];
-    expect(state(r, [], 5, apps, nudges).potions).toEqual({ a: 2, n: 2 });
+  test("two potions each at the start, never regained", () => {
+    const s = state(arena(), [act("a", "POTION", 1, 6)], 2);
+    expect(s.potions).toEqual({ a: 1, n: 2 });
+  });
+
+  test("a hero who looks rusty starts like the other one", () => {
+    expect(state(arena({ challengerEnergy: 0, opponentEnergy: 0 }), [], 1).energy.a).toBe(3);
   });
 });
 
 describe("turns", () => {
-  test("the challenger opens; 3 actions end the turn", () => {
-    const r = arena();
-    const apps = [app("a", 0.5)];
-    const s = state(r, [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 6), act("a", "PARRY", 1.2)], 2, apps);
+  test("the challenger opens; 3 actions end the turn and keep the rest", () => {
+    const s = state(arena(), [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 6), act("a", "PARRY", 1.2)], 2);
     expect(s.hp.n).toBe(34 - 11);
-    expect(s.energy.a).toBe(1);
+    expect(s.energy.a).toBe(0);
     expect(s.turn).toMatchObject({ playerId: "n", number: 2, used: 0, max: 3 });
   });
 
   test("ending the turn early passes the hand", () => {
     const s = state(arena(), [act("a", "ATTACK", 1, 5), act("a", "END", 1.5)], 2);
     expect(s.turn).toMatchObject({ playerId: "n", number: 2 });
+    expect(s.energy.a).toBe(2);
   });
 
-  test("a parry halves the next hit, rounded down, then is spent", () => {
-    const r = arena();
+  test("a parry halves the next hit, rounded down, then is spent and gives back 1 action point", () => {
     const actions = [act("a", "PARRY", 1), act("a", "END", 1.1), act("n", "ATTACK", 2, 7), act("n", "ATTACK", 2.1, 5)];
-    expect(state(r, actions, 3).hp.a).toBe(34 - 3 - 5);
+    const s = state(arena(), actions, 3);
+    expect(s.hp.a).toBe(34 - 3 - 5);
+    expect(s.energy.a).toBe(2 + 1);
+    expect(s.log.find((l) => l.kind === "REFUND")).toMatchObject({ playerId: "a", amount: 1 });
   });
 
-  test("the knight's thrust pierces the parry from evolution 5", () => {
-    const r = arena({ challengerForm: 5, opponentForm: 5, challengerEnergy: 3 });
+  test("a parry gives nothing back while no hit lands on it", () => {
+    const actions = [act("a", "PARRY", 1), act("a", "END", 1.1), act("n", "POTION", 2, 6), act("n", "END", 2.1)];
+    const s = state(arena(), actions, 3);
+    expect(s.parry.a).toBe(true);
+    expect(s.energy.a).toBe(2 + 3);
+  });
+
+  test("the knight's thrust pierces the parry from evolution 5, and the parry gives nothing back", () => {
+    const r = arena({ challengerForm: 5, opponentForm: 5 });
     const actions = [act("a", "END", 1), act("n", "PARRY", 2), act("n", "END", 2.1), act("a", "THRUST", 3, 16)];
-    expect(state(r, actions, 4).hp.n).toBe(38 - 16);
+    const s = state(r, actions, 4);
+    expect(s.hp.n).toBe(38 - 16);
+    expect(s.energy.n).toBe(2);
   });
 
   test("the panda's whirl heals up to the maximum and stuns the next turn", () => {
-    const r = arena({ challengerEnergy: 3, opponentEnergy: 3 });
-    const actions = [act("a", "ATTACK", 1, 5), act("a", "END", 1.1), act("n", "WHIRL", 2, 10)];
-    const s = state(r, actions, 3);
+    const actions = [act("a", "ATTACK", 1, 5), act("a", "END", 1.1), act("n", "WHIRL", 2, 10), act("n", "END", 2.1)];
+    const s = state(arena(), actions, 3);
     expect(s.hp.n).toBe(34);
-    // n n'a plus d'énergie, a en a : la main passe aussitôt, avec un tour raccourci par l'étourdissement.
     expect(s.turn).toMatchObject({ playerId: "a", max: 2 });
   });
 
@@ -155,22 +162,26 @@ describe("turns", () => {
     expect(s.parry.a).toBe(false);
   });
 
-  test("a potion heals 6 without energy", () => {
-    const r = arena({ challengerEnergy: 0 });
-    const nudges = [{ id: "z", senderId: "n", recipientId: "a", sentAt: at(0.2) }];
-    const actions = [act("a", "END", 1), act("n", "ATTACK", 2, 7), act("n", "END", 2.1), act("a", "POTION", 3, 6)];
-    const s = state(r, actions, 4, [app("a", 0.5)], nudges);
-    expect(s.hp.a).toBe(34 - 7 + 6);
-    expect(s.potions.a).toBe(0);
+  test("a hit stored out of turn keeps its hand (fights started under the old rules)", () => {
+    const s = state(arena(), [act("n", "ATTACK", 1, 5)], 2);
+    expect(s.hp.a).toBe(29);
+    expect(s.turn).toMatchObject({ playerId: "n", used: 1 });
+  });
+
+  test("the log carries the hit points after each entry", () => {
+    const s = state(arena(), [act("a", "ATTACK", 1, 5)], 2);
+    expect(s.log.at(-1)).toMatchObject({ kind: "ATTACK", hp: { a: 34, n: 29 } });
   });
 });
 
 describe("end of the fight", () => {
+  const ko = () => {
+    const a = (h: number) => [act("a", "ATTACK", h, 6), act("a", "ATTACK", h + 0.1, 6), act("a", "ATTACK", h + 0.2, 6)];
+    return [...a(1), act("n", "END", 2), act("a", "THRUST", 3, 12)];
+  };
+
   test("knock-out: the hitter wins at once", () => {
-    const r = arena({ challengerForm: 1, opponentForm: 1, challengerEnergy: 6 });
-    const hits = [act("a", "ATTACK", 1, 6), act("a", "ATTACK", 1.1, 6), act("a", "ATTACK", 1.2, 6)];
-    const later = [act("n", "END", 2), act("a", "THRUST", 3, 12)];
-    const s = state(r, [...hits, ...later], 4, [app("a", 0.5), app("a", 0.6), app("a", 0.7), app("a", 0.8)]);
+    const s = state(arena({ challengerForm: 1, opponentForm: 1 }), ko(), 4);
     expect(s.over).toMatchObject({ winnerId: "a", ko: true, byBotte: true });
     expect(s.turn).toBeNull();
   });
@@ -183,10 +194,7 @@ describe("end of the fight", () => {
   });
 
   test("the winner wears the crown until the end of the next day", () => {
-    const r = arena({ challengerForm: 1, opponentForm: 1, challengerEnergy: 6, opponentEnergy: 2 });
-    const a = [app("a", 0.1), app("a", 0.2), app("a", 0.3)];
-    const actions = [act("a", "ATTACK", 1, 6), act("a", "ATTACK", 1.1, 6), act("a", "ATTACK", 1.2, 6), act("n", "END", 2), act("a", "ATTACK", 3, 6), act("a", "ATTACK", 3.1, 6), act("a", "ATTACK", 3.2, 6)];
-    const input = { arena: r, actions, apps: a, nudges: [] };
+    const input = { arena: arena({ challengerForm: 1, opponentForm: 1 }), actions: ko() };
     expect(arenaCrowns([input], at(4))).toEqual(["a"]);
     expect(arenaCrowns([input], new Date("2026-11-19T22:00:00Z"))).toEqual([]);
   });
@@ -194,77 +202,27 @@ describe("end of the fight", () => {
 
 describe("masterstroke", () => {
   test("a knock-out in the same turn as the panda's whirl counts", () => {
-    const r = arena({ challengerForm: 1, opponentForm: 1, challengerEnergy: 6 });
-    const apps = [app("a", 0.1), app("a", 0.2), app("a", 0.3), app("a", 0.4), app("a", 2.5)];
     const first = [act("a", "ATTACK", 1, 6), act("a", "ATTACK", 1.1, 6), act("a", "ATTACK", 1.2, 6), act("n", "END", 2)];
     const last = [act("a", "WHIRL", 3, 8), act("a", "ATTACK", 3.1, 6), act("a", "ATTACK", 3.2, 6)];
-    expect(state(r, [...first, ...last], 4, apps).over).toMatchObject({ winnerId: "a", ko: true, byBotte: true });
+    expect(state(arena({ challengerForm: 1, opponentForm: 1 }), [...first, ...last], 4).over).toMatchObject({ winnerId: "a", ko: true, byBotte: true });
   });
 });
 
 describe("automatic end of turn", () => {
-  test("a player with no energy and no potion left must pass", () => {
-    const s = state(arena({ opponentEnergy: 0 }), [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 5)], 2);
+  test("no action point and no potion left: the turn must pass", () => {
+    const first = [act("a", "POTION", 1, 6), act("a", "POTION", 1.1, 6), act("a", "END", 1.2), act("n", "END", 2)];
+    const s = state(arena(), [...first, act("a", "THRUST", 3, 14), act("a", "THRUST", 3.1, 14)], 4);
     expect(s.turn).toMatchObject({ playerId: "a", used: 2 });
     expect(mustPass(s, "a")).toBe(true);
+    expect(mustPass(state(arena(), [...first, act("a", "THRUST", 3, 14)], 4), "a")).toBe(false);
   });
 
-  test("energy left keeps the hand", () => {
-    expect(mustPass(state(arena(), [act("a", "ATTACK", 1, 5)], 2), "a")).toBe(false);
+  test("a botte costs 3 action points", () => {
+    const s = state(arena(), [act("a", "ATTACK", 1, 5)], 2);
+    expect(canPlay(s, "a", "THRUST")).toEqual({ ok: false, reason: "energy" });
   });
 
   test("only the player whose turn it is can be forced to pass", () => {
-    const s = state(arena({ opponentEnergy: 0 }), [], 1);
-    expect(mustPass(s, "n")).toBe(false);
+    expect(mustPass(state(arena(), [], 1), "n")).toBe(false);
   });
-});
-
-describe("stuck turn", () => {
-  test("the hand goes to the other as soon as they can play", () => {
-    const r = arena({ challengerEnergy: 0, opponentEnergy: 0 });
-    const s = state(r, [], 3, [app("n", 2)]);
-    expect(s.turn).toMatchObject({ playerId: "n", number: 2, used: 0 });
-    expect(s.turn!.startedAt).toEqual(at(2));
-    expect(s.log.at(-1)).toMatchObject({ playerId: "a", kind: "STUCK" });
-    expect(s.parry.a).toBe(false);
-  });
-
-  test("nobody moves when neither can play", () => {
-    const s = state(arena({ challengerEnergy: 0, opponentEnergy: 0 }), [], 3);
-    expect(s.turn).toMatchObject({ playerId: "a", number: 1 });
-  });
-
-  test("running out of energy mid-turn hands over at once when the other can play", () => {
-    const s = state(arena(), [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 5)], 2);
-    expect(s.turn).toMatchObject({ playerId: "n", number: 2, used: 0 });
-    expect(s.turn!.startedAt).toEqual(at(1.1));
-  });
-
-  test("a potion alone no longer keeps the hand when the other has energy", () => {
-    // a relance n, n candidate à 1 h : potion pour chacun, 2 ⚡ pour n. a frappe à 1,5 h : plus d'énergie, il lui reste sa potion.
-    const nudge: Nudge = { id: "u1", senderId: "a", recipientId: "n", sentAt: at(0.5) };
-    const s = state(arena({ challengerEnergy: 1, opponentEnergy: 0 }), [act("a", "ATTACK", 1.5, 5)], 2, [app("n", 1)], [nudge]);
-    expect(s.potions.a).toBe(1);
-    expect(s.turn).toMatchObject({ playerId: "n", number: 2 });
-  });
-
-  test("a potion keeps the hand when the other has no energy", () => {
-    // n relance a, a candidate à 1 h : potion pour chacun, 2 ⚡ pour a, qui les dépense.
-    const nudge: Nudge = { id: "u2", senderId: "n", recipientId: "a", sentAt: at(0.5) };
-    const s = state(arena({ challengerEnergy: 0, opponentEnergy: 0 }), [act("a", "ATTACK", 1.5, 5), act("a", "ATTACK", 1.6, 5)], 2, [app("a", 1)], [nudge]);
-    expect(s.turn).toMatchObject({ playerId: "a", used: 2 });
-  });
-
-  test("the hand never bounces back and forth", () => {
-    const r = arena({ challengerEnergy: 0, opponentEnergy: 0 });
-    const s = state(r, [act("n", "ATTACK", 2.5, 5), act("n", "ATTACK", 2.6, 5)], 3, [app("n", 2)]);
-    expect(s.turn).toMatchObject({ playerId: "n", used: 2 });
-  });
-});
-
-test("a hit played after a stuck turn passed stays when the application is removed", () => {
-  const r = arena({ challengerEnergy: 0, opponentEnergy: 0 });
-  const hits = [act("n", "ATTACK", 2.5, 5)];
-  expect(state(r, hits, 3, [app("n", 2)]).hp.a).toBe(29);
-  expect(state(r, hits, 3, [app("n", 2, 2.8)]).hp.a).toBe(29);
 });

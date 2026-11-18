@@ -119,6 +119,42 @@
         ],
         "createdAt": "2026-11-18T11:26:55.436Z",
         "reason": "Claude: frozen reference mockup (CLAUDE.md: maquettes figées); palette is the production email palette, muted #a39dcc on #16132a is about 7:1"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "docs/maquettes/arene-v2.html"
+        ],
+        "createdAt": "2026-11-18T14:16:19.926Z",
+        "reason": "Claude: faux positif, le détecteur ne résout pas les variables CSS (texte lu #000/fond #fff) ; vrais tokens --ink #f1ecff et --muted #a39dcc sur fonds sombres #16132a à #383453"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "docs/maquettes/arene-v2.html"
+        ],
+        "createdAt": "2026-11-18T14:16:19.951Z",
+        "reason": "Claude: Press Start 2P à 8-10px = typo pixel de l'app (globals.css), déjà dans la maquette Arène v1 validée ; texte courant en 13-16px"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          "docs/maquettes/arene-v2.html"
+        ],
+        "createdAt": "2026-11-18T14:16:19.974Z",
+        "reason": "Claude: Press Start 2P à 8-10px = typo pixel de l'app (globals.css), déjà dans la maquette Arène v1 validée"
+      },
+      {
+        "rule": "hard-offset-shadow",
+        "value": "*",
+        "files": [
+          "docs/maquettes/arene-v2.html"
+        ],
+        "createdAt": "2026-11-18T14:16:19.993Z",
+        "reason": "Claude: ombres pixel dures = direction 8 bits de l'app, reprises de la maquette v1 validée"
       }
     ]
   }
