@@ -312,8 +312,12 @@ html[data-decor] main { visibility: hidden; }
 .arena-log-fresh { outline: 2px solid #5aa9ff; outline-offset: 1px; background: #24345a; }
 @media (prefers-reduced-motion: reduce) { .arena-presence i { animation: none; } }
 .arena-move { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; padding: 10px; border: 3px solid var(--edge); background: var(--stone); box-shadow: 3px 3px 0 #0c0a1a; min-width: 0; cursor: pointer; }
-.arena-move:hover:not(:disabled) { border-color: var(--gold); }
-.arena-move:disabled { opacity: .45; cursor: not-allowed; }
+.arena-move:hover:not(:disabled):not(.off) { border-color: var(--gold); }
+.arena-move:disabled, .arena-move.off { opacity: .45; cursor: not-allowed; }
+/* Toucher une action grisée : la raison s'affiche au-dessus des actions, puis s'efface */
+.arena-hint { margin: 0; border-left: 4px solid var(--gold); background: #3a2f17; padding: 6px 10px; font-size: 14px; line-height: 1.4; animation: arena-hint 3s steps(1) both; }
+@keyframes arena-hint { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .arena-hint { animation: none; } }
 .arena-move.special { border-color: var(--magic); background: #2a1f42; }
 .arena-go { animation: arena-blink 1.2s steps(2) infinite; }
 @keyframes arena-rise { 0% { transform: translate(-50%, 6px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -18px); opacity: 0; } }

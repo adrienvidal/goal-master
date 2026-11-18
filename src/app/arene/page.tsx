@@ -95,7 +95,14 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   const st = statsFor(myForm);
   const myTurn = s.turn?.playerId === player.id;
   const special = player.character === "PANDA" ? "WHIRL" : "THRUST";
-  const off = (kind: Parameters<typeof canPlay>[2]) => !canPlay(s, player.id, kind).ok;
+  /** Message affiché quand on touche une action indisponible pendant son tour. */
+  const blocked = (kind: Parameters<typeof canPlay>[2], name: string): string | null => {
+    const check = canPlay(s, player.id, kind);
+    if (check.ok || !myTurn) return null;
+    if (check.reason === "potion") return "Plus de potion pour ce combat.";
+    if (check.reason === "energy") return `Il te manque ${COST[kind] - pa} PA pour ${name}.`;
+    return null;
+  };
   const potions = s.potions[player.id];
   const pa = s.energy[player.id];
   const botte = special === "THRUST" ? `${st.thrust} dégâts${st.pierce ? ", perce la Parade" : ""}` : `+${st.whirl} PV, ${foe.pseudo} perd ${st.stun} action${st.stun > 1 ? "s" : ""}`;
@@ -109,17 +116,17 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
     return null;
   };
   const moves: Move[] = [
-    { kind: "ATTACK", label: "⚔️ Attaque", cost: "1 PA", detail: why("ATTACK") ?? `${st.attack[0]} à ${st.attack[1]} dégâts`, disabled: off("ATTACK") },
-    { kind: "PARRY", label: "🛡️ Parade", cost: "1 PA", detail: why("PARRY") ?? "Divise le prochain coup · +1 PA s'il arrive", disabled: off("PARRY") },
+    { kind: "ATTACK", label: "⚔️ Attaque", cost: "1 PA", detail: why("ATTACK") ?? `${st.attack[0]} à ${st.attack[1]} dégâts`, blocked: blocked("ATTACK", "attaquer") },
+    { kind: "PARRY", label: "🛡️ Parade", cost: "1 PA", detail: why("PARRY") ?? "Divise le prochain coup · +1 PA s'il arrive", blocked: blocked("PARRY", "parer") },
     {
       kind: special,
       label: `✨ ${BOTTE[player.character]}`,
       cost: `${COST[special]} PA`,
       detail: why(special) ?? botte,
-      disabled: off(special),
+      blocked: blocked(special, BOTTE[player.character]),
       special: true,
     },
-    { kind: "POTION", label: "🧪 Potion", cost: `×${potions}`, detail: why("POTION") ?? (potions ? `+${POTION_HEAL} PV · ${potions} pour tout le combat` : "Plus de potion pour ce combat"), disabled: off("POTION") },
+    { kind: "POTION", label: "🧪 Potion", cost: `×${potions}`, detail: why("POTION") ?? (potions ? `+${POTION_HEAL} PV · ${potions} pour tout le combat` : "Plus de potion pour ce combat"), blocked: blocked("POTION", "boire une potion") },
   ];
   // Jauge : au début de mon tour, les PA gardés du tour d'avant et ceux que le tour vient de donner.
   const turnGain = myTurn && s.turn?.used === 0 ? (s.log.findLast((e) => e.kind === "ENERGY" && e.playerId === player.id)?.amount ?? 0) : 0;
@@ -179,7 +186,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
                 <span className="basis-full text-[13px] text-muted">+{ENERGY_PER_TURN} PA à chaque tour · ce que tu ne dépenses pas se garde, {MAX_ENERGY} au plus</span>
               </div>
               {myTurn && pa === 0 && potions > 0 ? <p className="border-l-4 border-energy bg-[#13283a] px-2.5 py-1.5 text-sm">Plus de PA : bois une potion ou finis ton tour.</p> : null}
-              <ArenaMoves id={input.arena.id} moves={moves} myTurn={myTurn} />
+              <ArenaMoves id={input.arena.id} moves={moves} myTurn={myTurn} waiting={!myTurn && !s.over ? `C'est au tour ${ofName(foe.pseudo)}. Tu joueras dès qu'il a fini : on te préviendra.` : null} />
               {!myTurn && !s.over ? <p className="text-sm text-muted">Au début de ton tour : +{Math.min(ENERGY_PER_TURN, MAX_ENERGY - pa)} PA (tu en gardes {pa}, {MAX_ENERGY} au plus).</p> : null}
             </div>
             <div className="flex flex-col gap-1.5 border-[3px] border-edge bg-night px-3 py-2.5">
