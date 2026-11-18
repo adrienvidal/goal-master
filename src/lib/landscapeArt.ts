@@ -29,6 +29,8 @@ const inHero = (x: number, pad = 6): boolean => x >= HERO0 - pad && x <= HERO1 +
 const visible = (x: number, m = 0): boolean => x >= VX0 - m && x <= VX1 + m;
 const tiled = (xs: number[]): number[] => xs.flatMap((x) => [x - SW, x, x + SW]).filter((x) => visible(x, 12));
 const scaled = (n: number): number => Math.max(3, Math.round((n * span()) / SW));
+/** Position d'origine (dans 0..320) d'un élément répété par tiled(). */
+const home = (x: number): number => ((x % SW) + SW) % SW;
 
 function rng(seed: number): () => number {
   let s = seed;
@@ -160,13 +162,19 @@ function drawOrbs(c: Ctx, e: Env): void {
     }
   }
 }
+/** Scintillement : éclat blanc, puis lavande, puis la couleur propre de l'étoile. */
+function starColor(twinkle: number, own: string): string {
+  if (twinkle < 3) return "#ffffff";
+  if (twinkle < 8) return "#c9c4ee";
+  return own;
+}
 function drawStars(c: Ctx, e: Env, f: number, S: Scene): void {
   if (e.stars <= 0.05) return;
   const n = Math.round(S.starList.length * e.stars);
   for (let i = 0; i < n; i++) {
     const s = S.starList[i]; const tw = (f + s.p) % 40;
     const x = Math.floor(VX0 + s.fx * span()), y = Math.round(TOP + s.fy * (S.starMaxY - TOP));
-    c.fillStyle = tw < 3 ? "#ffffff" : tw < 8 ? "#c9c4ee" : s.c;
+    c.fillStyle = starColor(tw, s.c);
     c.fillRect(x, y, 1, 1);
     if (s.big && tw < 3) { c.fillRect(x - 1, y, 3, 1); c.fillRect(x, y - 1, 1, 3); }
   }
@@ -220,7 +228,9 @@ function drawFlag(c: Ctx, x: number, y: number, w: number, h: number, col: strin
 function drawWindows(c: Ctx, e: Env, f: number, list: number[][]): void {
   list.forEach(([x, y, w, h, th], i) => {
     const on = e.glow >= th;
-    c.fillStyle = on ? ((((f >> 3) * 7 + i * 13) % 29 === 0 ? "#ff9f40" : "#ffd36a")) : shade(e, "#2a2a44");
+    const flicker = ((f >> 3) * 7 + i * 13) % 29 === 0;
+    if (!on) c.fillStyle = shade(e, "#2a2a44");
+    else c.fillStyle = flicker ? "#ff9f40" : "#ffd36a";
     c.fillRect(x, y, w, h);
     if (on && h > 2) { c.fillStyle = "#fff2b0"; c.fillRect(x, y, 1, 1); }
   });
@@ -436,7 +446,7 @@ const MOUNTAINS: Scene = {
     mist(c, e, 118, 10, 4);
     const mid = plateau(heights(132, 12, 0.04, 0.1, 41, 0.3), 212 + HX, 234 + HX, 128, 10);
     const sizes: Record<number, number> = { 96: 11, 120: 10, 134: 8, 180: 9 };
-    for (const x of tiled([96, 120, 134, 180])) if (!inHero(x, 4) && mid[x] !== undefined) pine(c, e, x, mid[x] + 3, sizes[((x % SW) + SW) % SW], "#24404a", 0.18);
+    for (const x of tiled([96, 120, 134, 180])) if (!inHero(x, 4) && mid[x] !== undefined) pine(c, e, x, mid[x] + 3, sizes[home(x)], "#24404a", 0.18);
     hero(c, () => { // chalet posé sur son replat (y 128)
       c.fillStyle = shade(e, "#6a4a32"); c.fillRect(214, 117, 18, 13);
       for (let i = 0; i < 6; i++) { c.fillStyle = shade(e, "#7a3a2a"); c.fillRect(212 + i, 117 - i, 22 - 2 * i, 1); }
@@ -485,7 +495,7 @@ const PLAINS: Scene = {
     ridge(c, e, mid, "#5d9a4e", 0.25);
     hero(c, () => { c.fillStyle = shade(e, "#1a1424", 0.15); c.fillRect(231, 124, 8, 2); path(c, e, 235, 125, 180, "#c8a870", 26); });
     const radius: Record<number, number> = { 40: 7, 56: 9, 74: 6, 150: 5, 290: 8 };
-    for (const x of tiled([40, 56, 74, 150, 290])) if (!inHero(x, 10) && mid[x] !== undefined) tree(c, e, x, mid[x] + 2, radius[((x % SW) + SW) % SW], "#3f8a3a");
+    for (const x of tiled([40, 56, 74, 150, 290])) if (!inHero(x, 10) && mid[x] !== undefined) tree(c, e, x, mid[x] + 2, radius[home(x)], "#3f8a3a");
     ridge(c, e, heights(152, 4, 0.05, 0.12, 59), "#46803c", 0);
     const r = rng(61);
     for (let i = 0, n = scaled(46); i < n; i++) { c.fillStyle = shade(e, ["#f2c14e", "#ffffff", "#ff8aa0"][i % 3]); c.fillRect(Math.floor(VX0 + r() * span()), 156 + Math.floor(r() * 22), 1, 1); }
