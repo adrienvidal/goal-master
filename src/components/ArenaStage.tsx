@@ -154,9 +154,13 @@ export function ArenaLive({ arenaId, meId, foeName, hits, children }: { arenaId:
     show({ by: next.by, kind: next.kind, amount: next.amount, replay: true });
     setBanner((b) => (b ? { ...b, done: b.done + 1 } : b));
     writeSeen(arenaId, next.at);
+  }, [queue, step, show, arenaId]);
+
+  useEffect(() => {
+    if (!step) return;
     const t = setTimeout(() => setStep(null), STEP_MS);
     return () => clearTimeout(t);
-  }, [queue, step, show, arenaId]);
+  }, [step]);
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
@@ -194,7 +198,7 @@ export function ArenaLive({ arenaId, meId, foeName, hits, children }: { arenaId:
                 <small className="text-[13px] text-muted">{busy ? `Pendant ton absence, ${foeName} a joué · ${banner.done}/${banner.total}` : `${foeName} a joué ${banner.total} action${banner.total > 1 ? "s" : ""}`}</small>
                 <b className="font-display text-[10px] leading-relaxed">{busy ? (step?.label ?? "…") : banner.lost > 0 ? `Tu as perdu ${banner.lost} PV` : "Aucun dégât pour toi"}</b>
               </div>
-              <div className="dots" aria-hidden>{Array.from({ length: banner.total }, (_, i) => <i key={i} className={i < banner.done ? "on" : ""} />)}</div>
+              <div className="dots" aria-hidden>{Array.from({ length: banner.total }, (_, i) => <i key={i} className={!busy || i < banner.done ? "on" : ""} />)}</div>
               {busy ? <button type="button" className="btn ghost !w-auto !px-3 !py-2 !text-[9px]" onClick={skip}>Passer</button> : <button type="button" className="text-sm text-muted underline" onClick={() => setBanner(null)}>Fermer</button>}
             </div>
           ) : null}

@@ -6,6 +6,7 @@ import { ArenaJournal, ArenaLive, ArenaPresence, StageFighterView, type JournalL
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { arenaPhase, arenaState, canPlay, COST, ENERGY_PER_TURN, finishedArenas, MAX_ENERGY, POTION_HEAL, statsFor, type ArenaState, type LogEntry } from "@/game/arena";
 import { timeLeft } from "@/game/challenge";
+import { ofName } from "@/lib/french";
 import { buildPlayerView, type PlayerView } from "@/lib/playerView";
 import { db } from "@/server/db";
 import { arenaInputs, loadGame } from "@/server/game";
@@ -43,7 +44,7 @@ function logLine(e: LogEntry, meId: string, foeName: string): string {
       if (e.amount === 0) return me ? "Ton tour commence : tes PA sont déjà au maximum (6)." : `${who} commence son tour, PA au maximum.`;
       return me ? `Ton tour commence : +${e.amount} PA.` : `${who} commence son tour : +${e.amount} PA.`;
     case "REFUND":
-      return me ? `Ta Parade encaisse le coup : +${e.amount} PA.` : `La Parade de ${foeName} encaisse le coup : +${e.amount} PA.`;
+      return me ? `Ta Parade encaisse le coup : +${e.amount} PA.` : `La Parade ${ofName(foeName)} encaisse le coup : +${e.amount} PA.`;
   }
 }
 
