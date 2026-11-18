@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { ArenaMoves, type Move } from "@/components/Arena";
 import { ArenaJournal, ArenaLive, ArenaPresence, StageFighterView, type JournalLine, type StageFighter, type StageHit } from "@/components/ArenaStage";
 import { LiveRefresh } from "@/components/LiveRefresh";
-import { ACTIONS_PER_TURN, arenaPhase, arenaState, canPlay, ENERGY_PER_TURN, isStunned, finishedArenas, MAX_ENERGY, rulesFor, statsFor, type ArenaState, type LogEntry } from "@/game/arena";
+import { ACTIONS_PER_TURN, arenaPhase, arenaState, canPlay, ENERGY_PER_TURN, isStunned, finishedArenas, MAX_ENERGY, rulesFor, statsFor, type ArenaState, type Rules, type LogEntry } from "@/game/arena";
 import { timeLeft } from "@/game/challenge";
 import { ofName } from "@/lib/french";
 import { buildPlayerView, type PlayerView } from "@/lib/playerView";
@@ -21,6 +21,12 @@ const LIVE_MS = 3000;
 const ENDED_STAY_MS = 60 * 60 * 1000;
 const VISIBLE = ["ATTACK", "THRUST", "WHIRL", "PARRY", "POTION"] as const;
 type Visible = (typeof VISIBLE)[number];
+
+/** Ce que coûte le Bambou tourbillon à l'adversaire, selon les règles du combat. */
+function stunText(rules: Rules, stun: number, foeName: string): string {
+  if (rules.stunTakes === "energy") return `${foeName} reçoit ${stun} PA de moins au tour suivant`;
+  return `${foeName} perd ${stun} action${stun > 1 ? "s" : ""}`;
+}
 
 /** « 4 à 12 », ou « 14 » quand la valeur est fixe. */
 function range([min, max]: [number, number]): string {
@@ -113,8 +119,9 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   };
   const potions = s.potions[player.id];
   const pa = s.energy[player.id];
-  const botte = special === "THRUST" ? `${range(st.thrust)} dégâts${st.pierce ? ", perce la Parade" : ""}` : `${st.whirlHit ? `${st.whirlHit} dégâts, ` : ""}+${st.whirl} PV, ${foe.pseudo} perd ${st.stun} action${st.stun > 1 ? "s" : ""}`;
-  const actionsLeft = s.turn ? s.turn.max - s.turn.used : 0;
+  const botte = special === "THRUST" ? `${range(st.thrust)} dégâts${st.pierce ? ", perce la Parade" : ""}` : `${st.whirlHit ? `${st.whirlHit} dégâts, ` : ""}+${st.whirl} PV, ${stunText(rules, st.stun, foe.pseudo)}`;
+  // Règles v2 seulement : un compte d'actions par tour, en plus des PA.
+  const actionsLeft = s.turn?.max != null ? s.turn.max - s.turn.used : null;
   /** Raison affichée sous une action grisée pendant mon tour. */
   const why = (kind: Parameters<typeof canPlay>[2]): string | null => {
     const check = canPlay(s, player.id, kind);
@@ -176,18 +183,16 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
               </div>
               <div className={`flex flex-wrap items-center justify-between gap-2 border-[3px] px-3 py-2 ${myTurn ? "border-gold bg-[#3a2f17]" : "border-edge bg-night"}`}>
                 <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                  <span className="font-display text-[10px] leading-relaxed">{s.over ? "Combat terminé" : myTurn ? "À toi de jouer" : `${foe.pseudo} joue… ${s.turn?.used ?? 0}/${s.turn?.max ?? 3}`}</span>
-                  {myTurn && s.turn ? <span className="num text-gold">{actionsLeft} action{actionsLeft > 1 ? "s" : ""}</span> : null}
-                  {myTurn && s.turn && s.turn.number === 1 && s.turn.max < ACTIONS_PER_TURN ? (
-                    <details className="arena-state">
-                      <summary>🚩 tu ouvres</summary>
-                      <span>Celui qui ouvre le combat n&apos;a que {s.turn.max} actions à son premier tour, et l&apos;autre part avec {rules.responderBonus} PA de plus.</span>
-                    </details>
-                  ) : null}
+                  <span className="font-display text-[10px] leading-relaxed">{s.over ? "Combat terminé" : myTurn ? "À toi de jouer" : `${foe.pseudo} joue…${s.turn?.max != null ? ` ${s.turn.used}/${s.turn.max}` : ""}`}</span>
+                  {myTurn && actionsLeft !== null ? <span className="num text-gold">{actionsLeft} action{actionsLeft > 1 ? "s" : ""}</span> : null}
                   {s.turn && isStunned(s, player.id) ? (
                     <details className="arena-state">
                       <summary>💫 étourdi</summary>
-                      <span>Bambou tourbillon : {s.turn.max} action{s.turn.max > 1 ? "s" : ""} ce tour au lieu de {ACTIONS_PER_TURN}. Tes PA ne changent pas.</span>
+                      <span>
+                        {rules.stunTakes === "energy"
+                          ? `Bambou tourbillon : ${s.turn.stunned} PA de moins au début de ce tour.`
+                          : `Bambou tourbillon : ${s.turn.max} action${s.turn.max! > 1 ? "s" : ""} ce tour au lieu de ${ACTIONS_PER_TURN}. Tes PA ne changent pas.`}
+                      </span>
                     </details>
                   ) : null}
                 </span>

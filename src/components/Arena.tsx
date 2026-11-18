@@ -52,7 +52,7 @@ export function ArenaPanel({ partnerName, compare, onClose }: { partnerName: str
         ))}
       </div>
       <p className="text-sm text-muted">
-        Tu ouvres le combat avec 2 actions au premier tour, {partnerName} répond avec 1 PA de plus. {outsider ? `${outsider} ` : ""}
+        Tu ouvres le combat, {partnerName} répond avec 1 PA de plus. {outsider ? `${outsider} ` : ""}
         +3 PA à chaque tour. Fin au K.O., ou vendredi 18 h : le plus de PV restants gagne. Aucune XP en jeu.
       </p>
       <button type="button" className="btn arena" disabled={pending} onClick={() => run(provokeArena)}><BusyLabel pending={pending}>Envoyer la provocation</BusyLabel></button>
