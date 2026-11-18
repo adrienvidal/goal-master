@@ -6,6 +6,7 @@ import {
   arenaState,
   canPlay,
   canProvoke,
+  isStunned,
   mustPass,
   openArena,
   startBonus,
@@ -270,5 +271,20 @@ describe("rules v3 (balance)", () => {
   test("a parry halves the whirl damage too", () => {
     const actions = [act("a", "END", 1), act("n", "PARRY", 2), act("n", "END", 2.1), act("a", "WHIRL", 3, 4)];
     expect(state(v3(), actions, 4).hp.n).toBe(51 - 2);
+  });
+});
+
+describe("stunned", () => {
+  test("the opener's shorter first turn is not a stun", () => {
+    const s = state(arena({ rules: 3 }), [act("a", "ATTACK", 1, 2)], 2);
+    expect(s.turn).toMatchObject({ playerId: "a", number: 1, max: 2 });
+    expect(isStunned(s, "a")).toBe(false);
+  });
+
+  test("a player who lost actions to the whirl is stunned on their turn only", () => {
+    const s = state(arena({ rules: 3 }), [act("a", "WHIRL", 1, 4), act("a", "END", 1.1)], 2);
+    expect(s.turn).toMatchObject({ playerId: "n", max: 2 });
+    expect(isStunned(s, "n")).toBe(true);
+    expect(isStunned(s, "a")).toBe(false);
   });
 });

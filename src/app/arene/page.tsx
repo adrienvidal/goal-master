@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { ArenaMoves, type Move } from "@/components/Arena";
 import { ArenaJournal, ArenaLive, ArenaPresence, StageFighterView, type JournalLine, type StageFighter, type StageHit } from "@/components/ArenaStage";
 import { LiveRefresh } from "@/components/LiveRefresh";
-import { ACTIONS_PER_TURN, arenaPhase, arenaState, canPlay, ENERGY_PER_TURN, finishedArenas, MAX_ENERGY, rulesFor, statsFor, type ArenaState, type LogEntry } from "@/game/arena";
+import { ACTIONS_PER_TURN, arenaPhase, arenaState, canPlay, ENERGY_PER_TURN, isStunned, finishedArenas, MAX_ENERGY, rulesFor, statsFor, type ArenaState, type LogEntry } from "@/game/arena";
 import { timeLeft } from "@/game/challenge";
 import { ofName } from "@/lib/french";
 import { buildPlayerView, type PlayerView } from "@/lib/playerView";
@@ -153,7 +153,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   const petOf = (id: string) => companionOf(game.players.find((p) => p.id === id)?.companion ?? null);
   const stageOf = (v: PlayerView): StageFighter => ({
     id: v.id, name: v.pseudo, levelForm: (v.id === input.arena.challengerId ? input.arena.challengerForm : input.arena.opponentForm) ?? v.levelForm, character: v.character, color: v.color, displayedForm: v.displayedForm, mood: v.mood, title: v.title,
-    hp: s.hp[v.id], maxHp: s.maxHp[v.id], parry: s.parry[v.id], stunned: s.turn?.playerId === v.id && s.turn.max < 3,
+    hp: s.hp[v.id], maxHp: s.maxHp[v.id], parry: s.parry[v.id], stunned: isStunned(s, v.id),
     companion: petOf(v.id),
     companionName: ((c) => (c ? companionLabel(v.id, c, game.quests) : null))(petOf(v.id)),
   });
@@ -184,7 +184,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
                       <span>Celui qui ouvre le combat n&apos;a que {s.turn.max} actions à son premier tour, et l&apos;autre part avec {rules.responderBonus} PA de plus.</span>
                     </details>
                   ) : null}
-                  {myTurn && s.turn && s.turn.number > 1 && s.turn.max < ACTIONS_PER_TURN ? (
+                  {s.turn && isStunned(s, player.id) ? (
                     <details className="arena-state">
                       <summary>💫 étourdi</summary>
                       <span>Bambou tourbillon : {s.turn.max} action{s.turn.max > 1 ? "s" : ""} ce tour au lieu de {ACTIONS_PER_TURN}. Tes PA ne changent pas.</span>

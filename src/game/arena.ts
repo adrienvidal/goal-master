@@ -304,6 +304,12 @@ export function canPlay(state: ArenaState, playerId: string, kind: ArenaKind): M
   return { ok: true };
 }
 
+/** Étourdi : c'est son tour et le Bambou tourbillon lui a retiré des actions (le premier tour, plus court pour celui qui ouvre, n'en est pas un). */
+export function isStunned(state: ArenaState, playerId: string): boolean {
+  const t = state.turn;
+  return !!t && t.playerId === playerId && t.number > 1 && t.max < ACTIONS_PER_TURN;
+}
+
 /** Plus rien à jouer ce tour (ni PA ni potion) : le tour se termine tout seul, l'autre n'attend pas. */
 export function mustPass(state: ArenaState, playerId: string): boolean {
   return !state.over && state.turn?.playerId === playerId && state.energy[playerId] < 1 && state.potions[playerId] < 1;
