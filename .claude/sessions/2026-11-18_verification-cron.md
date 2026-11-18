@@ -3,7 +3,7 @@
 ## Reprise
 
 ```
-✅ Fait      Arène v3 en prod, Arènes de prod purgées
+✅ Fait      Arène purgée en prod, lot Impact (effets de combat) en prod
 ⛔ Bloqué    Aucun
 🎯 Priorité  Prévenir Nicolas, vérifier le duel du boss (échéance 20/11 18 h)
 ```
@@ -305,3 +305,28 @@
 
 ### Décisions
 - Le duel du vendredi contre le boss est gardé : il ne dépend que des candidatures et des niveaux, pas des règles de l'Arène
+
+---
+
+## Suite : lot Impact (effets de l'Arène)
+
+### Réalisé
+- Relance reçue en prod vérifiée : envoyée par Nicolas le 18/11 à 12 h 45
+- Cadrage du lot avec Adrien (skill `game-feel`) : effets seulement, ni règles ni chiffres
+- Maquette animée validée : https://claude.ai/artifact/M6BXDH9vaLciTTvq2wJ55J (`docs/maquettes/arene-impact.html`)
+- PR #121 fusionnée dans `dev` : barème `src/lib/arenaImpact.ts` (testé), élan et ruée de l'attaquant, gel de la scène au contact (60 / 120 / 250 ms), tremblement décroissant, flash, étincelles, chiffres qui rebondissent, « Paré ! » et « +1 PA », dégâts du Bambou sur la cible, PV qui changent au contact pendant le rejeu, traînée des barres de PV, chute au K.O., flash et « K.O. ! » qui claque ; mode « réduire les animations » en teinte ; 236 tests verts
+- Vérifié en local à 390 px (coup joué, rejeu, K.O. jusqu'au résultat) ; testé par Adrien sur l'aperçu
+- Mise en production sur accord d'Adrien
+
+### Reste à faire
+- Prévenir Nicolas : Arène remise à zéro, règles v3, nouveaux effets
+- Jeudi 19/11 et vendredi 20/11 à 18 h 01 : rappel du boss puis duel
+- Premier vrai combat v3 : Bambou tourbillon ou Botte abusés ?
+- Plus tard si besoin : son, vibration du téléphone (écartés de ce lot)
+
+### Décisions
+- Au rejeu, les PV changent au contact du coup, plus à son départ
+- Pour mon propre coup, les chiffres arrivent avec la réponse du serveur : affichés tout de suite s'ils arrivent après le contact
+- La chute au K.O. se joue quand les PV passent à zéro sous les yeux, pas à l'ouverture d'un combat fini
+- Mode « réduire les animations » : pas de mouvement du corps (règle existante de l'app), teinte rouge au lieu du flash ; la maquette gardait l'élan
+- Scripts de test locaux : écrire les dates en UTC (`now() at time zone 'UTC'`), sinon le pilote `pg` décale d'une heure et les coups passent « dans le futur »
