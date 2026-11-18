@@ -11,16 +11,21 @@ import { totalXp, type Application } from "@/game/xp";
 import type { Player } from "@/generated/prisma/client";
 import { db } from "./db";
 
-export type GameData = { players: Player[]; apps: Application[]; nudges: NudgeRow[]; challenges: ChallengeRow[]; arenas: ArenaEntry[]; quests: QuestRow[] };
+/** Objectif actif d'un joueur (le plus récent s'il y en a plusieurs). */
+export type ActiveGoal = { playerId: string; target: number; deadline: Date; createdAt: Date };
+
+export type GameData = { players: Player[]; apps: Application[]; nudges: NudgeRow[]; challenges: ChallengeRow[]; arenas: ArenaEntry[]; quests: QuestRow[]; goals: ActiveGoal[] };
 
 export async function loadGame(): Promise<GameData> {
-  const [players, rows, nudgeRows, challenges, arenas, quests] = await Promise.all([
+  // Une seule vague de lectures en parallèle : chaque aller-retour vers la base compte.
+  const [players, rows, nudgeRows, challenges, arenas, quests, goals] = await Promise.all([
     db().player.findMany({ orderBy: { createdAt: "asc" } }),
     db().application.findMany(),
     db().nudge.findMany(),
     db().challenge.findMany({ orderBy: { createdAt: "desc" } }),
     db().arena.findMany({ orderBy: { createdAt: "desc" }, include: { actions: { orderBy: { createdAt: "asc" } } } }),
     db().quest.findMany({ orderBy: { createdAt: "asc" } }),
+    db().goal.findMany({ where: { status: "ACTIVE" }, orderBy: { createdAt: "desc" }, select: { playerId: true, target: true, createdAt: true, deadline: true } }),
   ]);
   return {
     players,
@@ -29,6 +34,7 @@ export async function loadGame(): Promise<GameData> {
     challenges,
     arenas: arenas.map(({ actions, ...arena }) => ({ arena, actions })),
     quests,
+    goals,
   };
 }
 
@@ -37,10 +43,14 @@ export function arenaInputs(data: GameData): ArenaInput[] {
   return data.arenas.map((e) => ({ ...e, apps: data.apps, nudges: data.nudges }));
 }
 
+/** Objectif actif d'un joueur, déjà chargé avec le jeu. */
+export function activeGoal(data: GameData, playerId: string): ActiveGoal | null {
+  return data.goals.find((g) => g.playerId === playerId) ?? null;
+}
+
 /** Objectifs actifs des deux joueurs, pour le duel de la semaine. */
 export async function loadDuelInput(data: GameData): Promise<DuelInput> {
-  const goals = await db().goal.findMany({ where: { status: "ACTIVE" }, select: { playerId: true, target: true, createdAt: true, deadline: true } });
-  return { goals: goals.map((g) => ({ ...g, deadline: parisDay(g.deadline) })), apps: data.apps, nudges: data.nudges, quests: data.quests };
+  return { goals: data.goals.map((g) => ({ ...g, deadline: parisDay(g.deadline) })), apps: data.apps, nudges: data.nudges, quests: data.quests };
 }
 
 /** Enregistre les succès gagnés ; un succès déjà débloqué n'est jamais retiré (cadrage §6.5). */

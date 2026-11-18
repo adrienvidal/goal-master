@@ -56,7 +56,7 @@ describe("nudges", () => {
 });
 
 describe("XP des quêtes", () => {
-  const q = { id: "q1", giverId: "a", receiverId: "b", text: "Poste sur LinkedIn", link: null, offer: [], companion: null, createdAt: new Date("2026-11-16T10:00:00Z"), doneAt: null, closedAt: null };
+  const q = { id: "q1", giverId: "a", receiverId: "b", text: "Poste sur LinkedIn", link: null, offer: [], companion: null, companionName: null, createdAt: new Date("2026-11-16T10:00:00Z"), doneAt: null, closedAt: null };
   test("une quête validée ajoute 20 à celui qui l'a faite et 5 à celui qui l'a donnée", () => {
     const done = { ...q, status: "VALIDATED" as const, validatedAt: new Date("2026-11-17T10:00:00Z") };
     expect(totalXp("b", [], [], [done])).toBe(20);

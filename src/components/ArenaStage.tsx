@@ -29,6 +29,8 @@ export type StageFighter = {
   stunned: boolean;
   /** Compagnon affiché (spec quetes) : décoratif, il saute quand son héros frappe. */
   companion: CompanionId | null;
+  /** Nom donné au compagnon (ou l'espèce). */
+  companionName: string | null;
 };
 /** Le dernier coup joué, `key` change à chaque nouveau coup. */
 export type StageHit = { key: string; by: string; kind: ArenaKind; amount: number; at: string };
@@ -168,7 +170,7 @@ export function StageFighterView({ f, right, isMe }: { f: StageFighter; right: b
           <Sprite character={f.character} color={f.color} form={f.displayedForm} mood={f.mood} pose={st.pose} px={4} label={f.title} />
           {st.effects.map((e) => <PixelFx key={`${e.name}-${e.at}-${fx?.n}`} {...e} />)}
         </span>
-        {f.companion ? <Companion id={f.companion} px={3} joy={st.pose === "action"} className={right ? "order-first -scale-x-100 mr-1" : "ml-1"} /> : null}
+        {f.companion ? <Companion id={f.companion} px={3} label={f.companionName ?? undefined} joy={st.pose === "action"} className={right ? "order-first -scale-x-100 mr-1" : "ml-1"} /> : null}
         {st.float ? <span key={`float-${fx?.n}`} className={`arena-dmg ${st.float.heal ? "heal" : ""}`}>{st.float.text}</span> : null}
       </div>
     </div>

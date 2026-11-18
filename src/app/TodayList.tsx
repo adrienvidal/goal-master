@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import { BusyLabel } from "@/components/LinkButton";
 import { removeApplication } from "./actions";
 
 export type TodayItem = { id: string; name: string; detail: string; time: string; warning: string };
@@ -50,7 +51,7 @@ export default function TodayList({ items, count, cap }: { items: TodayItem[]; c
               {error ? <p className="err">{error}</p> : null}
               <div className="grid grid-cols-2 gap-2">
                 <button type="button" className="btn ghost !text-[10px]" onClick={() => { setConfirming(null); setError(""); }}>Garder</button>
-                <button type="button" className="btn !bg-danger !text-[10px]" disabled={pending} onClick={() => remove(item)}>{error ? "Réessayer" : "Retirer"}</button>
+                <button type="button" className="btn !bg-danger !text-[10px]" disabled={pending} onClick={() => remove(item)}><BusyLabel pending={pending}>{error ? "Réessayer" : "Retirer"}</BusyLabel></button>
               </div>
             </li>
           ) : (

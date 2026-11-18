@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { SubmitButton } from "@/components/LinkButton";
 import { Sprite } from "@/components/Sprite";
 import { parisDay } from "@/game/calendar";
 import { extendedDeadline, goalOutcome } from "@/lib/goal";
@@ -35,7 +36,7 @@ export default async function GoalEndPage(): Promise<React.ReactElement> {
           </p>
           <p className="text-muted">Succès « Mission accomplie » débloqué. Tu gardes ton XP, ton niveau et tes succès.</p>
           <form action={completeGoal} className="w-full">
-            <button type="submit" className="btn">Nouvel objectif</button>
+            <SubmitButton className="btn">Nouvel objectif</SubmitButton>
           </form>
           <small className="text-muted">Au nouvel objectif, tu peux changer de personnage.</small>
         </div>
@@ -52,10 +53,10 @@ export default async function GoalEndPage(): Promise<React.ReactElement> {
           <span className="num">{g.done}</span> candidatures sur <span className="num">{g.target}</span> au {short(g.deadline)}. Ton avatar garde tout ce qu&apos;il a gagné.
         </p>
         <form action={extendGoal} className="w-full">
-          <button type="submit" className="btn">Prolonger jusqu&apos;au <span className="whitespace-nowrap">{short(extendedDeadline(parisDay(now)))}</span></button>
+          <SubmitButton className="btn">Prolonger jusqu&apos;au <span className="whitespace-nowrap">{short(extendedDeadline(parisDay(now)))}</span></SubmitButton>
         </form>
         <form action={abandonGoal} className="w-full">
-          <button type="submit" className="btn ghost">Nouvel objectif</button>
+          <SubmitButton className="btn ghost">Nouvel objectif</SubmitButton>
         </form>
       </div>
     </main>

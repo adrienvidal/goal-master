@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LinkButton } from "@/components/LinkButton";
 import { ACHIEVEMENTS, type AchievementId } from "@/game/achievements";
 import { db } from "@/server/db";
 import { requirePlayer } from "@/server/session";
@@ -22,7 +22,7 @@ export default async function AchievementsPage(): Promise<React.ReactElement> {
             <h1 className="h-title">Mes succès</h1>
             <span className="num text-gold">{unlocked.size} / {ids.length} débloqués</span>
           </div>
-          <Link href="/" className="btn ghost !w-auto px-4 !text-[10px]">Retour</Link>
+          <LinkButton href="/" className="btn ghost !w-auto px-4 !text-[10px]">Retour</LinkButton>
         </div>
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(104px,1fr))] gap-2.5">
           {ids.map((id) => {

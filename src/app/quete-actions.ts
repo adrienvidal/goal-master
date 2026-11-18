@@ -4,7 +4,7 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { questFormReached, type NotificationEvent } from "@/game/notifications";
-import { checkLink, checkQuestText, drawOffer, isCompanion, openQuest, ownedCompanions, type QuestRow } from "@/game/quests";
+import { checkCompanionName, checkLink, checkQuestText, drawOffer, isCompanion, openQuest, ownedCompanions, type QuestRow } from "@/game/quests";
 import { formName } from "@/lib/forms";
 import { db } from "@/server/db";
 import { loadGame, syncAchievements } from "@/server/game";
@@ -117,19 +117,34 @@ export async function cancelQuest(id: string): Promise<QuestResult> {
 }
 
 /** Adopter un compagnon du coffre : seulement l'un de ceux proposés, une seule fois. */
-export async function adoptCompanion(questId: string, companion: string): Promise<QuestResult> {
+export async function adoptCompanion(questId: string, companion: string, rawName = ""): Promise<QuestResult> {
   const player = await requirePlayer();
   if (!isCompanion(companion)) return { ok: false, error: "Ce compagnon n'existe pas." };
+  const named = checkCompanionName(rawName, companion);
+  if (!named.ok) return named;
   const game = await loadGame();
   if (ownedCompanions(player.id, game.quests).includes(companion)) return { ok: false, error: "Ce compagnon est déjà dans ta Ménagerie : choisis-en un autre." };
   const { count } = await db().quest.updateMany({
     where: { id: questId, receiverId: player.id, status: "VALIDATED", companion: null, offer: { has: companion } },
-    data: { companion },
+    data: { companion, companionName: named.name },
   });
   if (count !== 1) return { ok: false, error: "Ce coffre est déjà ouvert." };
   await db().player.update({ where: { id: player.id }, data: { companion } });
   await syncAchievements({ ...game, quests: game.quests.map((q) => (q.id === questId ? { ...q, companion } : q)) }, new Date());
   // Pas de revalidatePath("/") ici : la page du coffre se rechargerait et partirait sur l'accueil avant l'écran d'adoption.
+  return { ok: true };
+}
+
+/** Renommer un de ses compagnons (vide = nom de l'espèce). */
+export async function renameCompanion(companion: string, rawName: string): Promise<QuestResult> {
+  const player = await requirePlayer();
+  if (!isCompanion(companion)) return { ok: false, error: "Ce compagnon n'existe pas." };
+  const named = checkCompanionName(rawName, companion);
+  if (!named.ok) return named;
+  const { count } = await db().quest.updateMany({ where: { receiverId: player.id, status: "VALIDATED", companion }, data: { companionName: named.name } });
+  if (count === 0) return { ok: false, error: "Ce compagnon n'est pas encore dans ta Ménagerie." };
+  revalidatePath("/");
+  revalidatePath("/menagerie");
   return { ok: true };
 }
 

@@ -1,7 +1,9 @@
 import { MyAvatar } from "@/components/MyAvatar";
-import { COMPANION_NAMES, isCompanion, openQuest, pendingChest } from "@/game/quests";
+import { LinkButton, LinkButtonLabel } from "@/components/LinkButton";
+import { COMPANION_NAMES, companionLabel, isCompanion, openQuest, pendingChest } from "@/game/quests";
 import { Companion } from "@/components/Companion";
-import { QuestsCard } from "@/components/QuestsCard";
+import { QuestBanner } from "@/components/QuestBanner";
+import { QuestLine } from "@/components/QuestLine";
 import { Sprite } from "@/components/Sprite";
 import { Bar } from "@/components/Bar";
 import { Flame } from "@/components/Flame";
@@ -29,8 +31,7 @@ import { COLOR_HEX } from "@/lib/sprites";
 import { goalOutcome } from "@/lib/goal";
 import { buildPlayerView, removalImpact, splitCompany, type FeedItem, type PlayerView } from "@/lib/playerView";
 import { DAILY_XP_CAP } from "@/game/levels";
-import { db } from "@/server/db";
-import { arenaInputs, loadDuelInput, loadGame } from "@/server/game";
+import { activeGoal, arenaInputs, loadDuelInput, loadGame } from "@/server/game";
 import { requirePlayer } from "@/server/session";
 import AddApplication from "./AddApplication";
 import TodayList, { type TodayItem } from "./TodayList";
@@ -80,7 +81,7 @@ function FeedText({ line, pseudo }: { line: FeedLine; pseudo: string }): React.R
     case "application":
       return <span>{pseudo} → <b>{line.company}</b></span>;
     case "quest":
-      return <span className="text-gold">{pseudo} a réussi sa quête{line.companion ? <> et adopté {COMPANION_NAMES[line.companion].the}</> : null}</span>;
+      return <span className="text-gold">{pseudo} a réussi sa quête{line.companion ? <> et adopté {line.name ?? COMPANION_NAMES[line.companion].the}</> : null}</span>;
   }
 }
 
@@ -193,13 +194,9 @@ function ArenaCard({ input, meId, views, now }: { input: ArenaInput; meId: strin
         {cells.map((on, i) => <i key={i} className={`energy-cell ${on ? "" : "empty"}`} />)}
       </div>
       {mine && s.energy[meId] === 0 ? <p className="text-sm text-muted">Envoie une candidature pour recharger 2 ⚡. Sinon, tu peux finir ton tour.</p> : null}
-      <span className="btn arena">{mine ? "Entrer et jouer" : "Entrer dans l'Arène"}</span>
+      <LinkButtonLabel className="btn arena">{mine ? "Entrer et jouer" : "Entrer dans l'Arène"}</LinkButtonLabel>
     </Link>
   );
-}
-
-async function goalFor(playerId: string): Promise<{ target: number; deadline: Date; createdAt: Date } | null> {
-  return db().goal.findFirst({ where: { playerId, status: "ACTIVE" }, orderBy: { createdAt: "desc" }, select: { target: true, deadline: true, createdAt: true } });
 }
 
 function GoalBlock({ view }: { view: PlayerView }): React.ReactElement | null {
@@ -227,12 +224,12 @@ export default async function HomePage(): Promise<React.ReactElement> {
   // Un coffre de quête à ouvrir passe avant tout le reste (spec quetes).
   if (pendingChest(player.id, game.quests)) redirect("/coffre");
   const now = new Date();
-  const myGoal = await goalFor(player.id);
+  const myGoal = activeGoal(game, player.id);
   if (!myGoal) redirect("/objectif/nouveau");
   const me = buildPlayerView(player, game.apps, game.nudges, game.quests, myGoal, now);
   if (me.goal && goalOutcome(me.goal.done, me.goal.target, me.goal.deadline, parisDay(now)) !== "active") redirect("/objectif/fin");
   const partnerRow = game.players.find((p) => p.id !== player.id);
-  const partner = partnerRow ? buildPlayerView(partnerRow, game.apps, game.nudges, game.quests, await goalFor(partnerRow.id), now) : null;
+  const partner = partnerRow ? buildPlayerView(partnerRow, game.apps, game.nudges, game.quests, activeGoal(game, partnerRow.id), now) : null;
   const received = partner ? pendingNudge(player.id, game.nudges, game.apps, now) : null;
   const won = partner ? justWonNudge(player.id, game.nudges, game.apps, now) : null;
   const duelInput = await loadDuelInput(game);
@@ -273,6 +270,8 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const partnerFeed = partner ? withDuelLine(partner.feed, lastDuel) : [];
   const myCompanion = player.companion && isCompanion(player.companion) ? player.companion : null;
   const partnerCompanion = partnerRow?.companion && isCompanion(partnerRow.companion) ? partnerRow.companion : null;
+  const questIn = partnerRow ? openQuest(partnerRow.id, player.id, game.quests) : null;
+  const questOut = partnerRow ? openQuest(player.id, partnerRow.id, game.quests) : null;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
@@ -293,6 +292,11 @@ export default async function HomePage(): Promise<React.ReactElement> {
             </NudgeBanner>
           ) : null}
           {won && partner ? <NudgeWinBanner id={won.id} partner={partner.pseudo} /> : null}
+          {questIn && partner ? (
+            <QuestBanner quest={questIn} partnerName={partner.pseudo}>
+              <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} pose="victory" px={2} />
+            </QuestBanner>
+          ) : null}
           {incoming && partner ? (
             <ChallengeIncoming id={incoming.id}>
               <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} pose="victory" px={2} crown={crownIds.has(partner.id)} />
@@ -317,7 +321,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
               {myCompanion ? (
                 <Link href="/menagerie" className="flex flex-col items-center gap-0.5 no-underline" aria-label="Ma Ménagerie">
                   <Companion id={myCompanion} px={3} />
-                  <small className="text-xs text-muted">{COMPANION_NAMES[myCompanion].name}</small>
+                  <small className="text-xs text-muted">{companionLabel(player.id, myCompanion, game.quests)}</small>
                 </Link>
               ) : null}
             </div>
@@ -337,11 +341,11 @@ export default async function HomePage(): Promise<React.ReactElement> {
           {running && partner ? <ChallengeRace challenge={running} views={[me, partner]} apps={game.apps} now={now} /> : null}
           {arenaOutgoing && partner ? <ArenaPending id={arenaOutgoing.id} partnerName={partner.pseudo} expires={`demain ${TIME.format(new Date(arenaOutgoing.createdAt.getTime() + ANSWER_WITHIN_MS))}`} /> : null}
           {arenaRunning && partner ? <ArenaCard input={arenaRunning} meId={player.id} views={[me, partner]} now={now} /> : null}
-          {partner && partnerRow ? <QuestsCard received={openQuest(partnerRow.id, player.id, game.quests)} given={openQuest(player.id, partnerRow.id, game.quests)} partnerName={partner.pseudo} /> : null}
           <AddApplication todayCount={me.today.count} />
-          <div className="grid grid-cols-2 gap-2">
-            <Link href="/succes" className="btn ghost !text-[10px]">Mes succès</Link>
-            <Link href="/reglages" className="btn ghost !text-[10px]">Réglages</Link>
+          <div className="grid grid-cols-3 gap-2">
+            <LinkButton href="/succes" className="btn ghost !px-1 !text-[9px]">Mes succès</LinkButton>
+            <LinkButton href="/menagerie" className="btn ghost !px-1 !text-[9px]">Ménagerie</LinkButton>
+            <LinkButton href="/reglages" className="btn ghost !px-1 !text-[9px]">Réglages</LinkButton>
           </div>
           <TodayList items={todayItems} count={me.today.count} cap={DAILY_XP_CAP} />
         </section>
@@ -351,7 +355,12 @@ export default async function HomePage(): Promise<React.ReactElement> {
             <>
               <div className="flex items-end gap-3">
                 <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} mood={partner.mood} px={3} label={partner.title} hurt={wounded} crown={crownIds.has(partner.id)} />
-                {partnerCompanion ? <Companion id={partnerCompanion} px={2} /> : null}
+                {partnerCompanion && partnerRow ? (
+                  <span className="flex flex-col items-center gap-0.5">
+                    <Companion id={partnerCompanion} px={2} />
+                    <small className="text-xs text-muted">{companionLabel(partnerRow.id, partnerCompanion, game.quests)}</small>
+                  </span>
+                ) : null}
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="font-display text-[11px] leading-relaxed">{partner.pseudo} · Niv. {partner.level}</span>
                   <span className="text-sm text-muted">{partner.title} · {wounded ? "blessé" : `série ${partner.streak}`}</span>
@@ -365,6 +374,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
                   <span>Avant le {shortDate(partner.goal.deadline)}</span>
                 </p>
               ) : null}
+              {questOut ? <QuestLine quest={questOut} partnerName={partner.pseudo} /> : null}
               <ul className="flex flex-col gap-1.5 text-sm">
                 {partnerFeed.length === 0 ? <li className="text-muted">Pas encore de candidature.</li> : null}
                 {partnerFeed.map((r, i) => (
@@ -374,7 +384,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
                   </li>
                 ))}
               </ul>
-              <PartnerActions partnerName={partner.pseudo} nudgeSentToday={sentToday(player.id, game.nudges, parisDay(now))} blink={partner.idleWorkdays >= 2} launch={launch} arena={arenaLaunch(me, partner, game.arenas, now)} />
+              <PartnerActions partnerName={partner.pseudo} nudgeSentToday={sentToday(player.id, game.nudges, parisDay(now))} blink={partner.idleWorkdays >= 2} launch={launch} arena={arenaLaunch(me, partner, game.arenas, now)} quest={questOut ? { ok: false, reason: `Une quête est déjà en cours pour ${partner.pseudo}.` } : { ok: true }} />
             </>
           ) : (
             <p className="text-muted">Ton binôme ne s&apos;est pas encore connecté. Sa carte apparaîtra ici dès son premier lancement.</p>

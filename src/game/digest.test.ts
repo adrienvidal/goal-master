@@ -51,7 +51,7 @@ describe("digestDate", () => {
 });
 
 const app = (userId: string, at: string): Application => ({ id: `${userId}${at}`, userId, company: "Alan", createdAt: new Date(at), cancelledAt: null });
-const q = (over: Partial<QuestRow>): QuestRow => ({ id: "q", giverId: "a", receiverId: "b", text: "x", link: null, status: "VALIDATED", offer: [], companion: null, createdAt: new Date("2026-11-10"), doneAt: new Date("2026-11-10"), validatedAt: new Date("2026-11-10"), closedAt: null, ...over });
+const q = (over: Partial<QuestRow>): QuestRow => ({ id: "q", giverId: "a", receiverId: "b", text: "x", link: null, status: "VALIDATED", offer: [], companion: null, companionName: null, createdAt: new Date("2026-11-10"), doneAt: new Date("2026-11-10"), validatedAt: new Date("2026-11-10"), closedAt: null, ...over });
 
 describe("compte du jour", () => {
   const apps = [app("b", "2026-11-17T10:00:00Z"), app("b", "2026-11-18T08:00:00Z"), app("b", "2026-11-18T09:00:00Z"), app("a", "2026-11-18T09:00:00Z")];

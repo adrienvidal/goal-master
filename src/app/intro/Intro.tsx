@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { SubmitButton } from "@/components/LinkButton";
 import { BossSprite } from "@/components/BossSprite";
 import { ChestSprite, Companion } from "@/components/Companion";
 import { EyeIcon } from "@/components/DecorView";
@@ -155,7 +156,7 @@ export default function Intro({ start = 0 }: { start?: number }): React.ReactEle
         </div>
         {last ? (
           <form action={finishIntro}>
-            <button type="submit" className="btn">Commencer la quête</button>
+            <SubmitButton className="btn">Commencer la quête</SubmitButton>
           </form>
         ) : (
           <button type="button" className="btn" onClick={() => setI(i + 1)}>Suivant</button>

@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Cron du 17/11 vérifié, Quêtes et compagnons sur dev
+✅ Fait      Quêtes et bilan du jour en prod, e-mails de test réservés à Adrien
 ⛔ Bloqué    Aucun
-🎯 Priorité  Tester les Quêtes sur l'aperçu de dev, puis mise en prod (échéance 19/11)
+🎯 Priorité  Relire le premier bilan du jour et le rappel du boss (échéance 19/11)
 ```
 
 ## Réalisé
@@ -56,3 +56,109 @@
 - Tirage stocké sur la quête à la validation (l'ajout d'un animal au catalogue ne rebrasse rien) ; collection calculée
 - Dernier compagnon restant : montré seul dans le coffre plutôt que donné en silence ; collection complète : XP seules, pas de coffre
 - Notifications des quêtes hors plafond quotidien, une par étape, chaque « pas encore » renotifie
+
+---
+
+## Suite : e-mails (bilan du jour)
+
+### Réalisé
+- Relecture des notifications e-mail : une notification ratée n'était jamais retentée, un code de connexion qui ne part pas ne prévient personne, et un joueur actif recevait un e-mail par événement
+- PR #80 : hors production, tout e-mail part vers DEV_MAIL_TO, et sans DEV_MAIL_TO rien ne part (avant, un aperçu sans la variable ou un `npm start` local écrivaient aux vraies adresses) ; CLAUDE.md aligné (#84)
+- Maquette du bilan du jour validée : https://claude.ai/artifact/SX3pyJ8tfcHwpts9w4p1BR (`docs/maquettes/bilan-du-jour.html`)
+- PR #81 : un seul e-mail par jour et par joueur, envoyé en fin de cron (18 h 01), qui regroupe les notifications en attente (compte du jour, résultat du duel encadré, liste horodatée) ; push inchangé ; migration `NotificationLog.event` / `mailedAt` ; spec `docs/specs/2026-11-18-bilan-du-jour-design.md`, plan `docs/superpowers/plans/2026-11-18-bilan-du-jour.md` ; 216 tests verts ; bilan réel envoyé en local vers DEV_MAIL_TO
+- PR #79 (tours d'Arène en push seul) fermée, reprise dans #81 ; #82 : deux faux positifs du contrôle de design, exceptions limitées à un fichier
+- Mise en production (#83, commit de fusion) : Quêtes et compagnons, #80, #81 ; déploiement Vercel réussi, migration appliquée par `vercel-build`. Le « Reste à faire » des Quêtes « mise en production » est donc fait, sans test préalable sur l'aperçu de `dev`
+
+### Reste à faire
+- Ce soir 18 h 01 : premier bilan du jour en production (relire n8n, `NotificationLog.mailedAt`, la boîte des deux joueurs)
+- Code de connexion qui ne part pas : l'erreur est avalée (`src/server/auth.ts`), l'écran attend un code qui n'arrivera pas ; la laisser remonter
+- Correction du point de ce matin « retirer `DEV_MAIL_TO` de Preview pour que Nicolas teste » : depuis #80, sans DEV_MAIL_TO plus rien ne part ; retirer seulement `PREVIEW_DIRECT_LOGIN`, et Adrien transmet le code
+- Tester les Quêtes en production avec Nicolas (pas faites sur l'aperçu de `dev`)
+
+### Blockers
+- Aucun
+
+### Décisions
+- Le push reste l'alerte instantanée ; l'e-mail devient un bilan quotidien à 18 h 01, rien les jours sans nouvelle ; seul le code de connexion part tout de suite
+- Le plafond de 2 par jour ne bloque plus que le push : une notification plafonnée figure quand même dans le bilan
+- Tours d'Arène hors bilan (périmés le soir) ; catégories coupées hors bilan ; résultat du duel en tête
+- Un envoi raté laisse les lignes en attente pour le bilan suivant
+- Écartés : second bilan à midi, réglage de l'heure, retrait de ce que le joueur a déjà vu
+- Scripts locaux avec `tsx --env-file` : charger `.env.local` avant `.env.development.local`, sinon la base Neon de développement prend le pas sur Docker
+
+
+---
+
+## Suite : Quêtes v2 après test sur l'aperçu
+
+### Réalisé
+- Retours d'Adrien : carte Quêtes austère et actions mélangées, nom du compagnon, Ménagerie introuvable
+- Maquette v2 validée (même lien), cadrage §v2, plan `docs/superpowers/plans/2026-11-18-quetes-v2.md`
+- PR #86 fusionnée dans `dev` : bandeau de quête reçue, ligne « Ta quête pour X » et 4e action « 📜 Quête » dans la carte du binôme, bouton Ménagerie, nom du compagnon (adoption, renommage, accueil, fil, Arène), migration `companion_names` ; 218 tests verts ; revue de branche corrigée
+- Aperçu de `dev` reconstruit avec succès
+
+### Reste à faire
+- Adrien reteste les Quêtes v2 sur l'aperçu, puis mise en production sur accord
+- Base locale : quêtes de test `t-in`, `t-out`, `t-chest3`, `test-chest-2`
+
+### Décisions
+- Tout ce qui vise le binôme vit dans sa carte (Motiver, Défier, Arène, Quête) ; la quête reçue s'annonce en bandeau, comme un défi ou une provocation
+- Le nom du compagnon vit sur la quête qui l'a donné (`companionName`), vide = nom de l'espèce
+
+---
+
+## Suite : retour visuel des boutons
+
+### Réalisé
+- Retour d'Adrien : aucun changement d'état ni chargement au clic, partout dans l'app
+- PR #88 fusionnée dans `dev` : appui (le bouton s'enfonce), points clignotants sur les liens-boutons (`LinkButton`, `useLinkStatus`) et sur les boutons d'action (`BusyLabel`, `SubmitButton`), écran `loading.tsx` ; 218 tests verts, lint propre ; aperçu de `dev` reconstruit
+
+### Reste à faire
+- Adrien reteste sur l'aperçu (Quêtes v2 + boutons), puis mise en production sur accord
+
+### Décisions
+- Pas de maquette pour ce lot (accord d'Adrien) : comportement, pas un nouvel écran
+- Les points remplacent le texte sans changer la largeur du bouton
+
+---
+
+## Suite : vitesse de chargement
+
+### Réalisé
+- Cause trouvée : fonctions Vercel à Washington (`iad1`, en-tête `x-vercel-id` de la prod), base Neon à Francfort ; chaque requête traversait l'Atlantique
+- PR #90 fusionnée dans `dev` : `regions: ["fra1"]` dans `vercel.json` ; objectifs actifs chargés avec le jeu (`GameData.goals`, `activeGoal`), l'accueil passe de 7 à 4 allers-retours vers la base ; aperçu reconstruit
+
+### Reste à faire
+- Après la mise en production : remesurer `/connexion` (référence avant : 158 ms de médiane depuis Paris) et vérifier que `x-vercel-id` indique `fra1`
+
+### Décisions
+- Région des fonctions fixée dans `vercel.json` (versionnée) plutôt que dans les réglages du projet Vercel
+
+---
+
+## Suite : bouton « Valider » bloqué
+
+### Réalisé
+- Cause : décalage de version, l'aperçu a été redéployé (fusion de #90) pendant le test d'Adrien ; l'action a bien été faite côté serveur (POST 200, coffre ouvert chez l'autre), mais l'ancienne page n'a pas pu lire la réponse
+- PR #92 fusionnée dans `dev` : un bouton qui charge plus de 8 s vérifie `/api/version` et recharge la page si la version a changé ; vérifié dans le navigateur (version simulée)
+
+### Décisions
+- Ne plus fusionner dans `dev` pendant qu'Adrien teste l'aperçu (mémoire `pas-de-deploiement-pendant-test`)
+
+---
+
+## Suite : coffre v3 et mise en production
+
+### Réalisé
+- Ménageries vidées sur l'aperçu (branche Neon `preview/dev`) et en local : compagnons, noms et coffres en attente effacés ; quêtes et XP gardées
+- Bandeau « pas encore » sur l'accueil du destinataire (PR #94)
+- Coffre v3 : maquette animée validée (entrée « Coffre v3 »), puis codé (PR #95) : trois coups, apparition une à une, collection x/6, XP qui monte à l'adoption ; testé en local à 390 px
+- Décision d'Adrien : mettre `dev` en production avant d'attaquer la prochaine fonctionnalité
+
+### Reste à faire
+- Après la mise en production : vérifier `x-vercel-id` en `fra1`, remesurer `/connexion` (158 ms avant), vérifier les tables `Quest` en production
+- Prochaine fonctionnalité : à cadrer avec Adrien (branche partie de `dev`, maquette d'abord)
+- Branche distante `fix/test-mail-only-to-dev` (contenu déjà fusionné par #80) : à supprimer sur accord d'Adrien
+
+### Décisions
+- Pendant un test de l'aperçu, rien n'est fusionné dans `dev` ; les documents de session attendent la fin du test

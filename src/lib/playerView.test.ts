@@ -87,8 +87,8 @@ test("feed shows when the player reached a new form, among recent applications",
 });
 
 test("une quête validée compte dans l'XP et apparaît dans le fil avec son compagnon", () => {
-  const quest = { id: "q1", giverId: "b", receiverId: "a", text: "Poste un article sur LinkedIn", link: null, status: "VALIDATED" as const, offer: ["fox"], companion: "fox", createdAt: new Date("2026-11-15T09:00:00Z"), doneAt: new Date("2026-11-15T10:00:00Z"), validatedAt: new Date("2026-11-15T11:00:00Z"), closedAt: null };
+  const quest = { id: "q1", giverId: "b", receiverId: "a", text: "Poste un article sur LinkedIn", link: null, status: "VALIDATED" as const, offer: ["fox"], companion: "fox", companionName: "Roux", createdAt: new Date("2026-11-15T09:00:00Z"), doneAt: new Date("2026-11-15T10:00:00Z"), validatedAt: new Date("2026-11-15T11:00:00Z"), closedAt: null };
   const v = buildPlayerView(player, [], [], [quest], goal, now);
   expect(v.xpInLevel).toBe(20);
-  expect(v.feed[0]).toEqual({ kind: "quest", text: "Poste un article sur LinkedIn", companion: "fox", day: "2026-11-15" });
+  expect(v.feed[0]).toEqual({ kind: "quest", text: "Poste un article sur LinkedIn", companion: "fox", name: "Roux", day: "2026-11-15" });
 });

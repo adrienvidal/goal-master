@@ -327,3 +327,60 @@ html[data-decor] main { visibility: hidden; }
 .pick[aria-checked="true"], .pick.shown { border-color: var(--gold); background: #3a3160; box-shadow: 0 0 0 3px var(--gold-dk); }
 .pick.locked { cursor: default; color: var(--muted); }
 @media (max-width: 360px) { .pick svg { zoom: .8; } }
+
+/* Quêtes v2 : bandeau reçu, ligne donnée, 4e action */
+.btn.quest { background: var(--quest); box-shadow: inset -4px -4px 0 var(--quest-dk), 4px 4px 0 #0c0a1a; }
+.qbanner { background: var(--quest); color: var(--quest-ink); border: 3px solid var(--quest-dk); box-shadow: 4px 4px 0 #0c0a1a; padding: 10px 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
+.qbanner p { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.qbanner q { quotes: "« " " »"; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+.qbanner .qstate { align-self: flex-start; }
+.qmini { border: 3px solid var(--quest-dk); background: rgb(233 217 176 / .08); padding: 10px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+.qmini .lbl { grid-column: 1 / -1; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--quest); }
+.qmini .txt { min-width: 0; font-size: 15px; overflow-wrap: anywhere; }
+.qmini .qstate { grid-column: 1; justify-self: start; }
+.qmini .qstate.wait { color: var(--muted); }
+.qmini .qstate.todo { color: var(--ember); }
+.qmini .btn { grid-column: 2; grid-row: 2 / span 2; }
+@media (max-width: 440px) { .partner-actions.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- Retour visuel des boutons : survol, appui, chargement ---------- */
+.btn { position: relative; transition: filter .08s, transform .05s; }
+.btn:not(:disabled):not(.off):not([aria-disabled="true"]):hover { filter: brightness(1.08); }
+/* Appui : le bouton s'enfonce sur son ombre, comme un bouton d'arcade. */
+.btn:not(:disabled):not(.off):not([aria-disabled="true"]):active { transform: translate(3px, 3px); filter: brightness(.92); }
+.btn:disabled { cursor: progress; }
+.busy-label { visibility: hidden; display: contents; }
+.busy-label > * { visibility: hidden; }
+.dots { display: inline-flex; gap: 4px; align-items: center; justify-content: center; }
+.dots i { width: 5px; height: 5px; background: currentColor; animation: dot-blink 1s steps(1) infinite; }
+.dots i:nth-child(2) { animation-delay: .2s; }
+.dots i:nth-child(3) { animation-delay: .4s; }
+.dots-over { position: absolute; inset: 0; }
+@keyframes dot-blink { 0%, 100% { opacity: .25; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } .btn:active { transform: none; } .dots i { animation: none; opacity: .8; } }
+
+/* ---------- Coffre v3 (maquette quetes, « Coffre v3 ») ---------- */
+.chest-tap { position: relative; display: grid; place-items: center; background: none; border: 0; padding: 0; cursor: pointer; }
+.chest-tap:disabled { cursor: default; }
+.chest-tap > span:not(.chest-ray):not(.chest-sparks) { position: relative; z-index: 1; }
+.chest-hit1 { animation: chest-hit1 .35s steps(4) 1; }
+.chest-hit2 { animation: chest-hit2 .4s steps(5) 1; }
+@keyframes chest-hit1 { 25% { transform: translateX(-3px) rotate(-2deg); } 75% { transform: translateX(3px) rotate(2deg); } }
+@keyframes chest-hit2 { 20% { transform: translate(-5px, -2px) rotate(-4deg); } 60% { transform: translate(5px, -3px) rotate(4deg); } }
+.chest-ray { position: absolute; bottom: 30%; left: 50%; width: 70px; height: 0; transform: translateX(-50%); background: linear-gradient(to top, rgb(255 243 176 / .85), transparent); transition: height .5s ease-out; }
+.chest-tap.opened .chest-ray { height: 220px; }
+.chest-sparks { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.chest-sparks i { position: absolute; left: 50%; top: 55%; width: 4px; height: 4px; background: #fff3b0; animation: chest-spark .6s ease-out forwards; }
+@keyframes chest-spark { to { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+.chest-count { width: 12px; height: 12px; border: 2px solid var(--gold); }
+.chest-count.on { background: var(--gold); }
+.chest-pick { opacity: 0; transform: translateY(16px) scale(.8); transition: opacity .3s, transform .3s; }
+.chest-pick.out { opacity: 1; transform: none; }
+.chest-pick.sil svg { filter: brightness(0); }
+.chest-jump { display: inline-flex; animation: chest-jump .6s steps(4) 1; }
+@keyframes chest-jump { 0% { transform: translate(-60px, -40px); } 60% { transform: translate(0, -14px); } 100% { transform: none; } }
+.chest-xp { transition: width 1.2s steps(10); }
+@media (prefers-reduced-motion: reduce) {
+  .chest-hit1, .chest-hit2, .chest-jump, .chest-sparks i { animation: none; }
+  .chest-ray, .chest-pick, .chest-xp { transition: none; }
+}

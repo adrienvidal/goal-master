@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { BusyLabel } from "@/components/LinkButton";
 import { useState, useTransition } from "react";
 import { launchQuest } from "@/app/quete-actions";
 import { QUEST_TEXT_MAX } from "@/game/quests";
@@ -41,7 +42,7 @@ export function QuestForm({ partnerName }: { partnerName: string }): React.React
       </div>
       <p className="text-sm text-muted">Récompense : un coffre et +20 XP pour {partnerName}, +5 XP pour toi.</p>
       {error ? <p className="err" role="alert">{error}</p> : null}
-      <button type="submit" className="btn" disabled={pending}>{pending ? "Envoi…" : "Lancer la quête"}</button>
+      <button type="submit" className="btn" disabled={pending}><BusyLabel pending={pending}>Lancer la quête</BusyLabel></button>
     </form>
   );
 }

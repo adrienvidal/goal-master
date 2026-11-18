@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LinkButton, SubmitButton } from "@/components/LinkButton";
 import { Landscape } from "@/components/Landscape";
 import { PushChannel } from "@/components/PushSetup";
 import { isCategory } from "@/game/notifications";
@@ -15,9 +15,9 @@ export default async function SettingsPage(): Promise<React.ReactElement> {
       <div className="device flex flex-col gap-5">
         <div className="flex items-center justify-between gap-3">
           <h1 className="h-title">Réglages</h1>
-          <Link href="/" className="btn ghost !w-auto px-4 !text-[10px]">Retour</Link>
+          <LinkButton href="/" className="btn ghost !w-auto px-4 !text-[10px]">Retour</LinkButton>
         </div>
-        <Link href="/intro" className="btn ghost !text-[10px]">Revoir l&apos;intro</Link>
+        <LinkButton href="/intro" className="btn ghost !text-[10px]">Revoir l&apos;intro</LinkButton>
         <section className="flex flex-col gap-3" aria-labelledby="fond">
           <h2 id="fond" className="text-xs uppercase tracking-wider text-muted">Paysage de fond</h2>
           <ul className="grid grid-cols-2 gap-2 sm:gap-3">
@@ -26,17 +26,16 @@ export default async function SettingsPage(): Promise<React.ReactElement> {
               return (
                 <li key={id}>
                   <form action={setLandscape.bind(null, id)}>
-                    <button
-                      type="submit"
+                    <SubmitButton
                       aria-pressed={current}
-                      className={`flex w-full flex-col gap-2 border-[3px] bg-night p-2 text-left ${current ? "border-gold" : "border-edge"}`}
+                      className={`relative flex w-full flex-col gap-2 border-[3px] bg-night p-2 text-left ${current ? "border-gold" : "border-edge"}`}
                     >
                       <Landscape id={id} label />
                       <span className="flex flex-wrap items-center justify-between gap-x-2 px-1">
                         <b className="text-sm leading-tight sm:text-base">{LANDSCAPE_NAMES[id]}</b>
                         {current ? <small className="font-display text-[9px] text-gold">Actuel</small> : null}
                       </span>
-                    </button>
+                    </SubmitButton>
                   </form>
                 </li>
               );
