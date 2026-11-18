@@ -1,6 +1,19 @@
 "use client";
 import Link, { useLinkStatus } from "next/link";
+import { useEffect } from "react";
 import { useFormStatus } from "react-dom";
+
+/** Événement lancé quand un bouton charge depuis trop longtemps : l'app vérifie alors si une nouvelle version est en ligne. */
+export const SLOW_ACTION_EVENT = "gm-slow-action";
+const SLOW_AFTER_MS = 8000;
+
+function useSlowSignal(pending: boolean): void {
+  useEffect(() => {
+    if (!pending) return;
+    const timer = setTimeout(() => window.dispatchEvent(new Event(SLOW_ACTION_EVENT)), SLOW_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, [pending]);
+}
 
 /** Trois points qui clignotent : « ça charge ». */
 export function Dots({ className = "" }: { className?: string }): React.ReactElement {
@@ -15,6 +28,7 @@ export function Dots({ className = "" }: { className?: string }): React.ReactEle
 
 function Pending({ children }: { children: React.ReactNode }): React.ReactElement {
   const { pending } = useLinkStatus();
+  useSlowSignal(pending);
   // Le libellé garde sa place (pas de saut de largeur) ; les points se posent par-dessus.
   return (
     <>
@@ -44,6 +58,7 @@ export function LinkButtonLabel({ className, children }: { className: string; ch
 
 /** Libellé d'un bouton d'action : pendant l'enregistrement, les points remplacent le texte sans changer la taille. */
 export function BusyLabel({ pending, children }: { pending: boolean; children: React.ReactNode }): React.ReactElement {
+  useSlowSignal(pending);
   return (
     <>
       <span className={pending ? "busy-label" : "contents"}>{children}</span>
