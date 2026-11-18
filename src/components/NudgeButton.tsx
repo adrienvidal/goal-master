@@ -19,7 +19,7 @@ export function NudgeButton({ partnerName, sentToday, blink, open: openProp, onO
   if (!open)
     return (
       <button type="button" className={`btn ${blink ? "blink" : ""}`} onClick={() => setOpen(true)}>
-        ⚔️ Motiver
+        <span aria-hidden>⚔️</span>Motiver
       </button>
     );
 
