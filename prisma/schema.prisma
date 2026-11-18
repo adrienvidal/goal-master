@@ -234,6 +234,9 @@ model NotificationLog {
   key      String
   capped   Boolean
   sentAt   DateTime @default(now())
+  /// Événement à mettre dans le bilan du jour (null : pas d'e-mail) ; mailedAt : bilan parti.
+  event    Json?
+  mailedAt DateTime?
 
   @@unique([playerId, key])
   @@index([playerId, sentAt])

@@ -72,6 +72,14 @@ export function ruleOf(event: NotificationEvent): { category: Category; capped: 
   return RULES[event.kind];
 }
 
+/** Pendant un combat d'Arène, les tours ne partent qu'en push : périmés le soir, ils n'entrent pas dans le bilan. */
+const PUSH_ONLY: ReadonlySet<NotificationEvent["kind"]> = new Set(["arena-turn"]);
+
+/** L'événement entre-t-il dans le bilan du jour ? */
+export function sendsEmail(event: NotificationEvent): boolean {
+  return !PUSH_ONLY.has(event.kind);
+}
+
 /** Clé unique par destinataire : un même événement ne part qu'une fois. */
 export function keyOf(event: NotificationEvent): string {
   switch (event.kind) {
@@ -106,11 +114,14 @@ export function keyOf(event: NotificationEvent): string {
   }
 }
 
-/** Faut-il envoyer ? Catégorie coupée ou plafond du jour atteint : non. */
-export function shouldSend(event: NotificationEvent, muted: readonly string[], cappedSentToday: number): boolean {
-  const rule = ruleOf(event);
-  if (muted.includes(rule.category)) return false;
-  return !rule.capped || cappedSentToday < DAILY_NOTIFICATION_CAP;
+/** Catégorie coupée par le joueur : ni push, ni bilan. */
+export function isMuted(event: NotificationEvent, muted: readonly string[]): boolean {
+  return muted.includes(ruleOf(event).category);
+}
+
+/** Le push part-il ? Non au-delà du plafond du jour pour les catégories plafonnées (le bilan, lui, garde tout). */
+export function pushAllowed(event: NotificationEvent, cappedPushedToday: number): boolean {
+  return !ruleOf(event).capped || cappedPushedToday < DAILY_NOTIFICATION_CAP;
 }
 
 export type NotificationText = { title: string; headline: string; detail: string; url: string };
