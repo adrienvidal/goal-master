@@ -275,13 +275,10 @@ export function ArenaLive({ arenaId, meId, foeName, hits, ended, fighters, child
 
   const busy = step !== null || queue.length > 0;
   const finale = finished ? ended : null;
-  const replay: Replay = cut?.origin === "mine"
-    ? { hp: cut.hp, logEnd: null, locked: false, finale }
-    : step
-    ? { hp: landed ? step.hpAfter : step.hpBefore, logEnd: step.logEnd, locked: true, finale }
-    : queue.length
-      ? { hp: queue[0].hpBefore, logEnd: queue[0].logStart - 1, locked: true, finale }
-      : { hp: null, logEnd: null, locked: false, finale };
+  let replay: Replay = { hp: null, logEnd: null, locked: false, finale };
+  if (cut?.origin === "mine") replay = { hp: cut.hp, logEnd: null, locked: false, finale };
+  else if (step) replay = { hp: landed ? step.hpAfter : step.hpBefore, logEnd: step.logEnd, locked: true, finale };
+  else if (queue.length) replay = { hp: queue[0].hpBefore, logEnd: queue[0].logStart - 1, locked: true, finale };
 
   return (
     <PlayCtx.Provider value={play}>

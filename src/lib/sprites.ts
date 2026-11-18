@@ -366,13 +366,13 @@ export function spriteLayers(character: CharacterId, color: ColorId, form: Form)
   const i = weaponOf(g.map((r) => r.padEnd(width, ".").split("")));
   const inWeapon = new Set((i?.cells ?? []).map(([y, x]) => `${x},${y}`));
   const player = COLOR_HEX[color];
-  const color_ = (c: string, x: number, y: number) => colorOf(c, player, "normal", x, y, character);
+  const paint = (c: string, x: number, y: number): string => colorOf(c, player, "normal", x, y, character);
   return {
     width,
     height: g.length,
     scale: character === "PANDA" ? PANDA_SCALE[form] : 1,
-    body: rectsOf(g, color_, (x, y) => !inWeapon.has(`${x},${y}`)),
-    weapon: rectsOf(g, color_, (x, y) => inWeapon.has(`${x},${y}`)),
+    body: rectsOf(g, paint, (x, y) => !inWeapon.has(`${x},${y}`)),
+    weapon: rectsOf(g, paint, (x, y) => inWeapon.has(`${x},${y}`)),
     pivot: i ? { x: i.col + 0.5, y: i.hy + 0.5 } : null,
   };
 }

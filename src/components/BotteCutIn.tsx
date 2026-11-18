@@ -187,7 +187,9 @@ export function BotteCutIn({ cut, character, color, form, side, pierce, onDone }
         });
         const maxR = Math.hypot(view.W, view.H) / 2;
         const grow = view.wide && cut.tier < 3 ? 1.6 : 1;
-        const [r0, r1, turns] = cut.tier === 1 ? [70 * grow, 80 * grow, 1] : cut.tier === 2 ? [40 * grow, 170 * grow, 1.5] : [20, maxR, 2.2];
+        // Rayon de départ et d'arrivée des feuilles, tours effectués : anneau, spirale, tornade jusqu'aux coins.
+        const swirl = { 1: [70 * grow, 80 * grow, 1], 2: [40 * grow, 170 * grow, 1.5], 3: [20, maxR, 2.2] }[cut.tier];
+        const [r0, r1, turns] = swirl;
         if (cut.tier === 3) push(kf(q(".botte-tint"), [{ t: 0.48, opacity: 0 }, { t: 0.6, opacity: 1 }, { t: 0.76, opacity: 1 }, { t: 0.88, opacity: 0 }], T));
         qa(".botte-gust").forEach((g, i) => push(kf(g, [{ t: 0.48, transform: `rotate(${i * 70}deg) scale(.6)`, opacity: 0 }, { t: 0.59, opacity: 1 }, { t: 0.85, transform: `rotate(${i * 70 + 540}deg) scale(1.1)`, opacity: 0 }], T)));
         qa(".botte-leaf").forEach((lf, i) => {
