@@ -105,8 +105,22 @@ body {
 .evo-after { opacity: 0; animation: evo-in .42s 2.5s forwards; }
 @keyframes evo-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
+/* ---------- Compagnons et coffre (spec quetes) ---------- */
+.pet { display: inline-flex; align-items: flex-end; line-height: 0; }
+.pet svg { display: block; image-rendering: pixelated; animation: pet-hop 1.6s steps(2) infinite; }
+.pet.joy svg { animation: pet-joy .7s steps(3) infinite; }
+.pet.locked svg { filter: brightness(0); opacity: .45; animation: none; }
+@keyframes pet-hop { 50% { transform: translateY(-2px); } }
+@keyframes pet-joy { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+.chest { display: inline-grid; place-items: center; position: relative; line-height: 0; }
+.chest svg { display: block; image-rendering: pixelated; position: relative; }
+.chest.shut svg { animation: chest-shake 1.2s steps(4) infinite; }
+.chest.open::before { content: ""; position: absolute; width: 150px; height: 150px; background: radial-gradient(circle, rgb(255 243 176 / .55), transparent 65%); animation: chest-glow 1.4s ease-in-out infinite; }
+@keyframes chest-shake { 0%, 60%, 100% { transform: translateX(0); } 70% { transform: translateX(-3px); } 80% { transform: translateX(3px); } 90% { transform: translateX(-2px); } }
+@keyframes chest-glow { 50% { transform: scale(1.15); opacity: .7; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .sprite svg, .sprite::before, .sprite::after, .pose-victory, .evo-flash { animation: none !important; }
+  .sprite svg, .pet svg, .chest svg, .chest::before, .sprite::before, .sprite::after, .pose-victory, .evo-flash { animation: none !important; }
   .evo-old { display: none; }
   .evo-new, .evo-title, .evo-after { opacity: 1; clip-path: none; animation: none; }
   .evo-new svg { filter: none; animation: none; }
