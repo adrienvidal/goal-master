@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { SLOW_ACTION_EVENT } from "./LinkButton";
 
 const CLOSED_KEY = "gm-nudge-closed";
 const WIN_KEY = "gm-nudge-win-seen";
@@ -66,16 +67,20 @@ export function NudgeWinBanner({ id, partner }: { id: string; partner: string })
   );
 }
 
-// Nouvelle version déployée : vérifiée au retour sur l'onglet et toutes les 5 minutes, bandeau fixe en haut.
+// Nouvelle version déployée : vérifiée au retour sur l'onglet, toutes les 5 minutes et quand un bouton charge plus de 8 s
+// (version changée en plein clic : on recharge aussitôt), sinon bandeau fixe en haut.
 export function VersionWatcher({ version }: { version: string }): React.ReactElement | null {
   const [stale, setStale] = useState(false);
   useEffect(() => {
     let alive = true;
-    async function check(): Promise<void> {
+    async function check(reloadIfStale = false): Promise<void> {
       try {
         const res = await fetch("/api/version", { cache: "no-store" });
         const { version: live } = (await res.json()) as { version: string };
-        if (alive && live !== version) setStale(true);
+        if (!alive || live === version) return;
+        // Un bouton bloqué sur une nouvelle version : l'action est faite côté serveur, la page la montrera après rechargement.
+        if (reloadIfStale) location.reload();
+        else setStale(true);
       } catch {
         // hors ligne : on réessaiera
       }
@@ -83,11 +88,14 @@ export function VersionWatcher({ version }: { version: string }): React.ReactEle
     const onVisible = (): void => {
       if (document.visibilityState === "visible") void check();
     };
+    const onSlow = (): void => void check(true);
     document.addEventListener("visibilitychange", onVisible);
-    const timer = setInterval(check, VERSION_EVERY_MS);
+    window.addEventListener(SLOW_ACTION_EVENT, onSlow);
+    const timer = setInterval(() => void check(), VERSION_EVERY_MS);
     return () => {
       alive = false;
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener(SLOW_ACTION_EVENT, onSlow);
       clearInterval(timer);
     };
   }, [version]);
