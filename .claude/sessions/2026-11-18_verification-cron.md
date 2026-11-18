@@ -3,7 +3,7 @@
 ## Reprise
 
 ```
-✅ Fait      Arène v3 équilibrée, sur l'aperçu de dev
+✅ Fait      Arène v3 : PA seule limite, Panda réparé, sur l'aperçu
 ⛔ Bloqué    Aucun
 🎯 Priorité  Fin du combat v2, puis v3 en prod sur accord (échéance 20/11 18 h)
 ```
@@ -253,3 +253,23 @@
 - Ouverture à ~60 % et écart maximal à ~75 % : en limite haute des cibles, acceptés
 - Bambou tourbillon : 1 action perdue à tous les paliers (2 au dernier palier écrasaient le Chevalier)
 - Écartés : coup critique (affichage à part), nouvelle action, notification « les règles changent »
+
+---
+
+## Suite : retours d'Adrien sur la v3 (Panda, actions et PA)
+
+### Réalisé
+- Panda penché et rayé : depuis la v3, le premier tour plus court de l'ouvreur passait pour un étourdissement ; `isStunned` testé ; un sprite incliné laissait voir le fond entre ses rangées de pixels, corrigé par un léger chevauchement des rangées
+- « 2 actions » à côté de « 4 PA » prêtait à confusion : en v3, les PA sont la seule limite d'un tour ; le Bambou tourbillon retire 1 PA au tour suivant ; le lanceur reçoit 3 PA, celui qui répond part avec 1 PA ; chiffres réajustés (PV 48 + 2 × évolution, Coup d'estoc 4+palier à 12+palier, Bambou 3 dégâts et +1+palier PV)
+- Mesures (1 000 combats) : ouverture 58 %, une évolution d'écart 55-56 %, écart maximal 75 %, Panda 51-54 %, Botte 50 %, 8,3 tours ; le test tolère 2 points de bruit de mesure
+- PR #115 fusionnée dans `dev` (231 tests verts), aperçu reconstruit ; combat v3 vérifié en local
+- Arènes purgées sur l'aperçu à la demande d'Adrien (2 combats, leurs actions, 21 notifications) ; production non touchée
+
+### Reste à faire
+- Adrien teste un combat v3 sur l'aperçu
+- Vendredi 20/11 à 18 h 01 : fin du combat en cours (v2), puis v3 en production sur accord
+- Prévenir Nicolas des nouvelles règles
+
+### Décisions
+- Un seul compteur, les PA ; la v3 n'étant pas en production, modifiée sur place plutôt qu'une v4
+- Écartés pour l'instant (idées d'Adrien) : recharge de 1-2 tours sur la Botte (deuxième compteur, aucun abus mesuré) et attaque ultime à charger (troisième compteur, nouvelle action et animations : lot à cadrer avec maquette si l'idée revient après de vrais combats)
