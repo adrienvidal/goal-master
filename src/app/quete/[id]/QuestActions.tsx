@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { BusyLabel } from "@/components/LinkButton";
 import { useState, useTransition } from "react";
 import { cancelQuest, markQuestDone, refuseQuest, validateQuest, type QuestResult } from "@/app/quete-actions";
 
@@ -27,7 +28,7 @@ export function MarkDone({ id, link: initial }: { id: string; link: string }): R
         <input id="quest-link" type="url" inputMode="url" className="qfield" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://www.linkedin.com/posts/…" />
       </label>
       {error ? <p className="err" role="alert">{error}</p> : null}
-      <button type="submit" className="btn ok" disabled={pending}>{pending ? "Envoi…" : "C'est fait"}</button>
+      <button type="submit" className="btn ok" disabled={pending}><BusyLabel pending={pending}>C&apos;est fait</BusyLabel></button>
     </form>
   );
 }
@@ -39,8 +40,8 @@ export function ReviewQuest({ id }: { id: string }): React.ReactElement {
     <div className="flex flex-col gap-2">
       {error ? <p className="err" role="alert">{error}</p> : null}
       <div className="grid grid-cols-2 gap-2">
-        <button type="button" className="btn ghost" disabled={pending} onClick={() => run(() => refuseQuest(id))}>Pas encore</button>
-        <button type="button" className="btn ok" disabled={pending} onClick={() => run(() => validateQuest(id))}>Valider</button>
+        <button type="button" className="btn ghost" disabled={pending} onClick={() => run(() => refuseQuest(id))}><BusyLabel pending={pending}>Pas encore</BusyLabel></button>
+        <button type="button" className="btn ok" disabled={pending} onClick={() => run(() => validateQuest(id))}><BusyLabel pending={pending}>Valider</BusyLabel></button>
       </div>
     </div>
   );
@@ -58,7 +59,7 @@ export function CancelQuest({ id, partnerName }: { id: string; partnerName: stri
       {error ? <p className="err" role="alert">{error}</p> : null}
       <div className="grid grid-cols-2 gap-2">
         <button type="button" className="btn ghost" disabled={pending} onClick={() => setConfirm(false)}>Garder</button>
-        <button type="button" className="btn !bg-danger" disabled={pending} onClick={() => run(() => cancelQuest(id), () => router.push("/"))}>Annuler</button>
+        <button type="button" className="btn !bg-danger" disabled={pending} onClick={() => run(() => cancelQuest(id), () => router.push("/"))}><BusyLabel pending={pending}>Annuler</BusyLabel></button>
       </div>
     </div>
   );

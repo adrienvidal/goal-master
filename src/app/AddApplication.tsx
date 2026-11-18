@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { BusyLabel } from "@/components/LinkButton";
 import { ACTION_EVENT } from "@/components/MyAvatar";
 import { addApplication, cancelApplication, type DuplicateInfo } from "./actions";
 
@@ -94,13 +95,13 @@ export default function AddApplication({ todayCount }: Props): React.ReactElemen
                   {duplicateOf.sure ? "Ne pas l'ajouter" : "Non, la même"}
                 </button>
                 <button type="button" className={`btn ${duplicateOf.sure ? "ghost" : ""} !text-[10px]`} disabled={pending} onClick={() => submit(true)}>
-                  {duplicateOf.sure ? "Compter quand même" : "Oui, autre poste"}
+                  <BusyLabel pending={pending}>{duplicateOf.sure ? "Compter quand même" : "Oui, autre poste"}</BusyLabel>
                 </button>
               </div>
             </>
           ) : (
             <div className="grid grid-cols-[1fr_auto] gap-2">
-              <button type="submit" className="btn" disabled={pending}>Valider · +10 XP</button>
+              <button type="submit" className="btn" disabled={pending}><BusyLabel pending={pending}>Valider · +10 XP</BusyLabel></button>
               <button type="button" className="btn ghost !w-auto px-4" onClick={() => setOpen(false)}>Fermer</button>
             </div>
           )}

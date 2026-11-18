@@ -1,4 +1,5 @@
 import { MyAvatar } from "@/components/MyAvatar";
+import { LinkButton, LinkButtonLabel } from "@/components/LinkButton";
 import { COMPANION_NAMES, companionLabel, isCompanion, openQuest, pendingChest } from "@/game/quests";
 import { Companion } from "@/components/Companion";
 import { QuestBanner } from "@/components/QuestBanner";
@@ -194,7 +195,7 @@ function ArenaCard({ input, meId, views, now }: { input: ArenaInput; meId: strin
         {cells.map((on, i) => <i key={i} className={`energy-cell ${on ? "" : "empty"}`} />)}
       </div>
       {mine && s.energy[meId] === 0 ? <p className="text-sm text-muted">Envoie une candidature pour recharger 2 ⚡. Sinon, tu peux finir ton tour.</p> : null}
-      <span className="btn arena">{mine ? "Entrer et jouer" : "Entrer dans l'Arène"}</span>
+      <LinkButtonLabel className="btn arena">{mine ? "Entrer et jouer" : "Entrer dans l'Arène"}</LinkButtonLabel>
     </Link>
   );
 }
@@ -347,9 +348,9 @@ export default async function HomePage(): Promise<React.ReactElement> {
           {arenaRunning && partner ? <ArenaCard input={arenaRunning} meId={player.id} views={[me, partner]} now={now} /> : null}
           <AddApplication todayCount={me.today.count} />
           <div className="grid grid-cols-3 gap-2">
-            <Link href="/succes" className="btn ghost !px-1 !text-[9px]">Mes succès</Link>
-            <Link href="/menagerie" className="btn ghost !px-1 !text-[9px]">Ménagerie</Link>
-            <Link href="/reglages" className="btn ghost !px-1 !text-[9px]">Réglages</Link>
+            <LinkButton href="/succes" className="btn ghost !px-1 !text-[9px]">Mes succès</LinkButton>
+            <LinkButton href="/menagerie" className="btn ghost !px-1 !text-[9px]">Ménagerie</LinkButton>
+            <LinkButton href="/reglages" className="btn ghost !px-1 !text-[9px]">Réglages</LinkButton>
           </div>
           <TodayList items={todayItems} count={me.today.count} cap={DAILY_XP_CAP} />
         </section>

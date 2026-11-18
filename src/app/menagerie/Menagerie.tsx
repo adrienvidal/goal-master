@@ -1,5 +1,6 @@
 "use client";
 import { useOptimistic, useState, useTransition } from "react";
+import { BusyLabel } from "@/components/LinkButton";
 import { renameCompanion, showCompanion } from "@/app/quete-actions";
 import { Companion } from "@/components/Companion";
 import { COMPANION_IDS, COMPANION_NAME_MAX, COMPANION_NAMES, type CompanionId } from "@/game/quests";
@@ -11,6 +12,7 @@ export function Menagerie({ owned, shown, names }: { owned: CompanionId[]; shown
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
   const [, startTransition] = useTransition();
+  const [saving, startSaving] = useTransition();
   const shownId = owned.find((c) => c === current) ?? null;
   const [draft, setDraft] = useState(shownId ? names[shownId] ?? "" : "");
   const pick = (c: CompanionId) => {
@@ -31,7 +33,7 @@ export function Menagerie({ owned, shown, names }: { owned: CompanionId[]; shown
   const rename = (e: React.FormEvent) => {
     e.preventDefault();
     if (!shownId) return;
-    startTransition(async () => {
+    startSaving(async () => {
       setError("");
       const r = await renameCompanion(shownId, draft).catch(() => OFFLINE);
       if (r.ok) setSaved(`C'est noté : ${draft.trim() || COMPANION_NAMES[shownId].name}.`);
@@ -65,7 +67,7 @@ export function Menagerie({ owned, shown, names }: { owned: CompanionId[]; shown
             Renommer ton {COMPANION_NAMES[shownId].name.toLowerCase()}
             <input id="rename-pet" className="qfield" maxLength={COMPANION_NAME_MAX} value={draft} onChange={(e) => { setDraft(e.target.value); setSaved(""); }} autoComplete="off" />
           </label>
-          <button type="submit" className="btn sm">Enregistrer</button>
+          <button type="submit" className="btn sm" disabled={saving}><BusyLabel pending={saving}>Enregistrer</BusyLabel></button>
         </form>
       ) : null}
       {saved ? <p className="text-sm text-[var(--ok)]" role="status">{saved}</p> : null}

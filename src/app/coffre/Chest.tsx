@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { BusyLabel, LinkButton } from "@/components/LinkButton";
 import { useState, useTransition } from "react";
 import { adoptCompanion } from "@/app/quete-actions";
 import { ChestSprite, Companion } from "@/components/Companion";
@@ -49,7 +49,7 @@ export function Chest({ questId, giver, text, offer, character, color, form }: P
         </div>
         <h1 className="h-title text-gold">{name.trim() && name.trim() !== COMPANION_NAMES[choice].name ? name.trim() : COMPANION_NAMES[choice].the.charAt(0).toUpperCase() + COMPANION_NAMES[choice].the.slice(1)} te suit !</h1>
         <p className="text-sm text-muted">Il se tient à côté de ton héros. Change de compagnon quand tu veux dans ta Ménagerie.</p>
-        <Link href="/" className="btn no-underline">Continuer</Link>
+        <LinkButton href="/" className="btn no-underline">Continuer</LinkButton>
       </div>
     );
 
@@ -72,7 +72,7 @@ export function Chest({ questId, giver, text, offer, character, color, form }: P
       </label>
       <p className="num text-2xl text-gold">+{XP_QUEST_DONE} XP</p>
       {error ? <p className="err" role="alert">{error}</p> : null}
-      <button type="button" className="btn" disabled={pending} onClick={adopt}>{pending ? "Adoption…" : `Adopter ${shownName === COMPANION_NAMES[choice].name ? COMPANION_NAMES[choice].the : shownName}`}</button>
+      <button type="button" className="btn" disabled={pending} onClick={adopt}><BusyLabel pending={pending}>{`Adopter ${shownName === COMPANION_NAMES[choice].name ? COMPANION_NAMES[choice].the : shownName}`}</BusyLabel></button>
     </div>
   );
 }

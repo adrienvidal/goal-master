@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LinkButton } from "@/components/LinkButton";
 import { redirect } from "next/navigation";
 import { openQuest } from "@/game/quests";
 import { loadGame } from "@/server/game";
@@ -20,7 +20,7 @@ export default async function NewQuestPage(): Promise<React.ReactElement> {
           <>
             <p className="note">{partner.pseudo} a déjà une quête de ta part : « {running.text} ». Attends qu&apos;elle soit validée ou annule-la.</p>
             <span className="btn off" aria-disabled="true">Lancer la quête</span>
-            <Link href={`/quete/${running.id}`} className="btn ghost no-underline">Voir sa quête en cours</Link>
+            <LinkButton href={`/quete/${running.id}`} className="btn ghost no-underline">Voir sa quête en cours</LinkButton>
           </>
         ) : (
           <>
@@ -28,7 +28,7 @@ export default async function NewQuestPage(): Promise<React.ReactElement> {
             <QuestForm partnerName={partner.pseudo} />
           </>
         )}
-        <Link href="/" className="btn ghost no-underline">Retour</Link>
+        <LinkButton href="/" className="btn ghost no-underline">Retour</LinkButton>
       </div>
     </main>
   );

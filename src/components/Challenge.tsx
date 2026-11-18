@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { BusyLabel, LinkButton } from "@/components/LinkButton";
 import { useEffect, useState, useTransition } from "react";
 import { cancelChallenge, launchChallenge, respondChallenge, type ChallengeResult } from "@/app/defi-actions";
 import { CHALLENGE_TARGETS, type ChallengeWhen } from "@/game/challenge";
@@ -41,12 +41,12 @@ export function PartnerActions({ partnerName, nudgeSentToday, blink, launch, are
         {arena.ok ? (
           <button type="button" className="btn arena" onClick={() => setPanel("arena")}><span aria-hidden>🛡️</span>Arène</button>
         ) : arena.enter ? (
-          <Link href="/arene" className="btn arena no-underline"><span aria-hidden>🛡️</span>Entrer</Link>
+          <LinkButton href="/arene" className="btn arena no-underline"><span aria-hidden>🛡️</span>Entrer</LinkButton>
         ) : (
           <span className="btn off" aria-disabled="true"><span aria-hidden>🛡️</span>Arène</span>
         )}
         {quest.ok ? (
-          <Link href="/quete/nouvelle" className="btn quest no-underline"><span aria-hidden>📜</span>Quête</Link>
+          <LinkButton href="/quete/nouvelle" className="btn quest no-underline"><span aria-hidden>📜</span>Quête</LinkButton>
         ) : (
           <span className="btn off" aria-disabled="true"><span aria-hidden>📜</span>Quête</span>
         )}
@@ -89,7 +89,7 @@ function ChallengePanel({ partnerName, launch, onClose }: { partnerName: string;
         </div>
       </div>
       <p className="text-[15px]">Le premier à <b>{target} candidatures</b> avant <b>{until}</b> gagne la couronne.</p>
-      <button type="button" className="btn ember" disabled={pending} onClick={() => run(() => launchChallenge(target, when))}>Envoyer le défi</button>
+      <button type="button" className="btn ember" disabled={pending} onClick={() => run(() => launchChallenge(target, when))}><BusyLabel pending={pending}>Envoyer le défi</BusyLabel></button>
       <button type="button" className="btn ghost" onClick={onClose}>Fermer</button>
       {error ? <p className="err">{error}</p> : null}
     </div>
@@ -103,8 +103,8 @@ export function ChallengeIncoming({ id, children }: { id: string; children: Reac
     <div role="status" className="flex flex-col gap-3 border-[3px] border-ember bg-stone-2 p-3">
       <div className="flex min-w-0 items-end gap-3">{children}</div>
       <div className="grid grid-cols-2 gap-2">
-        <button type="button" className="btn ghost" disabled={pending} onClick={() => run(() => respondChallenge(id, false))}>Pas cette fois</button>
-        <button type="button" className="btn ember" disabled={pending} onClick={() => run(() => respondChallenge(id, true))}>Relever le défi</button>
+        <button type="button" className="btn ghost" disabled={pending} onClick={() => run(() => respondChallenge(id, false))}><BusyLabel pending={pending}>Pas cette fois</BusyLabel></button>
+        <button type="button" className="btn ember" disabled={pending} onClick={() => run(() => respondChallenge(id, true))}><BusyLabel pending={pending}>Relever le défi</BusyLabel></button>
       </div>
       {error ? <p className="err">{error}</p> : null}
     </div>
@@ -118,7 +118,7 @@ export function ChallengePending({ id, partnerName, target, until }: { id: strin
     <div className="flex flex-col gap-2 border-[3px] border-dashed border-ember p-3">
       <p className="text-[15px]">🏁 Défi envoyé à {partnerName} : <b>{target} candidatures avant {until}</b>.</p>
       <p className="text-sm text-muted">En attente de sa réponse. Il a reçu une notification.</p>
-      <button type="button" className="btn ghost" disabled={pending} onClick={() => run(() => cancelChallenge(id))}>Annuler le défi</button>
+      <button type="button" className="btn ghost" disabled={pending} onClick={() => run(() => cancelChallenge(id))}><BusyLabel pending={pending}>Annuler le défi</BusyLabel></button>
       {error ? <p className="err">{error}</p> : null}
     </div>
   );
