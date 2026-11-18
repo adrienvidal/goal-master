@@ -10,6 +10,8 @@ import type { Form } from "@/game/levels";
 import type { CharacterId, ColorId } from "@/lib/onboarding";
 import type { Pose } from "@/lib/sprites";
 import { decayTrauma, impactOf, shakeOffset } from "@/lib/arenaImpact";
+import { botteCut, type BotteCut } from "@/lib/arenaBotte";
+import { BotteCutIn } from "./BotteCutIn";
 import { Sprite } from "./Sprite";
 
 // Scène du combat : chaque coup se joue une fois (pose, recul, chiffre), puis le héros revient en garde.
@@ -124,7 +126,11 @@ const FINALE_KO_MS = 2800;
  * `ended` : le combat est fini, par K.O. ou à l'échéance. Le rejeu va jusqu'au bout, la scène annonce la fin,
  * puis le résultat s'ouvre tout seul (le bouton reste en secours).
  */
-export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { arenaId: string; meId: string; foeName: string; hits: StageHit[]; ended: "ko" | "time" | null; children: React.ReactNode }): React.ReactElement {
+/** Botte plein écran en cours : elle précède `show()` du coup, le mien comme celui du rejeu. */
+/** `hp` : PV des deux au départ, gardés à l'écran pendant la séquence (la réponse du serveur arrive avant le contact). */
+type Cut = { origin: "mine" | "replay"; by: string; kind: ArenaKind; n: number; spec: BotteCut; pierce: boolean; hp: Record<string, number> };
+
+export function ArenaLive({ arenaId, meId, foeName, hits, ended, fighters, children }: { arenaId: string; meId: string; foeName: string; hits: StageHit[]; ended: "ko" | "time" | null; fighters: StageFighter[]; children: React.ReactNode }): React.ReactElement {
   const router = useRouter();
   const [fx, setFx] = useState<Fx | null>(null);
   const [queue, setQueue] = useState<StageHit[]>([]);
@@ -135,6 +141,11 @@ export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { a
   const known = useRef<string | null>(null);
   const optimistic = useRef<{ kind: ArenaKind; at: number } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [cut, setCut] = useState<Cut | null>(null);
+  const cutRef = useRef<Cut | null>(null);
+  cutRef.current = cut;
+  // Confirmation de mon coup arrivée pendant la Botte plein écran : appliquée au départ de l'impact.
+  const pending = useRef<StageHit | null>(null);
   const lastAt = hits.at(-1)?.at ?? null;
 
   const show = useCallback((f: Omit<Fx, "n">) => {
@@ -142,6 +153,19 @@ export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { a
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setFx(null), FX_MS);
   }, []);
+
+  // Botte du combattant `by` : la séquence plein écran, ou rien (autre action, combattant inconnu).
+  const cutFor = useCallback(
+    (origin: Cut["origin"], by: string, kind: ArenaKind): Cut | null => {
+      const f = fighters.find((x) => x.id === by);
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const spec = f ? botteCut(kind, f.levelForm, { replay: origin === "replay", reduced }) : null;
+      if (!f || !spec) return null;
+      const target = fighters.find((x) => x.id !== by);
+      return { origin, by, kind, n: Date.now(), spec, pierce: origin === "mine" && spec.cracks && !!target?.parry, hp: Object.fromEntries(fighters.map((x) => [x.id, x.hp])) };
+    },
+    [fighters],
+  );
 
   // Coups arrivés depuis le dernier passage : à l'ouverture, ceux que cet appareil n'a pas vus ; ensuite, les nouveaux.
   useEffect(() => {
@@ -157,7 +181,8 @@ export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { a
     const confirmed = mine.at(-1);
     if (o && confirmed && confirmed.kind === o.kind && Date.now() - o.at < CONFIRM_MS) {
       optimistic.current = null;
-      if (Date.now() - o.at < FX_MS) setFx((cur) => (cur ? { ...cur, amount: confirmed.amount, delta: deltaOf(confirmed), parried: confirmed.parried, late: Date.now() - cur.n >= (impactOf(cur.kind, { parried: false, ko: false })?.at ?? 0) } : cur));
+      if (cutRef.current?.origin === "mine") pending.current = confirmed;
+      else if (Date.now() - o.at < FX_MS) setFx((cur) => (cur ? { ...cur, amount: confirmed.amount, delta: deltaOf(confirmed), parried: confirmed.parried, late: Date.now() - cur.n >= (impactOf(cur.kind, { parried: false, ko: false })?.at ?? 0) } : cur));
     }
     if (theirs.length === 0) {
       if (lastAt && queue.length === 0 && !step) writeSeen(arenaId, lastAt);
@@ -174,21 +199,26 @@ export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { a
     const [next, ...rest] = queue;
     setStep(next);
     setQueue(rest);
-    show({ by: next.by, kind: next.kind, amount: next.amount, replay: true, delta: deltaOf(next), parried: next.parried, ko: knocksOut(next) });
+    const c = cutFor("replay", next.by, next.kind);
+    if (c) setCut(c);
+    else show({ by: next.by, kind: next.kind, amount: next.amount, replay: true, delta: deltaOf(next), parried: next.parried, ko: knocksOut(next) });
     setBanner((b) => (b ? { ...b, done: Math.min(b.total, b.done + 1) } : b));
     writeSeen(arenaId, next.at);
-  }, [queue, step, show, arenaId]);
+  }, [queue, step, show, arenaId, cutFor]);
 
+  // Pendant la Botte plein écran du rejeu, les PV attendent : le contact et la fin du pas partent après elle.
+  const cutting = cut !== null;
   useEffect(() => {
     if (!step) return;
     setLanded(false);
+    if (cutting) return;
     const land = setTimeout(() => setLanded(true), impactOf(step.kind, { parried: step.parried, ko: false })?.at ?? 0);
     const t = setTimeout(() => setStep(null), STEP_MS);
     return () => {
       clearTimeout(land);
       clearTimeout(t);
     };
-  }, [step]);
+  }, [step, cutting]);
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
@@ -202,6 +232,7 @@ export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { a
   }, [finished, ended, router, arenaId, hits]);
 
   const skip = useCallback(() => {
+    setCut(null);
     setQueue([]);
     setStep(null);
     setFx(null);
@@ -213,23 +244,47 @@ export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { a
     (kind: ArenaKind) => {
       if (!VISUAL.includes(kind)) return;
       optimistic.current = { kind, at: Date.now() };
+      const c = cutFor("mine", meId, kind);
+      if (c) {
+        pending.current = null;
+        setCut(c);
+        return;
+      }
       show({ by: meId, kind, amount: null, replay: true, delta: null, parried: false, ko: false });
     },
-    [meId, show],
+    [meId, show, cutFor],
   );
+
+  // Fin de la Botte plein écran (ou tap) : l'impact du lot Impact part, comme sans elle.
+  const cutDone = useCallback(() => {
+    const c = cutRef.current;
+    setCut(null);
+    if (!c) return;
+    if (c.origin === "mine") {
+      const p = pending.current;
+      pending.current = null;
+      // Pas encore confirmé : l'horloge de confirmation repart du début de l'impact.
+      if (!p && optimistic.current) optimistic.current = { kind: c.kind, at: Date.now() };
+      show({ by: meId, kind: c.kind, amount: p?.amount ?? null, replay: true, delta: p ? deltaOf(p) : null, parried: p?.parried ?? false, ko: false });
+      return;
+    }
+    if (step) show({ by: step.by, kind: step.kind, amount: step.amount, replay: true, delta: deltaOf(step), parried: step.parried, ko: knocksOut(step) });
+  }, [meId, show, step]);
+
+  const cutFighter = cut ? fighters.find((x) => x.id === cut.by) : undefined;
 
   const busy = step !== null || queue.length > 0;
   const finale = finished ? ended : null;
-  const replay: Replay = step
-    ? { hp: landed ? step.hpAfter : step.hpBefore, logEnd: step.logEnd, locked: true, finale }
-    : queue.length
-      ? { hp: queue[0].hpBefore, logEnd: queue[0].logStart - 1, locked: true, finale }
-      : { hp: null, logEnd: null, locked: false, finale };
+  let replay: Replay = { hp: null, logEnd: null, locked: false, finale };
+  if (cut?.origin === "mine") replay = { hp: cut.hp, logEnd: null, locked: false, finale };
+  else if (step) replay = { hp: landed ? step.hpAfter : step.hpBefore, logEnd: step.logEnd, locked: true, finale };
+  else if (queue.length) replay = { hp: queue[0].hpBefore, logEnd: queue[0].logStart - 1, locked: true, finale };
 
   return (
     <PlayCtx.Provider value={play}>
       <FxCtx.Provider value={fx}>
         <ReplayCtx.Provider value={replay}>
+          {cut && cutFighter ? <BotteCutIn key={cut.n} cut={cut.spec} character={cutFighter.character} color={cutFighter.color} form={cutFighter.displayedForm} side={cut.by === meId ? "left" : "right"} pierce={cut.pierce} onDone={cutDone} /> : null}
           {banner ? (
             <div className={`arena-replay ${busy ? "" : "done"}`} role="status">
               <div className="flex min-w-0 flex-col gap-0.5">

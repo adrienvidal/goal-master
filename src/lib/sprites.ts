@@ -325,6 +325,23 @@ export function poseGrid(character: CharacterId, form: Form, pose: Pose): Grid {
   return posed(GRIDS[character][form], pose, character);
 }
 
+/** Rectangles d'une grille, cases voisines de même couleur fusionnées ; `keep` filtre les cases. */
+function rectsOf(g: Grid, color: (c: string, x: number, y: number) => string, keep: (x: number, y: number) => boolean = () => true): Rect[] {
+  const rects: Rect[] = [];
+  g.forEach((row, y) => {
+    let x = 0;
+    while (x < row.length) {
+      if (row[x] === "." || !keep(x, y)) { x++; continue; }
+      const fill = color(row[x], x, y);
+      let e = x + 1;
+      while (e < row.length && row[e] !== "." && keep(e, y) && color(row[e], e, y) === fill) e++;
+      rects.push({ x, y, w: e - x, fill });
+      x = e;
+    }
+  });
+  return rects;
+}
+
 export function sprite(character: CharacterId, color: ColorId, form: Form, mood: Mood, pose: Pose = "rest", crown = false): SpriteData {
   const tired = mood === "tired" || mood === "exhausted";
   const base = character === "KNIGHT" && tired && OPEN_HELMET[form] ? OPEN_HELMET[form]! : GRIDS[character][form];
@@ -332,22 +349,30 @@ export function sprite(character: CharacterId, color: ColorId, form: Form, mood:
   const posedGrid = posed(faced, mood === "normal" || COMBAT_POSES.includes(pose) ? pose : "rest", character);
   const g = crown ? crowned(posedGrid) : posedGrid;
   const player = COLOR_HEX[color];
-  const rects: Rect[] = [];
-  g.forEach((row, y) => {
-    let x = 0;
-    while (x < row.length) {
-      if (row[x] === ".") { x++; continue; }
-      const fill = colorOf(row[x], player, mood, x, y, character);
-      let e = x + 1;
-      while (e < row.length && row[e] !== "." && colorOf(row[e], player, mood, e, y, character) === fill) e++;
-      rects.push({ x, y, w: e - x, fill });
-      x = e;
-    }
-  });
   return {
     width: Math.max(...g.map((r) => r.length)),
     height: g.length,
     scale: character === "PANDA" ? PANDA_SCALE[form] : 1,
-    rects,
+    rects: rectsOf(g, (c, x, y) => colorOf(c, player, mood, x, y, character)),
+  };
+}
+
+/** Sprite de repos en deux calques, pour les Bottes plein écran : le corps, et l'arme qui bouge seule autour du poing. */
+export type SpriteLayers = { width: number; height: number; scale: number; body: Rect[]; weapon: Rect[]; pivot: { x: number; y: number } | null };
+
+export function spriteLayers(character: CharacterId, color: ColorId, form: Form): SpriteLayers {
+  const g = character === "PANDA" ? pandaFace(GRIDS[character][form], "normal") : knightFace(GRIDS[character][form], "normal");
+  const width = Math.max(...g.map((r) => r.length));
+  const i = weaponOf(g.map((r) => r.padEnd(width, ".").split("")));
+  const inWeapon = new Set((i?.cells ?? []).map(([y, x]) => `${x},${y}`));
+  const player = COLOR_HEX[color];
+  const paint = (c: string, x: number, y: number): string => colorOf(c, player, "normal", x, y, character);
+  return {
+    width,
+    height: g.length,
+    scale: character === "PANDA" ? PANDA_SCALE[form] : 1,
+    body: rectsOf(g, paint, (x, y) => !inWeapon.has(`${x},${y}`)),
+    weapon: rectsOf(g, paint, (x, y) => inWeapon.has(`${x},${y}`)),
+    pivot: i ? { x: i.col + 0.5, y: i.hy + 0.5 } : null,
   };
 }
