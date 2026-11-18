@@ -305,6 +305,10 @@ html[data-decor] main { visibility: hidden; }
 .arena-replay .dots { display: flex; gap: 5px; }
 .arena-replay .dots i { width: 10px; height: 10px; background: var(--night); box-shadow: inset 0 0 0 2px var(--edge); }
 .arena-replay .dots i.on { background: #5aa9ff; box-shadow: none; }
+/* Fin du combat : annonce au-dessus de la scène, avant l'ouverture du résultat */
+.arena-finale { position: fixed; left: 50%; top: 38%; z-index: 40; transform: translate(-50%, -50%); font-family: var(--font-display); font-size: 28px; line-height: 1.3; color: var(--gold); text-shadow: 4px 4px 0 #0c0a1a; white-space: nowrap; pointer-events: none; animation: arena-finale .5s steps(3) both; }
+@keyframes arena-finale { from { transform: translate(-50%, -50%) scale(.4); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .arena-finale { animation: none; } }
 .arena-log-fresh { outline: 2px solid #5aa9ff; outline-offset: 1px; background: #24345a; }
 @media (prefers-reduced-motion: reduce) { .arena-presence i { animation: none; } }
 .arena-move { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; padding: 10px; border: 3px solid var(--edge); background: var(--stone); box-shadow: 3px 3px 0 #0c0a1a; min-width: 0; cursor: pointer; }
