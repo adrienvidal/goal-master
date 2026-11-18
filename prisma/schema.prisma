@@ -275,6 +275,8 @@ model Arena {
   opponentForm     Int?
   challengerEnergy Int?
   opponentEnergy   Int?
+  /// Version des règles du combat, figée à la création (voir rulesFor dans src/game/arena.ts).
+  rules            Int           @default(3)
   actions          ArenaAction[]
 
   @@index([createdAt])

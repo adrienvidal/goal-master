@@ -10,6 +10,8 @@ import {
   openArena,
   startBonus,
   statsFor,
+  rollValue,
+  rulesFor,
   type ArenaActionRow,
   type ArenaRow,
 } from "./arena";
@@ -32,27 +34,29 @@ function arena(over: Partial<ArenaRow> = {}): ArenaRow {
     opponentForm: 3,
     challengerEnergy: null,
     opponentEnergy: null,
+    rules: 2,
     ...over,
   };
 }
 function act(playerId: string, kind: ArenaActionRow["kind"], h: number, value = 0): ArenaActionRow {
   return { id: `x${seq++}`, arenaId: "r", playerId, kind, value, createdAt: at(h) };
 }
+const v2 = rulesFor(2);
 const state = (r: ArenaRow, actions: ArenaActionRow[], nowH: number) => arenaState({ arena: r, actions }, at(nowH));
 
 describe("stats", () => {
   test("grow modestly with the evolution", () => {
-    expect(statsFor(1)).toMatchObject({ maxHp: 30, attack: [4, 6], thrust: 12, pierce: false });
-    expect(statsFor(3)).toMatchObject({ maxHp: 34, attack: [5, 7], thrust: 14, pierce: false });
-    expect(statsFor(6)).toMatchObject({ maxHp: 40, attack: [6, 8], thrust: 16, pierce: true });
-    expect(statsFor(2)).toMatchObject({ maxHp: 32, whirl: 8, stun: 1 });
-    expect(statsFor(5)).toMatchObject({ maxHp: 38, whirl: 12, stun: 2 });
+    expect(statsFor(1, v2)).toMatchObject({ maxHp: 30, attack: [4, 6], thrust: [12, 12], pierce: false });
+    expect(statsFor(3, v2)).toMatchObject({ maxHp: 34, attack: [5, 7], thrust: [14, 14], pierce: false });
+    expect(statsFor(6, v2)).toMatchObject({ maxHp: 40, attack: [6, 8], thrust: [16, 16], pierce: true });
+    expect(statsFor(2, v2)).toMatchObject({ maxHp: 32, whirl: 8, stun: 1 });
+    expect(statsFor(5, v2)).toMatchObject({ maxHp: 38, whirl: 12, stun: 2 });
   });
 
   test("start bonus: +1 action point for the less evolved hero only", () => {
-    expect(startBonus(3, 3)).toBe(0);
-    expect(startBonus(2, 3)).toBe(1);
-    expect(startBonus(3, 2)).toBe(0);
+    expect(startBonus(3, 3, v2)).toBe(0);
+    expect(startBonus(2, 3, v2)).toBe(1);
+    expect(startBonus(3, 2, v2)).toBe(0);
   });
 });
 
@@ -224,5 +228,47 @@ describe("automatic end of turn", () => {
 
   test("only the player whose turn it is can be forced to pass", () => {
     expect(mustPass(state(arena(), [], 1), "n")).toBe(false);
+  });
+});
+
+describe("rules v3 (balance)", () => {
+  const v3 = (over: Partial<ArenaRow> = {}) => arena({ rules: 3, ...over });
+
+  test("a fight keeps the rules it started with; unknown versions fall back to the current ones", () => {
+    expect(rulesFor(2).version).toBe(2);
+    expect(rulesFor(3).version).toBe(3);
+    expect(rulesFor(99).version).toBe(3);
+    expect(state(arena(), [], 1).maxHp.a).toBe(34);
+    expect(state(v3(), [], 1).maxHp.a).toBe(51);
+  });
+
+  test("the opener plays 2 actions on the first turn, the responder starts with 1 extra action point", () => {
+    const s = state(v3(), [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 5)], 2);
+    expect(s.turn).toMatchObject({ playerId: "n", number: 2, max: 3 });
+    expect(s.energy.n).toBe(4);
+    expect(state(v3(), [], 1).turn).toMatchObject({ playerId: "a", max: 2 });
+  });
+
+  test("the outsider gets 1 action point per 2 evolutions of gap", () => {
+    expect(startBonus(3, 4)).toBe(1);
+    expect(startBonus(1, 6)).toBe(3);
+    expect(startBonus(4, 3)).toBe(0);
+  });
+
+  test("a botte costs 2 action points and the thrust damage is rolled", () => {
+    expect(canPlay(state(v3(), [], 1), "a", "THRUST")).toEqual({ ok: true });
+    expect(rollValue("THRUST", 3, rulesFor(3), () => 0)).toBe(4);
+    expect(rollValue("THRUST", 3, rulesFor(3), () => 0.999)).toBe(12);
+  });
+
+  test("the whirl hurts as well as it heals, and the damage shows in the log", () => {
+    const s = state(v3(), [act("a", "WHIRL", 1, 4)], 2);
+    expect(s.hp.n).toBe(51 - 4);
+    expect(s.log.find((e) => e.kind === "WHIRL")).toMatchObject({ amount: 4, dealt: 4 });
+  });
+
+  test("a parry halves the whirl damage too", () => {
+    const actions = [act("a", "END", 1), act("n", "PARRY", 2), act("n", "END", 2.1), act("a", "WHIRL", 3, 4)];
+    expect(state(v3(), actions, 4).hp.n).toBe(51 - 2);
   });
 });
