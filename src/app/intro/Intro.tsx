@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { BossSprite } from "@/components/BossSprite";
+import { ChestSprite, Companion } from "@/components/Companion";
 import { EyeIcon } from "@/components/DecorView";
 import { Sprite } from "@/components/Sprite";
 import { finishIntro } from "./actions";
@@ -115,9 +116,20 @@ const STEPS: Step[] = [
       </div>
     ),
   },
+  {
+    title: "Lance une quête.",
+    text: "Lance une quête à ton binôme : un post LinkedIn, un café avec un ancien collègue. Quand tu la valides, ton binôme ouvre un coffre et adopte un compagnon parmi trois. +20 XP pour ton binôme, +5 XP pour toi.",
+    stage: (
+      <div className="flex items-end justify-center gap-3">
+        <Sprite character="KNIGHT" color="BLUE" form={3} pose="victory" px={5} label="Ton héros" />
+        <Companion id="fox" px={4} joy />
+        <ChestSprite px={4} />
+      </div>
+    ),
+  },
 ];
 
-// Intro du premier lancement (maquettes validées) : 8 écrans, « Passer » à tout moment.
+// Intro du premier lancement (maquettes validées) : 9 écrans, « Passer » à tout moment.
 export default function Intro({ start = 0 }: { start?: number }): React.ReactElement {
   const [i, setI] = useState(start);
   const step = STEPS[i];

@@ -6,19 +6,21 @@ import { parisDay } from "@/game/calendar";
 import { pastDuels, type DuelInput } from "@/game/duel";
 import { formForLevel, levelFromXp } from "@/game/levels";
 import type { NudgeRow } from "@/game/nudges";
+import { ownedCompanions, questsGivenValidated, type QuestRow } from "@/game/quests";
 import { totalXp, type Application } from "@/game/xp";
 import type { Player } from "@/generated/prisma/client";
 import { db } from "./db";
 
-export type GameData = { players: Player[]; apps: Application[]; nudges: NudgeRow[]; challenges: ChallengeRow[]; arenas: ArenaEntry[] };
+export type GameData = { players: Player[]; apps: Application[]; nudges: NudgeRow[]; challenges: ChallengeRow[]; arenas: ArenaEntry[]; quests: QuestRow[] };
 
 export async function loadGame(): Promise<GameData> {
-  const [players, rows, nudgeRows, challenges, arenas] = await Promise.all([
+  const [players, rows, nudgeRows, challenges, arenas, quests] = await Promise.all([
     db().player.findMany({ orderBy: { createdAt: "asc" } }),
     db().application.findMany(),
     db().nudge.findMany(),
     db().challenge.findMany({ orderBy: { createdAt: "desc" } }),
     db().arena.findMany({ orderBy: { createdAt: "desc" }, include: { actions: { orderBy: { createdAt: "asc" } } } }),
+    db().quest.findMany({ orderBy: { createdAt: "asc" } }),
   ]);
   return {
     players,
@@ -26,6 +28,7 @@ export async function loadGame(): Promise<GameData> {
     nudges: nudgeRows.map((n) => ({ id: n.id, senderId: n.senderId, recipientId: n.recipientId, message: n.message, sentAt: n.sentAt })),
     challenges,
     arenas: arenas.map(({ actions, ...arena }) => ({ arena, actions })),
+    quests,
   };
 }
 
@@ -37,7 +40,7 @@ export function arenaInputs(data: GameData): ArenaInput[] {
 /** Objectifs actifs des deux joueurs, pour le duel de la semaine. */
 export async function loadDuelInput(data: GameData): Promise<DuelInput> {
   const goals = await db().goal.findMany({ where: { status: "ACTIVE" }, select: { playerId: true, target: true, createdAt: true, deadline: true } });
-  return { goals: goals.map((g) => ({ ...g, deadline: parisDay(g.deadline) })), apps: data.apps, nudges: data.nudges };
+  return { goals: goals.map((g) => ({ ...g, deadline: parisDay(g.deadline) })), apps: data.apps, nudges: data.nudges, quests: data.quests };
 }
 
 /** Enregistre les succès gagnés ; un succès déjà débloqué n'est jamais retiré (cadrage §6.5). */
@@ -52,8 +55,8 @@ export async function syncAchievements(data: GameData, now: Date): Promise<void>
     const active = await db().goal.findFirst({ where: { playerId: player.id, status: "ACTIVE" }, select: { target: true, createdAt: true } });
     const doneInActive = active ? data.apps.filter((a) => a.userId === player.id && a.cancelledAt === null && a.createdAt >= active.createdAt).length : 0;
     const goalsReached = completed + (active && doneInActive >= active.target ? 1 : 0);
-    const levelForm = formForLevel(levelFromXp(totalXp(player.id, data.apps, data.nudges)).level);
-    const earned = earnedAchievements({ userId: player.id, partnerId: partner?.id ?? "", apps: data.apps, nudges: data.nudges, goalsReached, today, levelForm, bossesBeaten: won.filter((d) => d.fighters.some((f) => f.playerId === player.id)).length, challengeWinStreak: bestWinStreak(player.id, data.challenges, now), arenaWins: arenas.filter((a) => a.over.winnerId === player.id).length, arenaBotteKos: arenas.filter((a) => a.over.winnerId === player.id && a.over.byBotte).length });
+    const levelForm = formForLevel(levelFromXp(totalXp(player.id, data.apps, data.nudges, data.quests)).level);
+    const earned = earnedAchievements({ userId: player.id, partnerId: partner?.id ?? "", apps: data.apps, nudges: data.nudges, goalsReached, today, levelForm, bossesBeaten: won.filter((d) => d.fighters.some((f) => f.playerId === player.id)).length, challengeWinStreak: bestWinStreak(player.id, data.challenges, now), arenaWins: arenas.filter((a) => a.over.winnerId === player.id).length, arenaBotteKos: arenas.filter((a) => a.over.winnerId === player.id && a.over.byBotte).length, companions: ownedCompanions(player.id, data.quests).length, questsGiven: questsGivenValidated(player.id, data.quests) });
     if (earned.size === 0) continue;
     await db().unlockedAchievement.createMany({ data: [...earned].map((code) => ({ playerId: player.id, code })), skipDuplicates: true });
   }

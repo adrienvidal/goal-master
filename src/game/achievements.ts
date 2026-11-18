@@ -21,7 +21,9 @@ export type AchievementId =
   | "duelist"
   | "unbeaten"
   | "gladiator"
-  | "masterstroke";
+  | "masterstroke"
+  | "tamer"
+  | "mentor";
 
 export const ACHIEVEMENTS: Record<AchievementId, { title: string; condition: string }> = {
   first_step: { title: "Premier pas", condition: "1ʳᵉ candidature" },
@@ -42,6 +44,8 @@ export const ACHIEVEMENTS: Record<AchievementId, { title: string; condition: str
   unbeaten: { title: "Invaincu", condition: "Gagner 3 défis d'affilée" },
   gladiator: { title: "Gladiateur", condition: "Gagner une Arène" },
   masterstroke: { title: "Coup de maître", condition: "Gagner par K.O. dans le tour de ta Botte" },
+  tamer: { title: "Dompteur", condition: "Adopter 3 compagnons" },
+  mentor: { title: "Mentor", condition: "3 quêtes données et validées" },
 };
 
 const APPLICATION_MILESTONES: [number, AchievementId][] = [
@@ -58,6 +62,8 @@ const STREAK_MILESTONES: [number, AchievementId][] = [
 ];
 const COACH_NUDGES = 5;
 const UNBEATEN_WINS = 3;
+const TAMER_COMPANIONS = 3;
+const MENTOR_QUESTS = 3;
 
 export function earnedAchievements(input: {
   userId: string;
@@ -73,8 +79,11 @@ export function earnedAchievements(input: {
   /** Arènes gagnées, et gagnées par K.O. avec la Botte (src/game/arena.ts). */
   arenaWins?: number;
   arenaBotteKos?: number;
+  /** Compagnons adoptés et quêtes données puis validées (src/game/quests.ts). */
+  companions?: number;
+  questsGiven?: number;
 }): Set<AchievementId> {
-  const { userId, partnerId, apps, nudges, goalsReached, today, levelForm, bossesBeaten = 0, challengeWinStreak = 0, arenaWins = 0, arenaBotteKos = 0 } = input;
+  const { userId, partnerId, apps, nudges, goalsReached, today, levelForm, bossesBeaten = 0, challengeWinStreak = 0, arenaWins = 0, arenaBotteKos = 0, companions = 0, questsGiven = 0 } = input;
   const active = activeApplications(apps);
   const mine = active.filter((a) => a.userId === userId);
   const myCounts = countsByDay(mine);
@@ -89,6 +98,8 @@ export function earnedAchievements(input: {
   if (challengeWinStreak >= UNBEATEN_WINS) earned.add("unbeaten");
   if (arenaWins >= 1) earned.add("gladiator");
   if (arenaBotteKos >= 1) earned.add("masterstroke");
+  if (companions >= TAMER_COMPANIONS) earned.add("tamer");
+  if (questsGiven >= MENTOR_QUESTS) earned.add("mentor");
 
   const partnerDays = countsByDay(active.filter((a) => a.userId === partnerId));
   if ([...myCounts.keys()].some((d) => partnerDays.has(d))) earned.add("duo");

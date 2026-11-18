@@ -1,5 +1,7 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { Companion } from "./Companion";
+import type { CompanionId } from "@/game/quests";
 import type { Mood } from "@/game/avatar";
 import type { ArenaKind } from "@/game/arena";
 import type { Form } from "@/game/levels";
@@ -25,6 +27,8 @@ export type StageFighter = {
   maxHp: number;
   parry: boolean;
   stunned: boolean;
+  /** Compagnon affiché (spec quetes) : décoratif, il saute quand son héros frappe. */
+  companion: CompanionId | null;
 };
 /** Le dernier coup joué, `key` change à chaque nouveau coup. */
 export type StageHit = { key: string; by: string; kind: ArenaKind; amount: number; at: string };
@@ -164,6 +168,7 @@ export function StageFighterView({ f, right, isMe }: { f: StageFighter; right: b
           <Sprite character={f.character} color={f.color} form={f.displayedForm} mood={f.mood} pose={st.pose} px={4} label={f.title} />
           {st.effects.map((e) => <PixelFx key={`${e.name}-${e.at}-${fx?.n}`} {...e} />)}
         </span>
+        {f.companion ? <Companion id={f.companion} px={3} joy={st.pose === "action"} className={right ? "order-first -scale-x-100 mr-1" : "ml-1"} /> : null}
         {st.float ? <span key={`float-${fx?.n}`} className={`arena-dmg ${st.float.heal ? "heal" : ""}`}>{st.float.text}</span> : null}
       </div>
     </div>

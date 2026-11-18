@@ -18,7 +18,7 @@ export default async function GoalEndPage(): Promise<React.ReactElement> {
   if (!goal) redirect("/objectif/nouveau");
   const game = await loadGame();
   const now = new Date();
-  const me = buildPlayerView(player, game.apps, game.nudges, goal, now);
+  const me = buildPlayerView(player, game.apps, game.nudges, game.quests, goal, now);
   const g = me.goal!;
   const outcome = goalOutcome(g.done, g.target, g.deadline, parisDay(now));
   if (outcome === "active") redirect("/");

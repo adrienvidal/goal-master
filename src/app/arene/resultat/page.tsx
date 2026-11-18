@@ -21,7 +21,7 @@ export default async function ArenaResultPage(): Promise<React.ReactElement> {
   await syncAchievements(game, now);
   const { input, over } = last;
   const s = arenaState(input, now);
-  const views = game.players.map((p) => buildPlayerView(p, game.apps, game.nudges, null, now));
+  const views = game.players.map((p) => buildPlayerView(p, game.apps, game.nudges, game.quests, null, now));
   const me = views.find((v) => v.id === player.id);
   const partner = views.find((v) => v.id !== player.id);
   if (!me || !partner) redirect("/");

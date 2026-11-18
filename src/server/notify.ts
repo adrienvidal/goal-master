@@ -42,7 +42,7 @@ async function mailScene(playerId: string, event: NotificationEvent): Promise<Ma
   const game = await loadGame();
   const heroOf = (id: string): Hero | null => {
     const p = game.players.find((x) => x.id === id);
-    return p ? { character: p.character, color: p.color, form: formForLevel(levelFromXp(totalXp(p.id, game.apps, game.nudges)).level) } : null;
+    return p ? { character: p.character, color: p.color, form: formForLevel(levelFromXp(totalXp(p.id, game.apps, game.nudges, game.quests)).level) } : null;
   };
   const me = heroOf(playerId);
   if (!me) return null;

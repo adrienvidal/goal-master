@@ -1,6 +1,7 @@
 // Duel de fin de semaine contre un boss, à deux (maquettes docs/maquettes/decor-et-duel.html).
 // Rien n'est stocké : tout se déduit des objectifs, des candidatures et des relances.
 import { addDays, isWorkday, parisDay, type Day } from "./calendar";
+import type { QuestRow } from "./quests";
 import { levelFromXp } from "./levels";
 import { activeApplications, totalXp, type Application, type Nudge } from "./xp";
 
@@ -17,7 +18,7 @@ export const DUEL_HOUR = 18;
 export const LEVELS_PER_BONUS = 5;
 
 export type DuelGoal = { playerId: string; target: number; createdAt: Date; deadline: Day };
-export type DuelInput = { goals: DuelGoal[]; apps: Application[]; nudges: Nudge[] };
+export type DuelInput = { goals: DuelGoal[]; apps: Application[]; nudges: Nudge[]; quests?: QuestRow[] };
 
 export type Fighter = { playerId: string; need: number; hits: number; bonus: number };
 export type Duel = {
@@ -72,9 +73,9 @@ function workdays(from: Day, to: Day): number {
   return n;
 }
 
-function levelAt(playerId: string, apps: Application[], nudges: Nudge[], at: Date): number {
+function levelAt(playerId: string, apps: Application[], nudges: Nudge[], quests: QuestRow[], at: Date): number {
   const before = apps.filter((a) => a.createdAt < at);
-  return levelFromXp(totalXp(playerId, before, nudges.filter((n) => n.sentAt < at))).level;
+  return levelFromXp(totalXp(playerId, before, nudges.filter((n) => n.sentAt < at), quests.filter((q) => q.validatedAt !== null && q.validatedAt < at))).level;
 }
 
 /** Le duel du vendredi `friday`, évalué à l'instant `now` ; null si personne n'a de boss à combattre cette semaine. */
@@ -96,7 +97,7 @@ export function duelOn(input: DuelInput, friday: Day, now: Date): Duel | null {
     // Objectif fixé en cours de semaine : boss au prorata des jours ouvrés restants.
     if (goal.createdAt > start) need = Math.max(1, Math.ceil((need * workdays(parisDay(goal.createdAt), friday)) / 5));
     const hits = mine.filter((a) => a.createdAt >= from && a.createdAt < until).length;
-    const bonus = Math.floor(levelAt(goal.playerId, input.apps, input.nudges, until) / LEVELS_PER_BONUS);
+    const bonus = Math.floor(levelAt(goal.playerId, input.apps, input.nudges, input.quests ?? [], until) / LEVELS_PER_BONUS);
     fighters.push({ playerId: goal.playerId, need, hits, bonus });
   }
   if (fighters.length === 0) return null;

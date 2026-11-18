@@ -111,3 +111,33 @@ describe("challenge notifications", () => {
     expect(textOf({ ...end, won: true, mine: 5, theirs: 2 }).url).toBe("/defi");
   });
 });
+
+describe("notifications des quêtes", () => {
+  const text = "Poste un article sur LinkedIn";
+  const launched: NotificationEvent = { kind: "quest", questId: "q1", from: "Adrien", text };
+  const done = (round: number): NotificationEvent => ({ kind: "quest-done", questId: "q1", round, from: "Nicolas", text });
+  const end = (validated: boolean): NotificationEvent => ({ kind: "quest-end", questId: "q1", round: 7, validated, partner: "Adrien", text });
+  const cancel: NotificationEvent = { kind: "quest-cancel", questId: "q1", partner: "Adrien", text };
+
+  it("catégorie Quêtes, jamais plafonnées", () => {
+    for (const e of [launched, done(1), end(true), end(false), cancel]) expect(ruleOf(e)).toEqual({ category: "quests", capped: false });
+    expect(shouldSend(launched, [], 99)).toBe(true);
+    expect(shouldSend(launched, ["quests"], 0)).toBe(false);
+  });
+
+  it("chaque aller-retour « pas encore » repart", () => {
+    expect(keyOf(done(1))).not.toBe(keyOf(done(2)));
+    expect(keyOf(launched)).toBe("quest:q1");
+    expect(keyOf(end(true))).toBe("quest-end:q1:7");
+  });
+
+  it("textes de la maquette", () => {
+    expect(textOf(launched)).toMatchObject({ headline: "Adrien te lance une quête", url: "/quete/q1" });
+    expect(textOf(done(1))).toMatchObject({ headline: "Nicolas a fait sa quête", url: "/quete/q1" });
+    expect(textOf(end(true))).toMatchObject({ headline: "Quête validée, un coffre t'attend", url: "/coffre" });
+    expect(textOf(end(false))).toMatchObject({ headline: "Pas encore", url: "/quete/q1" });
+    expect(textOf(cancel)).toMatchObject({ headline: "Quête annulée", url: "/" });
+    expect(textOf({ kind: "quest-end", questId: "q1", round: 7, validated: true, chest: false, partner: "Adrien", text })).toMatchObject({ headline: "Quête validée", url: "/" });
+    expect(textOf(launched).detail).toContain(`« ${text} »`);
+  });
+});
