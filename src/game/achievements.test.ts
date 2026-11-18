@@ -15,8 +15,8 @@ function daily(userId: string, firstDay: string, days: number, perDay = 1): Appl
 const base = { userId: "a", partnerId: "b", nudges: [] as Nudge[], goalsReached: 0, today: "2026-11-30", levelForm: 1 as const };
 
 describe("earnedAchievements", () => {
-  test("18 achievements are defined", () => {
-    expect(Object.keys(ACHIEVEMENTS)).toHaveLength(18);
+  test("20 achievements are defined", () => {
+    expect(Object.keys(ACHIEVEMENTS)).toHaveLength(20);
     expect(ACHIEVEMENTS.centurion.title).toBe("Centurion");
   });
 
@@ -94,5 +94,17 @@ describe("arena achievements", () => {
     expect(earnedAchievements({ ...base, arenaWins: 1 }).has("gladiator")).toBe(true);
     expect(earnedAchievements({ ...base, arenaWins: 1 }).has("masterstroke")).toBe(false);
     expect(earnedAchievements({ ...base, arenaWins: 1, arenaBotteKos: 1 }).has("masterstroke")).toBe(true);
+  });
+});
+
+describe("quêtes", () => {
+  const base = { userId: "a", partnerId: "b", apps: [], nudges: [], goalsReached: 0, today: "2026-11-18", levelForm: 1 as const };
+  test("Dompteur à 3 compagnons, Mentor à 3 quêtes données et validées", () => {
+    expect(earnedAchievements({ ...base, companions: 2, questsGiven: 2 }).size).toBe(0);
+    const got = earnedAchievements({ ...base, companions: 3, questsGiven: 3 });
+    expect(got.has("tamer")).toBe(true);
+    expect(got.has("mentor")).toBe(true);
+    expect(ACHIEVEMENTS.tamer.title).toBe("Dompteur");
+    expect(ACHIEVEMENTS.mentor.title).toBe("Mentor");
   });
 });

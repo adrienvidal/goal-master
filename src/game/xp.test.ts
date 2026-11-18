@@ -54,3 +54,13 @@ describe("nudges", () => {
     expect(nudgeSucceeded(nudge, [app("b", "2026-11-16T12:00:00Z", true)])).toBe(false);
   });
 });
+
+describe("XP des quêtes", () => {
+  const q = { id: "q1", giverId: "a", receiverId: "b", text: "Poste sur LinkedIn", link: null, offer: [], companion: null, createdAt: new Date("2026-11-16T10:00:00Z"), doneAt: null, closedAt: null };
+  test("une quête validée ajoute 20 à celui qui l'a faite et 5 à celui qui l'a donnée", () => {
+    const done = { ...q, status: "VALIDATED" as const, validatedAt: new Date("2026-11-17T10:00:00Z") };
+    expect(totalXp("b", [], [], [done])).toBe(20);
+    expect(totalXp("a", [], [], [done])).toBe(5);
+    expect(totalXp("b", [], [], [{ ...q, status: "DONE" as const, validatedAt: null }])).toBe(0);
+  });
+});

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Duel } from "./duel";
-import { formReached, keyOf, koCrossed, nudgesJustSucceeded, pushBody, ruleOf, rustDue, shouldSend, textOf, type NotificationEvent } from "./notifications";
+import { formReached, keyOf, koCrossed, nudgesJustSucceeded, isMuted, pushAllowed, pushBody, ruleOf, rustDue, sendsEmail, textOf, type NotificationEvent } from "./notifications";
 import type { NudgeRow } from "./nudges";
 import type { Application } from "./xp";
 
@@ -10,16 +10,17 @@ const evo: NotificationEvent = { kind: "evo", partnerId: "b", partner: "Nicolas"
 const nudgeEvent: NotificationEvent = { kind: "nudge", nudgeId: "n1", from: "Adrien", message: 0 };
 const duel = (id: string, hits: number, hp = 16): Duel => ({ id, boss: 1, start: new Date(0), at: new Date(0), hp, hits, bonus: 0, fighters: [], won: hits >= hp, resolved: false });
 
-describe("shouldSend", () => {
-  it("se tait quand la catégorie est coupée, sur les deux canaux", () => {
-    expect(shouldSend(evo, ["partner"], 0)).toBe(false);
-    expect(shouldSend(nudgeEvent, ["nudges"], 0)).toBe(false);
+describe("isMuted et pushAllowed", () => {
+  it("se tait quand la catégorie est coupée, en push comme dans le bilan", () => {
+    expect(isMuted(evo, ["partner"])).toBe(true);
+    expect(isMuted(nudgeEvent, ["nudges"])).toBe(true);
+    expect(isMuted(evo, ["nudges"])).toBe(false);
   });
-  it("plafonne à deux par jour, sauf la relance reçue et le duel", () => {
-    expect(shouldSend(evo, [], 1)).toBe(true);
-    expect(shouldSend(evo, [], 2)).toBe(false);
-    expect(shouldSend(nudgeEvent, [], 5)).toBe(true);
-    expect(shouldSend({ kind: "duel", friday: "2026-11-20", won: true, boss: 1, total: 18, hp: 16 }, [], 5)).toBe(true);
+  it("plafonne le push à deux par jour, sauf la relance reçue et le duel", () => {
+    expect(pushAllowed(evo, 1)).toBe(true);
+    expect(pushAllowed(evo, 2)).toBe(false);
+    expect(pushAllowed(nudgeEvent, 5)).toBe(true);
+    expect(pushAllowed({ kind: "duel", friday: "2026-11-20", won: true, boss: 1, total: 18, hp: 16 }, 5)).toBe(true);
   });
 });
 
@@ -109,5 +110,45 @@ describe("challenge notifications", () => {
     expect(pushBody(textOf(sent), sent)).toBe("5 candidatures avant ce soir minuit. Le premier arrivé gagne la couronne.");
     expect(textOf(end).headline).toBe("Nicolas l'emporte 5 à 3.");
     expect(textOf({ ...end, won: true, mine: 5, theirs: 2 }).url).toBe("/defi");
+  });
+});
+
+describe("notifications des quêtes", () => {
+  const text = "Poste un article sur LinkedIn";
+  const launched: NotificationEvent = { kind: "quest", questId: "q1", from: "Adrien", text };
+  const done = (round: number): NotificationEvent => ({ kind: "quest-done", questId: "q1", round, from: "Nicolas", text });
+  const end = (validated: boolean): NotificationEvent => ({ kind: "quest-end", questId: "q1", round: 7, validated, partner: "Adrien", text });
+  const cancel: NotificationEvent = { kind: "quest-cancel", questId: "q1", partner: "Adrien", text };
+
+  it("catégorie Quêtes, jamais plafonnées", () => {
+    for (const e of [launched, done(1), end(true), end(false), cancel]) expect(ruleOf(e)).toEqual({ category: "quests", capped: false });
+    expect(pushAllowed(launched, 99)).toBe(true);
+    expect(isMuted(launched, ["quests"])).toBe(true);
+  });
+
+  it("chaque aller-retour « pas encore » repart", () => {
+    expect(keyOf(done(1))).not.toBe(keyOf(done(2)));
+    expect(keyOf(launched)).toBe("quest:q1");
+    expect(keyOf(end(true))).toBe("quest-end:q1:7");
+  });
+
+  it("textes de la maquette", () => {
+    expect(textOf(launched)).toMatchObject({ headline: "Adrien te lance une quête", url: "/quete/q1" });
+    expect(textOf(done(1))).toMatchObject({ headline: "Nicolas a fait sa quête", url: "/quete/q1" });
+    expect(textOf(end(true))).toMatchObject({ headline: "Quête validée, un coffre t'attend", url: "/coffre" });
+    expect(textOf(end(false))).toMatchObject({ headline: "Pas encore", url: "/quete/q1" });
+    expect(textOf(cancel)).toMatchObject({ headline: "Quête annulée", url: "/" });
+    expect(textOf({ kind: "quest-end", questId: "q1", round: 7, validated: true, chest: false, partner: "Adrien", text })).toMatchObject({ headline: "Quête validée", url: "/" });
+    expect(textOf(launched).detail).toContain(`« ${text} »`);
+  });
+});
+
+describe("sendsEmail", () => {
+  it("garde l'e-mail partout sauf pendant l'Arène", () => {
+    expect(sendsEmail({ kind: "arena-turn", arenaId: "a1", turn: 2, partner: "Nicolas", summary: "Nicolas frappe.", hp: 8 })).toBe(false);
+    expect(sendsEmail({ kind: "arena", arenaId: "a1", from: "Nicolas", rusty: false })).toBe(true);
+    expect(sendsEmail({ kind: "arena-end", arenaId: "a1", won: true, ko: false, partner: "Nicolas" })).toBe(true);
+    expect(sendsEmail(evo)).toBe(true);
+    expect(sendsEmail(nudgeEvent)).toBe(true);
   });
 });

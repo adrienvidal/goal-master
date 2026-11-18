@@ -70,6 +70,10 @@ model Player {
   achievements    UnlockedAchievement[]
   pushSubs        PushSubscription[]
   notifications   NotificationLog[]
+  givenQuests     Quest[]               @relation("givenQuests")
+  receivedQuests  Quest[]               @relation("receivedQuests")
+  /// Compagnon affiché à côté du héros (src/game/quests.ts), choisi parmi ceux adoptés.
+  companion       String?
 }
 
 model Goal {
@@ -230,6 +234,9 @@ model NotificationLog {
   key      String
   capped   Boolean
   sentAt   DateTime @default(now())
+  /// Événement à mettre dans le bilan du jour (null : pas d'e-mail) ; mailedAt : bilan parti.
+  event    Json?
+  mailedAt DateTime?
 
   @@unique([playerId, key])
   @@index([playerId, sentAt])
@@ -283,4 +290,32 @@ model ArenaAction {
   createdAt DateTime  @default(now())
 
   @@index([arenaId, createdAt])
+}
+
+enum QuestStatus {
+  OPEN
+  DONE
+  VALIDATED
+  CANCELLED
+}
+
+/// Quête lancée par un joueur à l'autre (spec quetes). L'XP et la collection se calculent ; seuls l'offre
+/// du coffre (tirée à la validation) et le compagnon adopté sont stockés.
+model Quest {
+  id          String      @id @default(cuid())
+  giverId     String
+  giver       Player      @relation("givenQuests", fields: [giverId], references: [id], onDelete: Cascade)
+  receiverId  String
+  receiver    Player      @relation("receivedQuests", fields: [receiverId], references: [id], onDelete: Cascade)
+  text        String
+  link        String?
+  status      QuestStatus @default(OPEN)
+  offer       String[]    @default([])
+  companion   String?
+  createdAt   DateTime    @default(now())
+  doneAt      DateTime?
+  validatedAt DateTime?
+  closedAt    DateTime?
+
+  @@index([receiverId, status])
 }

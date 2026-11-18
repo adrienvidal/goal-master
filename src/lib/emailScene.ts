@@ -39,5 +39,12 @@ export function sceneFor(event: NotificationEvent, me: Hero, partner: Hero | nul
       return [hero(me, "action"), ...p("rest")];
     case "arena-end":
       return event.won ? [hero(me, "victory")] : event.won === null ? [hero(me, "rest"), ...p("rest")] : p("victory");
+    case "quest":
+    case "quest-done":
+      return p("victory");
+    case "quest-end":
+      return event.validated ? [hero(me, "victory")] : p("rest");
+    case "quest-cancel":
+      return p("rest");
   }
 }

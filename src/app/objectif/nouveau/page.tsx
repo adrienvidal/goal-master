@@ -13,7 +13,7 @@ export default async function NewGoalPage(): Promise<React.ReactElement> {
   if (await db().goal.count({ where: { playerId: player.id, status: "ACTIVE" } })) redirect("/");
   const game = await loadGame();
   const now = new Date();
-  const me = buildPlayerView(player, game.apps, game.nudges, null, now);
+  const me = buildPlayerView(player, game.apps, game.nudges, game.quests, null, now);
   const today = parisDay(now);
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-10">

@@ -1,6 +1,7 @@
 import { avatarState, countsByDay, currentStreak, type Mood } from "@/game/avatar";
 import { addDays, parisDay, type Day } from "@/game/calendar";
 import { formForLevel, levelFromXp, type Form } from "@/game/levels";
+import { isCompanion, type CompanionId, type QuestRow } from "@/game/quests";
 import { activeApplications, nudgeSucceeded, totalXp, type Application, type Nudge } from "@/game/xp";
 import { formName } from "./forms";
 import type { CharacterId, ColorId } from "./onboarding";
@@ -27,20 +28,20 @@ export type PlayerView = {
 
 export type FeedItem =
   | { kind: "application"; company: string; day: Day }
-  | { kind: "evolution"; formName: string; day: Day };
+  | { kind: "evolution"; formName: string; day: Day }
+  | { kind: "quest"; text: string; companion: CompanionId | null; day: Day };
 
 const FEED_SIZE = 5;
 
-/** Moments où le joueur a atteint une nouvelle forme, en rejouant l'XP à chaque candidature (la sienne ou celle qui valide une relance). */
-function evolutions(playerId: string, apps: Application[], nudges: Nudge[]): { form: Form; at: Date }[] {
-  const checkpoints = activeApplications(apps)
-    .map((a) => a.createdAt)
+/** Moments où le joueur a atteint une nouvelle forme, en rejouant l'XP à chaque candidature (la sienne ou celle qui valide une relance) et à chaque quête validée. */
+function evolutions(playerId: string, apps: Application[], nudges: Nudge[], quests: QuestRow[]): { form: Form; at: Date }[] {
+  const checkpoints = [...activeApplications(apps).map((a) => a.createdAt), ...quests.flatMap((q) => (q.validatedAt ? [q.validatedAt] : []))]
     .sort((a, b) => a.getTime() - b.getTime());
   const events: { form: Form; at: Date }[] = [];
   let best: Form = 1;
   for (const at of checkpoints) {
     const until = apps.filter((a) => a.createdAt <= at);
-    const form = formForLevel(levelFromXp(totalXp(playerId, until, nudges.filter((n) => n.sentAt <= at))).level);
+    const form = formForLevel(levelFromXp(totalXp(playerId, until, nudges.filter((n) => n.sentAt <= at), quests.filter((q) => q.validatedAt !== null && q.validatedAt <= at))).level);
     if (form > best) {
       best = form;
       events.push({ form, at });
@@ -58,13 +59,13 @@ function daysBetween(from: Day, to: Day): number {
   return n;
 }
 
-export function buildPlayerView(player: PlayerRow, apps: Application[], nudges: Nudge[], goal: GoalRow, now: Date): PlayerView {
+export function buildPlayerView(player: PlayerRow, apps: Application[], nudges: Nudge[], quests: QuestRow[], goal: GoalRow, now: Date): PlayerView {
   const today = parisDay(now);
   const mine = activeApplications(apps)
     .filter((a) => a.userId === player.id)
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   const counts = countsByDay(mine);
-  const { level, xpInLevel, xpForNext } = levelFromXp(totalXp(player.id, apps, nudges));
+  const { level, xpInLevel, xpForNext } = levelFromXp(totalXp(player.id, apps, nudges, quests));
   const levelForm = formForLevel(level);
   const state = avatarState(counts, levelForm, today);
   const levelName = formName(player.character, levelForm);
@@ -96,8 +97,11 @@ export function buildPlayerView(player: PlayerRow, apps: Application[], nudges: 
     goal: goalView,
     today: { count: todays.length, items: todays.map((a) => ({ id: a.id, company: a.company, at: a.createdAt })) },
     feed: [
-      ...evolutions(player.id, apps, nudges).map((e) => ({ at: e.at, rank: 1, item: { kind: "evolution", formName: formName(player.character, e.form), day: parisDay(e.at) } as FeedItem })),
+      ...evolutions(player.id, apps, nudges, quests).map((e) => ({ at: e.at, rank: 1, item: { kind: "evolution", formName: formName(player.character, e.form), day: parisDay(e.at) } as FeedItem })),
       ...mine.map((a) => ({ at: a.createdAt, rank: 0, item: { kind: "application", company: a.company, day: parisDay(a.createdAt) } as FeedItem })),
+      ...quests
+        .filter((q) => q.receiverId === player.id && q.status === "VALIDATED" && q.validatedAt)
+        .map((q) => ({ at: q.validatedAt as Date, rank: 0, item: { kind: "quest", text: q.text, companion: q.companion && isCompanion(q.companion) ? q.companion : null, day: parisDay(q.validatedAt as Date) } as FeedItem })),
     ]
       .sort((a, b) => b.at.getTime() - a.at.getTime() || b.rank - a.rank)
       .slice(0, FEED_SIZE)

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isCompanion, type CompanionId } from "@/game/quests";
 import { redirect } from "next/navigation";
 import { ArenaMoves, type Move } from "@/components/Arena";
 import { ArenaLive, StageFighterView, type StageFighter, type StageHit } from "@/components/ArenaStage";
@@ -48,6 +49,8 @@ function lastMove(s: ArenaState): StageHit | null {
 }
 
 // Le combat (maquette arene, écrans 5 et 6) : scène, tour, énergie, actions, journal.
+const companionOf = (c: string | null): CompanionId | null => (c && isCompanion(c) ? c : null);
+
 export default async function ArenaPage(): Promise<React.ReactElement> {
   const player = await requirePlayer();
   const game = await loadGame();
@@ -56,7 +59,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   const input = inputs.find((i) => arenaPhase(i.arena, i.actions, now) === "running");
   if (!input) redirect(finishedArenas(inputs, now).length ? "/arene/resultat" : "/");
   const s = arenaState(input, now);
-  const views = game.players.map((p) => buildPlayerView(p, game.apps, game.nudges, null, now));
+  const views = game.players.map((p) => buildPlayerView(p, game.apps, game.nudges, game.quests, null, now));
   const me = views.find((v) => v.id === player.id)!;
   const foe = views.find((v) => v.id !== player.id)!;
   const myForm = (player.id === input.arena.challengerId ? input.arena.challengerForm : input.arena.opponentForm) ?? 1;
@@ -83,6 +86,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   const stageOf = (v: PlayerView): StageFighter => ({
     id: v.id, name: v.pseudo, levelForm: (v.id === input.arena.challengerId ? input.arena.challengerForm : input.arena.opponentForm) ?? v.levelForm, character: v.character, color: v.color, displayedForm: v.displayedForm, mood: v.mood, title: v.title,
     hp: s.hp[v.id], maxHp: s.maxHp[v.id], parry: s.parry[v.id], stunned: s.turn?.playerId === v.id && s.turn.max < 3,
+    companion: companionOf(game.players.find((p) => p.id === v.id)?.companion ?? null),
   });
   const lastHit = lastMove(s);
 
