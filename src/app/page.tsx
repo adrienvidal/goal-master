@@ -14,7 +14,7 @@ import { DecorView } from "@/components/DecorView";
 import { NudgeBanner, NudgeWinBanner } from "@/components/Banners";
 import { ArenaWatcher, ChallengeWatcher, DuelWatcher } from "@/components/DuelWatcher";
 import { ArenaIncoming, ArenaPending, type ArenaLaunch } from "@/components/Arena";
-import { ANSWER_WITHIN_MS, arenaCrowns, arenaPhase, arenaState, canProvoke, finishedArenas, MAX_ENERGY, openArena, startEnergy, statsFor, type ArenaEntry, type ArenaInput } from "@/game/arena";
+import { ANSWER_WITHIN_MS, arenaCrowns, arenaPhase, arenaState, canProvoke, ENERGY_PER_TURN, finishedArenas, MAX_ENERGY, openArena, startBonus, statsFor, type ArenaEntry, type ArenaInput } from "@/game/arena";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { canLaunch, challengeScore, crownHolder, deadlineFor, lastFinished, openChallenge, phaseOf, timeLeft, untilLabel, type ChallengeRow } from "@/game/challenge";
 import { bossInSentence, currentDuel, pastDuels, type Duel } from "@/game/duel";
@@ -155,20 +155,18 @@ function arenaLaunch(me: PlayerView, partner: PlayerView, entries: ArenaEntry[],
     const waiting = open !== null && arenaPhase(open.arena, open.actions, now) === "pending";
     return waiting ? { ok: false, reason: "Une provocation attend une réponse." } : { ok: false, reason: "Un combat est en cours.", enter: true };
   }
-  const rusty = (v: PlayerView) => v.mood === "tired" || v.mood === "exhausted";
   const [a, b] = [statsFor(me.levelForm), statsFor(partner.levelForm)];
   return {
     ok: true,
     compare: {
       myForm: me.levelForm, theirForm: partner.levelForm, myHp: a.maxHp, theirHp: b.maxHp,
       myAttack: `${a.attack[0]}-${a.attack[1]}`, theirAttack: `${b.attack[0]}-${b.attack[1]}`,
-      myEnergy: startEnergy(me.levelForm, partner.levelForm, rusty(me)), theirEnergy: startEnergy(partner.levelForm, me.levelForm, rusty(partner)),
-      partnerRusty: rusty(partner),
+      myEnergy: ENERGY_PER_TURN + startBonus(me.levelForm, partner.levelForm), theirEnergy: ENERGY_PER_TURN + startBonus(partner.levelForm, me.levelForm),
     },
   };
 }
 
-/** Carte compacte du combat en cours, au-dessus de « + Candidature » : toute la carte mène à /arene. */
+/** Carte compacte du combat en cours : toute la carte mène à /arene. */
 function ArenaCard({ input, meId, views, now }: { input: ArenaInput; meId: string; views: PlayerView[]; now: Date }): React.ReactElement {
   const s = arenaState(input, now);
   const mine = s.turn?.playerId === meId;
@@ -189,11 +187,11 @@ function ArenaCard({ input, meId, views, now }: { input: ArenaInput; meId: strin
           </span>
         ))}
       </div>
-      <div className="flex items-center gap-1" aria-label={`Ton énergie : ${s.energy[meId]}`}>
-        <span className="mr-1.5 text-[13px] uppercase tracking-wider text-muted">Ton énergie</span>
+      <div className="flex items-center gap-1" aria-label={`Tes PA : ${s.energy[meId]}`}>
+        <span className="mr-1.5 text-[13px] uppercase tracking-wider text-muted">Tes PA</span>
         {cells.map((on, i) => <i key={i} className={`energy-cell ${on ? "" : "empty"}`} />)}
       </div>
-      {mine && s.energy[meId] === 0 ? <p className="text-sm text-muted">Envoie une candidature pour recharger 2 ⚡. Sinon, tu peux finir ton tour.</p> : null}
+      {!mine ? <p className="text-sm text-muted">+{ENERGY_PER_TURN} PA au début de ton tour, ce que tu gardes s&apos;y ajoute (6 au plus).</p> : null}
       <LinkButtonLabel className="btn arena">{mine ? "Entrer et jouer" : "Entrer dans l'Arène"}</LinkButtonLabel>
     </Link>
   );
@@ -307,10 +305,10 @@ export default async function HomePage(): Promise<React.ReactElement> {
           ) : null}
           {closed ? <ChallengeClosedBanner id={closed.id} text={closed.text} /> : null}
           {arenaIncoming && partner ? (
-            <ArenaIncoming id={arenaIncoming.id} rusty={me.mood === "tired" || me.mood === "exhausted"}>
+            <ArenaIncoming id={arenaIncoming.id}>
               <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} pose="action" px={2} crown={crownIds.has(partner.id)} />
               <p className="min-w-0 text-[15px]">
-                <b className="text-magic">{partner.pseudo} te provoque en Arène.</b> Tour par tour, tes candidatures font tes coups.
+                <b className="text-magic">{partner.pseudo} te provoque en Arène.</b> Tour par tour, 3 PA à chaque tour. Aucune XP en jeu.
               </p>
             </ArenaIncoming>
           ) : null}

@@ -38,9 +38,9 @@ export async function loadGame(): Promise<GameData> {
   };
 }
 
-/** Les Arènes avec ce qu'il faut pour rejouer l'énergie et les potions. */
+/** Les Arènes à rejouer (v2 : leurs actions suffisent). */
 export function arenaInputs(data: GameData): ArenaInput[] {
-  return data.arenas.map((e) => ({ ...e, apps: data.apps, nudges: data.nudges }));
+  return data.arenas;
 }
 
 /** Objectif actif d'un joueur, déjà chargé avec le jeu. */

@@ -1,0 +1,705 @@
+<title>Arène v2 · Goal Master</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
+<style>
+/* Maquette : écrans empilés, chacun annoncé par sa route. Tokens = ceux de l'app (globals.css), un seul thème sombre assumé.
+   Ajout du lot : --hp (vie), --hp-low, --energy (énergie), --arena-floor (sol de l'arène). */
+:root {
+  color-scheme: dark;
+  --night: #16132a; --stone: #221e40; --stone-2: #2e2958; --edge: #4a4380;
+  --ink: #f1ecff; --muted: #a39dcc; --gold: #f2c14e; --gold-dk: #b9831c;
+  --ember: #ff7a45; --danger: #ff6b6b; --ok: #6fd49a; --warn-bg: #3a2f17;
+  --page: #0e0c1d; --shadow: #0c0a1a;
+  --p1: #5aa9ff; --p1-dk: #2f6fc0; --p2: #e5533d; --p2-dk: #a1301f; --crown: #ffd84a;
+  --hp: #6fd49a; --hp-low: #ff6b6b; --energy: #7fe3ff; --energy-dk: #2a8fb0;
+  --arena-floor: #2a2340; --arena-sky: #1c1838; --magic: #c58cff;
+  --f-display: "Press Start 2P", ui-monospace, monospace;
+  --f-ui: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-num: "VT323", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--f-ui); font-size: 16px; margin: 0; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 1040px; margin: 0 auto; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--page); padding: 14px 0 10px; border-bottom: 3px solid var(--edge); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--page); }
+.top h1 { font-family: var(--f-display); font-size: 12px; margin: 0 0 10px; line-height: 1.6; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: 13px; text-decoration: none; padding: 4px 8px; border: 2px solid var(--edge); color: var(--muted); }
+.toc a:hover { color: var(--ink); border-color: var(--gold); }
+.intro { color: var(--muted); max-width: 70ch; line-height: 1.5; margin: 22px 0 6px; }
+.rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin: 16px 0 8px; }
+.rules div { border: 2px dashed var(--edge); padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.rules b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+.screen { margin-top: 56px; scroll-margin-top: 150px; }
+.screen > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
+.route { font-family: var(--f-num); font-size: 22px; color: var(--gold); }
+.screen > header h2 { font-family: var(--f-display); font-size: 11px; margin: 0; line-height: 1.6; }
+.screen > header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 78ch; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.device { background: rgb(34 30 64 / .9); border: 4px solid var(--edge); box-shadow: 4px 4px 0 var(--shadow); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.device h4 { font-family: var(--f-display); font-size: 9px; line-height: 1.6; margin: 0; color: var(--gold); }
+.muted { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0; }
+.num { font-family: var(--f-num); font-size: 1.2em; }
+.btn { display: flex; justify-content: center; align-items: center; gap: 6px; text-align: center; width: 100%; font-family: var(--f-display); font-size: 10px; line-height: 1.4; color: #1a1626; background: var(--gold); padding: 12px; box-shadow: inset -4px -4px 0 var(--gold-dk), 4px 4px 0 var(--shadow); text-decoration: none; border: 0; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 3px var(--edge); }
+.btn.ember { background: var(--ember); box-shadow: inset -4px -4px 0 #b8512b, 4px 4px 0 var(--shadow); }
+.btn.arena { background: var(--magic); box-shadow: inset -4px -4px 0 #7a4fb0, 4px 4px 0 var(--shadow); }
+.btn.off { background: var(--stone-2); color: var(--muted); box-shadow: inset 0 0 0 3px var(--edge); cursor: not-allowed; }
+.h-title { font-family: var(--f-display); font-size: 12px; line-height: 1.6; margin: 0; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.err { border-left: 4px solid var(--danger); padding: 6px 10px; background: #3a1b2a; color: var(--ink); font-size: 14px; line-height: 1.45; margin: 0; }
+@media (min-width: 760px) { .wide { grid-column: 1 / -1; } }
+@media (max-width: 420px) { .device { padding: 14px 12px; } }
+
+/* Avatars pixel */
+.av { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
+.av svg { display: block; image-rendering: pixelated; }
+.av .crown { position: relative; left: -3px; margin-bottom: -3px; z-index: 1; }
+.av.flip .body { transform: scaleX(-1); }
+.av.ko .body { transform: rotate(90deg) translateX(30%); opacity: .7; }
+.av.hit .body { filter: brightness(2.2) saturate(0); }
+.av .stars { position: absolute; top: -6px; font-size: 13px; letter-spacing: 2px; color: var(--crown); }
+
+/* Carte du binôme */
+.partner { display: flex; gap: 12px; align-items: center; }
+.partner .who { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.partner .name { font-weight: 600; font-size: 17px; }
+.partner .meta { color: var(--muted); font-size: 14px; }
+.bar { height: 12px; background: var(--night); border: 2px solid var(--edge); position: relative; }
+.bar i { position: absolute; inset: 0 auto 0 0; background: var(--gold); }
+.bar.p2 i { background: var(--p2); }
+.actions3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.actions3 .btn { font-size: 9px; padding: 12px 6px; flex-direction: column; }
+.actions3 .btn .ico { font-size: 16px; font-family: var(--f-ui); }
+
+/* Bandeaux et cartes d'accueil */
+.banner { border: 3px solid var(--magic); background: #261c3a; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.banner .line { display: flex; gap: 10px; align-items: center; }
+.banner p { margin: 0; font-size: 15px; line-height: 1.45; }
+.banner.calm { border-color: var(--edge); background: var(--night); }
+.banner.calm .x { margin-left: auto; color: var(--muted); text-decoration: none; font-family: var(--f-display); font-size: 10px; }
+.pending { border: 3px dashed var(--magic); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.pending p { margin: 0; font-size: 15px; line-height: 1.45; }
+.mini { border: 3px solid var(--magic); background: var(--night); padding: 12px; display: flex; flex-direction: column; gap: 10px; text-decoration: none; }
+.mini .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.mini .tag { font-family: var(--f-num); font-size: 22px; color: var(--magic); }
+.mini .tag.go { color: var(--gold); animation: blink 1.2s steps(2) infinite; }
+.mini .vs { display: grid; grid-template-columns: auto 1fr auto 1fr auto; gap: 8px; align-items: center; }
+.mini .hpn { font-family: var(--f-num); font-size: 20px; }
+@keyframes blink { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .mini .tag.go, .dmg { animation: none !important; } }
+
+/* Arène */
+.arena { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .arena { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; } }
+.arena .col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.stage { position: relative; border: 3px solid var(--edge); background:
+  linear-gradient(to bottom, var(--arena-sky) 0 62%, var(--arena-floor) 62% 100%);
+  padding: 12px 12px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; overflow: hidden; }
+.stage::after { content: ""; position: absolute; left: 0; right: 0; top: 62%; height: 4px; background: repeating-linear-gradient(90deg, var(--edge) 0 12px, transparent 12px 20px); }
+.fighter { display: flex; flex-direction: column; gap: 8px; min-width: 0; z-index: 1; }
+.fighter.right { align-items: flex-end; text-align: right; }
+.fighter .tag { font-size: 14px; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.fighter.right .tag { justify-content: flex-end; }
+.fighter .tag b { font-weight: 600; }
+.fighter .tag span { color: var(--muted); font-size: 13px; }
+.hp { width: 100%; max-width: 180px; }
+.hp .bar { height: 14px; }
+.hp .bar i { background: var(--hp); }
+.hp.low .bar i { background: var(--hp-low); }
+.hp .val { font-family: var(--f-num); font-size: 20px; line-height: 1; }
+.fighter .sprite { min-height: 72px; display: flex; align-items: flex-end; position: relative; }
+.dmg { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); font-family: var(--f-display); font-size: 12px; color: var(--danger); text-shadow: 2px 2px 0 var(--shadow); animation: rise 1.4s ease-out infinite; }
+.dmg.heal { color: var(--hp); }
+@keyframes rise { 0% { transform: translate(-50%, 6px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -14px); opacity: 0; } }
+.shield { position: absolute; right: -10px; bottom: 6px; font-size: 18px; }
+.turnline { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; border: 3px solid var(--gold); background: var(--warn-bg); padding: 8px 12px; }
+.turnline.wait { border-color: var(--edge); background: var(--night); }
+.turnline .who { font-family: var(--f-display); font-size: 10px; line-height: 1.6; }
+.turnline .clock { font-family: var(--f-num); font-size: 20px; color: var(--muted); }
+.energy { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.energy .lbl { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-right: 6px; }
+.energy i { width: 18px; height: 18px; background: var(--energy); box-shadow: inset -3px -3px 0 var(--energy-dk); display: inline-block; }
+.energy i.empty { background: var(--night); box-shadow: inset 0 0 0 2px var(--edge); }
+.energy .n { font-family: var(--f-num); font-size: 22px; margin-left: 6px; }
+.moves { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.move { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; text-decoration: none; padding: 10px; border: 3px solid var(--edge); background: var(--stone); box-shadow: 3px 3px 0 var(--shadow); min-width: 0; }
+.move:hover { border-color: var(--gold); }
+.move b { font-family: var(--f-display); font-size: 9px; line-height: 1.5; }
+.move span { font-size: 13px; color: var(--muted); line-height: 1.3; }
+.move .cost { font-family: var(--f-num); font-size: 18px; color: var(--energy); }
+.move.special { border-color: var(--magic); background: #2a1f42; }
+.move.off { opacity: .45; cursor: not-allowed; }
+.move.off:hover { border-color: var(--edge); }
+.turnfoot { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.turnfoot .cnt { font-family: var(--f-num); font-size: 20px; color: var(--muted); }
+.turnfoot .btn { width: auto; padding: 10px 16px; }
+.log { border: 3px solid var(--edge); background: var(--night); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.log .lt { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.log ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; font-size: 14px; line-height: 1.35; }
+.log li { display: grid; grid-template-columns: 48px 1fr; gap: 8px; }
+.log time { font-family: var(--f-num); font-size: 17px; color: var(--muted); }
+.log .me { color: var(--p1); } .log .him { color: var(--p2); }
+.log .sys { color: var(--muted); font-style: italic; }
+.note { border-left: 4px solid var(--energy); padding: 6px 10px; background: #13283a; font-size: 14px; line-height: 1.45; margin: 0; }
+
+/* Résultat */
+.result { text-align: center; align-items: center; }
+.result .big-t { font-family: var(--f-display); font-size: 16px; line-height: 1.6; margin: 0; text-wrap: balance; }
+.result .big-t.win { color: var(--crown); }
+.result .big-t.lose { color: var(--muted); }
+.result .score { font-family: var(--f-num); font-size: 30px; line-height: 1.1; margin: 0; }
+.result .score .s1 { color: var(--p1); } .result .score .s2 { color: var(--p2); }
+.duo { display: flex; gap: 20px; justify-content: center; align-items: end; min-height: 110px; }
+.badge { display: flex; gap: 10px; align-items: center; border: 3px solid var(--gold-dk); background: var(--warn-bg); padding: 8px 12px; text-align: left; }
+.badge b { font-family: var(--f-display); font-size: 9px; color: var(--gold); display: block; margin-bottom: 4px; }
+.badge span { font-size: 14px; }
+.stats { display: grid; grid-template-columns: 1fr auto auto; gap: 4px 14px; font-size: 14px; text-align: left; width: 100%; max-width: 300px; }
+.stats .h { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.stats .v { font-family: var(--f-num); font-size: 19px; text-align: right; }
+
+/* Notification push */
+.push { background: #2b2840; border-radius: 14px; padding: 10px 12px; display: grid; grid-template-columns: 28px 1fr; gap: 4px 10px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; line-height: 1.35; }
+.push .ic { width: 28px; height: 28px; border-radius: 6px; background: var(--stone-2); display: grid; place-items: center; grid-row: span 2; font-family: var(--f-display); font-size: 8px; color: var(--gold); }
+.push b { font-weight: 600; }
+
+/* Succès */
+.ach { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.ach div { border: 3px solid var(--edge); padding: 10px; display: flex; flex-direction: column; gap: 6px; align-items: center; text-align: center; font-size: 13px; color: var(--muted); }
+.ach div.got { border-color: var(--gold-dk); background: var(--warn-bg); color: var(--ink); }
+.ach div.new { outline: 3px solid var(--crown); outline-offset: 2px; }
+.ach b { font-family: var(--f-display); font-size: 8px; line-height: 1.6; color: var(--gold); }
+.ach div:not(.got) b { color: var(--muted); }
+
+/* Intro */
+.introscreen { align-items: center; text-align: center; }
+.introscreen .steps { font-family: var(--f-num); font-size: 18px; color: var(--muted); }
+.introscreen ol { text-align: left; margin: 0; padding-left: 22px; line-height: 1.55; font-size: 15px; }
+
+/* Sprites du combat */
+.sheet-wrap { overflow-x: auto; }
+.sheet { border-collapse: collapse; width: 100%; min-width: 660px; }
+.sheet th, .sheet td { border: 2px solid var(--stone-2); padding: 10px 8px 8px; text-align: center; vertical-align: bottom; }
+.sheet thead th { font-size: 13px; color: var(--muted); font-weight: 400; vertical-align: middle; }
+.sheet th.st { text-align: left; color: var(--ink); font-weight: 600; font-size: 14px; vertical-align: middle; white-space: nowrap; }
+.cell { display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-end; min-height: 92px; position: relative; padding-top: 14px; }
+.cell svg, .scene svg, .fxcard svg, .auras svg { display: block; image-rendering: pixelated; }
+.bob svg.body { animation: bob 1s steps(2) infinite; }
+.lunge svg.body { animation: lunge 1.2s steps(2) infinite; }
+.flash svg.body { animation: flash .8s steps(2) infinite; }
+.tilt svg.body { transform: rotate(-7deg); }
+.jump svg.body { animation: jump .9s steps(2) infinite; }
+@keyframes jump { 50% { transform: translateY(-9px); } }
+.ov { position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+.ov svg { animation: spin .6s steps(2) infinite; }
+@keyframes bob { 50% { transform: translateY(-3px); } }
+@keyframes lunge { 50% { transform: translateX(5px); } }
+@keyframes flash { 50% { filter: brightness(3) saturate(0); transform: translateX(-3px); } }
+@keyframes spin { 50% { transform: scaleX(-1); } }
+.scene { position: relative; height: 180px; border: 3px solid var(--edge); background: linear-gradient(to bottom, var(--arena-sky) 0 72%, var(--arena-floor) 72% 100%); overflow: hidden; }
+.scene.mini { height: 96px; width: 150px; border-width: 2px; }
+.scene .f { position: absolute; bottom: 14%; }
+.scene .fl { left: 8%; }
+.scene .fr { right: 8%; }
+.scene .fr svg.body { transform: scaleX(-1); }
+.scene .fr .hitflash svg.body { transform: scaleX(-1); filter: brightness(3) saturate(0); }
+.scene .hitflash svg.body { filter: brightness(3) saturate(0); }
+.scene .tiltc svg.body { transform: rotate(-7deg); }
+.scene .fx { position: absolute; }
+.scene .txt { position: absolute; font-family: var(--f-display); text-shadow: 2px 2px 0 var(--shadow); }
+.frames { display: flex; gap: 8px; flex-wrap: wrap; }
+.frames figure { margin: 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.frames figcaption { font-size: 13px; color: var(--muted); }
+.frames figure.on .scene { border-color: var(--gold); }
+.auras { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.auras figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; border: 2px solid var(--stone-2); padding: 12px 8px 8px; }
+.auras figcaption { font-size: 13px; color: var(--muted); text-align: center; }
+.aura svg.body { animation: aura .8s steps(2) infinite; filter: drop-shadow(2px 0 0 var(--magic)) drop-shadow(-2px 0 0 var(--magic)) drop-shadow(0 2px 0 var(--magic)) drop-shadow(0 -2px 0 var(--magic)); }
+@keyframes aura { 50% { filter: drop-shadow(2px 0 0 var(--gold)) drop-shadow(-2px 0 0 var(--gold)) drop-shadow(0 2px 0 var(--gold)) drop-shadow(0 -2px 0 var(--gold)); } }
+.fxgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.fxcard { border: 2px solid var(--stone-2); background: var(--night); padding: 12px 10px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.fxcard .pic { min-height: 48px; display: flex; align-items: center; justify-content: center; }
+.fxcard b { font-weight: 600; font-size: 14px; }
+.fxcard span { font-size: 13px; color: var(--muted); line-height: 1.35; }
+.fxcard .numfx { font-family: var(--f-display); font-size: 14px; text-shadow: 2px 2px 0 var(--shadow); display: flex; gap: 12px; }
+@media (prefers-reduced-motion: reduce) { .bob svg.body, .lunge svg.body, .flash svg.body, .jump svg.body, .ov svg, .aura svg.body { animation: none !important; } }
+</style>
+<style>
+/* Ajouts v2 : PA (points d'action), rejeu des actions, présence. --pa reprend la couleur de l'ancienne énergie. */
+:root { --pa: #7fe3ff; --pa-dk: #2a8fb0; --pa-kept: #4fb8d8; --live: #6fd49a; }
+.energy i.kept { background: var(--pa-kept); box-shadow: inset -3px -3px 0 var(--pa-dk); }
+.energy i.gain { outline: 2px solid var(--gold); outline-offset: 1px; animation: pop .9s steps(2) 2; }
+@keyframes pop { 50% { transform: translateY(-3px); } }
+.energy .hint { flex-basis: 100%; font-size: 13px; color: var(--muted); }
+.replay { border: 3px solid var(--p1); background: #16243e; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+.replay .what { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.replay .what small { font-size: 13px; color: var(--muted); }
+.replay .what b { font-family: var(--f-display); font-size: 10px; line-height: 1.6; }
+.replay .dots { display: flex; gap: 5px; }
+.replay .dots i { width: 10px; height: 10px; background: var(--night); box-shadow: inset 0 0 0 2px var(--edge); }
+.replay .dots i.on { background: var(--p1); box-shadow: none; }
+.replay .btn { width: auto; padding: 8px 12px; font-size: 9px; }
+.replay.done { border-color: var(--gold); background: var(--warn-bg); }
+.presence { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink); border: 2px solid var(--edge); padding: 3px 8px; background: var(--night); align-self: flex-start; }
+.presence i { width: 8px; height: 8px; background: var(--live); animation: blink 1.6s steps(2) infinite; }
+.presence.off i { background: var(--muted); animation: none; }
+.presence.lost { border-color: var(--danger); }
+.presence.lost i { background: var(--danger); animation: none; }
+.log li.fresh span { background: #24345a; outline: 2px solid var(--p1); outline-offset: 1px; }
+.moves.locked .move { opacity: .45; pointer-events: none; }
+.fighter .sprite .dmg.static { animation: rise 1.2s ease-out 1 forwards; }
+.pa-float { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); font-family: var(--f-display); font-size: 11px; color: var(--pa); text-shadow: 2px 2px 0 var(--shadow); white-space: nowrap; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.legend i { width: 14px; height: 14px; display: inline-block; }
+.cmp { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cmp th, .cmp td { border: 2px solid var(--stone-2); padding: 6px 8px; text-align: left; vertical-align: top; line-height: 1.4; }
+.cmp th { color: var(--muted); font-weight: 400; font-size: 13px; }
+.cmp td.old { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--edge); }
+.tbl { overflow-x: auto; }
+.av.lunge-r .body { animation: lungeR .5s steps(2) 2; }
+.av.lunge-l .body { animation: lungeL .5s steps(2) 2; }
+.av.flip.lunge-l .body { animation: lungeLf .5s steps(2) 2; }
+@keyframes lungeR { 50% { transform: translateX(8px); } }
+@keyframes lungeL { 50% { transform: translateX(-8px); } }
+@keyframes lungeLf { 50% { transform: scaleX(-1) translateX(8px); } }
+.av.hitnow .body { animation: hitf .5s steps(2) 2; }
+.av.flip.hitnow .body { animation: hitff .5s steps(2) 2; }
+@keyframes hitf { 50% { filter: brightness(3) saturate(0); } }
+@keyframes hitff { 0%,100% { transform: scaleX(-1); } 50% { transform: scaleX(-1); filter: brightness(3) saturate(0); } }
+button.move { color: inherit; font: inherit; cursor: pointer; width: 100%; }
+.hp .bar i { transition: width .5s steps(5); }
+@media (prefers-reduced-motion: reduce) { .presence i, .energy i.gain, .av .body { animation: none !important; } .hp .bar i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Goal Master · Arène v2</h1>
+    <nav class="toc" aria-label="Écrans">
+      <a href="#regles">0 · Ce qui change</a>
+      <a href="#pa">1 · Les PA</a>
+      <a href="#retour">2 · Retour sur l'Arène</a>
+      <a href="#direct">3 · En direct à deux</a>
+      <a href="#parade">4 · Parade qui rend 1 PA</a>
+      <a href="#autour">5 · Provocation, accueil, intro</a>
+      <a href="#etats">6 · Cas limites</a>
+    </nav>
+  </div>
+
+  <p class="intro">L'Arène devient un jeu à part : plus rien ne vient des candidatures ni des relances. Chaque tour donne 3 PA, les PA non dépensés se gardent (6 au plus), et une Parade qui encaisse un coup rend 1 PA. En revenant sur l'Arène, on revoit les actions de l'autre une par une ; à deux sur l'écran, le combat se suit en direct. Ici, Adrien (Chevalier, bleu, Évol. 3) contre Nicolas (Panda, rouge, Évol. 2).</p>
+
+  <!-- 0 -->
+  <section class="screen" id="regles">
+    <header>
+      <span class="route">règles</span>
+      <h2>0 · Ce qui change</h2>
+      <p>Le reste ne bouge pas : provocation, quatre actions, 3 actions au plus par tour, K.O. ou fin vendredi 18 h, couronne, succès, aucune XP en jeu.</p>
+    </header>
+    <div class="device">
+      <div class="tbl"><table class="cmp">
+        <thead><tr><th></th><th>Avant</th><th>Arène v2</th></tr></thead>
+        <tbody>
+          <tr><th>Nom</th><td class="old">Énergie ⚡</td><td>PA (points d'action)</td></tr>
+          <tr><th>Gagner des PA</th><td class="old">2 ⚡ par candidature</td><td>+3 PA au début de chaque tour, plafond 6</td></tr>
+          <tr><th>Garder des PA</th><td class="old">Réserve remplie par les candidatures</td><td>Les PA non dépensés passent au tour suivant</td></tr>
+          <tr><th>Parade</th><td class="old">Divise le prochain coup</td><td>Divise le prochain coup, et rend 1 PA si elle encaisse un coup</td></tr>
+          <tr><th>Départ</th><td class="old">2 ⚡, +1 outsider, 0 si rouillé</td><td>3 PA au premier tour, +1 PA pour le moins évolué ; un rouillé part comme les autres</td></tr>
+          <tr><th>Potions</th><td class="old">Une par relance réussie</td><td>2 chacun au départ, sans en regagner</td></tr>
+          <tr><th>Stats</th><td>Selon l'évolution (30 à 40 PV)</td><td>Inchangé</td></tr>
+          <tr><th>Tour bloqué</th><td class="old">La main passe à celui qui a de l'énergie</td><td>Disparaît : on a toujours des PA. Reste le filet des 24 h</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- 1 -->
+  <section class="screen" id="pa">
+    <header>
+      <span class="route">/arene · ton tour</span>
+      <h2>1 · Les PA, à toi de jouer</h2>
+      <p>Les cases claires sont les PA gardés du tour d'avant, les cases vives les 3 du tour qui commence (soulignées d'or à l'arrivée). Garder 3 PA permet un tour Botte + Attaque + Parade.</p>
+    </header>
+    <div class="grid">
+      <div class="device wide">
+        <h4>Tour d'Adrien : 2 PA gardés + 3 du tour</h4>
+        <div class="arena">
+          <div class="col">
+            <span class="presence off"><i></i>Nicolas n'est pas dans l'Arène</span>
+            <div class="stage">
+              <div class="fighter">
+                <div class="tag"><b>Toi</b><span>Chevalier · Évol. 3</span></div>
+                <div class="hp"><div class="bar"><i style="width:65%"></i></div><span class="val">22/34</span></div>
+                <div class="sprite"><div class="av" data-sprite="knight" data-color="p1" data-px="4"></div></div>
+              </div>
+              <div class="fighter right">
+                <div class="tag"><b>Nicolas</b><span>Panda · Évol. 2</span></div>
+                <div class="hp low"><div class="bar"><i style="width:41%"></i></div><span class="val">13/32</span></div>
+                <div class="sprite"><div class="av flip" data-sprite="panda" data-color="p2" data-px="4"></div></div>
+              </div>
+            </div>
+            <div class="turnline"><span class="who">À toi de jouer</span><span class="clock">Fin vendredi 18 h · 2 j</span></div>
+            <div class="energy"><span class="lbl">PA</span><i class="kept"></i><i class="kept"></i><i class="gain"></i><i class="gain"></i><i class="gain"></i><i class="empty"></i><span class="n">5</span><span class="hint">+3 PA à chaque tour · ce que tu ne dépenses pas se garde, 6 au plus</span></div>
+            <div class="moves">
+              <a class="move" href="#retour"><span class="cost">1 PA</span><b>⚔️ Attaque</b><span>5 à 7 dégâts</span></a>
+              <a class="move" href="#parade"><span class="cost">1 PA</span><b>🛡️ Parade</b><span>Divise le prochain coup · +1 PA s'il arrive</span></a>
+              <a class="move special" href="#retour"><span class="cost">3 PA</span><b>✨ Coup d'estoc</b><span>14 dégâts</span></a>
+              <a class="move" href="#combat-fin"><span class="cost">×2</span><b>🧪 Potion</b><span>+6 PV · 2 pour tout le combat</span></a>
+            </div>
+            <div class="turnfoot"><span class="cnt">Actions 0/3</span><a class="btn ghost" href="#direct">Finir mon tour</a></div>
+          </div>
+          <div class="log">
+            <span class="lt">Journal</span>
+            <ol>
+              <li><time>09:12</time><span class="sys">Ton tour commence : +3 PA (2 gardés).</span></li>
+              <li><time>08:40</time><span class="him">Nicolas attaque : 5 dégâts.</span></li>
+              <li><time>08:39</time><span class="him">Nicolas boit une potion : +6 PV.</span></li>
+              <li><time>hier</time><span class="me">Tu attaques : 6 dégâts. Tu gardes 2 PA.</span></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+      <div class="device">
+        <h4>Légende</h4>
+        <div class="legend">
+          <span><i style="background:var(--pa-kept)"></i>gardé du tour d'avant</span>
+          <span><i style="background:var(--pa);outline:2px solid var(--gold)"></i>reçu ce tour</span>
+          <span><i style="background:var(--night);box-shadow:inset 0 0 0 2px var(--edge)"></i>vide</span>
+        </div>
+        <h4>Plafond atteint</h4>
+        <div class="energy"><span class="lbl">PA</span><i class="kept"></i><i class="kept"></i><i class="kept"></i><i class="kept"></i><i class="gain"></i><i class="gain"></i><span class="n">6</span></div>
+        <p class="note">Tu avais gardé 4 PA : ce tour ne t'en donne que 2, le plafond est à 6.</p>
+      </div>
+      <div class="device">
+        <h4>Botte trop chère pour l'instant</h4>
+        <div class="energy"><span class="lbl">PA</span><i></i><i></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><span class="n">2</span></div>
+        <div class="moves" style="grid-template-columns:1fr">
+          <span class="move special off"><span class="cost">3 PA</span><b>✨ Coup d'estoc</b><span>Il te manque 1 PA. Garde-en un ce tour, tu pourras la lancer au prochain.</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="screen" id="retour">
+    <header>
+      <span class="route">/arene · retour, vu par Nicolas</span>
+      <h2>2 · Les actions d'Adrien défilent à l'arrivée</h2>
+      <p>Adrien a joué Attaque, Attaque, Coup d'estoc pendant que Nicolas n'était pas là. À l'ouverture, chaque action se rejoue avec son animation (1,5 s chacune), les PV baissent, la ligne s'ajoute au journal. Les actions de Nicolas restent verrouillées jusqu'à la fin, « Passer » saute directement à la fin. Le téléphone retient la dernière action vue.</p>
+    </header>
+    <div class="grid">
+      <div class="device wide" id="replay-device">
+        <h4>Démo animée</h4>
+        <div class="arena">
+          <div class="col">
+            <div class="replay" id="rp-bar">
+              <div class="what"><small id="rp-small">Pendant ton absence, Adrien a joué</small><b id="rp-label">⚔️ Attaque · 6 dégâts</b></div>
+              <div class="dots" id="rp-dots"><i></i><i></i><i></i></div>
+              <button class="btn ghost" id="rp-skip" type="button">Passer</button>
+            </div>
+            <div class="stage">
+              <div class="fighter">
+                <div class="tag"><b>Toi</b><span>Panda · Évol. 2</span></div>
+                <div class="hp" id="rp-hp"><div class="bar"><i id="rp-hpbar" style="width:100%"></i></div><span class="val" id="rp-hpval">32/32</span></div>
+                <div class="sprite" id="rp-me"><div class="av" id="rp-me-av" data-sprite="panda" data-color="p2" data-px="4"></div></div>
+              </div>
+              <div class="fighter right">
+                <div class="tag"><b>Adrien</b><span>Chevalier · Évol. 3</span></div>
+                <div class="hp"><div class="bar"><i style="width:65%"></i></div><span class="val">22/34</span></div>
+                <div class="sprite"><div class="av flip" id="rp-him-av" data-sprite="knight" data-color="p1" data-px="4"></div></div>
+              </div>
+            </div>
+            <div class="turnline wait" id="rp-turn"><span class="who">Tour d'Adrien</span><span class="clock">rejeu</span></div>
+            <div class="energy" id="rp-pa"><span class="lbl">PA</span><i class="kept"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><span class="n">1</span></div>
+            <div class="moves locked" id="rp-moves">
+              <a class="move" href="#direct"><span class="cost">1 PA</span><b>⚔️ Attaque</b><span>4 à 6 dégâts</span></a>
+              <a class="move" href="#parade"><span class="cost">1 PA</span><b>🛡️ Parade</b><span>+1 PA s'il arrive</span></a>
+              <a class="move special" href="#direct"><span class="cost">3 PA</span><b>✨ Bambou tourbillon</b><span>+8 PV, Adrien perd une action</span></a>
+              <a class="move" href="#direct"><span class="cost">×2</span><b>🧪 Potion</b><span>+6 PV</span></a>
+            </div>
+          </div>
+          <div class="log">
+            <span class="lt">Journal</span>
+            <ol id="rp-log">
+              <li><time>hier</time><span class="me">Tu gardes 1 PA et finis ton tour.</span></li>
+            </ol>
+          </div>
+        </div>
+        <button class="btn ghost" id="rp-again" type="button">Revoir la démo</button>
+      </div>
+      <div class="device">
+        <h4>Rien de nouveau</h4>
+        <p class="muted">Si Adrien n'a rien joué depuis la dernière visite, pas de bandeau : l'écran s'ouvre directement dans son état normal.</p>
+        <h4>Premier passage sur ce téléphone</h4>
+        <p class="muted">Aucune action vue retenue : on ne rejoue que le dernier tour de l'autre, pas tout le combat.</p>
+      </div>
+      <div class="device" id="combat-fin">
+        <h4>Combat fini pendant l'absence</h4>
+        <div class="replay done"><div class="what"><small>Adrien a joué · 3/3</small><b>✨ Coup d'estoc · K.O.</b></div></div>
+        <p class="muted">Le rejeu va jusqu'au K.O., puis l'écran de résultat s'ouvre (comme aujourd'hui, une fois par appareil).</p>
+        <a class="btn" href="#autour">Voir le résultat</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="screen" id="direct">
+    <header>
+      <span class="route">/arene · tous les deux sur l'écran</span>
+      <h2>3 · Le combat en direct</h2>
+      <p>Les deux écrans côte à côte. Quand Adrien joue, l'action s'anime chez lui tout de suite, et chez Nicolas environ 2 s après, avec la même animation que le rejeu. La pastille dit si l'autre a l'Arène ouverte. Clique « Attaque » chez Adrien.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>Écran d'Adrien</h4>
+        <span class="presence"><i></i>Nicolas est dans l'Arène</span>
+        <div class="stage">
+          <div class="fighter"><div class="tag"><b>Toi</b></div><div class="hp"><div class="bar"><i style="width:65%"></i></div><span class="val">22/34</span></div><div class="sprite"><div class="av" id="dA-me" data-sprite="knight" data-color="p1" data-px="3"></div></div></div>
+          <div class="fighter right"><div class="tag"><b>Nicolas</b></div><div class="hp"><div class="bar"><i id="dA-hpbar" style="width:72%"></i></div><span class="val" id="dA-hpval">23/32</span></div><div class="sprite" id="dA-him-s"><div class="av flip" id="dA-him" data-sprite="panda" data-color="p2" data-px="3"></div></div></div>
+        </div>
+        <div class="turnline"><span class="who">À toi de jouer</span><span class="clock" id="dA-cnt">Actions 0/3</span></div>
+        <div class="moves" style="grid-template-columns:1fr 1fr">
+          <button class="move" id="dA-attack" type="button"><span class="cost">1 PA</span><b>⚔️ Attaque</b><span>5 à 7 dégâts</span></button>
+          <span class="move off"><span class="cost">1 PA</span><b>🛡️ Parade</b><span>+1 PA s'il arrive</span></span>
+        </div>
+      </div>
+      <div class="device">
+        <h4>Écran de Nicolas, au même moment</h4>
+        <span class="presence"><i></i>Adrien est dans l'Arène</span>
+        <div class="stage">
+          <div class="fighter"><div class="tag"><b>Toi</b></div><div class="hp"><div class="bar"><i id="dB-hpbar" style="width:72%"></i></div><span class="val" id="dB-hpval">23/32</span></div><div class="sprite" id="dB-me-s"><div class="av" id="dB-me" data-sprite="panda" data-color="p2" data-px="3"></div></div></div>
+          <div class="fighter right"><div class="tag"><b>Adrien</b></div><div class="hp"><div class="bar"><i style="width:65%"></i></div><span class="val">22/34</span></div><div class="sprite"><div class="av flip" id="dB-him" data-sprite="knight" data-color="p1" data-px="3"></div></div></div>
+        </div>
+        <div class="turnline wait"><span class="who" id="dB-who">Adrien joue… 0/3</span><span class="clock">en direct</span></div>
+        <div class="log"><ol id="dB-log"><li><time>09:14</time><span class="sys">Le tour d'Adrien commence.</span></li></ol></div>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:12px">Quand Adrien finit son tour, l'écran de Nicolas passe à « À toi de jouer » avec ses +3 PA, sans recharger la page.</p>
+  </section>
+
+  <!-- 4 -->
+  <section class="screen" id="parade">
+    <header>
+      <span class="route">/arene · parade</span>
+      <h2>4 · Une Parade qui encaisse rend 1 PA</h2>
+      <p>La Parade ne se cumule pas et ne rend son PA qu'une fois, au coup qui la consomme. Le PA rendu s'ajoute à ceux que Nicolas aura au début de son tour.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>Adrien frappe dans la Parade de Nicolas (vu par Nicolas)</h4>
+        <div class="stage">
+          <div class="fighter"><div class="tag"><b>Toi</b></div><div class="hp"><div class="bar"><i style="width:63%"></i></div><span class="val">20/32</span></div><div class="sprite"><div class="av" data-sprite="panda" data-color="p2" data-px="3"></div><span class="shield">🛡️</span><span class="pa-float">+1 PA</span></div></div>
+          <div class="fighter right"><div class="tag"><b>Adrien</b></div><div class="hp"><div class="bar"><i style="width:65%"></i></div><span class="val">22/34</span></div><div class="sprite"><div class="av flip" data-sprite="knight" data-color="p1" data-px="3"></div></div></div>
+        </div>
+        <div class="log"><ol>
+          <li><time>09:15</time><span class="him">Adrien attaque : 7 dégâts, ta Parade en arrête la moitié (3 dégâts). Tu gagnes 1 PA.</span></li>
+        </ol></div>
+        <div class="energy"><span class="lbl">PA</span><i class="kept"></i><i class="gain"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><span class="n">2</span><span class="hint">1 gardé + 1 rendu par la Parade · +3 à ton prochain tour</span></div>
+      </div>
+      <div class="device">
+        <h4>Parade qui n'a rien encaissé</h4>
+        <p class="muted">Si l'autre ne frappe pas (il se soigne, pare, ou son tour passe), la Parade reste en place pour le coup suivant. Pas de PA tant qu'aucun coup ne la touche.</p>
+        <h4>Coup d'estoc à l'Évol. 5</h4>
+        <p class="muted">La Botte du Chevalier perce la Parade à l'Évol. 5 : le coup n'est pas divisé, et la Parade ne rend pas de PA.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="screen" id="autour">
+    <header>
+      <span class="route">/ · /intro</span>
+      <h2>5 · Provocation, accueil, intro</h2>
+      <p>Seuls les textes changent. Plus aucune mention des candidatures ni des relances dans l'Arène.</p>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>Panneau de provocation</h4>
+        <p class="h-title">Provoquer Nicolas</p>
+        <div class="tbl"><table class="cmp">
+          <thead><tr><th></th><th>Toi</th><th>Nicolas</th></tr></thead>
+          <tbody>
+            <tr><th>PV</th><td class="num">34</td><td class="num">32</td></tr>
+            <tr><th>Attaque</th><td class="num">5-7</td><td class="num">4-6</td></tr>
+            <tr><th>PA au départ</th><td class="num">3</td><td class="num">4 <small class="muted">(+1, moins évolué)</small></td></tr>
+            <tr><th>Potions</th><td class="num">2</td><td class="num">2</td></tr>
+          </tbody>
+        </table></div>
+        <p class="muted">+3 PA à chaque tour. Fin au K.O. ou vendredi 18 h. Aucune XP en jeu.</p>
+        <a class="btn arena" href="#pa">⚔️ Lancer la provocation</a>
+      </div>
+      <div class="device">
+        <h4>Carte du combat sur l'accueil</h4>
+        <a class="mini" href="#retour">
+          <div class="head"><span class="tag go">À toi de jouer</span><span class="muted">Adrien a joué 3 actions</span></div>
+          <div class="vs"><span class="hpn">19</span><div class="bar"><i style="width:59%;background:var(--hp)"></i></div><span class="muted">vs</span><div class="bar p2"><i style="width:65%"></i></div><span class="hpn">22</span></div>
+          <span class="muted">Tes PA : 1 gardé, +3 en entrant dans ton tour</span>
+        </a>
+      </div>
+      <div class="device introscreen">
+        <h4>Écran « L'Arène » de l'intro</h4>
+        <span class="steps">8 / 9</span>
+        <p class="h-title">L'Arène</p>
+        <ol>
+          <li>Provoque ton binôme en combat, au tour par tour.</li>
+          <li>Chaque tour te donne 3 PA. Garde-les pour placer ta Botte.</li>
+          <li>Une Parade qui encaisse un coup te rend 1 PA.</li>
+          <li>K.O. ou vendredi 18 h : le gagnant prend la couronne.</li>
+        </ol>
+        <p class="muted">L'Arène est un jeu à part : tes candidatures n'y changent rien, ton évolution donne tes stats.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="screen" id="etats">
+    <header>
+      <span class="route">cas limites</span>
+      <h2>6 · Quand ça coince</h2>
+    </header>
+    <div class="grid">
+      <div class="device">
+        <h4>Connexion perdue en direct</h4>
+        <span class="presence lost"><i></i>Connexion perdue · on réessaie</span>
+        <p class="muted">L'écran garde le dernier état connu. Dès que la connexion revient, les actions manquées se rejouent comme au retour.</p>
+      </div>
+      <div class="device">
+        <h4>Action refusée</h4>
+        <p class="err">Ton coup n'est pas parti. Vérifie ta connexion : tes PA n'ont pas été dépensés.</p>
+      </div>
+      <div class="device">
+        <h4>Combat en cours au passage en v2</h4>
+        <p class="note">Le combat de cette semaine passe aux nouvelles règles. Nicolas, qui avait la main sans énergie, reçoit 3 PA et peut jouer tout de suite.</p>
+        <div class="push"><span class="ic">GM</span><b>🛡️ À toi de jouer</b><span>L'Arène change : 3 PA à chaque tour. Tu as 3 PA, Adrien t'attend.</span></div>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+// Sprites réels de l'app (src/lib/spriteGrids.ts), forme 3 : Écuyer et Novice. P = couleur du joueur (COLOR_HEX).
+const PAL = {K:'#1a1626',E:'#1a1626',S:'#f4c7a1',R:'#e8838a',W:'#dfe6ee',G:'#8b93a7',T:'#c99a5b',B:'#7a4a26',Y:'#f2c14e',O:'#b9831c',L:'#fffbe0',C:'#7a5aa0',H:'#9c7f73',F:'#f3f1f6',N:'#26232f',I:'#ffffff',V:'#6fae4a',A:'#3b2b4a',D:'#2b2f4a',Z:'#a1402a',g:'#ffd84a',y:'#c99a1a',r:'#e8838a'};
+const PLAYER = { p1: "#3d7bd9", p2: "#d94848" };
+const SQUIRE = ["....KKKKKKK.....","...KBBBBBBBK....","..KBBBBBBBBBK...","..KBSSSSSSSBK.W.","..KSSESSSESSK.W.","..KSSSSSSSSSK.W.","...KSSSKKSSK..W.","....KKSSSSKK..W.","...KKPPPPPPKKYWY",".KKKPPPPPPPPKSB.","KPPPKPPYYPPPKSB.","KPYPKPPPPPPKKK..","KPPPKBBBBBBK....",".KKKKPPPPPPK....","....KPPKKPPK....","....KGGK.KGGK...","....KBBK.KBBK...","...KKKKK.KKKKK.."];
+const P_NOV = ["....KKK......KKK....","...KNNNKKKKKKNNNK...","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNNFFFFFFFFFNNK.NV",".KNNKFFFFFFFFFKNNNNV","KNNKFFFFFFFFFFFKNNNV","KNNKFFFFFFFFFFFK...V","KNNKFFFFFFFFFFFK...V",".KKKBBBBBBBBBBBK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK....V","....KNNNK.KNNNK....V","...KKKKKK.KKKKKK...."];
+const CROWN = ["g..g..g","gg.g.gg","ggggggg","gyrgryg"];
+function svg(grid, player, px, cls) {
+  const w = grid[0].length, h = grid.length;
+  let r = "";
+  grid.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${ch === "P" ? player : PAL[ch]}"/>`;
+  }));
+  return `<svg class="${cls}" width="${w * px}" height="${h * px}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+document.querySelectorAll("[data-sprite]").forEach((el) => {
+  const px = Number(el.dataset.px || 3);
+  if (el.dataset.sprite === "crown-only") { el.innerHTML = svg(CROWN, PLAYER.p1, 6, "body"); return; }
+  const grid = el.dataset.sprite === "panda" ? P_NOV : SQUIRE;
+  const crown = el.dataset.crown ? svg(CROWN, PLAYER.p1, px, "crown") : "";
+  el.insertAdjacentHTML("afterbegin", crown + svg(grid, PLAYER[el.dataset.color || "p1"], px, "body"));
+});
+</script>
+<script>
+// Démo : rejeu des actions d'Adrien au retour de Nicolas, puis direct à deux. Données inventées mais plausibles.
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function anim(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+  function floatNum(host, text, heal) {
+    const s = document.createElement("span");
+    s.className = "dmg static" + (heal ? " heal" : "");
+    s.textContent = text;
+    host.appendChild(s);
+    setTimeout(() => s.remove(), 1300);
+  }
+  function hhmm(d) { return d.toTimeString().slice(0, 5); }
+
+  // 2 · Rejeu
+  const MAX = 32;
+  const steps = [
+    { label: "⚔️ Attaque · 6 dégâts", dmg: 6, log: "Adrien attaque : 6 dégâts.", t: "08:41" },
+    { label: "⚔️ Attaque · 5 dégâts", dmg: 5, log: "Adrien attaque : 5 dégâts.", t: "08:41" },
+    { label: "✨ Coup d'estoc · 14 dégâts", dmg: 14, log: "Adrien lance Coup d'estoc : 14 dégâts.", t: "08:42" },
+  ];
+  let hp, i, timer;
+  function setHp(v) {
+    hp = v;
+    $("rp-hpbar").style.width = (v / MAX * 100) + "%";
+    $("rp-hpval").textContent = v + "/" + MAX;
+    $("rp-hp").classList.toggle("low", v / MAX < 0.35);
+  }
+  function addLog(t, text, cls) {
+    const li = document.createElement("li");
+    li.className = "fresh";
+    li.innerHTML = `<time>${t}</time><span class="${cls}">${text}</span>`;
+    $("rp-log").prepend(li);
+    setTimeout(() => li.classList.remove("fresh"), 1400);
+  }
+  function dots(n) { [...$("rp-dots").children].forEach((d, k) => d.classList.toggle("on", k < n)); }
+  function play(k) {
+    const s = steps[k];
+    $("rp-small").textContent = `Pendant ton absence, Adrien a joué · ${k + 1}/${steps.length}`;
+    $("rp-label").textContent = s.label;
+    dots(k + 1);
+    if (!reduce) { anim($("rp-him-av"), "lunge-l"); setTimeout(() => anim($("rp-me-av"), "hitnow"), 250); }
+    setTimeout(() => { setHp(hp - s.dmg); floatNum($("rp-me"), "-" + s.dmg); addLog(s.t, s.log, "him"); }, reduce ? 0 : 300);
+  }
+  function finish() {
+    clearTimeout(timer);
+    let v = MAX; const log = $("rp-log");
+    log.innerHTML = '<li><time>hier</time><span class="me">Tu gardes 1 PA et finis ton tour.</span></li>';
+    steps.forEach((s) => { v -= s.dmg; log.insertAdjacentHTML("afterbegin", `<li><time>${s.t}</time><span class="him">${s.log}</span></li>`); });
+    log.insertAdjacentHTML("afterbegin", '<li><time>08:42</time><span class="sys">Ton tour commence : +3 PA (1 gardé).</span></li>');
+    setHp(v); dots(steps.length);
+    const bar = $("rp-bar"); bar.classList.add("done");
+    $("rp-small").textContent = "Adrien a joué 3 actions";
+    $("rp-label").textContent = "À toi : -25 PV, tu as 4 PA";
+    $("rp-skip").hidden = true;
+    const t = $("rp-turn"); t.classList.remove("wait");
+    t.innerHTML = '<span class="who">À toi de jouer</span><span class="clock">Fin vendredi 18 h · 2 j</span>';
+    $("rp-pa").innerHTML = '<span class="lbl">PA</span><i class="kept"></i><i class="gain"></i><i class="gain"></i><i class="gain"></i><i class="empty"></i><i class="empty"></i><span class="n">4</span>';
+    $("rp-moves").classList.remove("locked");
+  }
+  function start() {
+    clearTimeout(timer);
+    $("rp-bar").classList.remove("done"); $("rp-skip").hidden = false;
+    $("rp-log").innerHTML = '<li><time>hier</time><span class="me">Tu gardes 1 PA et finis ton tour.</span></li>';
+    const t = $("rp-turn"); t.classList.add("wait");
+    t.innerHTML = '<span class="who">Tour d\'Adrien</span><span class="clock">rejeu</span>';
+    $("rp-pa").innerHTML = '<span class="lbl">PA</span><i class="kept"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><span class="n">1</span>';
+    $("rp-moves").classList.add("locked");
+    setHp(MAX); dots(0); i = 0;
+    const next = () => { if (i < steps.length) { play(i++); timer = setTimeout(next, 1500); } else timer = setTimeout(finish, 900); };
+    timer = setTimeout(next, 600);
+  }
+  $("rp-skip").addEventListener("click", finish);
+  $("rp-again").addEventListener("click", start);
+  start();
+
+  // 3 · Direct à deux
+  let nh = 23, n = 0;
+  const NMAX = 32;
+  $("dA-attack").addEventListener("click", () => {
+    if (n >= 3) return;
+    n++;
+    const dmg = 5 + Math.floor(Math.random() * 3);
+    nh = Math.max(0, nh - dmg);
+    $("dA-cnt").textContent = `Actions ${n}/3`;
+    if (!reduce) { anim($("dA-me"), "lunge-r"); anim($("dA-him"), "hitnow"); }
+    floatNum($("dA-him-s"), "-" + dmg);
+    $("dA-hpbar").style.width = (nh / NMAX * 100) + "%"; $("dA-hpval").textContent = nh + "/" + NMAX;
+    const hpNow = nh, k = n;
+    setTimeout(() => {
+      if (!reduce) { anim($("dB-him"), "lunge-l"); anim($("dB-me"), "hitnow"); }
+      floatNum($("dB-me-s"), "-" + dmg);
+      $("dB-hpbar").style.width = (hpNow / NMAX * 100) + "%"; $("dB-hpval").textContent = hpNow + "/" + NMAX;
+      $("dB-who").textContent = k < 3 ? `Adrien joue… ${k}/3` : "À toi de jouer : +3 PA";
+      $("dB-log").insertAdjacentHTML("afterbegin", `<li class="fresh"><time>${hhmm(new Date())}</time><span class="him">Adrien attaque : ${dmg} dégâts.</span></li>`);
+      if (k === 3) $("dB-who").parentElement.classList.remove("wait");
+    }, 2000);
+    if (n === 3) $("dA-attack").classList.add("off");
+  });
+})();
+</script>

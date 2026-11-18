@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
-import { ANSWER_WITHIN_MS, arenaDeadline, arenaState, canPlay, canProvoke, mustPass, openArena, rollValue, startEnergy, type ArenaKind } from "@/game/arena";
+import { ANSWER_WITHIN_MS, arenaDeadline, arenaState, canPlay, canProvoke, mustPass, openArena, rollValue, type ArenaKind } from "@/game/arena";
 import { buildPlayerView } from "@/lib/playerView";
 import { arenaEvents } from "@/server/arena";
 import { db } from "@/server/db";
@@ -15,9 +15,9 @@ export type ArenaResult = { ok: true } | { ok: false; error: string };
 const KINDS: ArenaKind[] = ["ATTACK", "PARRY", "THRUST", "WHIRL", "POTION", "END"];
 const SPECIAL = { KNIGHT: "THRUST", PANDA: "WHIRL" } as const;
 
-function heroOf(p: Player, game: GameData, now: Date): { form: number; rusty: boolean } {
-  const v = buildPlayerView(p, game.apps, game.nudges, game.quests, null, now);
-  return { form: v.levelForm, rusty: v.mood === "tired" || v.mood === "exhausted" };
+/** Évolution réelle (celle du niveau, jamais la forme rouillée) : elle fixe les stats du combat. */
+function formOf(p: Player, game: GameData, now: Date): number {
+  return buildPlayerView(p, game.apps, game.nudges, game.quests, null, now).levelForm;
 }
 
 /** Provoquer le binôme : une Arène ouverte à la fois, une provocation par jour et par personne. */
@@ -38,13 +38,12 @@ export async function provokeArena(): Promise<ArenaResult> {
     revalidatePath("/");
     return { ok: false, error: `${partner.pseudo} vient de te provoquer : réponds-lui.` };
   }
-  const rusty = heroOf(partner, game, now).rusty;
-  after(() => notify(partner.id, { kind: "arena", arenaId: created.id, from: player.pseudo, rusty }));
+  after(() => notify(partner.id, { kind: "arena", arenaId: created.id, from: player.pseudo }));
   revalidatePath("/");
   return { ok: true };
 }
 
-/** Entrer dans l'Arène ou passer son tour, dans les 24 h. Stats et énergie de départ figées ici. */
+/** Entrer dans l'Arène ou passer son tour, dans les 24 h. Les évolutions (donc les stats) sont figées ici. */
 export async function respondArena(id: string, accept: boolean): Promise<ArenaResult> {
   const player = await requirePlayer();
   const now = new Date();
@@ -55,17 +54,7 @@ export async function respondArena(id: string, accept: boolean): Promise<ArenaRe
     const row = game.arenas.find((e) => e.arena.id === id)?.arena;
     const challenger = game.players.find((p) => p.id === row?.challengerId);
     if (!row || !challenger) return { ok: false, error: "Cette provocation n'est plus ouverte." };
-    const a = heroOf(challenger, game, now);
-    const b = heroOf(player, game, now);
-    data = {
-      status: "ACCEPTED",
-      acceptedAt: now,
-      deadline: arenaDeadline(now),
-      challengerForm: a.form,
-      opponentForm: b.form,
-      challengerEnergy: startEnergy(a.form, b.form, a.rusty),
-      opponentEnergy: startEnergy(b.form, a.form, b.rusty),
-    };
+    data = { status: "ACCEPTED", acceptedAt: now, deadline: arenaDeadline(now), challengerForm: formOf(challenger, game, now), opponentForm: formOf(player, game, now) };
   }
   const { count } = await db().arena.updateMany({ where: open, data });
   revalidatePath("/");
@@ -85,16 +74,15 @@ export async function cancelArena(id: string): Promise<ArenaResult> {
 const REFUSED: Record<"over" | "turn" | "energy" | "potion", string> = {
   over: "Le combat est terminé.",
   turn: "Ce n'est pas ton tour.",
-  energy: "Pas assez d'énergie : une candidature te donne 2 ⚡.",
-  potion: "Plus de potion : une relance réussie t'en donne une.",
+  energy: "Pas assez de PA pour cette action.",
+  potion: "Plus de potion pour ce combat.",
 };
 
-/** Jouer une action : le tour et l'énergie sont revérifiés au moment d'écrire, dans une transaction. */
+/** Jouer une action : le tour et les PA sont revérifiés au moment d'écrire, dans une transaction. */
 export async function playArena(id: string, kind: ArenaKind): Promise<ArenaResult> {
   const player = await requirePlayer();
   if (!KINDS.includes(kind)) return { ok: false, error: "Action inconnue." };
   if ((kind === "THRUST" || kind === "WHIRL") && SPECIAL[player.character] !== kind) return { ok: false, error: "Ce n'est pas ta Botte." };
-  const game = await loadGame();
   const now = new Date();
   try {
     await db().$transaction(
@@ -102,12 +90,12 @@ export async function playArena(id: string, kind: ArenaKind): Promise<ArenaResul
         const row = await tx.arena.findUnique({ where: { id }, include: { actions: { orderBy: { createdAt: "asc" } } } });
         if (!row || (row.challengerId !== player.id && row.opponentId !== player.id)) throw new Error("over");
         const { actions, ...arena } = row;
-        const state = arenaState({ arena, actions, apps: game.apps, nudges: game.nudges }, now);
+        const state = arenaState({ arena, actions }, now);
         const check = canPlay(state, player.id, kind);
         if (!check.ok) throw new Error(check.reason);
         const form = (player.id === arena.challengerId ? arena.challengerForm : arena.opponentForm) ?? 1;
         const played = await tx.arenaAction.create({ data: { arenaId: id, playerId: player.id, kind, value: rollValue(kind, form), createdAt: now } });
-        const next = arenaState({ arena, actions: [...actions, played], apps: game.apps, nudges: game.nudges }, now);
+        const next = arenaState({ arena, actions: [...actions, played] }, now);
         if (mustPass(next, player.id)) {
           await tx.arenaAction.create({ data: { arenaId: id, playerId: player.id, kind: "END", value: 0, createdAt: new Date(now.getTime() + 1) } });
         }
@@ -117,7 +105,7 @@ export async function playArena(id: string, kind: ArenaKind): Promise<ArenaResul
   } catch (error) {
     const reason = (error as Error).message as keyof typeof REFUSED;
     revalidatePath("/arene");
-    return { ok: false, error: REFUSED[reason] ?? "Ton coup n'est pas parti. Vérifie ta connexion : ton énergie n'a pas été dépensée." };
+    return { ok: false, error: REFUSED[reason] ?? "Ton coup n'est pas parti. Vérifie ta connexion : tes PA n'ont pas été dépensés." };
   }
   // Les notifications partent après la réponse : le coup s'affiche sans attendre le rechargement de la partie.
   after(async () => {

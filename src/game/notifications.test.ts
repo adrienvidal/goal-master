@@ -146,7 +146,7 @@ describe("notifications des quêtes", () => {
 describe("sendsEmail", () => {
   it("garde l'e-mail partout sauf pendant l'Arène", () => {
     expect(sendsEmail({ kind: "arena-turn", arenaId: "a1", turn: 2, partner: "Nicolas", summary: "Nicolas frappe.", hp: 8 })).toBe(false);
-    expect(sendsEmail({ kind: "arena", arenaId: "a1", from: "Nicolas", rusty: false })).toBe(true);
+    expect(sendsEmail({ kind: "arena", arenaId: "a1", from: "Nicolas" })).toBe(true);
     expect(sendsEmail({ kind: "arena-end", arenaId: "a1", won: true, ko: false, partner: "Nicolas" })).toBe(true);
     expect(sendsEmail(evo)).toBe(true);
     expect(sendsEmail(nudgeEvent)).toBe(true);
