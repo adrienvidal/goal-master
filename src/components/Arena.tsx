@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { BusyLabel } from "@/components/LinkButton";
 import { cancelArena, playArena, provokeArena, respondArena, type ArenaResult } from "@/app/arene-actions";
 import type { ArenaKind } from "@/game/arena";
@@ -88,18 +88,38 @@ export function ArenaPending({ id, partnerName, expires }: { id: string; partner
   );
 }
 
-export type Move = { kind: ArenaKind; label: string; cost: string; detail: string; disabled: boolean; special?: boolean };
+/** `blocked` : pourquoi l'action est indisponible pendant mon tour (null si elle est jouable). */
+export type Move = { kind: ArenaKind; label: string; cost: string; detail: string; blocked: string | null; special?: boolean };
 
-/** Les actions du tour : chaque coup part tout de suite ; « Finir mon tour » passe la main. */
-export function ArenaMoves({ id, moves, myTurn }: { id: string; moves: Move[]; myTurn: boolean }): React.ReactElement {
+const HINT_MS = 3000;
+
+/**
+ * Les actions du tour : chaque coup part tout de suite ; « Finir mon tour » passe la main.
+ * Une action grisée reste touchable : elle ne joue rien et dit pourquoi (`waiting` : ce n'est pas mon tour).
+ */
+export function ArenaMoves({ id, moves, myTurn, waiting }: { id: string; moves: Move[]; myTurn: boolean; waiting: string | null }): React.ReactElement {
   const [pending, error, run] = useArenaAction();
   const playFx = usePlayFx();
   const { locked } = useReplay();
+  const [hint, setHint] = useState<{ text: string; n: number } | null>(null);
+  useEffect(() => {
+    if (!hint) return;
+    const t = setTimeout(() => setHint(null), HINT_MS);
+    return () => clearTimeout(t);
+  }, [hint]);
+  const blockedBy = (m: Move): string | null =>
+    locked ? "Attends la fin du rejeu, ou touche Passer." : !myTurn ? waiting : m.blocked;
   return (
     <div className="flex flex-col gap-3">
+      {hint ? <p key={hint.n} role="status" className="arena-hint">{hint.text}</p> : null}
       <div className="grid grid-cols-2 gap-2">
-        {moves.map((m) => (
-          <button key={m.kind} type="button" className={`arena-move ${m.special ? "special" : ""}`} disabled={!myTurn || m.disabled || pending || locked} onClick={() => {
+        {moves.map((m) => {
+          const why = blockedBy(m);
+          const off = why !== null || (!myTurn && !waiting);
+          return (
+          <button key={m.kind} type="button" className={`arena-move ${m.special ? "special" : ""} ${off ? "off" : ""}`} aria-disabled={off} disabled={pending || (!myTurn && !waiting)} onClick={() => {
+            if (why) return setHint({ text: why, n: Date.now() });
+            if (off) return;
             playFx(m.kind);
             run(() => playArena(id, m.kind));
           }}>
@@ -107,7 +127,8 @@ export function ArenaMoves({ id, moves, myTurn }: { id: string; moves: Move[]; m
             <b className="font-display text-[9px] leading-relaxed">{m.label}</b>
             <span className="text-[13px] leading-snug text-muted">{m.detail}</span>
           </button>
-        ))}
+          );
+        })}
       </div>
       {myTurn ? (
         <div className="flex items-center justify-end gap-3">
