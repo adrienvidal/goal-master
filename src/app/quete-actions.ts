@@ -57,21 +57,20 @@ export async function markQuestDone(id: string, rawLink: string): Promise<QuestR
   return { ok: true };
 }
 
-/** Le donneur valide : XP pour les deux, coffre tiré pour le destinataire (compagnon donné d'office s'il n'en reste qu'un). */
+/** Le donneur valide : XP pour les deux, coffre tiré pour le destinataire. */
 export async function validateQuest(id: string): Promise<QuestResult> {
   const player = await requirePlayer();
   const game = await loadGame();
   const quest = game.quests.find((q) => q.id === id && q.giverId === player.id && q.status === "DONE");
   if (!quest || !quest.doneAt) return { ok: false, error: GONE };
+  // Un seul compagnon restant : le coffre le montre seul, sans choix ; aucun : XP seules, pas de coffre.
   const offer = drawOffer(quest.receiverId, game.quests);
-  const companion = offer.length === 1 ? offer[0] : null;
   const { count } = await db().quest.updateMany({
     where: { id, giverId: player.id, status: "DONE" },
-    data: { status: "VALIDATED", validatedAt: new Date(), offer, companion },
+    data: { status: "VALIDATED", validatedAt: new Date(), offer },
   });
   refresh(id);
   if (count !== 1) return { ok: false, error: GONE };
-  if (companion) await db().player.updateMany({ where: { id: quest.receiverId, companion: null }, data: { companion } });
   const round = quest.doneAt.getTime();
   after(() => notify(quest.receiverId, { kind: "quest-end", questId: id, round, validated: true, partner: player.pseudo, text: quest.text }));
   return { ok: true };

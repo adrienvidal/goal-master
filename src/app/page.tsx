@@ -1,5 +1,7 @@
 import { MyAvatar } from "@/components/MyAvatar";
-import { COMPANION_NAMES } from "@/game/quests";
+import { COMPANION_NAMES, isCompanion, openQuest, pendingChest } from "@/game/quests";
+import { Companion } from "@/components/Companion";
+import { QuestsCard } from "@/components/QuestsCard";
 import { Sprite } from "@/components/Sprite";
 import { Bar } from "@/components/Bar";
 import { Flame } from "@/components/Flame";
@@ -222,6 +224,8 @@ export default async function HomePage(): Promise<React.ReactElement> {
   // Un nouvel écran d'intro (nouvelle fonctionnalité) s'affiche d'office à la prochaine ouverture.
   if (introStepsSeen((await cookies()).get(INTRO_COOKIE)?.value) < INTRO_STEP_COUNT) redirect("/intro");
   const game = await loadGame();
+  // Un coffre de quête à ouvrir passe avant tout le reste (spec quetes).
+  if (pendingChest(player.id, game.quests)) redirect("/coffre");
   const now = new Date();
   const myGoal = await goalFor(player.id);
   if (!myGoal) redirect("/objectif/nouveau");
@@ -267,6 +271,8 @@ export default async function HomePage(): Promise<React.ReactElement> {
     return { id: a.id, ...splitCompany(a.company), time: TIME.format(a.at), warning };
   });
   const partnerFeed = partner ? withDuelLine(partner.feed, lastDuel) : [];
+  const myCompanion = player.companion && isCompanion(player.companion) ? player.companion : null;
+  const partnerCompanion = partnerRow?.companion && isCompanion(partnerRow.companion) ? partnerRow.companion : null;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
@@ -306,7 +312,15 @@ export default async function HomePage(): Promise<React.ReactElement> {
           ) : null}
           {arenaClosed ? <ChallengeClosedBanner id={arenaClosed.id} text={arenaClosed.text} storageKey="gm-arena-closed" /> : null}
           <div className="flex items-end gap-4 pr-9">
-            <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} level={me.level} mood={me.mood} fallen={me.fallen} hurt={wounded} crown={crownIds.has(me.id)} />
+            <div className="flex items-end gap-1">
+              <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} level={me.level} mood={me.mood} fallen={me.fallen} hurt={wounded} crown={crownIds.has(me.id)} />
+              {myCompanion ? (
+                <Link href="/menagerie" className="flex flex-col items-center gap-0.5 no-underline" aria-label="Ma Ménagerie">
+                  <Companion id={myCompanion} px={3} />
+                  <small className="text-xs text-muted">{COMPANION_NAMES[myCompanion].name}</small>
+                </Link>
+              ) : null}
+            </div>
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-display text-[11px] leading-relaxed">{me.pseudo} · Niv. {me.level}</span>
@@ -323,6 +337,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
           {running && partner ? <ChallengeRace challenge={running} views={[me, partner]} apps={game.apps} now={now} /> : null}
           {arenaOutgoing && partner ? <ArenaPending id={arenaOutgoing.id} partnerName={partner.pseudo} expires={`demain ${TIME.format(new Date(arenaOutgoing.createdAt.getTime() + ANSWER_WITHIN_MS))}`} /> : null}
           {arenaRunning && partner ? <ArenaCard input={arenaRunning} meId={player.id} views={[me, partner]} now={now} /> : null}
+          {partner && partnerRow ? <QuestsCard received={openQuest(partnerRow.id, player.id, game.quests)} given={openQuest(player.id, partnerRow.id, game.quests)} partnerName={partner.pseudo} /> : null}
           <AddApplication todayCount={me.today.count} />
           <div className="grid grid-cols-2 gap-2">
             <Link href="/succes" className="btn ghost !text-[10px]">Mes succès</Link>
@@ -336,6 +351,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
             <>
               <div className="flex items-end gap-3">
                 <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} mood={partner.mood} px={3} label={partner.title} hurt={wounded} crown={crownIds.has(partner.id)} />
+                {partnerCompanion ? <Companion id={partnerCompanion} px={2} /> : null}
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="font-display text-[11px] leading-relaxed">{partner.pseudo} · Niv. {partner.level}</span>
                   <span className="text-sm text-muted">{partner.title} · {wounded ? "blessé" : `série ${partner.streak}`}</span>

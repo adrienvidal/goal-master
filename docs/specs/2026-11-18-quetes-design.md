@@ -52,7 +52,8 @@ un coffre s'ouvre sur trois compagnons tirés au hasard, et le joueur en adopte 
   **d'office à la prochaine ouverture de l'app**, en plein écran avant l'accueil, et ne se ferme pas tant
   qu'un compagnon n'est pas adopté ; fermer l'app en plein choix redonne la même offre. Les XP comptent dès
   la validation. Restent 2 :
-  offre de 2. Reste 1 : donné d'office (`companion` posé à la validation). Aucun : XP seules.
+  offre de 2. Reste 1 : le coffre le montre seul, sans choix à faire (« Adopter »). Aucun : XP seules, pas de
+  coffre.
 - Le tirage exclut aussi les compagnons proposés dans un coffre pas encore ouvert du même joueur (deux
   coffres ne peuvent pas donner le même animal). *Choix de Claude.*
 - **Collection** = compagnons des quêtes validées du joueur (calculée). **Compagnon affiché** = choix
