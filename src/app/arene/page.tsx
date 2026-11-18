@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { ArenaMoves, type Move } from "@/components/Arena";
 import { ArenaJournal, ArenaLive, ArenaPresence, StageFighterView, type JournalLine, type StageFighter, type StageHit } from "@/components/ArenaStage";
 import { LiveRefresh } from "@/components/LiveRefresh";
-import { arenaPhase, arenaState, canPlay, COST, ENERGY_PER_TURN, finishedArenas, MAX_ENERGY, POTION_HEAL, statsFor, type ArenaState, type LogEntry } from "@/game/arena";
+import { ACTIONS_PER_TURN, arenaPhase, arenaState, canPlay, COST, ENERGY_PER_TURN, finishedArenas, MAX_ENERGY, POTION_HEAL, statsFor, type ArenaState, type LogEntry } from "@/game/arena";
 import { timeLeft } from "@/game/challenge";
 import { ofName } from "@/lib/french";
 import { buildPlayerView, type PlayerView } from "@/lib/playerView";
@@ -161,7 +161,20 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
                 <span className="num ml-1.5">{pa}</span>
                 <span className="basis-full text-[13px] text-muted">+{ENERGY_PER_TURN} PA à chaque tour · ce que tu ne dépenses pas se garde, {MAX_ENERGY} au plus</span>
               </div>
-              {myTurn && s.turn && s.turn.max < 3 ? <p className="border-l-4 border-energy bg-[#13283a] px-2.5 py-1.5 text-sm">Bambou tourbillon t&apos;a étourdi : ce tour, {s.turn.max} action{s.turn.max > 1 ? "s" : ""} au plus.</p> : null}
+              {myTurn && s.turn ? (
+                <div className="flex flex-wrap items-center gap-1" aria-label={`Actions : ${s.turn.used} jouée${s.turn.used > 1 ? "s" : ""} sur ${s.turn.max}`}>
+                  <span className="mr-1.5 text-[13px] uppercase tracking-wider text-muted">Actions</span>
+                  {Array.from({ length: ACTIONS_PER_TURN }, (_, i) => (
+                    <i key={i} className={`action-cell ${i >= s.turn!.max ? "stunned" : i < s.turn!.used ? "used" : ""}`}>{i >= s.turn!.max ? "💫" : null}</i>
+                  ))}
+                  <span className="num ml-1.5">{s.turn.max - s.turn.used}</span>
+                </div>
+              ) : null}
+              {myTurn && s.turn && s.turn.max < ACTIONS_PER_TURN ? (
+                <p className="border-l-4 border-magic bg-[#261c3a] px-2.5 py-1.5 text-sm">
+                  💫 Étourdi par Bambou tourbillon : {s.turn.max} action{s.turn.max > 1 ? "s" : ""} ce tour au lieu de {ACTIONS_PER_TURN}. Tes PA ne changent pas.
+                </p>
+              ) : null}
               {myTurn && pa === 0 && potions > 0 ? <p className="border-l-4 border-energy bg-[#13283a] px-2.5 py-1.5 text-sm">Plus de PA : bois une potion ou finis ton tour.</p> : null}
               <ArenaMoves id={input.arena.id} moves={moves} used={s.turn?.used ?? 0} max={s.turn?.max ?? 3} myTurn={myTurn} />
               {!myTurn && !s.over ? <p className="text-sm text-muted">Au début de ton tour : +{Math.min(ENERGY_PER_TURN, MAX_ENERGY - pa)} PA (tu en gardes {pa}, {MAX_ENERGY} au plus).</p> : null}
