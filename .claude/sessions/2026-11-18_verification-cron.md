@@ -104,3 +104,18 @@
 ### Décisions
 - Tout ce qui vise le binôme vit dans sa carte (Motiver, Défier, Arène, Quête) ; la quête reçue s'annonce en bandeau, comme un défi ou une provocation
 - Le nom du compagnon vit sur la quête qui l'a donné (`companionName`), vide = nom de l'espèce
+
+---
+
+## Suite : retour visuel des boutons
+
+### Réalisé
+- Retour d'Adrien : aucun changement d'état ni chargement au clic, partout dans l'app
+- PR #88 fusionnée dans `dev` : appui (le bouton s'enfonce), points clignotants sur les liens-boutons (`LinkButton`, `useLinkStatus`) et sur les boutons d'action (`BusyLabel`, `SubmitButton`), écran `loading.tsx` ; 218 tests verts, lint propre ; aperçu de `dev` reconstruit
+
+### Reste à faire
+- Adrien reteste sur l'aperçu (Quêtes v2 + boutons), puis mise en production sur accord
+
+### Décisions
+- Pas de maquette pour ce lot (accord d'Adrien) : comportement, pas un nouvel écran
+- Les points remplacent le texte sans changer la largeur du bouton
