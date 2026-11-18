@@ -17,10 +17,12 @@ type Props = {
   hurt?: boolean;
   /** Gagnant d'un défi : couronne sur la tête jusqu'à la fin du lendemain (spec defi). */
   crown?: boolean;
+  /** Héros incliné (étourdi) : les rangées de pixels se chevauchent, sinon la rotation laisse des rayures entre elles. */
+  tilted?: boolean;
 };
 
 // Avatar 8 bits : la taille suit la forme (le bébé est minuscule, le légendaire remplit la carte).
-export function Sprite({ character, color, form, mood = "normal", pose = "rest", px = 4, label, className = "", hurt = false, crown = false }: Props): React.ReactElement {
+export function Sprite({ character, color, form, mood = "normal", pose = "rest", px = 4, label, className = "", hurt = false, crown = false, tilted = false }: Props): React.ReactElement {
   const s = sprite(character, color, form, mood, pose, crown);
   const k = px * s.scale;
   const classes = ["sprite", pose === "rest" ? "idle" : `pose-${pose}`, mood !== "normal" ? `mood-${mood}` : "", form === 6 && mood === "normal" ? "legend-glow" : "", hurt ? "hurt" : "", crown ? "has-crown" : "", className];
@@ -28,7 +30,7 @@ export function Sprite({ character, color, form, mood = "normal", pose = "rest",
     <span className={classes.filter(Boolean).join(" ")}>
       <svg viewBox={`0 0 ${s.width} ${s.height}`} width={s.width * k} height={s.height * k} shapeRendering="crispEdges" role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
         {s.rects.map((r, i) => (
-          <rect key={i} x={r.x} y={r.y} width={r.w} height={1} fill={r.fill} />
+          <rect key={i} x={r.x} y={r.y} width={r.w} height={tilted ? 1.1 : 1} fill={r.fill} />
         ))}
       </svg>
       {hurt ? <span className="bandage" aria-hidden /> : null}
