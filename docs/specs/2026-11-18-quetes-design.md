@@ -165,3 +165,11 @@ Maquette v2 validée (même lien, écrans Accueil, Coffre, Ménagerie).
 - **Coffre** : champ « Son nom » prérempli avec l'espèce choisie, bouton « Adopter <nom> ».
 - **Ménagerie** : nom de chaque compagnon, espèce en dessous ; champ « Renommer ton <espèce> » pour le compagnon
   affiché, bouton « Enregistrer ».
+
+## v3 · ouverture du coffre (18/11)
+
+Maquette « Coffre v3 » validée. Trois appuis pour ouvrir (tremblement croissant, étincelles, compteur de trois
+carrés), couvercle qui saute dans un rayon de lumière ; compagnons qui sortent un par un (0,45 s puis 0,4 s
+d'écart), en silhouette puis en couleur ; collection « x/6 » avec les silhouettes manquantes ; à l'adoption,
+le compagnon bondit à côté du héros et la barre d'XP monte de +20 (passage de niveau animé). Animations
+réduites : tout apparaît directement.
