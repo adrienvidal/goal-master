@@ -1,15 +1,10 @@
-// Envoi d'une notification : Web Push sur les appareils abonnés et e-mail, sauf les tours d'Arène (push seul).
-// Catégorie coupée ou plafond du jour atteint : rien. Le journal garantit qu'un événement ne part qu'une fois.
+// Envoi d'une notification : Web Push tout de suite sur les appareils abonnés, et mise de côté pour le bilan du
+// jour (un seul e-mail à 18 h 01, src/server/digest.ts). Catégorie coupée : rien. Plafond du jour atteint : pas de
+// push, mais l'événement reste dans le bilan. Le journal garantit qu'un événement n'est traité qu'une fois.
 import { parisDay } from "@/game/calendar";
 import { parisTime } from "@/game/duel";
-import { keyOf, pushBody, ruleOf, sendsEmail, shouldSend, textOf, type NotificationEvent } from "@/game/notifications";
-import { formForLevel, levelFromXp } from "@/game/levels";
-import { totalXp } from "@/game/xp";
-import { pngSize, sceneToken, scenePng } from "@/lib/emailArt";
-import { sceneFor, type Hero } from "@/lib/emailScene";
+import { isMuted, keyOf, pushAllowed, pushBody, ruleOf, sendsEmail, textOf, type NotificationEvent } from "@/game/notifications";
 import { db } from "./db";
-import { loadGame } from "./game";
-import { notificationMail, sendMail, type MailScene } from "./mail";
 import { pushTo } from "./push";
 
 function isDuplicate(error: unknown): boolean {
@@ -17,40 +12,24 @@ function isDuplicate(error: unknown): boolean {
 }
 
 export async function notify(playerId: string, event: NotificationEvent, now = new Date()): Promise<void> {
-  const player = await db().player.findUnique({ where: { id: playerId }, select: { email: true, mutedCategories: true } });
-  if (!player) return;
-  const { capped } = ruleOf(event);
-  const cappedSentToday = await db().notificationLog.count({ where: { playerId, capped: true, sentAt: { gte: parisTime(parisDay(now), 0) } } });
-  if (!shouldSend(event, player.mutedCategories, cappedSentToday)) return;
+  const player = await db().player.findUnique({ where: { id: playerId }, select: { mutedCategories: true } });
+  if (!player || isMuted(event, player.mutedCategories)) return;
+  const rule = ruleOf(event);
+  const cappedPushedToday = await db().notificationLog.count({ where: { playerId, capped: true, sentAt: { gte: parisTime(parisDay(now), 0) } } });
+  const push = pushAllowed(event, cappedPushedToday);
+  if (!push && !sendsEmail(event)) return;
   try {
-    await db().notificationLog.create({ data: { playerId, key: keyOf(event), capped, sentAt: now } });
+    await db().notificationLog.create({
+      // `capped` ne compte que les push plafonnés réellement partis : c'est lui que le plafond additionne.
+      data: { playerId, key: keyOf(event), capped: rule.capped && push, sentAt: now, event: sendsEmail(event) ? event : undefined },
+    });
   } catch (error) {
     if (isDuplicate(error)) return;
     throw error;
   }
+  if (!push) return;
   const text = textOf(event);
-  const email = async (): Promise<void> => {
-    if (!sendsEmail(event)) return;
-    const scene = await mailScene(playerId, event).catch(() => null);
-    await sendMail(notificationMail(player.email, text, ruleOf(event).category, scene));
-  };
-  const results = await Promise.allSettled([pushTo(playerId, { title: text.title, body: pushBody(text, event), url: text.url }), email()]);
-  for (const r of results) if (r.status === "rejected") console.error("Échec d'envoi de notification", keyOf(event), r.reason);
-}
-
-/** Image de l'e-mail : les héros à leur forme actuelle (calculée, jamais stockée), selon l'événement. */
-async function mailScene(playerId: string, event: NotificationEvent): Promise<MailScene | null> {
-  const game = await loadGame();
-  const heroOf = (id: string): Hero | null => {
-    const p = game.players.find((x) => x.id === id);
-    return p ? { character: p.character, color: p.color, form: formForLevel(levelFromXp(totalXp(p.id, game.apps, game.nudges, game.quests)).level) } : null;
-  };
-  const me = heroOf(playerId);
-  if (!me) return null;
-  const partnerId = game.players.find((p) => p.id !== playerId)?.id;
-  const actors = sceneFor(event, me, partnerId ? heroOf(partnerId) : null);
-  if (actors.length === 0) return null;
-  return { query: actors.map(sceneToken).join(","), ...pngSize(scenePng(actors)) };
+  await pushTo(playerId, { title: text.title, body: pushBody(text, event), url: text.url }).catch((error) => console.error("Échec d'envoi de notification", keyOf(event), error));
 }
 
 /** Plusieurs notifications d'affilée, sans qu'un échec n'arrête les suivantes. */

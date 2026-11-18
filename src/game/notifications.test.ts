@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Duel } from "./duel";
-import { formReached, keyOf, koCrossed, nudgesJustSucceeded, pushBody, ruleOf, rustDue, sendsEmail, shouldSend, textOf, type NotificationEvent } from "./notifications";
+import { formReached, keyOf, koCrossed, nudgesJustSucceeded, isMuted, pushAllowed, pushBody, ruleOf, rustDue, sendsEmail, textOf, type NotificationEvent } from "./notifications";
 import type { NudgeRow } from "./nudges";
 import type { Application } from "./xp";
 
@@ -10,16 +10,17 @@ const evo: NotificationEvent = { kind: "evo", partnerId: "b", partner: "Nicolas"
 const nudgeEvent: NotificationEvent = { kind: "nudge", nudgeId: "n1", from: "Adrien", message: 0 };
 const duel = (id: string, hits: number, hp = 16): Duel => ({ id, boss: 1, start: new Date(0), at: new Date(0), hp, hits, bonus: 0, fighters: [], won: hits >= hp, resolved: false });
 
-describe("shouldSend", () => {
-  it("se tait quand la catégorie est coupée, sur les deux canaux", () => {
-    expect(shouldSend(evo, ["partner"], 0)).toBe(false);
-    expect(shouldSend(nudgeEvent, ["nudges"], 0)).toBe(false);
+describe("isMuted et pushAllowed", () => {
+  it("se tait quand la catégorie est coupée, en push comme dans le bilan", () => {
+    expect(isMuted(evo, ["partner"])).toBe(true);
+    expect(isMuted(nudgeEvent, ["nudges"])).toBe(true);
+    expect(isMuted(evo, ["nudges"])).toBe(false);
   });
-  it("plafonne à deux par jour, sauf la relance reçue et le duel", () => {
-    expect(shouldSend(evo, [], 1)).toBe(true);
-    expect(shouldSend(evo, [], 2)).toBe(false);
-    expect(shouldSend(nudgeEvent, [], 5)).toBe(true);
-    expect(shouldSend({ kind: "duel", friday: "2026-11-20", won: true, boss: 1, total: 18, hp: 16 }, [], 5)).toBe(true);
+  it("plafonne le push à deux par jour, sauf la relance reçue et le duel", () => {
+    expect(pushAllowed(evo, 1)).toBe(true);
+    expect(pushAllowed(evo, 2)).toBe(false);
+    expect(pushAllowed(nudgeEvent, 5)).toBe(true);
+    expect(pushAllowed({ kind: "duel", friday: "2026-11-20", won: true, boss: 1, total: 18, hp: 16 }, 5)).toBe(true);
   });
 });
 
@@ -121,8 +122,8 @@ describe("notifications des quêtes", () => {
 
   it("catégorie Quêtes, jamais plafonnées", () => {
     for (const e of [launched, done(1), end(true), end(false), cancel]) expect(ruleOf(e)).toEqual({ category: "quests", capped: false });
-    expect(shouldSend(launched, [], 99)).toBe(true);
-    expect(shouldSend(launched, ["quests"], 0)).toBe(false);
+    expect(pushAllowed(launched, 99)).toBe(true);
+    expect(isMuted(launched, ["quests"])).toBe(true);
   });
 
   it("chaque aller-retour « pas encore » repart", () => {
