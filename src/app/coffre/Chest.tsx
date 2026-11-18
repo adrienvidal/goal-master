@@ -40,7 +40,7 @@ export function Chest({ questId, giver, text, offer, character, color, form }: P
           <Sprite character={character} color={color} form={form} pose="victory" px={5} />
           <Companion id={choice} px={4} joy />
         </div>
-        <h1 className="h-title text-gold">{COMPANION_NAMES[choice].name} te suit !</h1>
+        <h1 className="h-title text-gold">{COMPANION_NAMES[choice].the.charAt(0).toUpperCase() + COMPANION_NAMES[choice].the.slice(1)} te suit !</h1>
         <p className="text-sm text-muted">Il se tient à côté de ton héros. Change de compagnon quand tu veux dans ta Ménagerie.</p>
         <Link href="/" className="btn no-underline">Continuer</Link>
       </div>

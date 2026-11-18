@@ -79,13 +79,26 @@ describe("compagnons et coffre", () => {
     expect(pendingChest("nicolas", [validated({ offer: [] })])).toBeNull();
   });
 
-  test("tirage : 3 distincts, hors possédés et hors offres en attente", () => {
+  test("tirage : 3 distincts, hors possédés, ceux des coffres fermés seulement en complément", () => {
     const quests = [validated({ companion: "cat", offer: ["cat", "dog", "fox"] }), validated({ offer: ["owl", "rabbit", "fox"] })];
     const offer = drawOffer("nicolas", quests, () => 0);
-    expect(offer).toEqual(["dog", "dragon"]);
+    expect(offer).toEqual(["dog", "dragon", "fox"]);
     const fresh = drawOffer("nicolas", [], () => 0.5);
     expect(fresh).toHaveLength(3);
     expect(new Set(fresh).size).toBe(3);
+  });
+
+  test("deux coffres fermés : le troisième se complète avec leurs compagnons au lieu de sortir vide", () => {
+    const quests = [validated({ offer: ["cat", "dog", "fox"] }), validated({ offer: ["owl", "rabbit", "dragon"] })];
+    const offer = drawOffer("nicolas", quests, () => 0);
+    expect(offer).toEqual(["cat", "dog", "fox"]);
+  });
+
+  test("un coffre dont tous les compagnons ont été adoptés ailleurs n'est plus en attente", () => {
+    const first = validated({ offer: ["cat", "dog"], validatedAt: new Date("2026-11-17T12:00:00Z") });
+    const adopted = [validated({ companion: "cat", offer: ["cat"] }), validated({ companion: "dog", offer: ["dog"] })];
+    expect(pendingChest("nicolas", [first, ...adopted])).toBeNull();
+    expect(pendingChest("nicolas", [first, adopted[0]])?.id).toBe(first.id);
   });
 
   test("tirage : 2 s'il en reste 2, rien quand la collection est complète", () => {

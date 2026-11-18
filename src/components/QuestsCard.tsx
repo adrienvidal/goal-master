@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ofName } from "@/lib/french";
 import type { QuestRow } from "@/game/quests";
 
 // Carte « Quêtes » de l'accueil (maquette quetes, écran 1) : la quête reçue et la quête donnée.
@@ -7,7 +8,7 @@ export function QuestsCard({ received, given, partnerName }: { received: QuestRo
     <section className="quests" aria-label="Quêtes">
       <h2>Quêtes</h2>
       <div className="qline">
-        <span className="lbl">Pour toi{received ? ` · de ${partnerName}` : ""}</span>
+        <span className="lbl">Pour toi{received ? ` · ${ofName(partnerName)}` : ""}</span>
         {received ? (
           <>
             <span className="txt">

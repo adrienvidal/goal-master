@@ -78,18 +78,29 @@ export function ownedCompanions(playerId: string, quests: QuestRow[]): Companion
     .filter((c): c is CompanionId => c !== null && isCompanion(c));
 }
 
-/** Le coffre à ouvrir avant l'accueil : le plus ancien validé dont aucun compagnon n'est encore adopté. */
-export function pendingChest(playerId: string, quests: QuestRow[]): QuestRow | null {
-  return validatedFor(playerId, quests).find((q) => q.offer.length > 0 && q.companion === null) ?? null;
+/** Ce que le coffre propose encore : son offre, moins les compagnons adoptés depuis dans un autre coffre. */
+export function chestChoices(chest: QuestRow, owned: readonly string[]): CompanionId[] {
+  return chest.offer.filter((c): c is CompanionId => isCompanion(c) && !owned.includes(c));
 }
 
-/** Tirage du coffre : jusqu'à 3 compagnons ni possédés, ni déjà proposés dans un coffre pas encore ouvert. */
+/** Le coffre à ouvrir avant l'accueil : le plus ancien validé, pas encore ouvert, qui a encore un compagnon à offrir. */
+export function pendingChest(playerId: string, quests: QuestRow[]): QuestRow | null {
+  const owned = ownedCompanions(playerId, quests);
+  return validatedFor(playerId, quests).find((q) => q.companion === null && chestChoices(q, owned).length > 0) ?? null;
+}
+
+/**
+ * Tirage du coffre : jusqu'à 3 compagnons pas encore possédés, en évitant d'abord ceux déjà proposés dans un coffre
+ * pas encore ouvert ; s'il n'en reste pas assez, on complète avec ceux-là (le coffre ne reste jamais vide à tort).
+ */
 export function drawOffer(playerId: string, quests: QuestRow[], random: () => number = Math.random): CompanionId[] {
-  const taken = new Set<string>(ownedCompanions(playerId, quests));
-  for (const q of validatedFor(playerId, quests)) if (q.companion === null) q.offer.forEach((c) => taken.add(c));
-  const pool = COMPANION_IDS.filter((c) => !taken.has(c));
+  const owned = new Set<string>(ownedCompanions(playerId, quests));
+  const pending = new Set<string>();
+  for (const q of validatedFor(playerId, quests)) if (q.companion === null) q.offer.forEach((c) => pending.add(c));
   const offer: CompanionId[] = [];
-  while (offer.length < CHEST_OFFER_SIZE && pool.length > 0) offer.push(pool.splice(Math.floor(random() * pool.length), 1)[0]);
+  for (const pool of [COMPANION_IDS.filter((c) => !owned.has(c) && !pending.has(c)), COMPANION_IDS.filter((c) => !owned.has(c) && pending.has(c))]) {
+    while (offer.length < CHEST_OFFER_SIZE && pool.length > 0) offer.push(pool.splice(Math.floor(random() * pool.length), 1)[0]);
+  }
   return offer;
 }
 

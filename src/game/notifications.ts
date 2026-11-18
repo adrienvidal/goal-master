@@ -44,7 +44,7 @@ export type NotificationEvent =
   | { kind: "arena-end"; arenaId: string; won: boolean | null; ko: boolean; partner: string }
   | { kind: "quest"; questId: string; from: string; text: string }
   | { kind: "quest-done"; questId: string; round: number; from: string; text: string }
-  | { kind: "quest-end"; questId: string; round: number; validated: boolean; partner: string; text: string }
+  | { kind: "quest-end"; questId: string; round: number; validated: boolean; chest?: boolean; partner: string; text: string }
   | { kind: "quest-cancel"; questId: string; partner: string; text: string };
 
 const RULES: Record<NotificationEvent["kind"], { category: Category; capped: boolean }> = {
@@ -162,6 +162,7 @@ export function textOf(event: NotificationEvent): NotificationText {
     case "quest-done":
       return { title: `📜 ${event.from} a fait sa quête`, headline: `${event.from} a fait sa quête`, detail: `« ${event.text} ». À toi de valider.`, url: `/quete/${event.questId}` };
     case "quest-end":
+      if (event.validated && event.chest === false) return { title: "📜 Quête validée", headline: "Quête validée", detail: `${event.partner} a validé « ${event.text} ». +20 XP. Ta Ménagerie est complète.`, url: "/" };
       return event.validated
         ? { title: "🎁 Quête validée", headline: "Quête validée, un coffre t'attend", detail: `${event.partner} a validé « ${event.text} ». +20 XP.`, url: "/coffre" }
         : { title: "📜 Pas encore", headline: "Pas encore", detail: `${event.partner} n'a pas validé « ${event.text} ». Jette un œil à ton lien.`, url: `/quete/${event.questId}` };
@@ -199,6 +200,13 @@ function formOf(playerId: string, apps: Application[], nudges: NudgeRow[], quest
 export function formReached(playerId: string, before: Application[], after: Application[], nudges: NudgeRow[], quests: QuestRow[] = []): Form | null {
   const from = formOf(playerId, before, nudges, quests);
   const to = formOf(playerId, after, nudges, quests);
+  return to > from ? to : null;
+}
+
+/** Nouvelle forme atteinte grâce à une quête qu'on vient de valider, ou null. */
+export function questFormReached(playerId: string, apps: Application[], nudges: NudgeRow[], before: QuestRow[], after: QuestRow[]): Form | null {
+  const from = formOf(playerId, apps, nudges, before);
+  const to = formOf(playerId, apps, nudges, after);
   return to > from ? to : null;
 }
 

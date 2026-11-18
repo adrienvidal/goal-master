@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ofName } from "@/lib/french";
 import { notFound } from "next/navigation";
 import { XP_QUEST_GIVEN } from "@/game/quests";
 import { db } from "@/server/db";
@@ -27,7 +28,7 @@ export default async function QuestPage({ params }: { params: Promise<{ id: stri
   const mine = quest.receiverId === player.id;
   const partner = mine ? quest.giver.pseudo : quest.receiver.pseudo;
   const step = quest.status === "VALIDATED" ? 2 : quest.status === "DONE" ? 1 : 0;
-  const from = mine ? `Quête de ${partner} · ${DATE.format(quest.createdAt)}` : `Ta quête pour ${partner} · ${quest.status === "DONE" && quest.doneAt ? `faite le ${DATE.format(quest.doneAt)} à ${TIME.format(quest.doneAt)}` : `lancée ${DATE.format(quest.createdAt)}`}`;
+  const from = mine ? `Quête ${ofName(partner)} · ${DATE.format(quest.createdAt)}` : `Ta quête pour ${partner} · ${quest.status === "DONE" && quest.doneAt ? `faite le ${DATE.format(quest.doneAt)} à ${TIME.format(quest.doneAt)}` : `lancée ${DATE.format(quest.createdAt)}`}`;
 
   return (
     <main className="mx-auto max-w-xl px-4 py-6 md:py-10">

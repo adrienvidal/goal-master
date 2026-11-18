@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isCompanion, pendingChest } from "@/game/quests";
+import { chestChoices, ownedCompanions, pendingChest } from "@/game/quests";
 import { buildPlayerView } from "@/lib/playerView";
 import { db } from "@/server/db";
 import { loadGame } from "@/server/game";
@@ -16,7 +16,7 @@ export default async function ChestPage(): Promise<React.ReactElement> {
   const giver = await db().player.findUnique({ where: { id: chest.giverId }, select: { pseudo: true } });
   return (
     <main className="chest-screen grid min-h-dvh place-items-center px-4 py-8">
-      <Chest questId={chest.id} giver={giver?.pseudo ?? "Ton binôme"} text={chest.text} offer={chest.offer.filter(isCompanion)} character={player.character} color={player.color} form={me.displayedForm} />
+      <Chest key={chest.id} questId={chest.id} giver={giver?.pseudo ?? "Ton binôme"} text={chest.text} offer={chestChoices(chest, ownedCompanions(player.id, game.quests))} character={player.character} color={player.color} form={me.displayedForm} />
     </main>
   );
 }

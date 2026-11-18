@@ -137,6 +137,7 @@ describe("notifications des quêtes", () => {
     expect(textOf(end(true))).toMatchObject({ headline: "Quête validée, un coffre t'attend", url: "/coffre" });
     expect(textOf(end(false))).toMatchObject({ headline: "Pas encore", url: "/quete/q1" });
     expect(textOf(cancel)).toMatchObject({ headline: "Quête annulée", url: "/" });
+    expect(textOf({ kind: "quest-end", questId: "q1", round: 7, validated: true, chest: false, partner: "Adrien", text })).toMatchObject({ headline: "Quête validée", url: "/" });
     expect(textOf(launched).detail).toContain(`« ${text} »`);
   });
 });
