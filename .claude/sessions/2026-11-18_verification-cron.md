@@ -144,3 +144,21 @@
 
 ### Décisions
 - Ne plus fusionner dans `dev` pendant qu'Adrien teste l'aperçu (mémoire `pas-de-deploiement-pendant-test`)
+
+---
+
+## Suite : coffre v3 et mise en production
+
+### Réalisé
+- Ménageries vidées sur l'aperçu (branche Neon `preview/dev`) et en local : compagnons, noms et coffres en attente effacés ; quêtes et XP gardées
+- Bandeau « pas encore » sur l'accueil du destinataire (PR #94)
+- Coffre v3 : maquette animée validée (entrée « Coffre v3 »), puis codé (PR #95) : trois coups, apparition une à une, collection x/6, XP qui monte à l'adoption ; testé en local à 390 px
+- Décision d'Adrien : mettre `dev` en production avant d'attaquer la prochaine fonctionnalité
+
+### Reste à faire
+- Après la mise en production : vérifier `x-vercel-id` en `fra1`, remesurer `/connexion` (158 ms avant), vérifier les tables `Quest` en production
+- Prochaine fonctionnalité : à cadrer avec Adrien (branche partie de `dev`, maquette d'abord)
+- Branche distante `fix/test-mail-only-to-dev` (contenu déjà fusionné par #80) : à supprimer sur accord d'Adrien
+
+### Décisions
+- Pendant un test de l'aperçu, rien n'est fusionné dans `dev` ; les documents de session attendent la fin du test
