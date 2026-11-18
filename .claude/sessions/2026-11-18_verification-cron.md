@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Arène v3 : PA seule limite, Panda réparé, sur l'aperçu
+✅ Fait      Arène v3 en prod, combat en cours gardé en v2
 ⛔ Bloqué    Aucun
-🎯 Priorité  Fin du combat v2, puis v3 en prod sur accord (échéance 20/11 18 h)
+🎯 Priorité  Prévenir Nicolas, vérifier la fin du combat (échéance 20/11 18 h)
 ```
 
 ## Réalisé
@@ -273,3 +273,18 @@
 ### Décisions
 - Un seul compteur, les PA ; la v3 n'étant pas en production, modifiée sur place plutôt qu'une v4
 - Écartés pour l'instant (idées d'Adrien) : recharge de 1-2 tours sur la Botte (deuxième compteur, aucun abus mesuré) et attaque ultime à charger (troisième compteur, nouvelle action et animations : lot à cadrer avec maquette si l'idée revient après de vrais combats)
+
+---
+
+## Suite : bouton d'acceptation et mise en production de la v3
+
+### Réalisé
+- Retour d'Adrien : le bouton qui accepte une provocation disait « Entrer dans l'Arène » ; devenu « Accepter le combat », lien de l'e-mail « Répondre à la provocation » (PR #117)
+- Branches nettoyées (seules `dev` et `main` restent)
+- **Mise en production** sur accord d'Adrien (PR #118, commit de fusion) : déploiement Vercel réussi, migration `arena_rules` appliquée ; le combat en cours en production est bien resté en règles v2 (fin le 20/11 18 h) ; les prochaines provocations partiront en v3
+- Le « Reste à faire » « v3 en production après la fin du combat » est donc fait plus tôt, sans risque pour le combat en cours grâce aux règles figées par combat
+
+### Reste à faire
+- Prévenir Nicolas : nouvelles règles de l'Arène (valables à partir du prochain combat)
+- Vendredi 20/11 à 18 h 01 : fin du combat v2 (résultat, couronne, notification), rappel du boss et duel
+- Premier vrai combat v3 : regarder si le Bambou tourbillon ou la Botte sont abusés (piste : recharge) avant toute attaque ultime
