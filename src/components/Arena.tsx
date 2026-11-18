@@ -33,7 +33,9 @@ export function ArenaPanel({ partnerName, compare, onClose }: { partnerName: str
     ["PA au premier tour", compare.myEnergy, compare.theirEnergy],
     ["Potions", 2, 2],
   ];
-  const outsider = compare.theirEnergy > compare.myEnergy ? `${partnerName} est moins évolué : il part avec 1 PA de plus.` : compare.myEnergy > compare.theirEnergy ? "Tu es l'outsider : tu pars avec 1 PA de plus." : null;
+  let outsider: string | null = null;
+  if (compare.myForm < compare.theirForm) outsider = "Tu es l'outsider : tu pars avec des PA en plus.";
+  else if (compare.myForm > compare.theirForm) outsider = `${partnerName} est moins évolué : il part avec des PA en plus.`;
   return (
     <div className="flex flex-col gap-3 border-[3px] border-magic bg-[#261c3a] p-3">
       <p className="h-title !text-[10px]">Provoquer {partnerName}</p>
@@ -50,7 +52,7 @@ export function ArenaPanel({ partnerName, compare, onClose }: { partnerName: str
         ))}
       </div>
       <p className="text-sm text-muted">
-        {outsider ? `${outsider} ` : ""}
+        Tu ouvres le combat avec 2 actions au premier tour, {partnerName} répond avec 1 PA de plus. {outsider ? `${outsider} ` : ""}
         +3 PA à chaque tour. Fin au K.O., ou vendredi 18 h : le plus de PV restants gagne. Aucune XP en jeu.
       </p>
       <button type="button" className="btn arena" disabled={pending} onClick={() => run(provokeArena)}><BusyLabel pending={pending}>Envoyer la provocation</BusyLabel></button>
