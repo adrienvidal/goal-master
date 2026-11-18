@@ -155,8 +155,9 @@
 - Coffre v3 : maquette animée validée (entrée « Coffre v3 »), puis codé (PR #95) : trois coups, apparition une à une, collection x/6, XP qui monte à l'adoption ; testé en local à 390 px
 - Décision d'Adrien : mettre `dev` en production avant d'attaquer la prochaine fonctionnalité
 
+- **Mise en production** (PR #97, commit de fusion) : déploiement OK ; production servie depuis `fra1` (`x-vercel-id`) ; `/connexion` 98 ms de médiane contre 158 ms avant ; migrations `quests`, `notification_digest`, `companion_names` appliquées ; aucune quête encore en production
+
 ### Reste à faire
-- Après la mise en production : vérifier `x-vercel-id` en `fra1`, remesurer `/connexion` (158 ms avant), vérifier les tables `Quest` en production
 - Prochaine fonctionnalité : à cadrer avec Adrien (branche partie de `dev`, maquette d'abord)
 - Branche distante `fix/test-mail-only-to-dev` (contenu déjà fusionné par #80) : à supprimer sur accord d'Adrien
 
