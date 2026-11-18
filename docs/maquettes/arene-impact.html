@@ -1,0 +1,614 @@
+<title>Arène Impact · Goal Master</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
+<style>
+/* Maquette animée du lot « Impact » : écrans empilés, chacun annoncé par sa route. Tokens = ceux de l'app (globals.css),
+   un seul thème sombre assumé (celui de l'app). Ajouts du lot : --flash (blanc d'impact), --trail (traînée des PV),
+   --clang (étincelles de Parade), --leaf (feuilles du Bambou), et l'échelle d'impact (gel, tremblement) en durées. */
+:root {
+  color-scheme: dark;
+  --night: #16132a; --stone: #221e40; --stone-2: #2e2958; --edge: #4a4380;
+  --ink: #f1ecff; --muted: #a39dcc; --gold: #f2c14e; --gold-dk: #b9831c;
+  --ember: #ff7a45; --danger: #ff6b6b; --ok: #6fd49a; --page: #0e0c1d; --shadow: #0c0a1a;
+  --p1: #5aa9ff; --p2: #e5533d; --hp: #6fd49a; --hp-low: #ff6b6b; --pa: #7fe3ff; --pa-dk: #2a8fb0;
+  --arena-floor: #2a2340; --arena-sky: #1c1838; --magic: #c58cff;
+  --flash: #ffffff; --trail: #fff3c4; --clang: #9fd8ff; --leaf: #7bc95a;
+  --f-display: "Press Start 2P", ui-monospace, monospace;
+  --f-ui: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-num: "VT323", ui-monospace, monospace;
+  /* Échelle d'impact : moyen / fort / K.O. */
+  --stop-m: 60ms; --stop-l: 120ms; --stop-ko: 250ms;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--f-ui); font-size: 16px; margin: 0; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 1040px; margin: 0 auto; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--page); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--page); padding: 14px 0 10px; border-bottom: 3px solid var(--edge); }
+.top h1 { font-family: var(--f-display); font-size: 12px; margin: 0 0 10px; line-height: 1.6; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.toc a { font-size: 13px; text-decoration: none; padding: 4px 8px; border: 2px solid var(--edge); color: var(--muted); }
+.toc a:hover { color: var(--ink); border-color: var(--gold); }
+.toc label { margin-left: auto; font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.intro { color: var(--muted); max-width: 70ch; line-height: 1.5; margin: 22px 0 6px; }
+.screen { margin-top: 56px; scroll-margin-top: 130px; }
+.screen > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
+.route { font-family: var(--f-num); font-size: 22px; color: var(--gold); }
+.screen > header h2 { font-family: var(--f-display); font-size: 11px; margin: 0; line-height: 1.6; }
+.screen > header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 78ch; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.device { background: rgb(34 30 64 / .9); border: 4px solid var(--edge); box-shadow: 4px 4px 0 var(--shadow); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.device h4 { font-family: var(--f-display); font-size: 9px; line-height: 1.6; margin: 0; color: var(--gold); }
+.muted { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0; }
+.num { font-family: var(--f-num); font-size: 1.2em; font-variant-numeric: tabular-nums; }
+.btn { display: flex; justify-content: center; align-items: center; gap: 6px; text-align: center; width: 100%; font-family: var(--f-display); font-size: 9px; line-height: 1.4; color: #1a1626; background: var(--gold); padding: 11px 8px; box-shadow: inset -4px -4px 0 var(--gold-dk), 4px 4px 0 var(--shadow); text-decoration: none; border: 0; cursor: pointer; }
+.btn:active { transform: translate(2px, 2px); box-shadow: inset -4px -4px 0 var(--gold-dk); }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 3px var(--edge); }
+.btn.arena { background: var(--magic); box-shadow: inset -4px -4px 0 #7a4fb0, 4px 4px 0 var(--shadow); }
+.btn.ember { background: var(--ember); box-shadow: inset -4px -4px 0 #b8512b, 4px 4px 0 var(--shadow); }
+.btn[aria-disabled="true"] { opacity: .45; cursor: wait; }
+.acts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.acts small { display: block; font-family: var(--f-ui); font-size: 12px; margin-top: 4px; opacity: .8; }
+.btn.stack { flex-direction: column; gap: 0; }
+
+/* Barème */
+.tiers { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 560px; }
+.tiers th, .tiers td { text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--stone-2); vertical-align: top; line-height: 1.4; }
+.tiers th { font-family: var(--f-display); font-size: 8px; color: var(--gold); font-weight: 400; }
+.scroll { overflow-x: auto; }
+.nogo { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.nogo div { border: 2px dashed var(--edge); padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.nogo b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+
+/* Scène */
+.stage { position: relative; overflow: hidden; background: linear-gradient(var(--arena-sky) 0 62%, var(--arena-floor) 62% 100%); border: 3px solid var(--edge); }
+.shaker { position: relative; padding: 12px 12px 14px; }
+.hud { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.card { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.card.r { align-items: flex-end; text-align: right; }
+.card .who { font-size: 14px; display: flex; gap: 6px; align-items: baseline; }
+.card .who span { color: var(--muted); font-size: 13px; }
+.bar { position: relative; width: 100%; max-width: 180px; height: 12px; background: var(--night); box-shadow: inset 0 0 0 2px var(--shadow); }
+.bar i { position: absolute; left: 2px; top: 2px; bottom: 2px; display: block; }
+.bar .trail { background: var(--trail); }
+.bar .fill { background: var(--hp); }
+.bar.low .fill { background: var(--hp-low); }
+.bar.heal .trail { background: var(--ok); opacity: .55; }
+.pips { display: flex; gap: 3px; }
+.pips b { width: 10px; height: 10px; background: var(--night); box-shadow: inset 0 0 0 2px var(--pa-dk); }
+.pips b.on { background: var(--pa); box-shadow: inset -2px -2px 0 var(--pa-dk); }
+.floor { position: relative; height: 128px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 12%; margin-top: 6px; }
+.f { position: relative; display: flex; align-items: flex-end; }
+.mover, .spr { display: block; position: relative; }
+.spr svg { display: block; image-rendering: pixelated; }
+.f.right .spr svg { transform: scaleX(-1); }
+.shield { position: absolute; bottom: 14px; right: -14px; opacity: 0; }
+.f.guard .shield { opacity: 1; }
+.fx { position: absolute; inset: 0; pointer-events: none; }
+.spark { position: absolute; width: 4px; height: 4px; }
+.float { position: absolute; left: 50%; bottom: 100%; font-family: var(--f-display); font-size: 12px; white-space: nowrap; text-shadow: 2px 2px 0 var(--shadow); pointer-events: none; translate: -50% 0; }
+.float.dmg { color: var(--danger); }
+.float.big { color: var(--gold); font-size: 17px; }
+.float.heal { color: var(--ok); }
+.float.clang { color: var(--clang); }
+.float.pa { color: var(--pa); font-size: 10px; }
+.whiteout { position: absolute; inset: 0; background: var(--flash); opacity: 0; pointer-events: none; }
+.stamp { position: absolute; left: 50%; top: 42%; font-family: var(--f-display); font-size: 30px; color: var(--gold); text-shadow: 3px 3px 0 var(--gold-dk), 6px 6px 0 var(--shadow); opacity: 0; pointer-events: none; translate: -50% -50%; white-space: nowrap; }
+.banner { position: absolute; left: 8px; right: 8px; top: 8px; z-index: 2; background: var(--night); border: 2px solid var(--magic); padding: 8px 12px; font-size: 13px; display: flex; gap: 8px; justify-content: space-between; align-items: center; }
+.banner button { font: inherit; font-size: 12px; background: none; border: 0; color: var(--magic); cursor: pointer; text-decoration: underline; }
+.log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; min-height: 66px; }
+.log li { display: grid; grid-template-columns: 46px 1fr; gap: 8px; }
+.log time { color: var(--muted); font-family: var(--f-num); font-size: 17px; }
+.log .me { color: var(--p1); } .log .foe { color: var(--p2); }
+.next { display: none; }
+.next.on { display: flex; }
+
+/* Résultat (inchangé, destination du K.O.) */
+.result { text-align: center; align-items: center; }
+.result .crown { font-family: var(--f-display); font-size: 12px; color: var(--gold); line-height: 1.7; }
+
+@media (max-width: 420px) {
+  .device { padding: 14px 10px; }
+  .floor { padding: 0 6%; height: 116px; }
+  .stamp { font-size: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn:active { transform: none; }
+}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Arène · lot Impact</h1>
+    <nav class="toc" aria-label="Écrans">
+      <a href="#bareme">0 · Barème</a>
+      <a href="#coups">1 · Les coups</a>
+      <a href="#rejeu">2 · Rejeu</a>
+      <a href="#ko">3 · K.O.</a>
+      <a href="#resultat">4 · Résultat</a>
+      <a href="#reduit">5 · Animations réduites</a>
+      <label><input type="checkbox" id="slow"> Ralenti ×3</label>
+    </nav>
+  </div>
+
+  <p class="intro">Chaque bouton joue le coup sur la scène, comme dans l'app. Rien ne change dans les règles ni dans les chiffres : seule la façon dont le coup se voit. Coche « Ralenti ×3 » pour regarder un effet en détail. Valeurs v3 : Chevalier et Panda en évolution 3, 54 PV.</p>
+
+  <section class="screen" id="bareme">
+    <header>
+      <span class="route">lot Impact</span>
+      <h2>0 · Plus le coup est fort, plus il se sent</h2>
+      <p>Chaque coup reçoit un niveau d'impact. Le gel est le court instant où tout s'arrête au contact : c'est lui qui fait sentir le coup. Tout tient dans la seconde que dure déjà un coup au rejeu.</p>
+    </header>
+    <div class="device">
+      <div class="scroll">
+        <table class="tiers">
+          <thead><tr><th>Coup</th><th>Gel</th><th>Tremblement</th><th>Ce qu'on voit</th></tr></thead>
+          <tbody>
+            <tr><td>Attaque</td><td class="num">60 ms</td><td>léger</td><td>élan, ruée, cible blanche, 8 étincelles, chiffre qui rebondit</td></tr>
+            <tr><td>Coup d'estoc</td><td class="num">120 ms</td><td>fort</td><td>élan plus long, trait de lame, 18 étincelles, chiffre doré plus gros</td></tr>
+            <tr><td>Parade encaissée</td><td class="num">50 ms</td><td>très léger</td><td>étincelles bleues, bouclier qui vibre, « Paré ! », +1 PA qui monte</td></tr>
+            <tr><td>Bambou tourbillon</td><td class="num">40 ms</td><td>léger</td><td>toupie, feuilles, −3 sur la cible, soin vert sur le Panda</td></tr>
+            <tr><td>Potion</td><td>aucun</td><td>aucun</td><td>bulles, halo vert, la barre remonte</td></tr>
+            <tr><td>K.O.</td><td class="num">250 ms</td><td>le plus fort</td><td>flash plein écran, ralenti, chute, « K.O. ! » qui claque</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="nogo">
+        <div><b>Pas dans ce lot</b>Son, vibration du téléphone, nouvelle action, attaque ultime, chiffres ou règles modifiés, bibliothèque d'animation.</div>
+        <div><b>Barres de PV</b>La barre tombe d'un coup, une traînée claire la rattrape une demi-seconde après : on lit ce qu'on vient de perdre.</div>
+        <div><b>Animations réduites</b>Téléphone réglé sur « réduire les animations » : ni tremblement ni flash, une teinte rouge à la place (écran 5).</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="coups">
+    <header>
+      <span class="route">/arene</span>
+      <h2>1 · Les coups un par un</h2>
+      <p>Toi (Chevalier) à gauche, Nicolas (Panda) à droite. Les trois premiers boutons sont tes coups ; Parade et Bambou montrent les coups de Nicolas tels que tu les vois au rejeu.</p>
+    </header>
+    <div class="grid">
+      <div class="device wide" data-stage="coups">
+        <h4>Combat en cours · ton tour</h4>
+        <div class="acts">
+          <button class="btn" data-act="attack">Attaque<small>−5 PV · 1 PA</small></button>
+          <button class="btn ember" data-act="thrust">Coup d'estoc<small>−13 PV · 3 PA</small></button>
+          <button class="btn ghost" data-act="potion">Potion<small>+6 PV</small></button>
+          <button class="btn ghost" data-act="parry">Parade encaissée<small>Nicolas frappe, tu pares</small></button>
+          <button class="btn arena" data-act="whirl">Bambou tourbillon<small>Nicolas, −3 / +2 PV</small></button>
+          <button class="btn ghost" data-act="reset">Remettre les PV</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="rejeu">
+    <header>
+      <span class="route">/arene</span>
+      <h2>2 · Rejeu à l'arrivée</h2>
+      <p>Tu ouvres l'Arène après le tour de Nicolas : ses 4 coups défilent, un toutes les 1,5 s comme aujourd'hui. Les effets tiennent dans ce rythme, le rejeu ne ralentit pas.</p>
+    </header>
+    <div class="grid">
+      <div class="device wide" data-stage="rejeu">
+        <h4>Pendant ton absence</h4>
+        <div class="acts">
+          <button class="btn arena" data-act="replay">Rejouer le tour de Nicolas</button>
+          <button class="btn ghost" data-act="reset">Remettre les PV</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="ko">
+    <header>
+      <span class="route">/arene</span>
+      <h2>3 · Le coup qui met K.O.</h2>
+      <p>Nicolas n'a plus que 9 PV. Le coup final se fige plus longtemps, l'écran flashe une fois, le Panda tombe au ralenti, puis « K.O. ! » claque. Le résultat s'ouvre ensuite tout seul, comme aujourd'hui.</p>
+    </header>
+    <div class="grid">
+      <div class="device wide" data-stage="ko">
+        <h4>Dernier coup</h4>
+        <div class="acts">
+          <button class="btn ember" data-act="ko">Coup d'estoc final<small>−13 PV · 3 PA</small></button>
+          <button class="btn ghost" data-act="reset">Recommencer</button>
+        </div>
+        <a class="btn next" href="#resultat" data-next>Voir le résultat</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="resultat">
+    <header>
+      <span class="route">/arene/resultat</span>
+      <h2>4 · Résultat</h2>
+      <p>Écran inchangé par ce lot : c'est là que mène le K.O.</p>
+    </header>
+    <div class="grid">
+      <div class="device result">
+        <span class="crown">Victoire par K.O.</span>
+        <div data-sprite="squire" data-px="4"></div>
+        <p class="muted">Tu remportes l'Arène contre Nicolas en 7 tours. La couronne est à toi jusqu'au prochain combat.</p>
+        <a class="btn ghost" href="#coups">Retour à l'Arène</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="reduit">
+    <header>
+      <span class="route">/arene</span>
+      <h2>5 · Animations réduites</h2>
+      <p>Même scène pour un téléphone réglé sur « réduire les animations » : le gel et les chiffres restent, le tremblement et les flashs blancs sont remplacés par une teinte rouge sur la cible.</p>
+    </header>
+    <div class="grid">
+      <div class="device wide" data-stage="reduit" data-reduced="1">
+        <h4>Combat en cours · animations réduites</h4>
+        <div class="acts">
+          <button class="btn" data-act="attack">Attaque<small>−5 PV</small></button>
+          <button class="btn ember" data-act="thrust">Coup d'estoc<small>−13 PV</small></button>
+          <button class="btn arena" data-act="whirl">Bambou tourbillon<small>Nicolas</small></button>
+          <button class="btn ember" data-act="ko">K.O.<small>coup final</small></button>
+          <button class="btn ghost" data-act="reset">Remettre les PV</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// Sprites réels de l'app (src/lib/spriteGrids.ts), forme 3 : Écuyer et Novice. P = couleur du joueur.
+const PAL = {K:'#1a1626',E:'#1a1626',S:'#f4c7a1',R:'#e8838a',W:'#dfe6ee',G:'#8b93a7',T:'#c99a5b',B:'#7a4a26',Y:'#f2c14e',O:'#b9831c',L:'#fffbe0',C:'#7a5aa0',H:'#9c7f73',F:'#f3f1f6',N:'#26232f',I:'#ffffff',V:'#6fae4a',A:'#3b2b4a',D:'#2b2f4a',Z:'#a1402a',g:'#ffd84a',y:'#c99a1a',r:'#e8838a',b:'#9fd8ff',u:'#2f6fc0'};
+const PLAYER = { p1: "#3d7bd9", p2: "#d94848" };
+const SQUIRE = ["....KKKKKKK.....","...KBBBBBBBK....","..KBBBBBBBBBK...","..KBSSSSSSSBK.W.","..KSSESSSESSK.W.","..KSSSSSSSSSK.W.","...KSSSKKSSK..W.","....KKSSSSKK..W.","...KKPPPPPPKKYWY",".KKKPPPPPPPPKSB.","KPPPKPPYYPPPKSB.","KPYPKPPPPPPKKK..","KPPPKBBBBBBK....",".KKKKPPPPPPK....","....KPPKKPPK....","....KGGK.KGGK...","....KBBK.KBBK...","...KKKKK.KKKKK.."];
+const P_NOV = ["....KKK......KKK....","...KNNNKKKKKKNNNK...","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNNFFFFFFFFFNNK.NV",".KNNKFFFFFFFFFKNNNNV","KNNKFFFFFFFFFFFKNNNV","KNNKFFFFFFFFFFFK...V","KNNKFFFFFFFFFFFK...V",".KKKBBBBBBBBBBBK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK.....","...KKKKKK.KKKKKK...."];
+const SHIELD = [".KKKKK.","KbbubbK","KbuuubK","KbbubbK",".KbubK.","..KbK..","...K..."];
+function svg(grid, player, px) {
+  const w = grid[0].length, h = grid.length;
+  let r = "";
+  grid.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${ch === "P" ? player : PAL[ch]}"/>`;
+  }));
+  return `<svg width="${w * px}" height="${h * px}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+document.querySelectorAll("[data-sprite]").forEach((el) => { el.innerHTML = svg(SQUIRE, PLAYER.p1, Number(el.dataset.px || 3)); });
+
+const slowBox = document.getElementById("slow");
+const OS_REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const START = { left: 41, right: 47 };
+const MAX = 54;
+const START_KO = { left: 33, right: 9 };
+
+class Stage {
+  constructor(host) {
+    this.host = host;
+    this.reduced = host.dataset.reduced === "1" || OS_REDUCED;
+    this.isKo = host.dataset.stage === "ko";
+    this.hp = { ...(this.isKo ? START_KO : START) };
+    this.pa = 4;
+    this.trauma = 0; this.t = 0; this.last = 0; this.busy = false;
+    const el = document.createElement("div");
+    el.className = "stage";
+    el.innerHTML = `
+      <div class="shaker">
+        <div class="hud">
+          ${this.card("left", "Toi", "Chevalier")}
+          ${this.card("right", "Nicolas", "Panda")}
+        </div>
+        <div class="floor">
+          <div class="f left"><div class="mover"><div class="spr">${svg(SQUIRE, PLAYER.p1, 4)}</div></div><div class="shield">${svg(SHIELD, PLAYER.p1, 3)}</div></div>
+          <div class="f right"><div class="mover"><div class="spr">${svg(P_NOV, PLAYER.p2, 4)}</div></div></div>
+          <div class="fx"></div>
+        </div>
+      </div>
+      <div class="whiteout"></div>
+      <div class="stamp">K.O. !</div>`;
+    host.querySelector("h4").after(el);
+    const log = document.createElement("ol");
+    log.className = "log";
+    el.after(log);
+    this.el = el; this.log = log;
+    this.shaker = el.querySelector(".shaker");
+    this.fx = el.querySelector(".fx");
+    this.floor = el.querySelector(".floor");
+    this.side = {};
+    for (const s of ["left", "right"]) {
+      const f = el.querySelector(`.f.${s}`);
+      this.side[s] = { f, mover: f.querySelector(".mover"), spr: f.querySelector(".spr"), bar: el.querySelector(`[data-bar="${s}"]`), num: el.querySelector(`[data-num="${s}"]`) };
+    }
+    this.pips = el.querySelector(".pips");
+    this.render(true);
+    host.querySelectorAll("[data-act]").forEach((b) => b.addEventListener("click", () => this.run(b.dataset.act)));
+    this.next = host.querySelector("[data-next]");
+    requestAnimationFrame((t) => this.tick(t));
+  }
+  card(s, name, sub) {
+    return `<div class="card ${s === "right" ? "r" : ""}">
+      <div class="who"><b>${name}</b><span>${sub} · Évol. 3</span></div>
+      <div class="bar" data-bar="${s}"><i class="trail"></i><i class="fill"></i></div>
+      <span class="num" data-num="${s}"></span>
+      ${s === "left" ? `<div class="pips" aria-label="Points d'action"></div>` : ""}
+    </div>`;
+  }
+  get k() { return slowBox.checked ? 3 : 1; }
+  wait(ms) { return new Promise((r) => setTimeout(r, ms * this.k)); }
+  w(pct) { return `calc(${(Math.max(0, pct) / MAX) * 100}% - ${pct > 0 ? 4 * (pct / MAX) : 0}px)`; }
+  render(instant) {
+    for (const s of ["left", "right"]) {
+      const { bar, num } = this.side[s];
+      bar.classList.toggle("low", this.hp[s] <= MAX / 3);
+      if (instant) { bar.querySelector(".fill").style.width = this.w(this.hp[s]); bar.querySelector(".trail").style.width = this.w(this.hp[s]); }
+      num.textContent = `${this.hp[s]}/${MAX}`;
+    }
+    if (this.pips) this.pips.innerHTML = Array.from({ length: 6 }, (_, i) => `<b class="${i < this.pa ? "on" : ""}"></b>`).join("");
+  }
+  // Barre : dégâts = la barre tombe tout de suite, la traînée suit 0,3 s après ; soin = traînée verte devant, la barre la rejoint.
+  setHp(s, v) {
+    const before = this.hp[s];
+    this.hp[s] = Math.max(0, Math.min(MAX, v));
+    const bar = this.side[s].bar, fill = bar.querySelector(".fill"), trail = bar.querySelector(".trail");
+    const from = this.w(before), to = this.w(this.hp[s]);
+    if (this.hp[s] < before) {
+      bar.classList.remove("heal");
+      fill.style.width = to;
+      trail.animate([{ width: from }, { width: from, offset: .4 }, { width: to }], { duration: 750 * this.k, easing: "ease-in" }).finished.then(() => { trail.style.width = to; });
+    } else {
+      bar.classList.add("heal");
+      trail.style.width = to;
+      fill.animate([{ width: from }, { width: to }], { duration: 500 * this.k, easing: "ease-out" }).finished.then(() => { fill.style.width = to; bar.classList.remove("heal"); });
+    }
+    this.render(false);
+  }
+  addLog(text, cls) {
+    const li = document.createElement("li");
+    const d = new Date();
+    li.innerHTML = `<time>${d.toTimeString().slice(0, 5)}</time><span class="${cls}">${text}</span>`;
+    this.log.prepend(li);
+    while (this.log.children.length > 3) this.log.lastChild.remove();
+  }
+  // Tremblement : trauma qui décroît en temps réel, décalage = trauma², sinus à fréquences sans rapport (jamais un bruit image par image).
+  shake(amount) { if (!this.reduced) this.trauma = Math.min(1, this.trauma + amount); }
+  tick(now) {
+    const dt = this.last ? (now - this.last) / 1000 : 0;
+    this.last = now;
+    if (this.trauma > 0) {
+      this.trauma = Math.max(0, this.trauma - 1.4 * dt / this.k);
+      const s = this.trauma * this.trauma;
+      this.t += dt * 30 / this.k;
+      this.shaker.style.translate = `${(10 * s * Math.sin(this.t * 1.7)).toFixed(2)}px ${(7 * s * Math.sin(this.t * 2.3)).toFixed(2)}px`;
+      this.shaker.style.rotate = `${(1.2 * s * Math.sin(this.t * 1.1)).toFixed(2)}deg`;
+      if (this.trauma === 0) { this.shaker.style.translate = ""; this.shaker.style.rotate = ""; }
+    }
+    requestAnimationFrame((t) => this.tick(t));
+  }
+  // Gel : toutes les animations de la scène s'arrêtent net (le tremblement continue en temps réel).
+  async freeze(ms) {
+    const anims = this.el.getAnimations({ subtree: true });
+    anims.forEach((a) => a.pause());
+    await this.wait(ms);
+    anims.forEach((a) => a.play());
+  }
+  flash(s, ms) {
+    const spr = this.side[s].spr;
+    spr.style.filter = this.reduced ? "sepia(1) saturate(6) hue-rotate(-40deg) brightness(.9)" : "brightness(0) invert(1)";
+    setTimeout(() => { spr.style.filter = ""; }, ms * this.k);
+  }
+  point(s, where) {
+    const fr = this.floor.getBoundingClientRect(), r = this.side[s].spr.getBoundingClientRect();
+    const x = where === "front" ? (s === "right" ? r.left : r.right) : (r.left + r.right) / 2;
+    return { x: x - fr.left, y: r.top - fr.top + r.height * .45 };
+  }
+  sparks(p, n, colors, spread = 34) {
+    for (let i = 0; i < n; i++) {
+      const d = document.createElement("i");
+      d.className = "spark";
+      d.style.left = `${p.x}px`; d.style.top = `${p.y}px`;
+      d.style.background = colors[i % colors.length];
+      this.fx.append(d);
+      const a = Math.random() * Math.PI * 2, r = spread * (.5 + Math.random() * .7);
+      d.animate([{ translate: "0 0", opacity: 1 }, { translate: `${Math.round(Math.cos(a) * r / 2) * 2}px ${Math.round(Math.sin(a) * r / 2) * 2}px`, opacity: 0 }], { duration: (380 + Math.random() * 200) * this.k, easing: "cubic-bezier(.2,.8,.3,1)" }).finished.then(() => d.remove());
+    }
+  }
+  float(s, text, cls, delay = 0) {
+    const f = document.createElement("span");
+    f.className = `float ${cls}`;
+    f.textContent = text;
+    this.side[s].f.append(f);
+    f.animate([
+      { scale: .3, translate: "-50% 6px", opacity: 0 },
+      { scale: 1.35, translate: "-50% -8px", opacity: 1, offset: .14 },
+      { scale: 1, translate: "-50% -12px", opacity: 1, offset: .26 },
+      { scale: 1, translate: "-50% -30px", opacity: 1, offset: .8 },
+      { scale: 1, translate: "-50% -38px", opacity: 0 },
+    ], { duration: 1050 * this.k, delay: delay * this.k, easing: "ease-out", fill: "backwards" }).finished.then(() => f.remove());
+  }
+  // Recul + écrasement de la cible, retour exact à la position de repos.
+  recoil(s, dir, px, ms = 340) {
+    this.side[s].mover.animate([{ translate: "0 0" }, { translate: `${dir * px}px 0`, offset: .3 }, { translate: "0 0" }], { duration: ms * this.k, easing: "ease-out" });
+    this.side[s].spr.animate([{ scale: "1 1" }, { scale: "1.12 .86", offset: .2 }, { scale: ".94 1.06", offset: .55 }, { scale: "1 1" }], { duration: ms * this.k, easing: "ease-out" });
+  }
+  slash(p, dir) {
+    const l = document.createElement("i");
+    l.className = "spark";
+    Object.assign(l.style, { left: `${p.x - 30}px`, top: `${p.y}px`, width: "60px", height: "4px", background: css("--flash"), rotate: `${dir * -28}deg`, transformOrigin: "center" });
+    this.fx.append(l);
+    l.animate([{ scale: "0 1", opacity: 1 }, { scale: "1 1", opacity: 1, offset: .35 }, { scale: "1.1 .5", opacity: 0 }], { duration: 300 * this.k, easing: "ease-out" }).finished.then(() => l.remove());
+  }
+  // Frappe : élan (recul), ruée, contact (gel + flash + étincelles + chiffre), retour.
+  async strike(a, t, dmg, big, ko) {
+    const dir = a === "left" ? 1 : -1;
+    const dash = big ? 40 : 28;
+    const A = this.side[a].mover;
+    A.animate([
+      { translate: "0 0" },
+      { translate: `${-dir * (big ? 10 : 6)}px 0`, offset: big ? .3 : .22, easing: "ease-in" },
+      { translate: `${dir * dash}px -2px`, offset: .45, easing: "ease-out" },
+      { translate: `${dir * dash}px 0`, offset: .62 },
+      { translate: "0 0" },
+    ], { duration: (big ? 700 : 560) * this.k });
+    await this.wait((big ? 700 : 560) * .45);
+    const p = this.point(t, "front");
+    const stop = ko ? 250 : big ? 120 : 60;
+    this.flash(t, stop + 40);
+    this.sparks(p, big ? 18 : 8, big ? [css("--flash"), css("--gold"), css("--ember")] : [css("--flash"), css("--gold")], big ? 46 : 32);
+    if (big) this.slash(p, dir);
+    this.shake(ko ? .9 : big ? .75 : .4);
+    this.setHp(t, this.hp[t] - dmg);
+    this.float(t, `-${dmg}`, big ? "big" : "dmg");
+    this.recoil(t, dir, big ? 12 : 8);
+    await this.freeze(stop);
+  }
+  async run(act) {
+    if (this.busy) return;
+    if (act === "reset") { this.reset(); return; }
+    this.busy = true;
+    this.host.querySelectorAll("[data-act]").forEach((b) => b.setAttribute("aria-disabled", "true"));
+    try { await this[act](); } finally {
+      this.busy = false;
+      this.host.querySelectorAll("[data-act]").forEach((b) => b.removeAttribute("aria-disabled"));
+    }
+  }
+  reset() {
+    this.hp = { ...(this.isKo ? START_KO : START) }; this.pa = 4;
+    const R = this.side.right;
+    R.mover.getAnimations().forEach((a) => a.cancel());
+    R.mover.style.translate = ""; R.mover.style.rotate = "";
+    this.el.querySelector(".stamp").style.opacity = 0;
+    this.el.querySelector(".banner")?.remove();
+    this.next?.classList.remove("on");
+    this.log.innerHTML = "";
+    this.render(true);
+  }
+  async attack() { this.pa = Math.max(0, this.pa - 1); this.render(false); this.addLog("Attaque : 5 dégâts à Nicolas", "me"); await this.strike("left", "right", 5, false); await this.wait(500); }
+  async thrust() { this.pa = Math.max(0, this.pa - 3); this.render(false); this.addLog("Coup d'estoc : 13 dégâts à Nicolas", "me"); await this.strike("left", "right", 13, true); await this.wait(500); }
+  async potion() {
+    this.addLog("Potion : +6 PV", "me");
+    const L = this.side.left, p = this.point("left", "mid");
+    L.spr.animate([{ filter: "drop-shadow(0 0 0 transparent)" }, { filter: `drop-shadow(0 0 10px ${css("--ok")})`, offset: .4 }, { filter: "drop-shadow(0 0 0 transparent)" }], { duration: 800 * this.k });
+    for (let i = 0; i < 7; i++) {
+      const b = document.createElement("i");
+      b.className = "spark";
+      b.style.left = `${p.x - 18 + Math.round(Math.random() * 18) * 2}px`; b.style.top = `${p.y + 24}px`;
+      b.style.background = i % 2 ? css("--ok") : css("--pa");
+      this.fx.append(b);
+      b.animate([{ translate: "0 0", opacity: 0 }, { opacity: 1, offset: .2 }, { translate: `0 -${40 + Math.random() * 24}px`, opacity: 0 }], { duration: 700 * this.k, delay: i * 70 * this.k, easing: "ease-out", fill: "backwards" }).finished.then(() => b.remove());
+    }
+    await this.wait(250);
+    this.setHp("left", this.hp.left + 6);
+    this.float("left", "+6", "heal");
+    await this.wait(900);
+  }
+  async parry() {
+    this.addLog("Nicolas attaque, tu pares : 0 dégât, +1 PA", "foe");
+    const L = this.side.left;
+    L.f.classList.add("guard");
+    const R = this.side.right.mover;
+    R.animate([{ translate: "0 0" }, { translate: "6px 0", offset: .22 }, { translate: "-28px -2px", offset: .45 }, { translate: "-22px 0", offset: .62 }, { translate: "0 0" }], { duration: 560 * this.k });
+    await this.wait(560 * .45);
+    const p = this.point("left", "front");
+    this.sparks(p, 10, [css("--clang"), css("--flash")], 28);
+    this.shake(.2);
+    L.f.querySelector(".shield").animate([{ translate: "0 0" }, { translate: "-2px 0" }, { translate: "2px 0" }, { translate: "-2px 0" }, { translate: "1px 0" }, { translate: "0 0" }], { duration: 260 * this.k, easing: "steps(5)" });
+    this.side.right.mover.animate([{ translate: "0 0" }, { translate: "10px 0", offset: .3 }, { translate: "0 0" }], { duration: 300 * this.k, composite: "add" });
+    this.float("left", "Paré !", "clang");
+    await this.freeze(50);
+    await this.wait(380);
+    this.pa = Math.min(6, this.pa + 1); this.render(false);
+    this.pips?.children[this.pa - 1]?.animate([{ scale: 1.8 }, { scale: 1 }], { duration: 300 * this.k, easing: "cubic-bezier(.34,1.56,.64,1)" });
+    this.float("left", "+1 PA", "pa");
+    await this.wait(700);
+    L.f.classList.remove("guard");
+  }
+  async whirl() {
+    this.addLog("Nicolas : Bambou tourbillon, 3 dégâts, +2 PV", "foe");
+    const R = this.side.right, pr = this.point("right", "mid");
+    R.spr.animate([{ scale: "1 1" }, { scale: "-1 1" }, { scale: "1 1" }, { scale: "-1 1" }, { scale: "1 1" }], { duration: 520 * this.k, easing: "steps(4)" });
+    for (let i = 0; i < 8; i++) {
+      const lf = document.createElement("i");
+      lf.className = "spark";
+      lf.style.left = `${pr.x}px`; lf.style.top = `${pr.y}px`;
+      lf.style.background = i % 2 ? css("--leaf") : "#4f8f3a";
+      this.fx.append(lf);
+      const a0 = (i / 8) * Math.PI * 2;
+      const kf = [0, .25, .5, .75, 1].map((q) => { const a = a0 + q * Math.PI * 2.5, r = 18 + q * 28; return { translate: `${Math.round(Math.cos(a) * r)}px ${Math.round(Math.sin(a) * r * .5)}px`, opacity: q === 1 ? 0 : 1 }; });
+      lf.animate(kf, { duration: 700 * this.k, easing: "ease-out" }).finished.then(() => lf.remove());
+    }
+    await this.wait(420);
+    this.flash("left", 80);
+    this.shake(.3);
+    this.setHp("left", this.hp.left - 3);
+    this.float("left", "-3", "dmg");
+    this.recoil("left", -1, 6, 300);
+    this.sparks(this.point("left", "mid"), 6, [css("--leaf"), css("--flash")], 26);
+    await this.freeze(40);
+    await this.wait(260);
+    this.setHp("right", this.hp.right + 2);
+    this.float("right", "+2", "heal");
+    await this.wait(900);
+  }
+  async ko() {
+    if (this.hp.right <= 0) return;
+    const dmg = Math.min(13, this.hp.right);
+    this.pa = Math.max(0, this.pa - 3); this.render(false);
+    this.addLog(`Coup d'estoc : ${dmg} dégâts, Nicolas est K.O.`, "me");
+    await this.strike("left", "right", dmg, true, true);
+    const wo = this.el.querySelector(".whiteout");
+    if (this.reduced) wo.animate([{ opacity: 0, background: css("--danger") }, { opacity: .25, background: css("--danger") }, { opacity: 0, background: css("--danger") }], { duration: 400 * this.k });
+    else wo.animate([{ opacity: .9 }, { opacity: 0 }], { duration: 180 * this.k, easing: "ease-out" });
+    // Ralenti : la chute du Panda prend 0,9 s, avec un petit rebond au sol.
+    const R = this.side.right.mover;
+    await R.animate([
+      { translate: "0 0", rotate: "0deg" },
+      { translate: "10px -10px", rotate: "-20deg", offset: .25, easing: "ease-in" },
+      { translate: "22px 8px", rotate: "-90deg", offset: .8 },
+      { translate: "22px 4px", rotate: "-88deg", offset: .9 },
+      { translate: "22px 8px", rotate: "-90deg" },
+    ], { duration: 900 * this.k, fill: "forwards" }).finished;
+    this.shake(.55);
+    const st = this.el.querySelector(".stamp");
+    st.animate([{ scale: 2.6, opacity: 0 }, { scale: .92, opacity: 1, offset: .55 }, { scale: 1, opacity: 1 }], { duration: 420 * this.k, easing: "cubic-bezier(.2,.9,.3,1)", fill: "forwards" });
+    st.style.opacity = 1;
+    await this.wait(2200);
+    this.next?.classList.add("on");
+  }
+  async replay() {
+    const b = document.createElement("div");
+    b.className = "banner";
+    b.innerHTML = `<span>Pendant ton absence · <b data-step>1</b>/4</span><button type="button">Passer</button>`;
+    this.el.append(b);
+    let skip = false;
+    b.querySelector("button").addEventListener("click", () => { skip = true; });
+    const steps = [
+      async () => { this.addLog("Nicolas : Attaque, 6 dégâts", "foe"); await this.strike("right", "left", 6, false); },
+      async () => { this.addLog("Nicolas : Bambou tourbillon, 3 dégâts, +2 PV", "foe"); await this.whirlQuick(); },
+      async () => { this.addLog("Nicolas : Attaque, 4 dégâts", "foe"); await this.strike("right", "left", 4, false); },
+      async () => { this.addLog("Nicolas : Coup d'estoc, 12 dégâts", "foe"); await this.strike("right", "left", 12, true); },
+    ];
+    for (let i = 0; i < steps.length && !skip; i++) {
+      b.querySelector("[data-step]").textContent = i + 1;
+      const t0 = performance.now();
+      await steps[i]();
+      const left = 1500 * this.k - (performance.now() - t0);
+      if (left > 0) await new Promise((r) => setTimeout(r, left));
+    }
+    b.innerHTML = `<span>À toi de jouer · 4 PA</span>`;
+    await this.wait(1600);
+    b.remove();
+  }
+  async whirlQuick() {
+    const R = this.side.right;
+    R.spr.animate([{ scale: "1 1" }, { scale: "-1 1" }, { scale: "1 1" }, { scale: "-1 1" }, { scale: "1 1" }], { duration: 520 * this.k, easing: "steps(4)" });
+    this.sparks(this.point("right", "mid"), 8, [css("--leaf"), "#4f8f3a"], 40);
+    await this.wait(420);
+    this.flash("left", 80); this.shake(.3);
+    this.setHp("left", this.hp.left - 3); this.float("left", "-3", "dmg"); this.recoil("left", -1, 6, 300);
+    await this.freeze(40);
+    await this.wait(200);
+    this.setHp("right", this.hp.right + 2); this.float("right", "+2", "heal");
+  }
+}
+document.querySelectorAll("[data-stage]").forEach((h) => new Stage(h));
+</script>

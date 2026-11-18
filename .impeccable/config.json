@@ -155,6 +155,33 @@
         ],
         "createdAt": "2026-11-18T14:16:19.993Z",
         "reason": "Claude: ombres pixel dures = direction 8 bits de l'app, reprises de la maquette v1 validée"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "docs/maquettes/arene-impact.html"
+        ],
+        "createdAt": "2026-11-18T17:18:32.547Z",
+        "reason": "Claude: tout le texte vient de tokens clairs sur fond sombre explicite (thème unique de l'app), le scanner ne résout pas les variables CSS ; même cas que arene-v2"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "docs/maquettes/arene-impact.html"
+        ],
+        "createdAt": "2026-11-18T17:18:32.565Z",
+        "reason": "Claude: police pixel Press Start 2P à 9-10px, convention de l'app (boutons !text-[10px])"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          "docs/maquettes/arene-impact.html"
+        ],
+        "createdAt": "2026-11-18T17:18:32.579Z",
+        "reason": "Claude: même convention de police pixel que l'app"
       }
     ]
   }
