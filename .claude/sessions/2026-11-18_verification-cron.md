@@ -3,7 +3,7 @@
 ## Reprise
 
 ```
-✅ Fait      Quêtes, coffre v3 et bilan du jour en prod ; erreur d'envoi du code visible (dev)
+✅ Fait      Quêtes, coffre v3 et bilan du jour en prod ; erreur d'envoi du code visible (prod)
 ⛔ Bloqué    Aucun
 🎯 Priorité  Relire le premier bilan du jour et le rappel du boss (échéance 19/11)
 ```
@@ -173,9 +173,9 @@
 - PR #99 fusionnée dans `dev` : le code est noté sur le contexte de la requête, un hook « après » l'envoie en l'attendant ; échec → 503 `MAIL_FAILED` et « Le code n'a pas pu partir. Réessaie dans un instant. » ; vérifié en local (SMTP faux puis vrai), 218 tests verts
 - Branche distante `fix/test-mail-only-to-dev` supprimée (accord d'Adrien)
 - Point « code de connexion qui ne part pas » du bilan du jour : refermé
+- Mise en production sur accord d'Adrien (PR #101, commit de fusion) : déploiement Vercel réussi
 
 ### Reste à faire
-- Mettre #99 en production sur accord d'Adrien (avec la prochaine livraison)
 - Ce soir 18 h 01 : premier bilan du jour en production ; jeudi et vendredi : rappel du boss, puis duel
 - Prochaine fonctionnalité : à cadrer avec Adrien
 
