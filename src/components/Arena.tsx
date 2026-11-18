@@ -3,7 +3,7 @@ import { useState, useTransition } from "react";
 import { BusyLabel } from "@/components/LinkButton";
 import { cancelArena, playArena, provokeArena, respondArena, type ArenaResult } from "@/app/arene-actions";
 import type { ArenaKind } from "@/game/arena";
-import { usePlayFx } from "./ArenaStage";
+import { usePlayFx, useReplay } from "./ArenaStage";
 
 // Arène (maquette docs/maquettes/arene.html) : panneau de provocation, bandeaux et actions du combat.
 
@@ -94,11 +94,12 @@ export type Move = { kind: ArenaKind; label: string; cost: string; detail: strin
 export function ArenaMoves({ id, moves, used, max, myTurn }: { id: string; moves: Move[]; used: number; max: number; myTurn: boolean }): React.ReactElement {
   const [pending, error, run] = useArenaAction();
   const playFx = usePlayFx();
+  const { locked } = useReplay();
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-2">
         {moves.map((m) => (
-          <button key={m.kind} type="button" className={`arena-move ${m.special ? "special" : ""}`} disabled={!myTurn || m.disabled || pending} onClick={() => {
+          <button key={m.kind} type="button" className={`arena-move ${m.special ? "special" : ""}`} disabled={!myTurn || m.disabled || pending || locked} onClick={() => {
             playFx(m.kind);
             run(() => playArena(id, m.kind));
           }}>
@@ -111,7 +112,7 @@ export function ArenaMoves({ id, moves, used, max, myTurn }: { id: string; moves
       {myTurn ? (
         <div className="flex items-center justify-between gap-3">
           <span className="num text-muted">Actions {used}/{max}</span>
-          <button type="button" className="btn ghost !w-auto !px-4" disabled={pending} onClick={() => run(() => playArena(id, "END"))}><BusyLabel pending={pending}>Finir mon tour</BusyLabel></button>
+          <button type="button" className="btn ghost !w-auto !px-4" disabled={pending || locked} onClick={() => run(() => playArena(id, "END"))}><BusyLabel pending={pending}>Finir mon tour</BusyLabel></button>
         </div>
       ) : null}
       {error ? <p className="err">{error}</p> : null}
