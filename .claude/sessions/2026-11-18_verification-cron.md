@@ -119,3 +119,17 @@
 ### Décisions
 - Pas de maquette pour ce lot (accord d'Adrien) : comportement, pas un nouvel écran
 - Les points remplacent le texte sans changer la largeur du bouton
+
+---
+
+## Suite : vitesse de chargement
+
+### Réalisé
+- Cause trouvée : fonctions Vercel à Washington (`iad1`, en-tête `x-vercel-id` de la prod), base Neon à Francfort ; chaque requête traversait l'Atlantique
+- PR #90 fusionnée dans `dev` : `regions: ["fra1"]` dans `vercel.json` ; objectifs actifs chargés avec le jeu (`GameData.goals`, `activeGoal`), l'accueil passe de 7 à 4 allers-retours vers la base ; aperçu reconstruit
+
+### Reste à faire
+- Après la mise en production : remesurer `/connexion` (référence avant : 158 ms de médiane depuis Paris) et vérifier que `x-vercel-id` indique `fra1`
+
+### Décisions
+- Région des fonctions fixée dans `vercel.json` (versionnée) plutôt que dans les réglages du projet Vercel
