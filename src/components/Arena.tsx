@@ -62,7 +62,7 @@ export function ArenaPanel({ partnerName, compare, onClose }: { partnerName: str
   );
 }
 
-/** Chez le provoqué : entrer dans l'Arène ou passer son tour. */
+/** Chez le provoqué : accepter le combat ou passer son tour. */
 export function ArenaIncoming({ id, children }: { id: string; children: React.ReactNode }): React.ReactElement {
   const [pending, error, run] = useArenaAction();
   return (
@@ -70,7 +70,7 @@ export function ArenaIncoming({ id, children }: { id: string; children: React.Re
       <div className="flex min-w-0 items-end gap-3">{children}</div>
       <div className="grid grid-cols-2 gap-2">
         <button type="button" className="btn ghost" disabled={pending} onClick={() => run(() => respondArena(id, false))}><BusyLabel pending={pending}>Pas cette fois</BusyLabel></button>
-        <button type="button" className="btn arena" disabled={pending} onClick={() => run(() => respondArena(id, true))}><BusyLabel pending={pending}>Entrer dans l&apos;Arène</BusyLabel></button>
+        <button type="button" className="btn arena" disabled={pending} onClick={() => run(() => respondArena(id, true))}><BusyLabel pending={pending}>Accepter le combat</BusyLabel></button>
       </div>
       {error ? <p className="err">{error}</p> : null}
     </div>
