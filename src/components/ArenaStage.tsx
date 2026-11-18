@@ -281,7 +281,7 @@ export function StageFighterView({ f: given, right, isMe }: { f: StageFighter; r
       </div>
       <div className="relative flex min-h-[72px] items-end">
         <span key={st.moving ? `body-${fx?.n}` : "body"} className={body}>
-          <Sprite character={f.character} color={f.color} form={f.displayedForm} mood={f.mood} pose={st.pose} px={4} label={f.title} />
+          <Sprite character={f.character} color={f.color} form={f.displayedForm} mood={f.mood} pose={st.pose} px={4} label={f.title} tilted={f.stunned} />
           {st.effects.map((e) => <PixelFx key={`${e.name}-${e.at}-${fx?.n}`} {...e} />)}
         </span>
         {f.companion ? <Companion id={f.companion} px={3} label={f.companionName ?? undefined} joy={st.pose === "action"} className={right ? "order-first -scale-x-100 mr-1" : "ml-1"} /> : null}

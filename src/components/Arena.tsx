@@ -33,7 +33,9 @@ export function ArenaPanel({ partnerName, compare, onClose }: { partnerName: str
     ["PA au premier tour", compare.myEnergy, compare.theirEnergy],
     ["Potions", 2, 2],
   ];
-  const outsider = compare.theirEnergy > compare.myEnergy ? `${partnerName} est moins évolué : il part avec 1 PA de plus.` : compare.myEnergy > compare.theirEnergy ? "Tu es l'outsider : tu pars avec 1 PA de plus." : null;
+  let outsider: string | null = null;
+  if (compare.myForm < compare.theirForm) outsider = "Tu es l'outsider : tu pars avec des PA en plus.";
+  else if (compare.myForm > compare.theirForm) outsider = `${partnerName} est moins évolué : il part avec des PA en plus.`;
   return (
     <div className="flex flex-col gap-3 border-[3px] border-magic bg-[#261c3a] p-3">
       <p className="h-title !text-[10px]">Provoquer {partnerName}</p>
@@ -50,7 +52,7 @@ export function ArenaPanel({ partnerName, compare, onClose }: { partnerName: str
         ))}
       </div>
       <p className="text-sm text-muted">
-        {outsider ? `${outsider} ` : ""}
+        Tu ouvres le combat, {partnerName} répond avec 1 PA de plus. {outsider ? `${outsider} ` : ""}
         +3 PA à chaque tour. Fin au K.O., ou vendredi 18 h : le plus de PV restants gagne. Aucune XP en jeu.
       </p>
       <button type="button" className="btn arena" disabled={pending} onClick={() => run(provokeArena)}><BusyLabel pending={pending}>Envoyer la provocation</BusyLabel></button>
@@ -60,7 +62,7 @@ export function ArenaPanel({ partnerName, compare, onClose }: { partnerName: str
   );
 }
 
-/** Chez le provoqué : entrer dans l'Arène ou passer son tour. */
+/** Chez le provoqué : accepter le combat ou passer son tour. */
 export function ArenaIncoming({ id, children }: { id: string; children: React.ReactNode }): React.ReactElement {
   const [pending, error, run] = useArenaAction();
   return (
@@ -68,7 +70,7 @@ export function ArenaIncoming({ id, children }: { id: string; children: React.Re
       <div className="flex min-w-0 items-end gap-3">{children}</div>
       <div className="grid grid-cols-2 gap-2">
         <button type="button" className="btn ghost" disabled={pending} onClick={() => run(() => respondArena(id, false))}><BusyLabel pending={pending}>Pas cette fois</BusyLabel></button>
-        <button type="button" className="btn arena" disabled={pending} onClick={() => run(() => respondArena(id, true))}><BusyLabel pending={pending}>Entrer dans l&apos;Arène</BusyLabel></button>
+        <button type="button" className="btn arena" disabled={pending} onClick={() => run(() => respondArena(id, true))}><BusyLabel pending={pending}>Accepter le combat</BusyLabel></button>
       </div>
       {error ? <p className="err">{error}</p> : null}
     </div>

@@ -14,7 +14,7 @@ import { DecorView } from "@/components/DecorView";
 import { NudgeBanner, NudgeWinBanner } from "@/components/Banners";
 import { ArenaWatcher, ChallengeWatcher, DuelWatcher } from "@/components/DuelWatcher";
 import { ArenaIncoming, ArenaPending, type ArenaLaunch } from "@/components/Arena";
-import { ANSWER_WITHIN_MS, arenaCrowns, arenaPhase, arenaState, canProvoke, ENERGY_PER_TURN, finishedArenas, MAX_ENERGY, openArena, startBonus, statsFor, type ArenaEntry, type ArenaInput } from "@/game/arena";
+import { ANSWER_WITHIN_MS, arenaCrowns, arenaPhase, arenaState, canProvoke, CURRENT_RULES, ENERGY_PER_TURN, finishedArenas, MAX_ENERGY, openArena, startEnergy, statsFor, type ArenaEntry, type ArenaInput } from "@/game/arena";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { canLaunch, challengeScore, crownHolder, deadlineFor, lastFinished, openChallenge, phaseOf, timeLeft, untilLabel, type ChallengeRow } from "@/game/challenge";
 import { bossInSentence, currentDuel, pastDuels, type Duel } from "@/game/duel";
@@ -161,7 +161,9 @@ function arenaLaunch(me: PlayerView, partner: PlayerView, entries: ArenaEntry[],
     compare: {
       myForm: me.levelForm, theirForm: partner.levelForm, myHp: a.maxHp, theirHp: b.maxHp,
       myAttack: `${a.attack[0]}-${a.attack[1]}`, theirAttack: `${b.attack[0]}-${b.attack[1]}`,
-      myEnergy: ENERGY_PER_TURN + startBonus(me.levelForm, partner.levelForm), theirEnergy: ENERGY_PER_TURN + startBonus(partner.levelForm, me.levelForm),
+      // Je lance donc j'ouvre ; l'autre répond et reçoit le bonus de réponse.
+      myEnergy: ENERGY_PER_TURN + startEnergy(CURRENT_RULES, me.levelForm, partner.levelForm, false),
+      theirEnergy: ENERGY_PER_TURN + startEnergy(CURRENT_RULES, partner.levelForm, me.levelForm, true),
     },
   };
 }

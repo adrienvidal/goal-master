@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Arène v2 sur l'aperçu : PA à chaque tour, rejeu des coups, direct à deux
+✅ Fait      Arène v3 : PA seule limite, Panda réparé, sur l'aperçu
 ⛔ Bloqué    Aucun
-🎯 Priorité  Tester l'Arène v2 sur l'aperçu puis la mettre en prod (échéance 20/11, fin du combat)
+🎯 Priorité  Fin du combat v2, puis v3 en prod sur accord (échéance 20/11 18 h)
 ```
 
 ## Réalisé
@@ -196,9 +196,8 @@
 - Exceptions du détecteur de design pour la maquette v2 (faux positifs de contraste, police pixel) dans `.impeccable/config.json`
 
 ### Reste à faire
-- Adrien teste l'Arène v2 sur l'aperçu de `dev`, puis mise en production sur accord (avant la fin du combat, vendredi 20/11 18 h)
+- ~~Test sur l'aperçu puis mise en production~~ : fait (voir ci-dessous)
 - Prévenir Nicolas du changement de règles
-- Base locale : Arène de test `v2-test` (finie), à effacer si gênante
 
 ### Décisions
 - PA = colonne `energy` dans le code (pas de renommage en base) ; bonus de départ calculé depuis les évolutions, colonnes `challengerEnergy` / `opponentEnergy` ignorées
@@ -207,3 +206,70 @@
 - Un combat fini reste affiché sur `/arene` une heure, pour rejouer le K.O. avant le résultat
 - Écartés : nouvelle action, chat, emotes, notification spéciale « l'Arène change »
 
+---
+
+## Suite : retours d'Adrien sur l'aperçu, mise en production de l'Arène v2
+
+### Réalisé
+- Étourdissement incompris : une seule barre (PA), actions restantes et pastille « 💫 étourdi » dans le bandeau du tour, raison sous chaque action grisée (#105, #106)
+- Fin du combat : pose K.O., « K.O. ! » ou « Temps écoulé ! » 2,2 s, puis le résultat s'ouvre tout seul chez les deux (#107)
+- Action grisée touchée : message de raison 3 s (pas ton tour, PA manquants, plus de potion, rejeu en cours) (#108)
+- Arènes purgées à la demande d'Adrien sur l'aperçu (2 combats, 48 actions, 31 notifications) et en local ; production non touchée
+- **Mise en production** sur accord d'Adrien (PR #109, commit de fusion) : déploiement OK, migration `arena_seen` appliquée, combat en cours lisible (fin le 20/11 17 h UTC = 18 h Paris)
+
+### Reste à faire
+- Prévenir Nicolas que l'Arène a changé (3 PA par tour, plus de lien avec les candidatures)
+- Vendredi 20/11 à 18 h 01 : fin du combat (résultat, couronne, notification), rappel du boss et duel
+- Base locale : plus d'Arène de test
+
+### Décisions
+- PA et actions restent deux limites distinctes (fusion écartée : 6 attaques d'un coup = K.O. en un tour)
+- Le message d'action bloquée reste dans l'écran, pas de notification push
+- Une action grisée est `aria-disabled` (touchable), plus `disabled`
+
+
+---
+
+## Suite : skills de jeu et équilibrage de l'Arène (v3)
+
+### Réalisé
+- Skills `game-feel`, `rpg` et `game-ui-ux` installés dans le projet seulement (PR #112)
+- Diagnostic par simulation (règles v2) : l'ouvreur gagnait 92 %, une évolution d'écart 94 %, le Panda 1 % contre le Chevalier, la Botte était perdante, 3-4 tours par combat
+- Cibles validées par Adrien, puis PR #113 fusionnée dans `dev` : règles versionnées par combat (`Arena.rules`, migration `arena_rules`, combats existants en v2), règles v3, test d'équilibrage `src/game/arena-balance.test.ts`, textes (provocation, Arène, intro, résumé de tour), cadrage §v3 ; 228 tests verts ; aperçu de `dev` construit
+- Mesures v3 sur 1 000 combats : ouverture ~60 %, une évolution d'écart 59-61 %, écart maximal ~75 %, Panda 54 %, Botte 63 %, 9,4 tours
+
+### Reste à faire
+- Vendredi 20/11 à 18 h 01 : fin du combat en cours (v2), rappel du boss, duel
+- Après la fin du combat : mettre la v3 en production sur accord d'Adrien
+- Prévenir Nicolas : nouvelles règles de l'Arène (v2 puis v3)
+- Tester un combat v3 sur l'aperçu de `dev`
+- Plus tard, si le combat paraît sec : `game-feel` (tremblement, gel à l'impact), dégâts flottants du Bambou tourbillon sur l'adversaire
+
+### Blockers
+- Aucun
+
+### Décisions
+- Règles figées par combat plutôt qu'une date de bascule : un combat ne change jamais de règles en cours de route
+- Ouverture à ~60 % et écart maximal à ~75 % : en limite haute des cibles, acceptés
+- Bambou tourbillon : 1 action perdue à tous les paliers (2 au dernier palier écrasaient le Chevalier)
+- Écartés : coup critique (affichage à part), nouvelle action, notification « les règles changent »
+
+---
+
+## Suite : retours d'Adrien sur la v3 (Panda, actions et PA)
+
+### Réalisé
+- Panda penché et rayé : depuis la v3, le premier tour plus court de l'ouvreur passait pour un étourdissement ; `isStunned` testé ; un sprite incliné laissait voir le fond entre ses rangées de pixels, corrigé par un léger chevauchement des rangées
+- « 2 actions » à côté de « 4 PA » prêtait à confusion : en v3, les PA sont la seule limite d'un tour ; le Bambou tourbillon retire 1 PA au tour suivant ; le lanceur reçoit 3 PA, celui qui répond part avec 1 PA ; chiffres réajustés (PV 48 + 2 × évolution, Coup d'estoc 4+palier à 12+palier, Bambou 3 dégâts et +1+palier PV)
+- Mesures (1 000 combats) : ouverture 58 %, une évolution d'écart 55-56 %, écart maximal 75 %, Panda 51-54 %, Botte 50 %, 8,3 tours ; le test tolère 2 points de bruit de mesure
+- PR #115 fusionnée dans `dev` (231 tests verts), aperçu reconstruit ; combat v3 vérifié en local
+- Arènes purgées sur l'aperçu à la demande d'Adrien (2 combats, leurs actions, 21 notifications) ; production non touchée
+
+### Reste à faire
+- Adrien teste un combat v3 sur l'aperçu
+- Vendredi 20/11 à 18 h 01 : fin du combat en cours (v2), puis v3 en production sur accord
+- Prévenir Nicolas des nouvelles règles
+
+### Décisions
+- Un seul compteur, les PA ; la v3 n'étant pas en production, modifiée sur place plutôt qu'une v4
+- Écartés pour l'instant (idées d'Adrien) : recharge de 1-2 tours sur la Botte (deuxième compteur, aucun abus mesuré) et attaque ultime à charger (troisième compteur, nouvelle action et animations : lot à cadrer avec maquette si l'idée revient après de vrais combats)

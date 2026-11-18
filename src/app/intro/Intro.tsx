@@ -109,7 +109,7 @@ const STEPS: Step[] = [
   },
   {
     title: "Entre dans l'Arène.",
-    text: "Sur la carte de ton binôme, touche « Arène » pour le provoquer. Chaque tour te donne 3 PA, et ceux que tu gardes s'ajoutent : attaque, parade, potion ou Botte secrète. Une Parade qui encaisse un coup te rend 1 PA. Premier K.O. perdu, sinon le plus de PV vendredi 18 h. Le gagnant porte la couronne. Un jeu à part : aucune XP en jeu, tes candidatures n'y changent rien.",
+    text: "Sur la carte de ton binôme, touche « Arène » pour le provoquer. Chaque tour te donne 3 PA, et ceux que tu gardes s'ajoutent : attaque, parade, potion ou Botte secrète. Tu joues tant qu'il te reste des PA. Celui qui répond à la provocation part avec 1 PA de plus. Une Parade qui encaisse un coup te rend 1 PA. Premier K.O. perdu, sinon le plus de PV vendredi 18 h. Le gagnant porte la couronne. Un jeu à part : aucune XP en jeu, tes candidatures n'y changent rien.",
     stage: (
       <div className="flex items-end justify-center gap-6">
         <Sprite character="KNIGHT" color="BLUE" form={3} pose="action" px={5} label="Ton héros attaque" />

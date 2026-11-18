@@ -69,3 +69,32 @@ Poses dérivées par le code de la pose Repos (section 10 de la maquette) : en g
 - **Direct** : `/arene` se rafraîchit toutes les 3 s, quel que soit le tour ; chaque nouvelle action de l'adversaire passe par le même rejeu (sans bandeau). Pastille de présence « X est dans l'Arène » : chaque affichage de `/arene` note l'heure sur le joueur (`Player.arenaSeenAt`, une migration) ; présent = vu il y a moins de 10 s. Hors connexion : « Connexion perdue · on réessaie ».
 - **Textes** : « Énergie ⚡ » devient « PA » partout ; plus de bouton « + Candidature » dans l'Arène ; écran « L'Arène » de l'intro réécrit (pas de nouvel écran) ; notification de provocation sans variante « rouillé ».
 - **Combat en cours** : passe aux nouvelles règles au déploiement (le rejeu recalcule tout).
+
+## v3 : équilibrage (18/11)
+
+Constat (simulation de milliers de combats avec les règles v2) : celui qui ouvre gagnait 92 % des combats à évolution égale, une évolution d'écart donnait 94 % de victoires, le Panda gagnait 1 % contre le Chevalier, la Botte faisait moins bien que trois attaques, et un combat durait 3 à 4 tours en tout.
+
+Cibles convenues avec Adrien, vérifiées par `src/game/arena-balance.test.ts` (combats joués par le vrai moteur, joueur raisonnable des deux côtés) :
+
+| Cible | Visée | Mesuré (1 000 combats) |
+|---|---|---|
+| Héros identiques, celui qui ouvre gagne | 50-60 % | 58 % |
+| Une évolution d'écart, le plus évolué gagne | 55-65 % | 55-56 % |
+| Écart maximal (1 contre 6) | 75 % au plus | 75 % |
+| Panda contre Chevalier | 45-55 % | 51-54 % |
+| Jouer sa Botte plutôt qu'attaquer | 45-65 % | 50 % |
+| Durée d'un combat | 8-10 tours en tout | 8,3 |
+
+Le test tolère 2 points d'écart (bruit de mesure sur 400 combats).
+
+Règles v3 :
+
+- **Version figée par combat** : colonne `Arena.rules` (migration `arena_rules`). Les combats commencés avant gardent la v2 (`rulesFor`), les nouveaux prennent la v3.
+- **Un seul compteur, les PA** (retour d'Adrien : « actions » et « PA » côte à côte prêtaient à confusion) : plus de limite d'actions par tour, on joue tant qu'il reste des PA, puis « Finir mon tour » (automatique quand il ne reste ni PA ni potion).
+- **Stats** : PV 48 + 2 × évolution ; Attaque 2 à 8 pour tous ; Parade percée par le Coup d'estoc au dernier palier.
+- **Départ** : celui qui répond à la provocation part avec 1 PA ; l'outsider gagne +1 PA par tranche de 2 évolutions d'écart (arrondi au-dessus).
+- **Coup d'estoc** : 2 PA, dégâts tirés de 4 + palier à 12 + palier.
+- **Bambou tourbillon** : 2 PA, 3 dégâts (divisés par une Parade), +1 + palier PV, et l'adversaire reçoit 1 PA de moins au début de son tour suivant (pastille « étourdi »).
+- Inchangé : +3 PA par tour (6 au plus), Parade, 2 potions de +6 PV.
+
+Écartés : coup critique (il demandait un affichage à part), nouvelle action, notification « les règles changent », nouveau dessin de la jauge de PA.

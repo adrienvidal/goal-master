@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { ArenaMoves, type Move } from "@/components/Arena";
 import { ArenaJournal, ArenaLive, ArenaPresence, StageFighterView, type JournalLine, type StageFighter, type StageHit } from "@/components/ArenaStage";
 import { LiveRefresh } from "@/components/LiveRefresh";
-import { ACTIONS_PER_TURN, arenaPhase, arenaState, canPlay, COST, ENERGY_PER_TURN, finishedArenas, MAX_ENERGY, POTION_HEAL, statsFor, type ArenaState, type LogEntry } from "@/game/arena";
+import { ACTIONS_PER_TURN, arenaPhase, arenaState, canPlay, ENERGY_PER_TURN, isStunned, finishedArenas, MAX_ENERGY, rulesFor, statsFor, type ArenaState, type Rules, type LogEntry } from "@/game/arena";
 import { timeLeft } from "@/game/challenge";
 import { ofName } from "@/lib/french";
 import { buildPlayerView, type PlayerView } from "@/lib/playerView";
@@ -22,6 +22,17 @@ const ENDED_STAY_MS = 60 * 60 * 1000;
 const VISIBLE = ["ATTACK", "THRUST", "WHIRL", "PARRY", "POTION"] as const;
 type Visible = (typeof VISIBLE)[number];
 
+/** Ce que coûte le Bambou tourbillon à l'adversaire, selon les règles du combat. */
+function stunText(rules: Rules, stun: number, foeName: string): string {
+  if (rules.stunTakes === "energy") return `${foeName} reçoit ${stun} PA de moins au tour suivant`;
+  return `${foeName} perd ${stun} action${stun > 1 ? "s" : ""}`;
+}
+
+/** « 4 à 12 », ou « 14 » quand la valeur est fixe. */
+function range([min, max]: [number, number]): string {
+  return min === max ? `${min}` : `${min} à ${max}`;
+}
+
 /** Une ligne du journal, vue par `meId`. */
 function logLine(e: LogEntry, meId: string, foeName: string): string {
   const me = e.playerId === meId;
@@ -32,7 +43,9 @@ function logLine(e: LogEntry, meId: string, foeName: string): string {
     case "THRUST":
       return me ? `Tu lances Coup d'estoc : ${e.amount} dégâts.` : `${who} lance Coup d'estoc : ${e.amount} dégâts.`;
     case "WHIRL":
-      return me ? `Tu lances Bambou tourbillon : +${e.amount} PV, ${foeName} est étourdi.` : `${who} lance Bambou tourbillon : +${e.amount} PV, tu es étourdi.`;
+      return me
+        ? `Tu lances Bambou tourbillon : ${e.dealt ? `${e.dealt} dégâts, ` : ""}+${e.amount} PV, ${foeName} est étourdi.`
+        : `${who} lance Bambou tourbillon : ${e.dealt ? `${e.dealt} dégâts, ` : ""}+${e.amount} PV, tu es étourdi.`;
     case "PARRY":
       return me ? "Tu te mets en garde." : `${who} se met en garde.`;
     case "POTION":
@@ -53,7 +66,7 @@ function logLine(e: LogEntry, meId: string, foeName: string): string {
 function hitLabel(e: LogEntry & { kind: Visible }): string {
   if (e.kind === "ATTACK") return `⚔️ Attaque · ${e.amount} dégâts`;
   if (e.kind === "THRUST") return `✨ Coup d'estoc · ${e.amount} dégâts`;
-  if (e.kind === "WHIRL") return `✨ Bambou tourbillon · +${e.amount} PV`;
+  if (e.kind === "WHIRL") return `✨ Bambou tourbillon · ${e.dealt ? `${e.dealt} dégâts · ` : ""}+${e.amount} PV`;
   if (e.kind === "PARRY") return "🛡️ Parade";
   return `🧪 Potion · +${e.amount} PV`;
 }
@@ -92,7 +105,8 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   const foeSeen = game.players.find((p) => p.id === foe.id)?.arenaSeenAt;
   const foeHere = !!foeSeen && now.getTime() - foeSeen.getTime() < PRESENT_MS;
   const myForm = (player.id === input.arena.challengerId ? input.arena.challengerForm : input.arena.opponentForm) ?? 1;
-  const st = statsFor(myForm);
+  const rules = rulesFor(input.arena.rules);
+  const st = statsFor(myForm, rules);
   const myTurn = s.turn?.playerId === player.id;
   const special = player.character === "PANDA" ? "WHIRL" : "THRUST";
   /** Message affiché quand on touche une action indisponible pendant son tour. */
@@ -100,19 +114,20 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
     const check = canPlay(s, player.id, kind);
     if (check.ok || !myTurn) return null;
     if (check.reason === "potion") return "Plus de potion pour ce combat.";
-    if (check.reason === "energy") return `Il te manque ${COST[kind] - pa} PA pour ${name}.`;
+    if (check.reason === "energy") return `Il te manque ${rules.cost[kind] - pa} PA pour ${name}.`;
     return null;
   };
   const potions = s.potions[player.id];
   const pa = s.energy[player.id];
-  const botte = special === "THRUST" ? `${st.thrust} dégâts${st.pierce ? ", perce la Parade" : ""}` : `+${st.whirl} PV, ${foe.pseudo} perd ${st.stun} action${st.stun > 1 ? "s" : ""}`;
-  const actionsLeft = s.turn ? s.turn.max - s.turn.used : 0;
+  const botte = special === "THRUST" ? `${range(st.thrust)} dégâts${st.pierce ? ", perce la Parade" : ""}` : `${st.whirlHit ? `${st.whirlHit} dégâts, ` : ""}+${st.whirl} PV, ${stunText(rules, st.stun, foe.pseudo)}`;
+  // Règles v2 seulement : un compte d'actions par tour, en plus des PA.
+  const actionsLeft = s.turn?.max != null ? s.turn.max - s.turn.used : null;
   /** Raison affichée sous une action grisée pendant mon tour. */
   const why = (kind: Parameters<typeof canPlay>[2]): string | null => {
     const check = canPlay(s, player.id, kind);
     if (!myTurn || check.ok) return null;
     if (check.reason === "potion") return "Plus de potion pour ce combat";
-    if (check.reason === "energy") return `Il te manque ${COST[kind] - pa} PA`;
+    if (check.reason === "energy") return `Il te manque ${rules.cost[kind] - pa} PA`;
     return null;
   };
   const moves: Move[] = [
@@ -121,12 +136,12 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
     {
       kind: special,
       label: `✨ ${BOTTE[player.character]}`,
-      cost: `${COST[special]} PA`,
+      cost: `${rules.cost[special]} PA`,
       detail: why(special) ?? botte,
       blocked: blocked(special, BOTTE[player.character]),
       special: true,
     },
-    { kind: "POTION", label: "🧪 Potion", cost: `×${potions}`, detail: why("POTION") ?? (potions ? `+${POTION_HEAL} PV · ${potions} pour tout le combat` : "Plus de potion pour ce combat"), blocked: blocked("POTION", "boire une potion") },
+    { kind: "POTION", label: "🧪 Potion", cost: `×${potions}`, detail: why("POTION") ?? (potions ? `+${rules.potionHeal} PV · ${potions} pour tout le combat` : "Plus de potion pour ce combat"), blocked: blocked("POTION", "boire une potion") },
   ];
   // Jauge : au début de mon tour, les PA gardés du tour d'avant et ceux que le tour vient de donner.
   const turnGain = myTurn && s.turn?.used === 0 ? (s.log.findLast((e) => e.kind === "ENERGY" && e.playerId === player.id)?.amount ?? 0) : 0;
@@ -145,7 +160,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   const petOf = (id: string) => companionOf(game.players.find((p) => p.id === id)?.companion ?? null);
   const stageOf = (v: PlayerView): StageFighter => ({
     id: v.id, name: v.pseudo, levelForm: (v.id === input.arena.challengerId ? input.arena.challengerForm : input.arena.opponentForm) ?? v.levelForm, character: v.character, color: v.color, displayedForm: v.displayedForm, mood: v.mood, title: v.title,
-    hp: s.hp[v.id], maxHp: s.maxHp[v.id], parry: s.parry[v.id], stunned: s.turn?.playerId === v.id && s.turn.max < 3,
+    hp: s.hp[v.id], maxHp: s.maxHp[v.id], parry: s.parry[v.id], stunned: isStunned(s, v.id),
     companion: petOf(v.id),
     companionName: ((c) => (c ? companionLabel(v.id, c, game.quests) : null))(petOf(v.id)),
   });
@@ -168,12 +183,16 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
               </div>
               <div className={`flex flex-wrap items-center justify-between gap-2 border-[3px] px-3 py-2 ${myTurn ? "border-gold bg-[#3a2f17]" : "border-edge bg-night"}`}>
                 <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                  <span className="font-display text-[10px] leading-relaxed">{s.over ? "Combat terminé" : myTurn ? "À toi de jouer" : `${foe.pseudo} joue… ${s.turn?.used ?? 0}/${s.turn?.max ?? 3}`}</span>
-                  {myTurn && s.turn ? <span className="num text-gold">{actionsLeft} action{actionsLeft > 1 ? "s" : ""}</span> : null}
-                  {myTurn && s.turn && s.turn.max < ACTIONS_PER_TURN ? (
+                  <span className="font-display text-[10px] leading-relaxed">{s.over ? "Combat terminé" : myTurn ? "À toi de jouer" : `${foe.pseudo} joue…${s.turn?.max != null ? ` ${s.turn.used}/${s.turn.max}` : ""}`}</span>
+                  {myTurn && actionsLeft !== null ? <span className="num text-gold">{actionsLeft} action{actionsLeft > 1 ? "s" : ""}</span> : null}
+                  {s.turn && isStunned(s, player.id) ? (
                     <details className="arena-state">
                       <summary>💫 étourdi</summary>
-                      <span>Bambou tourbillon : {s.turn.max} action{s.turn.max > 1 ? "s" : ""} ce tour au lieu de {ACTIONS_PER_TURN}. Tes PA ne changent pas.</span>
+                      <span>
+                        {rules.stunTakes === "energy"
+                          ? `Bambou tourbillon : ${s.turn.stunned} PA de moins au début de ce tour.`
+                          : `Bambou tourbillon : ${s.turn.max} action${s.turn.max! > 1 ? "s" : ""} ce tour au lieu de ${ACTIONS_PER_TURN}. Tes PA ne changent pas.`}
+                      </span>
                     </details>
                   ) : null}
                 </span>
