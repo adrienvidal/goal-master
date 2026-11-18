@@ -1,5 +1,5 @@
 // E-mails envoyés depuis contact@viloris.io par le SMTP de Google Workspace (SMTP_USER, SMTP_PASS : mot de
-// passe d'application). En local, tout part vers DEV_MAIL_TO (src/lib/devMail.ts) ; sans DEV_MAIL_TO ou sans
+// passe d'application). Hors production, tout part vers DEV_MAIL_TO (src/lib/devMail.ts) ; sans DEV_MAIL_TO ou sans
 // SMTP_PASS, le message s'affiche dans le terminal.
 import nodemailer from "nodemailer";
 import { localRecipient } from "@/lib/devMail";
@@ -10,7 +10,7 @@ export type Mail = { to: string; subject: string; text: string; html: string };
 export async function sendMail(original: Mail): Promise<void> {
   const mail = localRecipient(original, process.env);
   if (!mail) {
-    console.log(`\n[e-mail non envoyé en local, DEV_MAIL_TO absent] à ${original.to} : ${original.subject}\n${original.text}\n`);
+    console.log(`\n[e-mail non envoyé hors production, DEV_MAIL_TO absent] à ${original.to} : ${original.subject}\n${original.text}\n`);
     return;
   }
   const user = process.env.SMTP_USER;
