@@ -214,6 +214,37 @@ textarea:focus, input:focus { outline: none; border-color: var(--gold); }
 .slot span small { display: block; font-size: 12px; color: var(--muted); }
 .rename { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
 @media (max-width: 360px) { .act4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Coffre v3 */
+.v3 { position: relative; overflow: hidden; }
+.v3-chest { position: relative; background: none; border: 0; padding: 0; cursor: pointer; display: grid; place-items: center; }
+.v3-chest .av { position: relative; z-index: 1; }
+.v3-chest.t1 .av { animation: v3shake .35s steps(4) 1; }
+.v3-chest.t2 .av { animation: v3shake2 .4s steps(5) 1; }
+@keyframes v3shake { 25% { transform: translateX(-3px) rotate(-2deg); } 75% { transform: translateX(3px) rotate(2deg); } }
+@keyframes v3shake2 { 20% { transform: translate(-5px,-2px) rotate(-4deg); } 60% { transform: translate(5px,-3px) rotate(4deg); } }
+.v3-ray { position: absolute; bottom: 30%; left: 50%; width: 70px; height: 0; transform: translateX(-50%); background: linear-gradient(to top, rgb(255 243 176 / .85), transparent); transition: height .5s ease-out; z-index: 0; }
+.v3-chest.open .v3-ray { height: 220px; }
+.v3-sparks { position: absolute; inset: 0; pointer-events: none; }
+.v3-sparks i { position: absolute; width: 4px; height: 4px; background: var(--glow); animation: v3spark .6s ease-out forwards; }
+@keyframes v3spark { to { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+.v3-taps { display: flex; gap: 6px; margin: 0; }
+.v3-taps i { width: 12px; height: 12px; border: 2px solid var(--gold); }
+.v3-taps i.on { background: var(--gold); }
+.v3-pick { opacity: 0; transform: translateY(16px) scale(.8); transition: opacity .3s, transform .3s; }
+.v3-pick.out { opacity: 1; transform: none; }
+.v3-pick.sil svg { filter: brightness(0); }
+.v3-coll { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.v3-coll .lbl { font-size: 13px; color: var(--muted); }
+.v3-coll b { color: var(--gold); }
+.v3-mini { display: flex; gap: 6px; align-items: flex-end; }
+.v3-mini .lockp svg { filter: brightness(0); opacity: .45; }
+.v3-done { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; max-width: 300px; }
+.v3-xp { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; width: 100%; }
+.v3-xp .bar i { transition: width 1.2s steps(10); }
+.v3-jump { animation: v3jump .6s steps(4) 1; }
+@keyframes v3jump { 0% { transform: translate(-60px,-40px); } 60% { transform: translate(0,-14px); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .v3-chest .av, .v3-jump, .v3-sparks i { animation: none !important; } .v3-ray, .v3-pick, .v3-xp .bar i { transition: none; } }
 </style>
 
 <div class="wrap">
@@ -225,6 +256,7 @@ textarea:focus, input:focus { outline: none; border-color: var(--gold); }
       <a href="#recue">Quête reçue</a>
       <a href="#donnee">Quête donnée</a>
       <a href="#coffre">Coffre</a>
+      <a href="#coffre-v3">Coffre v3</a>
       <a href="#menagerie">Ménagerie</a>
       <a href="#arene">Arène</a>
       <a href="#intro">Intro</a>
@@ -474,6 +506,43 @@ textarea:focus, input:focus { outline: none; border-color: var(--gold); }
     </div>
   </section>
 
+  <!-- 5 bis. COFFRE v3 : ouverture en trois coups, apparition une à une, XP qui se remplit, collection -->
+  <section class="screen" id="coffre-v3">
+    <header><span class="route">/coffre</span><h2>Coffre v3 · ouverture animée</h2><p>Jouable : touche le coffre trois fois (il tremble de plus en plus, étincelles), le couvercle saute dans un rayon de lumière, les trois compagnons sortent un par un en silhouette puis en couleur. Sous les choix, la collection (x/6). À l'adoption, le compagnon rejoint le héros et la barre d'XP se remplit de +20 sous tes yeux. « Rejouer » remet tout à zéro.</p></header>
+    <div class="grid">
+      <div class="full v3" id="v3-stage" aria-live="polite">
+        <p class="h-title" id="v3-title">Quête accomplie !</p>
+        <p class="muted" id="v3-sub">Adrien a validé « Poste un article sur LinkedIn ». Touche le coffre.</p>
+        <button type="button" class="v3-chest" id="v3-chest" aria-label="Taper sur le coffre"><span class="v3-ray"></span><span class="av" data-chest="closed" data-px="7" id="v3-chest-sprite"></span><span class="v3-sparks" id="v3-sparks"></span></button>
+        <p class="v3-taps" id="v3-taps"><i></i><i></i><i></i></p>
+        <div class="picks v3-picks" id="v3-picks" hidden>
+          <button class="pick v3-pick" data-pet="owl"><div class="av pet" data-pet="owl" data-px="4"></div><span>Hibou</span></button>
+          <button class="pick v3-pick sel" data-pet="fox"><div class="av pet joy" data-pet="fox" data-px="4"></div><span>Renard</span></button>
+          <button class="pick v3-pick" data-pet="dragon"><div class="av pet" data-pet="dragon" data-px="4"></div><span>Petit dragon</span></button>
+        </div>
+        <div class="v3-coll" id="v3-coll" hidden>
+          <span class="lbl">Ta collection · <b>2/6</b></span>
+          <span class="v3-mini"><span class="av" data-pet="cat" data-px="2"></span><span class="av" data-pet="dog" data-px="2"></span><span class="av lockp" data-pet="fox" data-px="2"></span><span class="av lockp" data-pet="owl" data-px="2"></span><span class="av lockp" data-pet="rabbit" data-px="2"></span><span class="av lockp" data-pet="dragon" data-px="2"></span></span>
+        </div>
+        <button class="btn" id="v3-adopt" style="max-width:260px" hidden>Adopter le renard</button>
+        <div class="v3-done" id="v3-done" hidden>
+          <div class="duo"><div class="av" data-sprite="panda" data-color="p2" data-px="5"></div><div class="av pet joy v3-jump" id="v3-hero-pet" data-pet="fox" data-px="4"></div></div>
+          <div class="v3-xp"><span class="num">Niv. 9</span><div class="bar"><i id="v3-xpbar" style="width:38%"></i></div><span class="num" id="v3-xptxt">38 / 100 XP</span></div>
+          <p class="xp" id="v3-gain">+20 XP</p>
+        </div>
+        <button type="button" class="btn ghost" id="v3-replay" style="max-width:200px">Rejouer</button>
+      </div>
+      <div class="device">
+        <h4>Ce qui change</h4>
+        <p class="muted"><b style="color:var(--ink)">1. Trois coups.</b> Chaque appui fait trembler le coffre plus fort et lance des étincelles ; les trois carrés sous le coffre comptent les coups. Au troisième, le couvercle saute dans un rayon de lumière.</p>
+        <p class="muted"><b style="color:var(--ink)">2. Un par un.</b> Les compagnons sortent l'un après l'autre (0,4 s d'écart), en silhouette noire puis en couleur.</p>
+        <p class="muted"><b style="color:var(--ink)">3. Collection.</b> Sous les choix : x/6 et les silhouettes de ceux qui manquent.</p>
+        <p class="muted"><b style="color:var(--ink)">4. Adoption fêtée.</b> Le compagnon bondit à côté du héros, la barre d'XP monte de +20 (avec passage de niveau animé si c'est le cas).</p>
+        <p class="muted">Animations réduites (réglage du téléphone) : pas de tremblement ni de rayon, les compagnons apparaissent directement.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- 6. MÉNAGERIE (v2 : noms) -->
   <section class="screen" id="menagerie">
     <header><span class="route">/menagerie</span><h2>Ménagerie</h2><p>v2 · Chaque compagnon a son nom (l'espèce en dessous). Toucher un compagnon l'affiche ; le champ du bas renomme celui qui est affiché. Accès : bouton « Ménagerie » de l'accueil, ou toucher son compagnon.</p></header>
@@ -645,4 +714,60 @@ document.querySelectorAll("#coffre-ouvert .pick").forEach((p) => p.addEventListe
 }));
 const nameField = document.getElementById("pet-name");
 nameField.addEventListener("input", () => { adopt.textContent = `Adopter ${nameField.value.trim() || "ce compagnon"}`; });
+
+// Coffre v3 : trois coups, sortie une à une, collection, XP qui monte.
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const chest = $("v3-chest"), sprite = $("v3-chest-sprite"), taps = [...document.querySelectorAll("#v3-taps i")];
+  const picks = $("v3-picks"), coll = $("v3-coll"), adopt = $("v3-adopt"), done = $("v3-done");
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let n = 0, choice = "fox";
+  const names = { owl: "le hibou", fox: "le renard", dragon: "le petit dragon" };
+  function sparks(k) {
+    if (reduced) return;
+    const box = $("v3-sparks");
+    for (let i = 0; i < 6 * k; i++) {
+      const s = document.createElement("i");
+      s.style.left = "50%"; s.style.top = "55%";
+      s.style.setProperty("--dx", `${Math.round((Math.random() - .5) * 140)}px`);
+      s.style.setProperty("--dy", `${Math.round(-Math.random() * 90)}px`);
+      box.appendChild(s); setTimeout(() => s.remove(), 650);
+    }
+  }
+  function reset() {
+    n = 0; chest.className = "v3-chest"; sprite.innerHTML = svg(CHEST.closed, "", 7); taps.forEach((t) => t.classList.remove("on"));
+    $("v3-title").textContent = "Quête accomplie !"; $("v3-sub").textContent = "Adrien a validé « Poste un article sur LinkedIn ». Touche le coffre.";
+    picks.hidden = true; coll.hidden = true; adopt.hidden = true; done.hidden = true; chest.hidden = false; $("v3-taps").hidden = false;
+    document.querySelectorAll(".v3-pick").forEach((p) => p.classList.remove("out", "sil"));
+    $("v3-xpbar").style.width = "38%"; $("v3-xptxt").textContent = "38 / 100 XP";
+  }
+  chest.addEventListener("click", () => {
+    if (n >= 3) return;
+    n++; taps[n - 1].classList.add("on"); sparks(n);
+    chest.classList.remove("t1", "t2"); void chest.offsetWidth;
+    if (n < 3) { chest.classList.add(n === 1 ? "t1" : "t2"); return; }
+    chest.classList.add("open"); sprite.innerHTML = svg(CHEST.open, "", 6);
+    $("v3-title").textContent = "Choisis ton compagnon"; $("v3-sub").textContent = "";
+    $("v3-taps").hidden = true; picks.hidden = false; coll.hidden = false;
+    document.querySelectorAll(".v3-pick").forEach((p, i) => {
+      p.classList.add("sil");
+      setTimeout(() => { p.classList.add("out"); setTimeout(() => p.classList.remove("sil"), reduced ? 0 : 350); }, reduced ? 0 : 450 + i * 400);
+    });
+    setTimeout(() => { adopt.hidden = false; }, reduced ? 0 : 1800);
+  });
+  document.querySelectorAll(".v3-pick").forEach((p) => p.addEventListener("click", () => {
+    document.querySelectorAll(".v3-pick").forEach((q) => { q.classList.remove("sel"); q.querySelector(".av").classList.remove("joy"); });
+    p.classList.add("sel"); p.querySelector(".av").classList.add("joy"); choice = p.dataset.pet;
+    adopt.textContent = `Adopter ${names[choice]}`;
+  }));
+  adopt.addEventListener("click", () => {
+    picks.hidden = true; coll.hidden = true; adopt.hidden = true; chest.hidden = true;
+    $("v3-title").textContent = `${names[choice].charAt(0).toUpperCase()}${names[choice].slice(1)} te suit !`;
+    const pet = $("v3-hero-pet"); pet.dataset.pet = choice; pet.innerHTML = svg(PETS[choice], "", 4);
+    pet.classList.remove("v3-jump"); void pet.offsetWidth; pet.classList.add("v3-jump");
+    done.hidden = false;
+    setTimeout(() => { $("v3-xpbar").style.width = "58%"; $("v3-xptxt").textContent = "58 / 100 XP"; }, reduced ? 0 : 500);
+  });
+  $("v3-replay").addEventListener("click", reset);
+})();
 </script>
