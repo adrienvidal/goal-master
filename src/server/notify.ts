@@ -1,8 +1,8 @@
-// Envoi d'une notification : Web Push sur les appareils abonnés et e-mail, toujours (spec notifications).
+// Envoi d'une notification : Web Push sur les appareils abonnés et e-mail, sauf les tours d'Arène (push seul).
 // Catégorie coupée ou plafond du jour atteint : rien. Le journal garantit qu'un événement ne part qu'une fois.
 import { parisDay } from "@/game/calendar";
 import { parisTime } from "@/game/duel";
-import { keyOf, pushBody, ruleOf, shouldSend, textOf, type NotificationEvent } from "@/game/notifications";
+import { keyOf, pushBody, ruleOf, sendsEmail, shouldSend, textOf, type NotificationEvent } from "@/game/notifications";
 import { formForLevel, levelFromXp } from "@/game/levels";
 import { totalXp } from "@/game/xp";
 import { pngSize, sceneToken, scenePng } from "@/lib/emailArt";
@@ -29,11 +29,12 @@ export async function notify(playerId: string, event: NotificationEvent, now = n
     throw error;
   }
   const text = textOf(event);
-  const scene = await mailScene(playerId, event).catch(() => null);
-  const results = await Promise.allSettled([
-    pushTo(playerId, { title: text.title, body: pushBody(text, event), url: text.url }),
-    sendMail(notificationMail(player.email, text, ruleOf(event).category, scene)),
-  ]);
+  const email = async (): Promise<void> => {
+    if (!sendsEmail(event)) return;
+    const scene = await mailScene(playerId, event).catch(() => null);
+    await sendMail(notificationMail(player.email, text, ruleOf(event).category, scene));
+  };
+  const results = await Promise.allSettled([pushTo(playerId, { title: text.title, body: pushBody(text, event), url: text.url }), email()]);
   for (const r of results) if (r.status === "rejected") console.error("Échec d'envoi de notification", keyOf(event), r.reason);
 }
 

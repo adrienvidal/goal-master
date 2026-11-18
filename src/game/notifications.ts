@@ -72,6 +72,14 @@ export function ruleOf(event: NotificationEvent): { category: Category; capped: 
   return RULES[event.kind];
 }
 
+/** Pendant un combat d'Arène, les tours ne partent qu'en push : un e-mail par tour, c'est du spam. */
+const PUSH_ONLY: ReadonlySet<NotificationEvent["kind"]> = new Set(["arena-turn"]);
+
+/** L'événement part-il aussi par e-mail ? */
+export function sendsEmail(event: NotificationEvent): boolean {
+  return !PUSH_ONLY.has(event.kind);
+}
+
 /** Clé unique par destinataire : un même événement ne part qu'une fois. */
 export function keyOf(event: NotificationEvent): string {
   switch (event.kind) {

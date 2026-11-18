@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Duel } from "./duel";
-import { formReached, keyOf, koCrossed, nudgesJustSucceeded, pushBody, ruleOf, rustDue, shouldSend, textOf, type NotificationEvent } from "./notifications";
+import { formReached, keyOf, koCrossed, nudgesJustSucceeded, pushBody, ruleOf, rustDue, sendsEmail, shouldSend, textOf, type NotificationEvent } from "./notifications";
 import type { NudgeRow } from "./nudges";
 import type { Application } from "./xp";
 
@@ -139,5 +139,15 @@ describe("notifications des quêtes", () => {
     expect(textOf(cancel)).toMatchObject({ headline: "Quête annulée", url: "/" });
     expect(textOf({ kind: "quest-end", questId: "q1", round: 7, validated: true, chest: false, partner: "Adrien", text })).toMatchObject({ headline: "Quête validée", url: "/" });
     expect(textOf(launched).detail).toContain(`« ${text} »`);
+  });
+});
+
+describe("sendsEmail", () => {
+  it("garde l'e-mail partout sauf pendant l'Arène", () => {
+    expect(sendsEmail({ kind: "arena-turn", arenaId: "a1", turn: 2, partner: "Nicolas", summary: "Nicolas frappe.", hp: 8 })).toBe(false);
+    expect(sendsEmail({ kind: "arena", arenaId: "a1", from: "Nicolas", rusty: false })).toBe(true);
+    expect(sendsEmail({ kind: "arena-end", arenaId: "a1", won: true, ko: false, partner: "Nicolas" })).toBe(true);
+    expect(sendsEmail(evo)).toBe(true);
+    expect(sendsEmail(nudgeEvent)).toBe(true);
   });
 });

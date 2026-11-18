@@ -4,7 +4,7 @@ Maquette validée : https://claude.ai/artifact/T7UcytDdGCRdEMB4uwnFNu (`docs/maq
 
 ## Règles
 
-- Chaque notification part **en Web Push** (appareils abonnés) **et par e-mail** (toujours, sans interrupteur propre).
+- Chaque notification part **en Web Push** (appareils abonnés) **et par e-mail** (sans interrupteur propre), sauf le tour d'Arène « À toi de jouer », en push seul pour ne pas noyer la boîte mail pendant un combat (décision du 18/11, `sendsEmail` dans `src/game/notifications.ts`).
 - Cinq catégories, coupables dans `/reglages` ; une catégorie coupée se tait sur les deux canaux.
 - **Plafond : 2 notifications « plafonnées » par jour (Paris) et par personne.** Hors plafond : relance reçue, rappel du jeudi, résultat du duel. Au-delà, abandon (jamais reporté).
 - Chaque notification a une **clé** unique par joueur : elle n'est envoyée qu'une fois, même si l'événement se rejoue (annulation puis nouvel ajout, cron relancé).
@@ -28,7 +28,7 @@ Maquette validée : https://claude.ai/artifact/T7UcytDdGCRdEMB4uwnFNu (`docs/maq
 
 ## Envoi (`src/server/notify.ts`)
 
-`notify(playerId, event)` : catégorie coupée → rien ; plafond atteint → rien ; insertion du journal (la contrainte unique garantit l'envoi unique) ; puis push + e-mail. Les envois déclenchés par une action passent dans `after()` pour ne pas ralentir la réponse. Décisions pures (plafond, rouille, évolution, K.O.) dans `src/game/notifications.ts`, testées.
+`notify(playerId, event)` : catégorie coupée → rien ; plafond atteint → rien ; insertion du journal (la contrainte unique garantit l'envoi unique) ; puis push + e-mail (push seul pour les tours d'Arène). Les envois déclenchés par une action passent dans `after()` pour ne pas ralentir la réponse. Décisions pures (plafond, rouille, évolution, K.O.) dans `src/game/notifications.ts`, testées.
 
 ## Cron
 
