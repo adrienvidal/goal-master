@@ -31,8 +31,7 @@ import { COLOR_HEX } from "@/lib/sprites";
 import { goalOutcome } from "@/lib/goal";
 import { buildPlayerView, removalImpact, splitCompany, type FeedItem, type PlayerView } from "@/lib/playerView";
 import { DAILY_XP_CAP } from "@/game/levels";
-import { db } from "@/server/db";
-import { arenaInputs, loadDuelInput, loadGame } from "@/server/game";
+import { activeGoal, arenaInputs, loadDuelInput, loadGame } from "@/server/game";
 import { requirePlayer } from "@/server/session";
 import AddApplication from "./AddApplication";
 import TodayList, { type TodayItem } from "./TodayList";
@@ -200,10 +199,6 @@ function ArenaCard({ input, meId, views, now }: { input: ArenaInput; meId: strin
   );
 }
 
-async function goalFor(playerId: string): Promise<{ target: number; deadline: Date; createdAt: Date } | null> {
-  return db().goal.findFirst({ where: { playerId, status: "ACTIVE" }, orderBy: { createdAt: "desc" }, select: { target: true, deadline: true, createdAt: true } });
-}
-
 function GoalBlock({ view }: { view: PlayerView }): React.ReactElement | null {
   if (!view.goal) return null;
   const { done, target, deadline, daysLeft } = view.goal;
@@ -229,12 +224,12 @@ export default async function HomePage(): Promise<React.ReactElement> {
   // Un coffre de quête à ouvrir passe avant tout le reste (spec quetes).
   if (pendingChest(player.id, game.quests)) redirect("/coffre");
   const now = new Date();
-  const myGoal = await goalFor(player.id);
+  const myGoal = activeGoal(game, player.id);
   if (!myGoal) redirect("/objectif/nouveau");
   const me = buildPlayerView(player, game.apps, game.nudges, game.quests, myGoal, now);
   if (me.goal && goalOutcome(me.goal.done, me.goal.target, me.goal.deadline, parisDay(now)) !== "active") redirect("/objectif/fin");
   const partnerRow = game.players.find((p) => p.id !== player.id);
-  const partner = partnerRow ? buildPlayerView(partnerRow, game.apps, game.nudges, game.quests, await goalFor(partnerRow.id), now) : null;
+  const partner = partnerRow ? buildPlayerView(partnerRow, game.apps, game.nudges, game.quests, activeGoal(game, partnerRow.id), now) : null;
   const received = partner ? pendingNudge(player.id, game.nudges, game.apps, now) : null;
   const won = partner ? justWonNudge(player.id, game.nudges, game.apps, now) : null;
   const duelInput = await loadDuelInput(game);
