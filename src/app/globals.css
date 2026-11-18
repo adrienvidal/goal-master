@@ -458,3 +458,44 @@ html[data-decor] main { visibility: hidden; }
   .chest-hit1, .chest-hit2, .chest-jump, .chest-sparks i { animation: none; }
   .chest-ray, .chest-pick, .chest-xp { transition: none; }
 }
+
+/* Bottes plein écran (spec 2026-11-18-arene-bottes-plein-ecran, maquette arene-botte) : la séquence couvre toute la
+   fenêtre avant l'impact. Bandeau : pierre (★), acier ou bambou (★★), or (★★★). */
+.botte { position: fixed; inset: 0; z-index: 60; overflow: hidden; display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: pointer; color: var(--ink); --band-estoc: #24507a; --band-whirl: #2b5e33; --leaf: #7bc95a; --leaf-dk: #3f8a3a; --clang: #9fd8ff; }
+.botte > span, .botte > svg { position: absolute; pointer-events: none; }
+.botte-dim { inset: 0; background: rgba(8, 6, 18, .78); }
+.botte-lines { inset: -20%; opacity: 0; background: repeating-linear-gradient(100deg, transparent 0 22px, rgba(241,236,255,.10) 22px 24px, transparent 24px 61px, rgba(241,236,255,.06) 61px 62px); }
+.botte-band { left: -10%; right: -10%; top: 50%; height: var(--bh); margin-top: calc(var(--bh) / -2); transform: rotate(-7deg); background: var(--stone-2); border-block: 4px solid var(--edge); box-shadow: 0 8px 0 #0c0a1a; }
+.botte.t2.estoc .botte-band { background: var(--band-estoc); border-color: var(--clang); }
+.botte.t2.whirl .botte-band { background: var(--band-whirl); border-color: var(--leaf); }
+.botte.t3 .botte-band { background: linear-gradient(180deg, #f6d27a, var(--gold) 45%, var(--gold-dk)); border-color: #fff3c4; }
+.botte-clip { position: absolute; inset: 0; overflow: hidden; }
+.botte-shine { position: absolute; top: 0; bottom: 0; width: 30%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent); transform: translateX(-200%) skewX(-20deg); }
+.botte-in { position: absolute; inset: 0 10%; display: flex; align-items: center; justify-content: center; gap: 5%; padding: 0 6%; transform: rotate(7deg); text-align: left; }
+.botte.from-right .botte-in { flex-direction: row-reverse; text-align: right; }
+.botte-hero { position: relative; flex: none; line-height: 0; }
+.botte-flip, .botte-rig, .botte-spin, .botte-weapon, .botte-ghost, .botte-layer { position: absolute; inset: 0; }
+.botte-flip.flipped { transform: scaleX(-1); }
+.botte-rig, .botte-ghost { transform-origin: 50% 100%; }
+.botte-ghost { opacity: 0; }
+.botte-spin.legend .botte-layer { filter: drop-shadow(0 0 6px rgba(242,193,78,.75)); }
+.botte-dust { position: absolute; left: 50%; bottom: 0; width: 8px; height: 8px; margin-left: -4px; background: var(--muted); opacity: 0; }
+.botte-title { min-width: 0; overflow-wrap: anywhere; }
+.botte-title b { display: block; font-family: var(--font-press-start), monospace; font-weight: normal; font-size: var(--ts); line-height: 1.35; text-shadow: 3px 3px 0 #0c0a1a; }
+.botte-title i { display: block; font-style: normal; font-size: calc(var(--ts) * .9); letter-spacing: 4px; color: var(--gold); margin-top: 6px; }
+.botte.t3 .botte-title b { color: #0c0a1a; text-shadow: 2px 2px 0 #fff3c4; }
+.botte.t3 .botte-title i { color: #0c0a1a; }
+.botte-fx { inset: 0; }
+.botte-slash { position: absolute; left: -10%; width: 120%; top: 50%; height: 6px; margin-top: -3px; background: #ffffff; box-shadow: 0 0 12px var(--clang), 0 0 2px #ffffff; transform-origin: left center; transform: scaleX(0); }
+.botte-leaf { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.botte-leaf i { position: absolute; width: 10px; height: 6px; margin: -3px 0 0 -5px; background: var(--leaf); box-shadow: 4px 0 0 var(--leaf-dk); opacity: 0; }
+@media (min-width: 768px) { .botte-leaf i { width: 14px; height: 8px; margin: -4px 0 0 -7px; box-shadow: 6px 0 0 var(--leaf-dk); } }
+.botte-gust { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 4px solid transparent; border-top-color: rgba(241,236,255,.35); border-right-color: rgba(241,236,255,.15); opacity: 0; }
+.botte-tint { inset: 0; opacity: 0; background: radial-gradient(circle, rgba(123,201,90,.05), rgba(63,138,58,.45)); }
+.botte.reduced.estoc .botte-tint { background: rgba(255,107,107,.35); }
+.botte.reduced.whirl .botte-tint { background: rgba(123,201,90,.3); }
+.botte-flash { inset: 0; background: #ffffff; opacity: 0; }
+.botte-cracks { inset: 0; width: 100%; height: 100%; }
+.botte-cracks polyline { fill: none; stroke: #ffffff; stroke-width: 3; stroke-linecap: square; stroke-dasharray: 100; stroke-dashoffset: 100; filter: drop-shadow(0 0 3px var(--clang)); }
+.botte-pierce { left: 0; right: 0; top: 20%; text-align: center; font-family: var(--font-press-start), monospace; font-size: 15px; line-height: 1.5; color: var(--gold); text-shadow: 3px 3px 0 #0c0a1a; opacity: 0; padding: 0 12px; }
+.botte-skip { right: max(12px, env(safe-area-inset-right, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px)); font-size: 12px; color: var(--muted); }
