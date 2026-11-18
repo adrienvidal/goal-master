@@ -118,8 +118,8 @@ export function questXp(playerId: string, quests: QuestRow[], at?: Date): number
 }
 
 /** Nom choisi pour un compagnon : vide ou identique à l'espèce = pas de nom propre (null). */
-export function checkCompanionName(raw: string, id: CompanionId): { ok: true; name: string | null } | { ok: false; error: string } {
-  const name = raw.trim();
+export function checkCompanionName(raw: unknown, id: CompanionId): { ok: true; name: string | null } | { ok: false; error: string } {
+  const name = typeof raw === "string" ? raw.trim() : "";
   if (name.length > COMPANION_NAME_MAX) return { ok: false, error: `${COMPANION_NAME_MAX} caractères au plus.` };
   return { ok: true, name: name && name !== COMPANION_NAMES[id].name ? name : null };
 }

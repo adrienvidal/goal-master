@@ -20,7 +20,12 @@ export function Menagerie({ owned, shown, names }: { owned: CompanionId[]; shown
       setError("");
       setCurrent(c);
       const r = await showCompanion(c).catch(() => OFFLINE);
-      if (!r.ok) setError(r.error);
+      if (!r.ok) {
+        setError(r.error);
+        // Le compagnon affiché n'a pas changé : le champ reprend son nom, pour ne pas renommer le mauvais.
+        const back = owned.find((o) => o === shown);
+        setDraft(back ? names[back] ?? COMPANION_NAMES[back].name : "");
+      }
     });
   };
   const rename = (e: React.FormEvent) => {
@@ -42,7 +47,8 @@ export function Menagerie({ owned, shown, names }: { owned: CompanionId[]; shown
               <Companion id={c} px={4} label={names[c]} />
               <span className="max-w-full overflow-hidden text-ellipsis">
                 {names[c] ?? COMPANION_NAMES[c].name}
-                {c === current ? <small className="block text-xs text-gold">affiché</small> : names[c] && names[c] !== COMPANION_NAMES[c].name ? <small className="block text-xs text-muted">{COMPANION_NAMES[c].name}</small> : null}
+                {names[c] && names[c] !== COMPANION_NAMES[c].name ? <small className="block text-xs text-muted">{COMPANION_NAMES[c].name}</small> : null}
+                {c === current ? <small className="block text-xs text-gold">affiché</small> : null}
               </span>
             </button>
           ) : (
