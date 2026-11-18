@@ -308,7 +308,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
             <ArenaIncoming id={arenaIncoming.id}>
               <Sprite character={partner.character} color={partner.color} form={partner.displayedForm} pose="action" px={2} crown={crownIds.has(partner.id)} />
               <p className="min-w-0 text-[15px]">
-                <b className="text-magic">{partner.pseudo} te provoque en Arène.</b> Tour par tour, tes candidatures font tes coups.
+                <b className="text-magic">{partner.pseudo} te provoque en Arène.</b> Tour par tour, 3 PA à chaque tour. Aucune XP en jeu.
               </p>
             </ArenaIncoming>
           ) : null}

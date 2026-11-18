@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Companion } from "./Companion";
 import type { CompanionId } from "@/game/quests";
@@ -104,7 +105,8 @@ function writeSeen(arenaId: string, at: string): void {
  * Rejeu et direct (spec arene v2) : les coups de l'adversaire pas encore vus sur cet appareil se rejouent un par un,
  * à l'arrivée (avec le bandeau « Pendant ton absence ») comme à chaque rafraîchissement de 3 s. Mon coup s'anime au clic.
  */
-export function ArenaLive({ arenaId, meId, foeName, hits, children }: { arenaId: string; meId: string; foeName: string; hits: StageHit[]; children: React.ReactNode }): React.ReactElement {
+/** `ended` : le combat est fini (K.O. ou échéance) ; le rejeu va jusqu'au bout, puis mène au résultat. */
+export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { arenaId: string; meId: string; foeName: string; hits: StageHit[]; ended: boolean; children: React.ReactNode }): React.ReactElement {
   const [fx, setFx] = useState<Fx | null>(null);
   const [queue, setQueue] = useState<StageHit[]>([]);
   const [step, setStep] = useState<StageHit | null>(null);
@@ -125,8 +127,8 @@ export function ArenaLive({ arenaId, meId, foeName, hits, children }: { arenaId:
     const first = known.current === null;
     const since = first ? readSeen(arenaId) : known.current;
     known.current = lastAt ?? "";
-    let fresh = since ? hits.filter((h) => h.at > since) : hits.slice(hits.findLastIndex((h) => h.by === meId) + 1);
-    if (first && !since) fresh = fresh.filter((h) => h.by !== meId);
+    // Sans trace sur cet appareil : seulement les coups de l'adversaire depuis mon dernier coup.
+    const fresh = since !== null ? hits.filter((h) => h.at > since) : hits.slice(hits.findLastIndex((h) => h.by === meId) + 1);
     const mine = fresh.filter((h) => h.by === meId);
     const theirs = fresh.filter((h) => h.by !== meId);
     // Confirmation de mon coup : l'animation lancée au clic continue, seul le chiffre tiré s'ajoute.
@@ -140,7 +142,7 @@ export function ArenaLive({ arenaId, meId, foeName, hits, children }: { arenaId:
       if (lastAt && queue.length === 0 && !step) writeSeen(arenaId, lastAt);
       return;
     }
-    if (first) setBanner({ total: theirs.length, done: 0, lost: theirs[0].hpBefore[meId] - theirs[theirs.length - 1].hpAfter[meId] });
+    setBanner(first ? { total: theirs.length, done: 0, lost: theirs[0].hpBefore[meId] - theirs[theirs.length - 1].hpAfter[meId] } : null);
     setQueue((q) => [...q, ...theirs]);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- seuls les nouveaux coups déclenchent le rejeu
   }, [lastAt]);
@@ -152,7 +154,7 @@ export function ArenaLive({ arenaId, meId, foeName, hits, children }: { arenaId:
     setStep(next);
     setQueue(rest);
     show({ by: next.by, kind: next.kind, amount: next.amount, replay: true });
-    setBanner((b) => (b ? { ...b, done: b.done + 1 } : b));
+    setBanner((b) => (b ? { ...b, done: Math.min(b.total, b.done + 1) } : b));
     writeSeen(arenaId, next.at);
   }, [queue, step, show, arenaId]);
 
@@ -201,6 +203,9 @@ export function ArenaLive({ arenaId, meId, foeName, hits, children }: { arenaId:
               <div className="dots" aria-hidden>{Array.from({ length: banner.total }, (_, i) => <i key={i} className={!busy || i < banner.done ? "on" : ""} />)}</div>
               {busy ? <button type="button" className="btn ghost !w-auto !px-3 !py-2 !text-[9px]" onClick={skip}>Passer</button> : <button type="button" className="text-sm text-muted underline" onClick={() => setBanner(null)}>Fermer</button>}
             </div>
+          ) : null}
+          {ended && !busy ? (
+            <Link href="/arene/resultat" className="btn arena">Voir le résultat</Link>
           ) : null}
           {children}
         </ReplayCtx.Provider>
@@ -266,12 +271,13 @@ export function StageFighterView({ f: given, right, isMe }: { f: StageFighter; r
   );
 }
 
+const JOURNAL_LINES = 14;
 export type JournalLine = { index: number; time: string; text: string; tone: "me" | "foe" | "sys" };
 
 /** Journal du combat, du plus récent au plus ancien ; pendant un rejeu, les lignes pas encore rejouées attendent leur tour. */
 export function ArenaJournal({ lines, empty }: { lines: JournalLine[]; empty: string }): React.ReactElement {
   const { logEnd } = useContext(ReplayCtx);
-  const shown = logEnd === null ? lines : lines.filter((l) => l.index <= logEnd);
+  const shown = (logEnd === null ? lines : lines.filter((l) => l.index <= logEnd)).slice(0, JOURNAL_LINES);
   return (
     <ol className="flex flex-col gap-1.5 text-sm">
       {shown.length === 0 ? <li className="text-muted">{empty}</li> : null}

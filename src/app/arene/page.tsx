@@ -18,6 +18,7 @@ const BOTTE = { KNIGHT: "Coup d'estoc", PANDA: "Bambou tourbillon" } as const;
 /** Le binôme est « dans l'Arène » s'il l'a affichée il y a moins de 10 s (rafraîchie toutes les 3 s). */
 const PRESENT_MS = 10_000;
 const LIVE_MS = 3000;
+const ENDED_STAY_MS = 60 * 60 * 1000;
 const VISIBLE = ["ATTACK", "THRUST", "WHIRL", "PARRY", "POTION"] as const;
 type Visible = (typeof VISIBLE)[number];
 
@@ -78,7 +79,9 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   const game = await loadGame();
   const now = new Date();
   const inputs = arenaInputs(game).filter((i) => i.arena.challengerId === player.id || i.arena.opponentId === player.id);
-  const input = inputs.find((i) => arenaPhase(i.arena, i.actions, now) === "running");
+  // Un combat fini il y a moins d'une heure reste affiché ici : le coup du K.O. se rejoue avant le résultat.
+  const recent = finishedArenas(inputs, now).find((f) => now.getTime() - f.over.at.getTime() < ENDED_STAY_MS)?.input;
+  const input = inputs.find((i) => arenaPhase(i.arena, i.actions, now) === "running") ?? recent;
   if (!input) redirect(finishedArenas(inputs, now).length ? "/arene/resultat" : "/");
   // Présence : chaque affichage (toutes les 3 s) note que ce joueur a l'Arène ouverte.
   await db().player.update({ where: { id: player.id }, data: { arenaSeenAt: now } });
@@ -118,7 +121,6 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
     .map((e, index) => ({ e, index }))
     .filter(({ e }) => e.kind !== "ENERGY" || e.playerId === player.id)
     .reverse()
-    .slice(0, 14)
     .map(({ e, index }) => ({
       index,
       time: TIME.format(e.at),
@@ -141,7 +143,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
           <h1 className="h-title">🛡️ Arène</h1>
           <Link href="/" className="text-sm text-muted underline">Accueil</Link>
         </div>
-        <ArenaLive arenaId={input.arena.id} meId={player.id} foeName={foe.pseudo} hits={stageHits(s)}>
+        <ArenaLive arenaId={input.arena.id} meId={player.id} foeName={foe.pseudo} hits={stageHits(s)} ended={s.over !== null}>
           <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:items-start">
             <div className="flex min-w-0 flex-col gap-3">
               <ArenaPresence name={foe.pseudo} here={foeHere} />
@@ -150,8 +152,8 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
                 <StageFighterView f={stageOf(foe)} right isMe={false} />
               </div>
               <div className={`flex flex-wrap items-center justify-between gap-2 border-[3px] px-3 py-2 ${myTurn ? "border-gold bg-[#3a2f17]" : "border-edge bg-night"}`}>
-                <span className="font-display text-[10px] leading-relaxed">{myTurn ? "À toi de jouer" : `${foe.pseudo} joue… ${s.turn?.used ?? 0}/${s.turn?.max ?? 3}`}</span>
-                <span className="num text-muted">jusqu&apos;à {turnEnds} · fin dans {timeLeft(input.arena.deadline!.getTime() - now.getTime())}</span>
+                <span className="font-display text-[10px] leading-relaxed">{s.over ? "Combat terminé" : myTurn ? "À toi de jouer" : `${foe.pseudo} joue… ${s.turn?.used ?? 0}/${s.turn?.max ?? 3}`}</span>
+                {s.over ? null : <span className="num text-muted">jusqu&apos;à {turnEnds} · fin dans {timeLeft(input.arena.deadline!.getTime() - now.getTime())}</span>}
               </div>
               <div className="flex flex-wrap items-center gap-1" aria-label={`PA : ${pa}`}>
                 <span className="mr-1.5 text-[13px] uppercase tracking-wider text-muted">PA</span>
@@ -162,7 +164,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
               {myTurn && s.turn && s.turn.max < 3 ? <p className="border-l-4 border-energy bg-[#13283a] px-2.5 py-1.5 text-sm">Bambou tourbillon t&apos;a étourdi : ce tour, {s.turn.max} action{s.turn.max > 1 ? "s" : ""} au plus.</p> : null}
               {myTurn && pa === 0 && potions > 0 ? <p className="border-l-4 border-energy bg-[#13283a] px-2.5 py-1.5 text-sm">Plus de PA : bois une potion ou finis ton tour.</p> : null}
               <ArenaMoves id={input.arena.id} moves={moves} used={s.turn?.used ?? 0} max={s.turn?.max ?? 3} myTurn={myTurn} />
-              {!myTurn ? <p className="text-sm text-muted">Au début de ton tour, tu recevras {ENERGY_PER_TURN} PA en plus des {pa} que tu gardes.</p> : null}
+              {!myTurn && !s.over ? <p className="text-sm text-muted">Au début de ton tour : +{Math.min(ENERGY_PER_TURN, MAX_ENERGY - pa)} PA (tu en gardes {pa}, {MAX_ENERGY} au plus).</p> : null}
             </div>
             <div className="flex flex-col gap-1.5 border-[3px] border-edge bg-night px-3 py-2.5">
               <span className="text-[13px] uppercase tracking-wider text-muted">Journal</span>
