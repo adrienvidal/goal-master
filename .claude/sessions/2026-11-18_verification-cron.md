@@ -86,3 +86,21 @@
 - Écartés : second bilan à midi, réglage de l'heure, retrait de ce que le joueur a déjà vu
 - Scripts locaux avec `tsx --env-file` : charger `.env.local` avant `.env.development.local`, sinon la base Neon de développement prend le pas sur Docker
 
+
+---
+
+## Suite : Quêtes v2 après test sur l'aperçu
+
+### Réalisé
+- Retours d'Adrien : carte Quêtes austère et actions mélangées, nom du compagnon, Ménagerie introuvable
+- Maquette v2 validée (même lien), cadrage §v2, plan `docs/superpowers/plans/2026-11-18-quetes-v2.md`
+- PR #86 fusionnée dans `dev` : bandeau de quête reçue, ligne « Ta quête pour X » et 4e action « 📜 Quête » dans la carte du binôme, bouton Ménagerie, nom du compagnon (adoption, renommage, accueil, fil, Arène), migration `companion_names` ; 218 tests verts ; revue de branche corrigée
+- Aperçu de `dev` reconstruit avec succès
+
+### Reste à faire
+- Adrien reteste les Quêtes v2 sur l'aperçu, puis mise en production sur accord
+- Base locale : quêtes de test `t-in`, `t-out`, `t-chest3`, `test-chest-2`
+
+### Décisions
+- Tout ce qui vise le binôme vit dans sa carte (Motiver, Défier, Arène, Quête) ; la quête reçue s'annonce en bandeau, comme un défi ou une provocation
+- Le nom du compagnon vit sur la quête qui l'a donné (`companionName`), vide = nom de l'espèce
