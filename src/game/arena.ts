@@ -58,7 +58,8 @@ export type Rules = {
   startBonus(form: number, otherForm: number): number;
 };
 
-const tierOf = (form: number) => Math.ceil(form / 2);
+/** Palier de l'évolution (1-2, 3-4, 5-6) : il règle la force de la Botte et sa mise en scène. */
+export const tierOf = (form: number): 1 | 2 | 3 => Math.min(3, Math.max(1, Math.ceil(form / 2))) as 1 | 2 | 3;
 
 /** v2 (18/11) : stats qui montent avec l'évolution, +1 PA pour l'outsider. Gardée pour rejouer les combats commencés avant la v3. */
 const V2: Rules = {
