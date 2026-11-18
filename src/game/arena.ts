@@ -45,8 +45,12 @@ export type Rules = {
   version: number;
   cost: Record<ArenaKind, number>;
   potionHeal: number;
-  /** Actions du premier tour du lanceur, qui ouvre le combat. */
-  openerActions: number;
+  /** Actions par tour ; `null` : pas de limite, seuls les PA comptent (v3). */
+  actionsPerTurn: number | null;
+  /** PA reçus par le lanceur à son premier tour, qui ouvre le combat. */
+  openerEnergy: number;
+  /** Ce que retire le Bambou tourbillon au tour suivant de l'adversaire : des actions (v2) ou des PA (v3). */
+  stunTakes: "actions" | "energy";
   /** PA en réserve au départ pour celui qui répond à la provocation. */
   responderBonus: number;
   stats(form: number): Stats;
@@ -61,7 +65,9 @@ const V2: Rules = {
   version: 2,
   cost: { ATTACK: 1, PARRY: 1, THRUST: 3, WHIRL: 3, POTION: 0, END: 0 },
   potionHeal: 6,
-  openerActions: ACTIONS_PER_TURN,
+  actionsPerTurn: ACTIONS_PER_TURN,
+  openerEnergy: ENERGY_PER_TURN,
+  stunTakes: "actions",
   responderBonus: 0,
   stats: (form) => {
     const tier = tierOf(form);
@@ -71,20 +77,23 @@ const V2: Rules = {
 };
 
 /**
- * v3 (équilibrage du 18/11) : l'évolution change le style plus que la force (Parade percée au dernier palier),
- * celui qui ouvre n'a que 2 actions au premier tour et l'autre part avec 1 PA, la Botte coûte 2 PA,
- * le Bambou tourbillon blesse aussi, et les coups varient davantage pour que rien ne soit joué d'avance.
+ * v3 (équilibrage du 18/11) : les PA sont la seule limite d'un tour (plus de compte d'actions),
+ * l'évolution pèse modérément (PV, Parade percée au dernier palier), celui qui répond part avec 1 PA,
+ * la Botte coûte 2 PA, le Bambou tourbillon blesse aussi et retire 1 PA au tour suivant de l'adversaire,
+ * et les coups varient assez pour que rien ne soit joué d'avance.
  * Cibles convenues avec Adrien, vérifiées par arena-balance.test.ts.
  */
 const V3: Rules = {
   version: 3,
   cost: { ATTACK: 1, PARRY: 1, THRUST: 2, WHIRL: 2, POTION: 0, END: 0 },
   potionHeal: 6,
-  openerActions: 2,
+  actionsPerTurn: null,
+  openerEnergy: ENERGY_PER_TURN,
+  stunTakes: "energy",
   responderBonus: 1,
   stats: (form) => {
     const tier = tierOf(form);
-    return { maxHp: 48 + form, attack: [2, 8], thrust: [2 + tier, 10 + tier], pierce: tier === 3, whirl: 2 + tier, whirlHit: 4, stun: 1 };
+    return { maxHp: 48 + 2 * form, attack: [2, 8], thrust: [4 + tier, 12 + tier], pierce: tier === 3, whirl: 1 + tier, whirlHit: 3, stun: 1 };
   },
   startBonus: (form, otherForm) => Math.max(0, Math.ceil((otherForm - form) / 2)),
 };
@@ -121,7 +130,8 @@ export function arenaDeadline(acceptedAt: Date): Date {
 
 /** `hp` : les PV des deux après la ligne, pour rejouer le combat pas à pas. ENERGY = PA du début de tour, REFUND = PA rendu par la Parade. */
 export type LogEntry = { at: Date; playerId: string; kind: ArenaKind | "TIMEOUT" | "ENERGY" | "REFUND"; amount: number; hp: Record<string, number>; dealt?: number };
-export type Turn = { playerId: string; number: number; startedAt: Date; used: number; max: number; endsAt: Date };
+/** `max` : actions permises ce tour (`null` : pas de limite) ; `stunned` : actions ou PA retirés par le Bambou tourbillon. */
+export type Turn = { playerId: string; number: number; startedAt: Date; used: number; max: number | null; stunned: number; endsAt: Date };
 /** `byBotte` : K.O. porté pendant le tour où le gagnant a joué sa Botte (Coup de maître, à la portée des deux personnages). */
 export type Over = { winnerId: string | null; ko: boolean; byBotte: boolean; at: Date };
 export type ArenaState = {
@@ -171,18 +181,20 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
   const start = r.acceptedAt;
   const end = now < r.deadline ? now : r.deadline;
   const stun: Record<string, number> = Object.fromEntries(ids.map((id) => [id, 0]));
-  let turn: Turn = { playerId: r.challengerId, number: 1, startedAt: start, used: 0, max: rules.openerActions, endsAt: new Date(start.getTime() + TURN_TIMEOUT_MS) };
-  log(start, turn.playerId, "ENERGY", gain(turn.playerId, ENERGY_PER_TURN));
+  let turn: Turn = { playerId: r.challengerId, number: 1, startedAt: start, used: 0, max: rules.actionsPerTurn, stunned: 0, endsAt: new Date(start.getTime() + TURN_TIMEOUT_MS) };
+  log(start, turn.playerId, "ENERGY", gain(turn.playerId, rules.openerEnergy));
 
   let botteInTurn = false;
   const passTurn = (at: Date) => {
     botteInTurn = false;
     s.previous = { playerId: turn.playerId, startedAt: turn.startedAt, endedAt: at };
     const next = other(turn.playerId);
-    const max = Math.max(1, ACTIONS_PER_TURN - stun[next]);
+    const stunned = stun[next];
     stun[next] = 0;
-    turn = { playerId: next, number: turn.number + 1, startedAt: at, used: 0, max, endsAt: new Date(at.getTime() + TURN_TIMEOUT_MS) };
-    log(at, next, "ENERGY", gain(next, ENERGY_PER_TURN));
+    const byActions = rules.stunTakes === "actions" && rules.actionsPerTurn !== null;
+    const max = byActions ? Math.max(1, rules.actionsPerTurn! - stunned) : rules.actionsPerTurn;
+    turn = { playerId: next, number: turn.number + 1, startedAt: at, used: 0, max, stunned, endsAt: new Date(at.getTime() + TURN_TIMEOUT_MS) };
+    log(at, next, "ENERGY", gain(next, byActions ? ENERGY_PER_TURN : Math.max(0, ENERGY_PER_TURN - stunned)));
   };
   const timeouts = (until: Date) => {
     while (turn.endsAt <= until) {
@@ -232,7 +244,7 @@ export function arenaState(input: ArenaInput, now: Date): ArenaState {
       return s;
     }
     if (a.kind === "END") passTurn(a.createdAt);
-    else if (++turn.used >= turn.max) passTurn(a.createdAt);
+    else if (++turn.used >= (turn.max ?? Infinity)) passTurn(a.createdAt);
   }
   timeouts(end);
   if (now >= r.deadline) {
@@ -304,10 +316,10 @@ export function canPlay(state: ArenaState, playerId: string, kind: ArenaKind): M
   return { ok: true };
 }
 
-/** Étourdi : c'est son tour et le Bambou tourbillon lui a retiré des actions (le premier tour, plus court pour celui qui ouvre, n'en est pas un). */
+/** Étourdi : c'est son tour et le Bambou tourbillon lui a retiré des actions (v2) ou des PA (v3). */
 export function isStunned(state: ArenaState, playerId: string): boolean {
   const t = state.turn;
-  return !!t && t.playerId === playerId && t.number > 1 && t.max < ACTIONS_PER_TURN;
+  return !!t && t.playerId === playerId && t.stunned > 0;
 }
 
 /** Plus rien à jouer ce tour (ni PA ni potion) : le tour se termine tout seul, l'autre n'attend pas. */
