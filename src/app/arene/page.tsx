@@ -98,20 +98,28 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   const off = (kind: Parameters<typeof canPlay>[2]) => !canPlay(s, player.id, kind).ok;
   const potions = s.potions[player.id];
   const pa = s.energy[player.id];
-  const missing = COST[special] - pa;
   const botte = special === "THRUST" ? `${st.thrust} dégâts${st.pierce ? ", perce la Parade" : ""}` : `+${st.whirl} PV, ${foe.pseudo} perd ${st.stun} action${st.stun > 1 ? "s" : ""}`;
+  const actionsLeft = s.turn ? s.turn.max - s.turn.used : 0;
+  /** Raison affichée sous une action grisée pendant mon tour. */
+  const why = (kind: Parameters<typeof canPlay>[2]): string | null => {
+    const check = canPlay(s, player.id, kind);
+    if (!myTurn || check.ok) return null;
+    if (check.reason === "potion") return "Plus de potion pour ce combat";
+    if (check.reason === "energy") return `Il te manque ${COST[kind] - pa} PA`;
+    return null;
+  };
   const moves: Move[] = [
-    { kind: "ATTACK", label: "⚔️ Attaque", cost: "1 PA", detail: `${st.attack[0]} à ${st.attack[1]} dégâts`, disabled: off("ATTACK") },
-    { kind: "PARRY", label: "🛡️ Parade", cost: "1 PA", detail: "Divise le prochain coup · +1 PA s'il arrive", disabled: off("PARRY") },
+    { kind: "ATTACK", label: "⚔️ Attaque", cost: "1 PA", detail: why("ATTACK") ?? `${st.attack[0]} à ${st.attack[1]} dégâts`, disabled: off("ATTACK") },
+    { kind: "PARRY", label: "🛡️ Parade", cost: "1 PA", detail: why("PARRY") ?? "Divise le prochain coup · +1 PA s'il arrive", disabled: off("PARRY") },
     {
       kind: special,
       label: `✨ ${BOTTE[player.character]}`,
       cost: `${COST[special]} PA`,
-      detail: myTurn && missing > 0 ? `Il te manque ${missing} PA. Garde-les ce tour, tu pourras la lancer au prochain.` : botte,
+      detail: why(special) ?? botte,
       disabled: off(special),
       special: true,
     },
-    { kind: "POTION", label: "🧪 Potion", cost: `×${potions}`, detail: potions ? `+${POTION_HEAL} PV · ${potions} pour tout le combat` : "Plus de potion pour ce combat", disabled: off("POTION") },
+    { kind: "POTION", label: "🧪 Potion", cost: `×${potions}`, detail: why("POTION") ?? (potions ? `+${POTION_HEAL} PV · ${potions} pour tout le combat` : "Plus de potion pour ce combat"), disabled: off("POTION") },
   ];
   // Jauge : au début de mon tour, les PA gardés du tour d'avant et ceux que le tour vient de donner.
   const turnGain = myTurn && s.turn?.used === 0 ? (s.log.findLast((e) => e.kind === "ENERGY" && e.playerId === player.id)?.amount ?? 0) : 0;
@@ -152,7 +160,16 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
                 <StageFighterView f={stageOf(foe)} right isMe={false} />
               </div>
               <div className={`flex flex-wrap items-center justify-between gap-2 border-[3px] px-3 py-2 ${myTurn ? "border-gold bg-[#3a2f17]" : "border-edge bg-night"}`}>
-                <span className="font-display text-[10px] leading-relaxed">{s.over ? "Combat terminé" : myTurn ? "À toi de jouer" : `${foe.pseudo} joue… ${s.turn?.used ?? 0}/${s.turn?.max ?? 3}`}</span>
+                <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  <span className="font-display text-[10px] leading-relaxed">{s.over ? "Combat terminé" : myTurn ? "À toi de jouer" : `${foe.pseudo} joue… ${s.turn?.used ?? 0}/${s.turn?.max ?? 3}`}</span>
+                  {myTurn && s.turn ? <span className="num text-gold">{actionsLeft} action{actionsLeft > 1 ? "s" : ""}</span> : null}
+                  {myTurn && s.turn && s.turn.max < ACTIONS_PER_TURN ? (
+                    <details className="arena-state">
+                      <summary>💫 étourdi</summary>
+                      <span>Bambou tourbillon : {s.turn.max} action{s.turn.max > 1 ? "s" : ""} ce tour au lieu de {ACTIONS_PER_TURN}. Tes PA ne changent pas.</span>
+                    </details>
+                  ) : null}
+                </span>
                 {s.over ? null : <span className="num text-muted">jusqu&apos;à {turnEnds} · fin dans {timeLeft(input.arena.deadline!.getTime() - now.getTime())}</span>}
               </div>
               <div className="flex flex-wrap items-center gap-1" aria-label={`PA : ${pa}`}>
@@ -161,22 +178,8 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
                 <span className="num ml-1.5">{pa}</span>
                 <span className="basis-full text-[13px] text-muted">+{ENERGY_PER_TURN} PA à chaque tour · ce que tu ne dépenses pas se garde, {MAX_ENERGY} au plus</span>
               </div>
-              {myTurn && s.turn ? (
-                <div className="flex flex-wrap items-center gap-1" aria-label={`Actions : ${s.turn.used} jouée${s.turn.used > 1 ? "s" : ""} sur ${s.turn.max}`}>
-                  <span className="mr-1.5 text-[13px] uppercase tracking-wider text-muted">Actions</span>
-                  {Array.from({ length: ACTIONS_PER_TURN }, (_, i) => (
-                    <i key={i} className={`action-cell ${i >= s.turn!.max ? "stunned" : i < s.turn!.used ? "used" : ""}`}>{i >= s.turn!.max ? "💫" : null}</i>
-                  ))}
-                  <span className="num ml-1.5">{s.turn.max - s.turn.used}</span>
-                </div>
-              ) : null}
-              {myTurn && s.turn && s.turn.max < ACTIONS_PER_TURN ? (
-                <p className="border-l-4 border-magic bg-[#261c3a] px-2.5 py-1.5 text-sm">
-                  💫 Étourdi par Bambou tourbillon : {s.turn.max} action{s.turn.max > 1 ? "s" : ""} ce tour au lieu de {ACTIONS_PER_TURN}. Tes PA ne changent pas.
-                </p>
-              ) : null}
               {myTurn && pa === 0 && potions > 0 ? <p className="border-l-4 border-energy bg-[#13283a] px-2.5 py-1.5 text-sm">Plus de PA : bois une potion ou finis ton tour.</p> : null}
-              <ArenaMoves id={input.arena.id} moves={moves} used={s.turn?.used ?? 0} max={s.turn?.max ?? 3} myTurn={myTurn} />
+              <ArenaMoves id={input.arena.id} moves={moves} myTurn={myTurn} />
               {!myTurn && !s.over ? <p className="text-sm text-muted">Au début de ton tour : +{Math.min(ENERGY_PER_TURN, MAX_ENERGY - pa)} PA (tu en gardes {pa}, {MAX_ENERGY} au plus).</p> : null}
             </div>
             <div className="flex flex-col gap-1.5 border-[3px] border-edge bg-night px-3 py-2.5">

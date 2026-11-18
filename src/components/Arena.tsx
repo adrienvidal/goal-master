@@ -91,7 +91,7 @@ export function ArenaPending({ id, partnerName, expires }: { id: string; partner
 export type Move = { kind: ArenaKind; label: string; cost: string; detail: string; disabled: boolean; special?: boolean };
 
 /** Les actions du tour : chaque coup part tout de suite ; « Finir mon tour » passe la main. */
-export function ArenaMoves({ id, moves, used, max, myTurn }: { id: string; moves: Move[]; used: number; max: number; myTurn: boolean }): React.ReactElement {
+export function ArenaMoves({ id, moves, myTurn }: { id: string; moves: Move[]; myTurn: boolean }): React.ReactElement {
   const [pending, error, run] = useArenaAction();
   const playFx = usePlayFx();
   const { locked } = useReplay();
@@ -110,8 +110,7 @@ export function ArenaMoves({ id, moves, used, max, myTurn }: { id: string; moves
         ))}
       </div>
       {myTurn ? (
-        <div className="flex items-center justify-between gap-3">
-          <span className="num text-muted">Actions {used}/{max}</span>
+        <div className="flex items-center justify-end gap-3">
           <button type="button" className="btn ghost !w-auto !px-4" disabled={pending || locked} onClick={() => run(() => playArena(id, "END"))}><BusyLabel pending={pending}>Finir mon tour</BusyLabel></button>
         </div>
       ) : null}
