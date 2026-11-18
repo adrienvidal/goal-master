@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Arène v2 en prod : PA, rejeu, direct, K.O. animé
+✅ Fait      Arène v3 équilibrée, sur l'aperçu de dev
 ⛔ Bloqué    Aucun
-🎯 Priorité  Prévenir Nicolas, puis fin du combat d'Arène (échéance 20/11 18 h)
+🎯 Priorité  Fin du combat v2, puis v3 en prod sur accord (échéance 20/11 18 h)
 ```
 
 ## Réalisé
@@ -227,3 +227,29 @@
 - Le message d'action bloquée reste dans l'écran, pas de notification push
 - Une action grisée est `aria-disabled` (touchable), plus `disabled`
 
+
+---
+
+## Suite : skills de jeu et équilibrage de l'Arène (v3)
+
+### Réalisé
+- Skills `game-feel`, `rpg` et `game-ui-ux` installés dans le projet seulement (PR #112)
+- Diagnostic par simulation (règles v2) : l'ouvreur gagnait 92 %, une évolution d'écart 94 %, le Panda 1 % contre le Chevalier, la Botte était perdante, 3-4 tours par combat
+- Cibles validées par Adrien, puis PR #113 fusionnée dans `dev` : règles versionnées par combat (`Arena.rules`, migration `arena_rules`, combats existants en v2), règles v3, test d'équilibrage `src/game/arena-balance.test.ts`, textes (provocation, Arène, intro, résumé de tour), cadrage §v3 ; 228 tests verts ; aperçu de `dev` construit
+- Mesures v3 sur 1 000 combats : ouverture ~60 %, une évolution d'écart 59-61 %, écart maximal ~75 %, Panda 54 %, Botte 63 %, 9,4 tours
+
+### Reste à faire
+- Vendredi 20/11 à 18 h 01 : fin du combat en cours (v2), rappel du boss, duel
+- Après la fin du combat : mettre la v3 en production sur accord d'Adrien
+- Prévenir Nicolas : nouvelles règles de l'Arène (v2 puis v3)
+- Tester un combat v3 sur l'aperçu de `dev`
+- Plus tard, si le combat paraît sec : `game-feel` (tremblement, gel à l'impact), dégâts flottants du Bambou tourbillon sur l'adversaire
+
+### Blockers
+- Aucun
+
+### Décisions
+- Règles figées par combat plutôt qu'une date de bascule : un combat ne change jamais de règles en cours de route
+- Ouverture à ~60 % et écart maximal à ~75 % : en limite haute des cibles, acceptés
+- Bambou tourbillon : 1 action perdue à tous les paliers (2 au dernier palier écrasaient le Chevalier)
+- Écartés : coup critique (affichage à part), nouvelle action, notification « les règles changent »
