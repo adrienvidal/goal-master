@@ -1,0 +1,591 @@
+<title>Goal Master · Quêtes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
+<style>
+/* Maquette : écrans empilés, chacun annoncé par sa route. Tokens = ceux de l'app (globals.css), un seul thème sombre assumé.
+   Ajout du lot : --quest (parchemin des quêtes), --quest-dk, --chest (bois du coffre), --glow (lueur du coffre). */
+:root {
+  color-scheme: dark;
+  --night: #16132a; --stone: #221e40; --stone-2: #2e2958; --edge: #4a4380;
+  --ink: #f1ecff; --muted: #a39dcc; --gold: #f2c14e; --gold-dk: #b9831c;
+  --ember: #ff7a45; --danger: #ff6b6b; --ok: #6fd49a; --warn-bg: #3a2f17;
+  --page: #0e0c1d; --shadow: #0c0a1a;
+  --p1: #5aa9ff; --p2: #e5533d; --crown: #ffd84a; --magic: #c58cff;
+  --quest: #e9d9b0; --quest-dk: #8f7a4a; --quest-ink: #2b2213;
+  --chest: #7a4a26; --glow: #fff3b0;
+  --f-display: "Press Start 2P", ui-monospace, monospace;
+  --f-ui: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-num: "VT323", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--f-ui); font-size: 16px; margin: 0; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 1040px; margin: 0 auto; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--page); padding: 14px 0 10px; border-bottom: 3px solid var(--edge); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--page); }
+.top h1 { font-family: var(--f-display); font-size: 12px; margin: 0 0 10px; line-height: 1.6; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: 13px; text-decoration: none; padding: 4px 8px; border: 2px solid var(--edge); color: var(--muted); }
+.toc a:hover { color: var(--ink); border-color: var(--gold); }
+@media (max-width: 640px) {
+  .top h1 { font-size: 10px; margin-bottom: 8px; }
+  .toc { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); padding-right: 16px; }
+  .toc a { flex: none; }
+  .screen, .device, .full { scroll-margin-top: 96px; }
+}
+.intro { color: var(--muted); max-width: 70ch; line-height: 1.5; margin: 22px 0 6px; }
+.rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin: 16px 0 8px; }
+.rules div { border: 2px dashed var(--edge); padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.rules b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+.screen { margin-top: 56px; scroll-margin-top: 150px; }
+.screen > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
+.route { font-family: var(--f-num); font-size: 22px; color: var(--gold); }
+.screen > header h2 { font-family: var(--f-display); font-size: 11px; margin: 0; line-height: 1.6; }
+.screen > header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 78ch; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.device { background: rgb(34 30 64 / .9); border: 4px solid var(--edge); box-shadow: 4px 4px 0 var(--shadow); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; scroll-margin-top: 150px; }
+.device h4 { font-family: var(--f-display); font-size: 9px; line-height: 1.6; margin: 0; color: var(--gold); }
+.muted { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0; }
+.num { font-family: var(--f-num); font-size: 1.2em; }
+.btn { display: flex; justify-content: center; align-items: center; gap: 6px; text-align: center; width: 100%; font-family: var(--f-display); font-size: 10px; line-height: 1.4; color: #1a1626; background: var(--gold); padding: 12px; box-shadow: inset -4px -4px 0 var(--gold-dk), 4px 4px 0 var(--shadow); text-decoration: none; border: 0; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 3px var(--edge); }
+.btn.ok { background: var(--ok); box-shadow: inset -4px -4px 0 #3e9a66, 4px 4px 0 var(--shadow); }
+.btn.off { background: var(--stone-2); color: var(--muted); box-shadow: inset 0 0 0 3px var(--edge); cursor: not-allowed; }
+.btn.sm { width: auto; min-height: 44px; min-width: 76px; font-size: 9px; padding: 10px 12px; }
+.h-title { font-family: var(--f-display); font-size: 12px; line-height: 1.6; margin: 0; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.err { border-left: 4px solid var(--danger); padding: 6px 10px; background: #3a1b2a; color: var(--ink); font-size: 14px; line-height: 1.45; margin: 0; }
+.note { border-left: 4px solid var(--gold); padding: 6px 10px; background: var(--warn-bg); color: var(--ink); font-size: 14px; line-height: 1.45; margin: 0; }
+@media (min-width: 760px) { .wide { grid-column: 1 / -1; } }
+@media (max-width: 420px) { .device { padding: 14px 12px; } }
+
+/* Sprites pixel */
+.av { flex: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
+.av svg { display: block; image-rendering: pixelated; }
+.av.flip svg { transform: scaleX(-1); }
+.pet { animation: hop 1.6s steps(2) infinite; }
+.pet.joy { animation: joy .7s steps(3) infinite; }
+@keyframes hop { 50% { transform: translateY(-2px); } }
+@keyframes joy { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+.duo { display: flex; align-items: flex-end; gap: 4px; }
+
+/* Héros + compagnon */
+.me { display: flex; gap: 14px; align-items: center; }
+.me .who { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.me .name { font-weight: 600; font-size: 17px; }
+.me .meta { color: var(--muted); font-size: 14px; }
+.bar { height: 12px; background: var(--night); border: 2px solid var(--edge); position: relative; }
+.bar i { position: absolute; inset: 0 auto 0 0; background: var(--gold); }
+.petlink { text-decoration: none; display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
+.petlink small { font-size: 12px; color: var(--muted); }
+
+/* Carte Quêtes : parchemin */
+.quests { background: var(--quest); color: var(--quest-ink); border: 3px solid var(--quest-dk); box-shadow: 4px 4px 0 var(--shadow); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.quests h3 { font-family: var(--f-display); font-size: 10px; margin: 0; line-height: 1.6; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.qline { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding-top: 8px; border-top: 2px dashed var(--quest-dk); }
+.qline .lbl { grid-column: 1 / -1; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #6b5a33; }
+.qline .txt { min-width: 0; font-size: 15px; line-height: 1.35; }
+.qline .txt em { font-style: normal; color: #6b5a33; font-size: 13px; display: block; }
+.qline .btn { color: #1a1626; }
+.state { display: inline-block; font-family: var(--f-num); font-size: 18px; padding: 0 6px; border: 2px solid currentColor; line-height: 1.1; }
+.state.wait { color: #6b5a33; }
+.state.todo { color: #a1402a; }
+.state.done { color: #2f7a4d; }
+
+/* Accueil : une colonne sur téléphone, deux sur ordinateur comme l'app */
+.home { display: grid; gap: 12px; }
+.home > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.home .partner-col { border-top: 3px solid var(--edge); padding-top: 12px; }
+@media (min-width: 760px) {
+  .home { grid-template-columns: 1.3fr 1fr; gap: 20px; }
+  .home .partner-col { border-top: 0; padding-top: 0; border-left: 3px solid var(--edge); padding-left: 20px; }
+}
+.viewtag { font-family: var(--f-num); font-size: 17px; color: var(--muted); }
+@media (min-width: 760px) { .viewtag::after { content: " · ordinateur : deux colonnes"; } }
+@media (max-width: 759px) { .viewtag::after { content: " · téléphone : une colonne"; } }
+
+/* Fil */
+.feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.feed li { display: flex; gap: 8px; align-items: center; color: var(--muted); }
+.feed li b { color: var(--ink); font-weight: 600; }
+.feed .t { font-family: var(--f-num); font-size: 18px; color: var(--muted); min-width: 42px; }
+
+/* Formulaires */
+label.f { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); }
+textarea, input[type="url"] { font: inherit; font-size: 16px; color: var(--ink); background: var(--night); border: 3px solid var(--edge); padding: 10px; width: 100%; resize: vertical; }
+textarea:focus, input:focus { outline: none; border-color: var(--gold); }
+.count { align-self: flex-end; font-family: var(--f-num); font-size: 18px; color: var(--muted); }
+.count.over { color: var(--danger); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { font: inherit; font-size: 13px; color: var(--ink); background: var(--stone-2); border: 2px solid var(--edge); padding: 6px 8px; cursor: pointer; text-align: left; }
+.chips button:hover { border-color: var(--gold); }
+
+/* Fiche de quête */
+.scroll { background: var(--quest); color: var(--quest-ink); border: 3px solid var(--quest-dk); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.scroll .from { font-size: 13px; color: #6b5a33; }
+.scroll q { font-size: 19px; line-height: 1.35; quotes: "« " " »"; }
+.scroll a { color: #2f5fa8; word-break: break-all; }
+.steps { display: flex; gap: 4px; font-family: var(--f-num); font-size: 17px; color: var(--muted); flex-wrap: wrap; }
+.steps span { padding: 0 6px; border: 2px solid var(--edge); }
+.steps span.on { color: var(--gold); border-color: var(--gold); }
+.device.form { max-width: 520px; }
+.confirm { border: 3px solid var(--danger); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+
+/* Coffre plein écran */
+.full { background: radial-gradient(circle at 50% 38%, #3a2f63 0, var(--night) 62%); border: 4px solid var(--edge); box-shadow: 4px 4px 0 var(--shadow); padding: 22px 16px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; min-width: 0; min-height: 440px; justify-content: center; scroll-margin-top: 150px; }
+.full .h-title { color: var(--gold); }
+.chestwrap { position: relative; display: grid; place-items: center; }
+.chestwrap.open::before { content: ""; position: absolute; width: 150px; height: 150px; background: radial-gradient(circle, rgb(255 243 176 / .55), transparent 65%); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { transform: scale(1.15); opacity: .7; } }
+.shake { animation: shake 1.2s steps(4) infinite; }
+@keyframes shake { 0%,60%,100% { transform: translateX(0); } 70% { transform: translateX(-3px); } 80% { transform: translateX(3px); } 90% { transform: translateX(-2px); } }
+.picks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 380px; }
+.picks.two { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 260px; }
+.pick { background: var(--stone); border: 3px solid var(--edge); padding: 12px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; cursor: pointer; font: inherit; color: var(--ink); }
+.pick span { font-size: 14px; }
+.pick.sel { border-color: var(--gold); background: #3a3160; box-shadow: 0 0 0 3px var(--gold-dk); }
+.xp { font-family: var(--f-num); font-size: 26px; color: var(--gold); margin: 0; }
+@media (max-width: 480px) { .full { min-height: 0; padding: 20px 12px; } .full .btn { max-width: none !important; } }
+@media (max-width: 360px) { .pick svg, .slot svg { zoom: .8; } }
+
+/* Ménagerie */
+.zoo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.slot { background: var(--stone); border: 3px solid var(--edge); padding: 12px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 104px; justify-content: flex-end; text-align: center; }
+.slot span { font-size: 14px; }
+.slot.shown { border-color: var(--gold); }
+.slot.shown span::after { content: " · affiché"; color: var(--gold); }
+.slot.lock svg { filter: brightness(0); opacity: .45; }
+.slot.lock span { color: var(--muted); }
+@media (min-width: 760px) { .zoo.all { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+/* Arène */
+.stage { background: linear-gradient(#1c1838 0 64%, #2a2340 64%); border: 3px solid var(--edge); padding: 18px 12px 12px; display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; }
+.hpbar { height: 10px; background: var(--night); border: 2px solid var(--edge); position: relative; width: 100%; }
+.hpbar i { position: absolute; inset: 0 auto 0 0; background: var(--ok); }
+.side { display: flex; flex-direction: column; gap: 6px; align-items: center; min-width: 0; }
+.dmg { font-family: var(--f-num); font-size: 24px; color: var(--danger); }
+@media (max-width: 480px) { .stage { padding: 14px 8px 10px; } .stage .av svg { zoom: .7; } .stage .side .muted { font-size: 12px; } }
+
+/* Notifications */
+.push { background: #2a2650; border: 2px solid var(--edge); padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start; }
+.push .ic { width: 28px; height: 28px; background: var(--gold); flex: none; display: grid; place-items: center; font-family: var(--f-display); font-size: 9px; color: #1a1626; }
+.push b { display: block; font-size: 14px; }
+.push p { margin: 2px 0 0; font-size: 14px; color: var(--muted); line-height: 1.4; }
+
+/* Succès et réglages */
+.badge { display: flex; gap: 10px; align-items: center; border: 2px solid var(--edge); padding: 8px 10px; }
+.badge b { display: block; font-size: 15px; }
+.badge span { font-size: 13px; color: var(--muted); }
+.badge.lock { opacity: .55; }
+.toggle { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 2px dashed var(--edge); padding-bottom: 8px; font-size: 15px; }
+.toggle i { width: 40px; height: 22px; background: var(--ok); position: relative; flex: none; }
+.toggle i::after { content: ""; position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; background: var(--ink); }
+.toggle.offt i { background: var(--stone-2); }
+.toggle.offt i::after { right: auto; left: 3px; }
+.toggle small { display: block; color: var(--muted); font-size: 12px; }
+.new { font-family: var(--f-num); font-size: 16px; color: var(--ok); border: 2px solid var(--ok); padding: 0 4px; margin-left: 6px; }
+
+@media (prefers-reduced-motion: reduce) { .pet, .pet.joy, .shake, .chestwrap.open::before { animation: none; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Goal Master · Quêtes et compagnons</h1>
+    <nav class="toc" aria-label="Écrans">
+      <a href="#accueil">Accueil</a>
+      <a href="#lancer">Lancer</a>
+      <a href="#recue">Quête reçue</a>
+      <a href="#donnee">Quête donnée</a>
+      <a href="#coffre">Coffre</a>
+      <a href="#menagerie">Ménagerie</a>
+      <a href="#arene">Arène</a>
+      <a href="#intro">Intro</a>
+      <a href="#notifs">Notifications</a>
+      <a href="#succes">Succès · Réglages</a>
+      <a href="#compagnons">Compagnons</a>
+    </nav>
+  </div>
+
+  <p class="intro">Parcours vu depuis Adrien (bleu, Chevalier) et Nicolas (rouge, Panda). Chaque bouton mène à l'écran suivant du parcours. Exemple suivi de bout en bout : Adrien demande à Nicolas de poster un article sur LinkedIn, Nicolas le fait, Adrien valide, Nicolas ouvre son coffre et adopte le renard.</p>
+  <div class="rules">
+    <div><b>Une quête par sens</b>Adrien → Nicolas et Nicolas → Adrien peuvent coexister, jamais deux dans le même sens.</div>
+    <div><b>Récompense</b>+20 XP pour celui qui l'accomplit et un coffre. +5 XP pour celui qui l'a donnée.</div>
+    <div><b>Coffre</b>3 compagnons tirés parmi ceux qu'on n'a pas, on en adopte un. Ouvert d'office à la prochaine ouverture de l'app.</div>
+    <div><b>Jamais retiré</b>Une validation ne s'annule pas : ni le compagnon, ni les XP.</div>
+  </div>
+
+  <!-- 1. ACCUEIL -->
+  <section class="screen" id="accueil">
+    <header><span class="route">/</span><h2>Accueil</h2><p>La carte Quêtes a deux lignes : la quête reçue et la quête donnée. Le compagnon se tient à côté de chaque héros ; toucher le sien ouvre la Ménagerie.</p></header>
+    <div class="grid">
+      <div class="device wide" id="accueil-cours">
+        <h4>Adrien · quête à valider <span class="viewtag"></span></h4>
+        <div class="home"><div>
+        <div class="me">
+          <div class="duo"><div class="av" data-sprite="knight" data-color="p1" data-px="4"></div><a class="petlink" href="#menagerie" aria-label="Ma Ménagerie"><div class="av pet" data-pet="dog" data-px="3"></div><small>Chien</small></a></div>
+          <div class="who"><span class="name">Adrien · Niv. 7 <span style="color:var(--ember)">🔥4</span></span><span class="meta"><span class="num">62/100</span> XP · 2 candidatures aujourd'hui</span><div class="bar"><i style="width:62%"></i></div></div>
+        </div>
+        <div class="quests">
+          <h3>Quêtes</h3>
+          <div class="qline"><span class="lbl">Pour toi · de Nicolas</span><span class="txt">Mets ton CV à jour sur Welcome to the Jungle<em>depuis lundi</em></span><a class="btn sm" href="#recue">Voir</a></div>
+          <div class="qline"><span class="lbl">Pour Nicolas</span><span class="txt">Poste un article sur LinkedIn<em><span class="state todo">Faite · à valider</span></em></span><a class="btn sm" href="#donnee-valider">Valider</a></div>
+        </div>
+        </div><div class="partner-col">
+        <div class="me">
+          <div class="duo"><div class="av" data-sprite="panda" data-color="p2" data-px="3"></div><div class="av pet" data-pet="cat" data-px="2"></div></div>
+          <div class="who"><span class="name">Nicolas · Niv. 9</span><span class="meta"><span class="num">38/100</span> · +2 aujourd'hui</span></div>
+        </div>
+        <ul class="feed">
+          <li><span class="t">14:32</span><span><b>Nicolas</b> a fait sa quête : <b>Poste un article sur LinkedIn</b></span></li>
+          <li><span class="t">11:05</span><span><b>Nicolas</b> a candidaté chez <b>Doctolib</b></span></li>
+          <li><span class="t">09:48</span><span><b>Adrien</b> a candidaté chez <b>Qonto</b></span></li>
+        </ul>
+        </div></div>
+      </div>
+
+      <div class="device" id="accueil-vide">
+        <h4>Premier lancement · aucune quête</h4>
+        <div class="me">
+          <div class="duo"><div class="av" data-sprite="knight" data-color="p1" data-px="4"></div></div>
+          <div class="who"><span class="name">Adrien · Niv. 7</span><span class="meta">Pas encore de compagnon</span><div class="bar"><i style="width:62%"></i></div></div>
+        </div>
+        <div class="quests">
+          <h3>Quêtes</h3>
+          <div class="qline"><span class="lbl">Pour toi</span><span class="txt">Rien pour l'instant.<em>Nicolas peut t'en lancer une.</em></span></div>
+          <div class="qline"><span class="lbl">Pour Nicolas</span><span class="txt">Pousse-le vers ce qui attire les recruteurs : un post, un contact, un salon.<em>Il gagne un compagnon, toi +5 XP.</em></span><a class="btn sm" href="#lancer">Lancer</a></div>
+        </div>
+      </div>
+
+      <div class="device" id="accueil-nicolas">
+        <h4>Nicolas · après adoption</h4>
+        <div class="me">
+          <div class="duo"><div class="av" data-sprite="panda" data-color="p2" data-px="4"></div><a class="petlink" href="#menagerie" aria-label="Ma Ménagerie"><div class="av pet joy" data-pet="fox" data-px="3"></div><small>Renard</small></a></div>
+          <div class="who"><span class="name">Nicolas · Niv. 9</span><span class="meta"><span class="num">58/100</span> XP · +20 de la quête</span><div class="bar"><i style="width:58%"></i></div></div>
+        </div>
+        <div class="quests">
+          <h3>Quêtes</h3>
+          <div class="qline"><span class="lbl">Pour toi</span><span class="txt">Rien pour l'instant.<em>Adrien peut t'en lancer une.</em></span></div>
+          <div class="qline"><span class="lbl">Pour Adrien · en cours</span><span class="txt">Mets ton CV à jour sur Welcome to the Jungle<em><span class="state wait">En cours</span></em></span><a class="btn sm ghost" href="#donnee-cours">Voir</a></div>
+        </div>
+        <ul class="feed">
+          <li><span class="t">16:10</span><span><b>Nicolas</b> a adopté le <b>renard</b> 🦊</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. LANCER -->
+  <section class="screen" id="lancer">
+    <header><span class="route">/quete/nouvelle</span><h2>Lancer une quête</h2><p>Texte libre, 120 caractères au plus. Les exemples remplissent le champ d'un toucher.</p></header>
+    <div class="grid">
+      <div class="device form">
+        <h4>Écriture</h4>
+        <p class="h-title">Une quête pour Nicolas</p>
+        <p class="muted">Une action qui le rapproche d'un poste, autre qu'une candidature. Tu valideras quand c'est fait.</p>
+        <label class="f" for="q-text">Sa quête
+          <textarea id="q-text" rows="3" maxlength="140">Poste un article sur LinkedIn</textarea>
+        </label>
+        <span class="count" id="q-count">29/120</span>
+        <div class="chips" aria-label="Exemples">
+          <button type="button">Poste un article sur LinkedIn</button>
+          <button type="button">Relance un ancien collègue pour un café</button>
+          <button type="button">Mets ton CV à jour sur Welcome to the Jungle</button>
+          <button type="button">Inscris-toi au salon de l'emploi de jeudi</button>
+          <button type="button">Écris à 3 recruteurs de ta liste</button>
+        </div>
+        <p class="muted">Récompense : un coffre et +20 XP pour lui, +5 XP pour toi.</p>
+        <a class="btn" href="#accueil-cours">Lancer la quête</a>
+        <a class="btn ghost" href="#accueil-vide">Retour</a>
+      </div>
+      <div class="device">
+        <h4>Erreurs</h4>
+        <p class="err">Écris la quête avant de la lancer.</p>
+        <p class="err">120 caractères au plus : raccourcis un peu.</p>
+        <h4>Déjà une quête en cours</h4>
+        <p class="note">Nicolas a déjà une quête de ta part : « Poste un article sur LinkedIn ». Attends qu'elle soit validée ou annule-la.</p>
+        <a class="btn off" aria-disabled="true">Lancer la quête</a>
+        <a class="btn ghost" href="#donnee-cours">Voir sa quête en cours</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. QUÊTE REÇUE -->
+  <section class="screen" id="recue">
+    <header><span class="route">/quete/[id]</span><h2>Quête reçue (Nicolas)</h2><p>Le destinataire la marque faite, avec un lien facultatif pour que le donneur vérifie d'un clic.</p></header>
+    <div class="grid">
+      <div class="device">
+        <h4>À faire</h4>
+        <div class="steps"><span class="on">Lancée</span><span>Faite</span><span>Validée</span></div>
+        <div class="scroll"><span class="from">Quête d'Adrien · lundi 16/11</span><q>Poste un article sur LinkedIn</q></div>
+        <label class="f" for="q-link">Lien de preuve (facultatif)
+          <input id="q-link" type="url" inputmode="url" value="https://www.linkedin.com/posts/nicolas-durand_reconversion-data-activity-7262" >
+        </label>
+        <a class="btn ok" href="#recue-faite">C'est fait</a>
+        <a class="btn ghost" href="#accueil-nicolas">Retour</a>
+      </div>
+      <div class="device" id="recue-faite">
+        <h4>Faite · en attente d'Adrien</h4>
+        <div class="steps"><span>Lancée</span><span class="on">Faite</span><span>Validée</span></div>
+        <div class="scroll"><span class="from">Quête d'Adrien</span><q>Poste un article sur LinkedIn</q><a href="#donnee-valider">linkedin.com/posts/nicolas-durand_reconversion…</a></div>
+        <p class="muted">Adrien est prévenu. Dès qu'il valide, un coffre t'attend.</p>
+        <a class="btn ghost" href="#donnee-valider">Côté Adrien →</a>
+      </div>
+      <div class="device">
+        <h4>Renvoyée · « pas encore »</h4>
+        <div class="steps"><span class="on">Lancée</span><span>Faite</span><span>Validée</span></div>
+        <div class="scroll"><span class="from">Quête d'Adrien</span><q>Poste un article sur LinkedIn</q></div>
+        <p class="note">Adrien dit « pas encore ». Le lien ne menait pas à ton post : vérifie-le et renvoie.</p>
+        <label class="f" for="q-link2">Lien de preuve (facultatif)<input id="q-link2" type="url" value=""></label>
+        <p class="err">Ce lien n'est pas une adresse web. Il doit commencer par https://</p>
+        <a class="btn ok" href="#recue-faite">C'est fait</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. QUÊTE DONNÉE -->
+  <section class="screen" id="donnee">
+    <header><span class="route">/quete/[id]</span><h2>Quête donnée (Adrien)</h2><p>Même adresse, vue du donneur : il valide, renvoie, ou annule tant que rien n'est validé.</p></header>
+    <div class="grid">
+      <div class="device" id="donnee-valider">
+        <h4>Faite · à valider</h4>
+        <div class="steps"><span>Lancée</span><span class="on">Faite</span><span>Validée</span></div>
+        <div class="scroll"><span class="from">Ta quête pour Nicolas · faite aujourd'hui à 14:32</span><q>Poste un article sur LinkedIn</q><a href="#donnee-valider">linkedin.com/posts/nicolas-durand_reconversion…</a></div>
+        <p class="muted">Vérifie le lien, puis valide. Sans lien, fie-toi à ce que tu as vu.</p>
+        <div class="row2"><a class="btn ghost" href="#accueil-cours">Pas encore</a><a class="btn ok" href="#donnee-validee">Valider</a></div>
+      </div>
+      <div class="device" id="donnee-validee">
+        <h4>Validée</h4>
+        <div class="steps"><span>Lancée</span><span>Faite</span><span class="on">Validée</span></div>
+        <div class="scroll"><span class="from">Ta quête pour Nicolas</span><q>Poste un article sur LinkedIn</q></div>
+        <p class="xp">+5 XP</p>
+        <p class="muted">Nicolas ouvrira son coffre à sa prochaine visite. Tu peux lui lancer une nouvelle quête.</p>
+        <a class="btn" href="#lancer">Nouvelle quête</a>
+        <a class="btn ghost" href="#coffre-ferme">Côté Nicolas →</a>
+      </div>
+      <div class="device" id="donnee-cours">
+        <h4>En cours · annuler</h4>
+        <div class="steps"><span class="on">Lancée</span><span>Faite</span><span>Validée</span></div>
+        <div class="scroll"><span class="from">Ta quête pour Nicolas · lancée lundi</span><q>Poste un article sur LinkedIn</q></div>
+        <p class="muted">Nicolas ne l'a pas encore marquée faite.</p>
+        <div class="confirm">
+          <p class="muted" style="color:var(--ink)">Annuler cette quête ? Nicolas en sera prévenu.</p>
+          <div class="row2"><a class="btn ghost" href="#donnee-cours">Garder</a><a class="btn" style="background:var(--danger);box-shadow:inset -4px -4px 0 #b84545,4px 4px 0 var(--shadow)" href="#accueil-vide">Annuler</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. COFFRE -->
+  <section class="screen" id="coffre">
+    <header><span class="route">/coffre</span><h2>Coffre (plein écran, avant l'accueil)</h2><p>S'ouvre d'office à la prochaine ouverture de l'app. Pas de bouton pour fermer : on adopte. Fermer l'app en plein choix redonne les mêmes trois.</p></header>
+    <div class="grid">
+      <div class="full" id="coffre-ferme">
+        <p class="h-title">Quête accomplie !</p>
+        <p class="muted">Adrien a validé « Poste un article sur LinkedIn ».</p>
+        <a class="chestwrap shake" href="#coffre-ouvert" aria-label="Ouvrir le coffre"><div class="av" data-chest="closed" data-px="7"></div></a>
+        <a class="btn" style="max-width:260px" href="#coffre-ouvert">Ouvrir le coffre</a>
+      </div>
+      <div class="full" id="coffre-ouvert">
+        <div class="chestwrap open"><div class="av" data-chest="open" data-px="5"></div></div>
+        <p class="h-title">Choisis ton compagnon</p>
+        <div class="picks" role="radiogroup" aria-label="Compagnons proposés">
+          <button class="pick" role="radio" aria-checked="false"><div class="av pet" data-pet="owl" data-px="4"></div><span>Hibou</span></button>
+          <button class="pick sel" role="radio" aria-checked="true"><div class="av pet joy" data-pet="fox" data-px="4"></div><span>Renard</span></button>
+          <button class="pick" role="radio" aria-checked="false"><div class="av pet" data-pet="dragon" data-px="4"></div><span>Dragon</span></button>
+        </div>
+        <p class="xp">+20 XP</p>
+        <a class="btn" style="max-width:260px" href="#coffre-adopte">Adopter le renard</a>
+      </div>
+      <div class="full" id="coffre-adopte">
+        <div class="duo"><div class="av" data-sprite="panda" data-color="p2" data-px="5"></div><div class="av pet joy" data-pet="fox" data-px="4"></div></div>
+        <p class="h-title">Le renard te suit !</p>
+        <p class="muted">Il se tient à côté de ton héros. Change de compagnon quand tu veux dans ta Ménagerie.</p>
+        <a class="btn" style="max-width:260px" href="#accueil-nicolas">Continuer</a>
+      </div>
+    </div>
+    <div class="grid" style="margin-top:16px">
+      <div class="device">
+        <h4>Plus que 2 compagnons à trouver</h4>
+        <div class="picks two"><button class="pick sel"><div class="av pet" data-pet="rabbit" data-px="4"></div><span>Lapin</span></button><button class="pick"><div class="av pet" data-pet="dog" data-px="4"></div><span>Chien</span></button></div>
+        <p class="muted">Le coffre ne propose que ceux qui manquent.</p>
+      </div>
+      <div class="device">
+        <h4>Le dernier · donné d'office</h4>
+        <div class="duo" style="justify-content:center"><div class="av pet joy" data-pet="dog" data-px="5"></div></div>
+        <p class="muted" style="text-align:center">Le chien complète ta Ménagerie ! +20 XP</p>
+        <a class="btn" href="#menagerie">Voir ma Ménagerie</a>
+      </div>
+      <div class="device">
+        <h4>Collection complète · XP seules</h4>
+        <p class="xp" style="text-align:center">+20 XP</p>
+        <p class="muted" style="text-align:center">Tu as tous les compagnons. De nouveaux arriveront bientôt.</p>
+        <a class="btn" href="#accueil-nicolas">Continuer</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. MÉNAGERIE -->
+  <section class="screen" id="menagerie">
+    <header><span class="route">/menagerie</span><h2>Ménagerie</h2><p>Ses compagnons, l'affiché en or. Toucher un autre l'affiche. Les silhouettes montrent ce qui reste à gagner.</p></header>
+    <div class="grid">
+      <div class="device wide">
+        <h4>Nicolas · 2 sur 6</h4>
+        <p class="h-title">Ta Ménagerie</p>
+        <div class="zoo all">
+          <a class="slot shown" href="#accueil-nicolas"><div class="av pet" data-pet="fox" data-px="4"></div><span>Renard</span></a>
+          <a class="slot" href="#accueil-nicolas"><div class="av" data-pet="cat" data-px="4"></div><span>Chat</span></a>
+          <div class="slot lock"><div class="av" data-pet="owl" data-px="4"></div><span>???</span></div>
+          <div class="slot lock"><div class="av" data-pet="dog" data-px="4"></div><span>???</span></div>
+          <div class="slot lock"><div class="av" data-pet="rabbit" data-px="4"></div><span>???</span></div>
+          <div class="slot lock"><div class="av" data-pet="dragon" data-px="4"></div><span>???</span></div>
+        </div>
+        <p class="muted">Chaque quête validée ouvre un coffre. Touche un compagnon pour l'afficher à côté de ton héros.</p>
+        <a class="btn ghost" href="#accueil-nicolas" style="max-width:320px">Retour</a>
+      </div>
+      <div class="device">
+        <h4>Vide</h4>
+        <p class="h-title">Ta Ménagerie</p>
+        <div class="zoo">
+          <div class="slot lock"><div class="av" data-pet="cat" data-px="4"></div><span>???</span></div>
+          <div class="slot lock"><div class="av" data-pet="dog" data-px="4"></div><span>???</span></div>
+          <div class="slot lock"><div class="av" data-pet="fox" data-px="4"></div><span>???</span></div>
+        </div>
+        <p class="muted">Aucun compagnon pour l'instant. Accomplis une quête de Nicolas pour ouvrir ton premier coffre.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. ARÈNE -->
+  <section class="screen" id="arene">
+    <header><span class="route">/arene</span><h2>Arène · compagnon au combat</h2><p>Purement décoratif : il se tient derrière son héros et saute quand celui-ci porte un coup.</p></header>
+    <div class="grid">
+      <div class="device wide">
+        <div class="stage">
+          <div class="side"><div class="hpbar"><i style="width:70%"></i></div><div class="duo"><div class="av pet joy" data-pet="dog" data-px="3"></div><div class="av" data-sprite="knight" data-color="p1" data-px="4"></div></div><span class="muted">Adrien · 21 PV</span></div>
+          <span class="dmg">−5</span>
+          <div class="side"><div class="hpbar"><i style="width:45%"></i></div><div class="duo"><div class="av flip" data-sprite="panda" data-color="p2" data-px="4"></div><div class="av flip pet" data-pet="fox" data-px="3"></div></div><span class="muted">Nicolas · 14 PV</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. INTRO -->
+  <section class="screen" id="intro">
+    <header><span class="route">/intro</span><h2>Intro · 9e écran</h2><p>Montré d'office aux deux appareils, avec la notification « Nouveauté : les Quêtes ».</p></header>
+    <div class="grid">
+      <div class="full" style="min-height:360px">
+        <span class="muted">9 / 9</span>
+        <div class="duo"><div class="av" data-sprite="knight" data-color="p1" data-px="4"></div><div class="av pet joy" data-pet="dog" data-px="3"></div><div class="av" data-chest="closed" data-px="4"></div></div>
+        <p class="h-title">Les Quêtes</p>
+        <p class="muted" style="max-width:36ch">Lance une quête à ton binôme : un post LinkedIn, un café avec un ancien collègue. Quand tu la valides, il ouvre un coffre et adopte un compagnon.</p>
+        <a class="btn" style="max-width:260px" href="#accueil-vide">C'est parti</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. NOTIFICATIONS -->
+  <section class="screen" id="notifs">
+    <header><span class="route">push + e-mail</span><h2>Notifications</h2><p>Catégorie « Quêtes », hors plafond quotidien. Chaque aller-retour « pas encore » notifie à nouveau.</p></header>
+    <div class="grid">
+      <div class="device">
+        <div class="push"><span class="ic">Q</span><div><b>Adrien te lance une quête</b><p>« Poste un article sur LinkedIn ». Un coffre à la clé.</p></div></div>
+        <div class="push"><span class="ic">Q</span><div><b>Nicolas a fait sa quête</b><p>« Poste un article sur LinkedIn ». À toi de valider.</p></div></div>
+        <div class="push"><span class="ic">Q</span><div><b>Quête validée, un coffre t'attend</b><p>Adrien a validé « Poste un article sur LinkedIn ». +20 XP.</p></div></div>
+        <div class="push"><span class="ic">Q</span><div><b>Pas encore</b><p>Adrien n'a pas validé « Poste un article sur LinkedIn ». Jette un œil à ton lien.</p></div></div>
+        <div class="push"><span class="ic">Q</span><div><b>Quête annulée</b><p>Adrien a retiré « Poste un article sur LinkedIn ».</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. SUCCÈS ET RÉGLAGES -->
+  <section class="screen" id="succes">
+    <header><span class="route">/succes · /reglages</span><h2>Succès et réglages</h2><p>Deux succès de plus, un interrupteur de plus.</p></header>
+    <div class="grid">
+      <div class="device">
+        <h4>/succes</h4>
+        <div class="badge"><div class="av" data-pet="fox" data-px="3"></div><div><b>Dompteur <span class="new">nouveau</span></b><span>Adopter 3 compagnons · 2/3</span></div></div>
+        <div class="badge lock"><div class="av" data-chest="closed" data-px="3"></div><div><b>Mentor</b><span>3 quêtes données et validées · 1/3</span></div></div>
+      </div>
+      <div class="device">
+        <h4>/reglages · notifications</h4>
+        <div class="toggle"><span>Relances<small>Quand ton binôme te relance</small></span><i></i></div>
+        <div class="toggle"><span>Quêtes<span class="new">nouveau</span><small>Quête reçue, faite, validée</small></span><i></i></div>
+        <div class="toggle offt"><span>Nouveautés<small>Quand l'app s'enrichit</small></span><i></i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. COMPAGNONS -->
+  <section class="screen" id="compagnons">
+    <header><span class="route">src/lib/companions.ts</span><h2>Les 6 compagnons</h2><p>Repos (en haut) et saut de joie (en bas). Indépendants du personnage, de l'évolution et de la couleur.</p></header>
+    <div class="grid">
+      <div class="device wide">
+        <div class="zoo" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">
+          <div class="slot"><div class="av pet" data-pet="cat" data-px="5"></div><span>Chat</span></div>
+          <div class="slot"><div class="av pet" data-pet="dog" data-px="5"></div><span>Chien</span></div>
+          <div class="slot"><div class="av pet" data-pet="fox" data-px="5"></div><span>Renard</span></div>
+          <div class="slot"><div class="av pet" data-pet="owl" data-px="5"></div><span>Hibou</span></div>
+          <div class="slot"><div class="av pet" data-pet="rabbit" data-px="5"></div><span>Lapin</span></div>
+          <div class="slot"><div class="av pet" data-pet="dragon" data-px="5"></div><span>Petit dragon</span></div>
+          <div class="slot"><div class="av pet joy" data-pet="cat" data-px="5"></div><span>Chat · joie</span></div>
+          <div class="slot"><div class="av pet joy" data-pet="dog" data-px="5"></div><span>Chien · joie</span></div>
+          <div class="slot"><div class="av pet joy" data-pet="fox" data-px="5"></div><span>Renard · joie</span></div>
+          <div class="slot"><div class="av pet joy" data-pet="owl" data-px="5"></div><span>Hibou · joie</span></div>
+          <div class="slot"><div class="av pet joy" data-pet="rabbit" data-px="5"></div><span>Lapin · joie</span></div>
+          <div class="slot"><div class="av pet joy" data-pet="dragon" data-px="5"></div><span>Dragon · joie</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// Héros : grilles réelles de l'app (src/lib/spriteGrids.ts), forme 3. Compagnons et coffre : nouvelles grilles.
+const PAL = {K:'#1a1626',E:'#1a1626',S:'#f4c7a1',R:'#e8838a',W:'#dfe6ee',G:'#8b93a7',T:'#c99a5b',B:'#7a4a26',Y:'#f2c14e',O:'#b9831c',L:'#fffbe0',F:'#f3f1f6',N:'#26232f',I:'#ffffff',V:'#6fae4a',
+  a:'#e8873a', b:'#fbeedd', c:'#9aa0b5', d:'#6b4a2b', e:'#c98a4b', f:'#a8794a', h:'#ecd9b2', j:'#f0eef5', k:'#f3a6b5', m:'#5fbf7a', n:'#2f8a55', o:'#ffd84a'};
+const PLAYER = { p1: "#3d7bd9", p2: "#d94848" };
+const SQUIRE = ["....KKKKKKK.....","...KBBBBBBBK....","..KBBBBBBBBBK...","..KBSSSSSSSBK.W.","..KSSESSSESSK.W.","..KSSSSSSSSSK.W.","...KSSSKKSSK..W.","....KKSSSSKK..W.","...KKPPPPPPKKYWY",".KKKPPPPPPPPKSB.","KPPPKPPYYPPPKSB.","KPYPKPPPPPPKKK..","KPPPKBBBBBBK....",".KKKKPPPPPPK....","....KPPKKPPK....","....KGGK.KGGK...","....KBBK.KBBK...","...KKKKK.KKKKK.."];
+const P_NOV = ["....KKK......KKK....","...KNNNKKKKKKNNNK...","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNNFFFFFFFFFNNK.NV",".KNNKFFFFFFFFFKNNNNV","KNNKFFFFFFFFFFFKNNNV","KNNKFFFFFFFFFFFK...V","KNNKFFFFFFFFFFFK...V",".KKKBBBBBBBBBBBK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK....V","....KNNNK.KNNNK....V","...KKKKKK.KKKKKK...."];
+const PETS = {
+  cat: ["..K....K......","..KK..KK......",".KcKKKKcK.....",".KccccccK.....","KcEccccEcK....","KcccRRcccK..K.",".KccccccK..KcK","..KcbbcK...KcK",".KccbbccK.KcK.",".KccbbcccKcK..",".KcKccKcccK...","..KK.KK.KKK..."],
+  dog: ["..KKK..KKK....",".KdddKKdddK...",".KddeeeeddK...",".KdeEeeEedK...","..KeeeeeeK....","..KeeKKeeK..K.","...KeRReK..KeK","..KeeeeeeK.KeK",".KeeebbeeeKeK.",".KeeebbeeeeK..",".KeeKeeKeeeK..","..KK.KK.KKK..."],
+  fox: [".K......K.....","KaK....KaK....","KaaKKKKaaK....","KaaaaaaaaK....","KaEaaaaEaK..KK",".KbbaabbK..KaaK","..KbbKbK..KaabK","...KaaaK.KaabbK","..KaabaaKaaabK.","..KaabaaaaaaK..","..KaaKaaKaaK...","...KK.KK.KK...."],
+  owl: [".K......K.",".KK....KK.","KffKKKKffK","KfLLffLLfK","KfLEffELfK","KffffYffffK","KfhhffhhfK","KfhhhhhhfK","KffhhhhffK",".KffhhffK.","..KYKKYK..","..K....K.."],
+  rabbit: ["..K...K...",".KjK.KjK..",".KkK.KkK..",".KkK.KkK..",".KjKKKjK..","KjjjjjjjK.","KjEjjjEjK.","KjjjkjjjK.",".KjjjjjK..","KjjjjjjjKK","KjjjjjjjKjK",".KjKKKjKK.","..K...K..."],
+  dragon: ["...K....K.....","..KmK..KmK....","..KmmKKmmK....","..KmmmmmmK....","..KmEmmEmK....","..KmmmmmmmK...","...KmmRmmK....","KK.KmooomK.KK.","KnKmmoommmKnK.","KnnmmoommnnK..",".KKmmoommKK..K","...KmmmmmKKKmK","...KmKKmmmmmK.","...KK.KKKKKK.."],
+};
+const CHEST = {
+  closed: ["................","................","................","..KKKKKKKKKKKK..",".KBBBBBBBBBBBBK.","KBTTTTTTTTTTTTBK","KBTTTTTTTTTTTTBK","KOOOOOOYYOOOOOOK","KBBBBBKYYKBBBBBK","KBTTTTTKKTTTTTBK","KBTTTTTTTTTTTTBK","KBTTTTTTTTTTTTBK","KOOOOOOOOOOOOOOK",".KKKKKKKKKKKKKK."],
+  open:   ["..KKKKKKKKKKKK..",".KBTTTTTTTTTTBK.","KBTTTTTTTTTTTTBK","KOOOOOOOOOOOOOOK",".KKKKKKKKKKKKKK.","..L..L....L..L..","...L..L..L..L...","KKKKKKKKKKKKKKKK","KLLLLLLLLLLLLLLK","KOOOOOOYYOOOOOOK","KBTTTTTKKTTTTTBK","KBTTTTTTTTTTTTBK","KOOOOOOOOOOOOOOK",".KKKKKKKKKKKKKK."],
+};
+function svg(grid, player, px) {
+  const w = Math.max(...grid.map((r) => r.length)), h = grid.length;
+  let r = "";
+  grid.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${ch === "P" ? player : PAL[ch]}"/>`;
+  }));
+  return `<svg width="${w * px}" height="${h * px}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+document.querySelectorAll("[data-sprite]").forEach((el) => {
+  el.insertAdjacentHTML("afterbegin", svg(el.dataset.sprite === "panda" ? P_NOV : SQUIRE, PLAYER[el.dataset.color || "p1"], Number(el.dataset.px || 3)));
+});
+document.querySelectorAll("[data-pet]").forEach((el) => { el.innerHTML = svg(PETS[el.dataset.pet], "", Number(el.dataset.px || 3)); });
+document.querySelectorAll("[data-chest]").forEach((el) => { el.innerHTML = svg(CHEST[el.dataset.chest], "", Number(el.dataset.px || 4)); });
+
+// Lancer : exemples et compteur.
+const ta = document.getElementById("q-text"), cnt = document.getElementById("q-count");
+const upd = () => { cnt.textContent = `${ta.value.length}/120`; cnt.classList.toggle("over", ta.value.length > 120); };
+ta.addEventListener("input", upd);
+document.querySelectorAll(".chips button").forEach((b) => b.addEventListener("click", () => { ta.value = b.textContent; upd(); ta.focus(); }));
+
+// Coffre : choisir un compagnon change le bouton.
+const adopt = document.querySelector('#coffre-ouvert .btn');
+document.querySelectorAll("#coffre-ouvert .pick").forEach((p) => p.addEventListener("click", () => {
+  document.querySelectorAll("#coffre-ouvert .pick").forEach((q) => { q.classList.remove("sel"); q.setAttribute("aria-checked", "false"); q.querySelector(".av").classList.remove("joy"); });
+  p.classList.add("sel"); p.setAttribute("aria-checked", "true"); p.querySelector(".av").classList.add("joy");
+  adopt.textContent = `Adopter le ${p.querySelector("span").textContent.toLowerCase()}`;
+}));
+</script>
