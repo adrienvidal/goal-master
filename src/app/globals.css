@@ -277,12 +277,44 @@ html[data-decor] main { visibility: hidden; }
 .arena-body.flip { transform: scaleX(-1); }
 .arena-body.stun { transform: rotate(-7deg); }
 .arena-body.flip.stun { transform: scaleX(-1) rotate(-7deg); }
-.arena-body.recoil-left { animation: arena-recoil-left .45s steps(3) 1; }
-.arena-body.recoil-right { animation: arena-recoil-right .45s steps(3) 1; }
-@keyframes arena-recoil-left { 50% { translate: -8px 0; } }
-@keyframes arena-recoil-right { 50% { translate: 8px 0; } }
-.arena-dmg { position: absolute; top: -6px; left: 50%; font-family: var(--font-press-start), monospace; font-size: 12px; color: var(--danger); text-shadow: 2px 2px 0 #0c0a1a; animation: arena-rise 1.6s ease-out forwards; }
+.arena-body.l { --dir: 1; }
+.arena-body.r { --dir: -1; }
+/* Lot Impact (maquette arene-impact) : --hit-at = instant du contact, posé par la scène pour le coup en cours. */
+.arena-fx.late { animation-delay: var(--hit-at, 0ms); animation-fill-mode: both; }
+.arena-body.lunge { --dash: 28px; animation: arena-lunge .56s both; }
+.arena-body.lunge.big { --dash: 40px; animation-duration: .7s; }
+@keyframes arena-lunge { 0% { translate: 0 0; } 22% { translate: calc(var(--dir) * -6px) 0; animation-timing-function: ease-in; } 45% { translate: calc(var(--dir) * var(--dash)) -2px; animation-timing-function: ease-out; } 62% { translate: calc(var(--dir) * var(--dash)) 0; } 100% { translate: 0 0; } }
+.arena-body.hit { --push: 8px; animation: arena-hit .34s ease-out var(--hit-at, 0ms) both, arena-flash .1s steps(1, end) var(--hit-at, 0ms); }
+.arena-body.hit.big { --push: 12px; }
+@keyframes arena-hit { 0% { translate: 0 0; scale: 1 1; } 20% { scale: 1.12 .86; } 30% { translate: calc(var(--dir) * -1 * var(--push)) 0; } 55% { scale: .94 1.06; } 100% { translate: 0 0; scale: 1 1; } }
+@keyframes arena-flash { from, to { filter: brightness(0) invert(1); } }
+@keyframes arena-tint { from, to { filter: sepia(1) saturate(6) hue-rotate(-40deg) brightness(.9); } }
+.arena-body.guard-hit { animation: arena-guard .26s steps(5) var(--hit-at, 0ms) both; }
+@keyframes arena-guard { 20% { translate: -2px 0; } 40% { translate: 2px 0; } 60% { translate: -2px 0; } 80% { translate: 1px 0; } 100% { translate: 0 0; } }
+.arena-body.spin { animation: arena-spin .52s steps(4) both; }
+@keyframes arena-spin { 25%, 75% { scale: -1 1; } 50%, 100% { scale: 1 1; } }
+.arena-body.fall { animation: arena-fall .6s ease-in both; }
+@keyframes arena-fall { 0% { translate: 0 -18px; } 60% { translate: 0 2px; } 78% { translate: 0 -4px; } 100% { translate: 0 0; } }
+.arena-spark { position: absolute; left: 85%; bottom: 45%; width: 4px; height: 4px; opacity: 0; pointer-events: none; animation: arena-spark .5s cubic-bezier(.2, .8, .3, 1) var(--hit-at, 0ms) forwards; }
+@keyframes arena-spark { 0% { opacity: 1; translate: 0 0; } 100% { opacity: 0; translate: var(--dx) var(--dy); } }
+.arena-stage > .arena-whiteout { position: absolute; inset: 0; z-index: 2; background: #ffffff; opacity: 0; pointer-events: none; animation: arena-whiteout .18s ease-out; }
+@keyframes arena-whiteout { from { opacity: .9; } to { opacity: 0; } }
+.arena-dmg { position: absolute; top: -6px; left: 50%; font-family: var(--font-press-start), monospace; font-size: 12px; color: var(--danger); text-shadow: 2px 2px 0 #0c0a1a; white-space: nowrap; pointer-events: none; animation: arena-pop .9s ease-out var(--hit-at, 0ms) both; }
+.arena-dmg.big { color: var(--gold); font-size: 16px; }
 .arena-dmg.heal { color: var(--ok); }
+.arena-dmg.clang { color: #9fd8ff; }
+.arena-dmg.pa { top: 14px; color: var(--energy); font-size: 10px; }
+.arena-dmg.later { animation-delay: calc(var(--hit-at, 0ms) + 260ms); }
+.arena-dmg.pa.later { animation-delay: calc(var(--hit-at, 0ms) + 400ms); }
+.arena-dmg.now { animation-delay: 0ms; }
+.arena-dmg.later.now { animation-delay: 260ms; }
+@keyframes arena-pop { 0% { transform: translate(-50%, 6px) scale(.3); opacity: 0; } 14% { transform: translate(-50%, -8px) scale(1.35); opacity: 1; } 26% { transform: translate(-50%, -12px) scale(1); } 80% { transform: translate(-50%, -30px); opacity: 1; } 100% { transform: translate(-50%, -38px); opacity: 0; } }
+/* Barres de PV : la traînée claire rattrape la barre 0,3 s après un coup ; au soin, traînée verte devant. */
+.arena-trail, .arena-fill { position: absolute; inset-block: 0; left: 0; display: block; }
+.arena-trail { background: #fff3c4; }
+.arena-trail.down { transition: width .45s ease-in; }
+.arena-trail.up { background: var(--ok); opacity: .55; }
+.arena-fill.up { transition: width .5s ease-out; }
 .energy-cell { width: 18px; height: 18px; display: inline-block; background: var(--energy); box-shadow: inset -3px -3px 0 var(--energy-dk); }
 .energy-cell.empty { background: var(--night); box-shadow: inset 0 0 0 2px var(--edge); }
 /* Arène v2 : PA gardés du tour d'avant, PA reçus ce tour, présence du binôme, bandeau de rejeu */
@@ -308,7 +340,10 @@ html[data-decor] main { visibility: hidden; }
 /* Fin du combat : annonce au-dessus de la scène, avant l'ouverture du résultat */
 .arena-finale { position: fixed; left: 50%; top: 38%; z-index: 40; transform: translate(-50%, -50%); font-family: var(--font-display); font-size: 28px; line-height: 1.3; color: var(--gold); text-shadow: 4px 4px 0 #0c0a1a; white-space: nowrap; pointer-events: none; animation: arena-finale .5s steps(3) both; }
 @keyframes arena-finale { from { transform: translate(-50%, -50%) scale(.4); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .arena-finale { animation: none; } }
+/* K.O. : « K.O. ! » claque (arrive trop grand et se pose), pendant que la scène flashe et tremble. */
+.arena-finale.ko { animation: arena-stamp .42s cubic-bezier(.2, .9, .3, 1) both; }
+@keyframes arena-stamp { 0% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; } 55% { transform: translate(-50%, -50%) scale(.92); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .arena-finale, .arena-finale.ko { animation: none; } }
 .arena-log-fresh { outline: 2px solid #5aa9ff; outline-offset: 1px; background: #24345a; }
 @media (prefers-reduced-motion: reduce) { .arena-presence i { animation: none; } }
 .arena-move { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; padding: 10px; border: 3px solid var(--edge); background: var(--stone); box-shadow: 3px 3px 0 #0c0a1a; min-width: 0; cursor: pointer; }
@@ -320,9 +355,18 @@ html[data-decor] main { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .arena-hint { animation: none; } }
 .arena-move.special { border-color: var(--magic); background: #2a1f42; }
 .arena-go { animation: arena-blink 1.2s steps(2) infinite; }
-@keyframes arena-rise { 0% { transform: translate(-50%, 6px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -18px); opacity: 0; } }
 @keyframes arena-blink { 50% { opacity: .35; } }
-@media (prefers-reduced-motion: reduce) { .arena-body, .arena-dmg, .arena-go { animation: none; } .arena-fx { animation: arena-fx .9s steps(1) forwards; } .arena-dmg { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .arena-body, .arena-dmg, .arena-go, .arena-spark { animation: none; }
+  .arena-fx { animation: arena-fx .9s steps(1) forwards; }
+  .arena-fx.late { animation-delay: var(--hit-at, 0ms); }
+  .arena-dmg { transform: translateX(-50%); animation: arena-fx .9s steps(1) var(--hit-at, 0ms) both; }
+  /* Ni secousse ni flash blanc : une teinte rouge sur la cible, et sur la scène au K.O. */
+  .arena-body.hit { animation: arena-tint .16s steps(1, end) var(--hit-at, 0ms); }
+  .arena-stage > .arena-whiteout { background: var(--danger); animation-name: arena-tint-out; }
+  .arena-trail.down, .arena-fill.up { transition: none; }
+}
+@keyframes arena-tint-out { from { opacity: .25; } to { opacity: 0; } }
 /* Trois boutons sur la carte du binôme : l'icône au-dessus du mot pour tenir sur mobile */
 .partner-actions .btn { flex-direction: column; gap: 6px; font-size: 9px; padding: 12px 6px; }
 
