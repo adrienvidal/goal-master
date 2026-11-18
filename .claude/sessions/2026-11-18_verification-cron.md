@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Arène v2 sur l'aperçu : PA à chaque tour, rejeu des coups, direct à deux
+✅ Fait      Arène v2 en prod : PA, rejeu, direct, K.O. animé
 ⛔ Bloqué    Aucun
-🎯 Priorité  Tester l'Arène v2 sur l'aperçu puis la mettre en prod (échéance 20/11, fin du combat)
+🎯 Priorité  Premier vrai tour en v2 avec Nicolas, fin du combat (échéance 20/11 17 h)
 ```
 
 ## Réalisé
@@ -196,9 +196,8 @@
 - Exceptions du détecteur de design pour la maquette v2 (faux positifs de contraste, police pixel) dans `.impeccable/config.json`
 
 ### Reste à faire
-- Adrien teste l'Arène v2 sur l'aperçu de `dev`, puis mise en production sur accord (avant la fin du combat, vendredi 20/11 18 h)
+- ~~Test sur l'aperçu puis mise en production~~ : fait (voir ci-dessous)
 - Prévenir Nicolas du changement de règles
-- Base locale : Arène de test `v2-test` (finie), à effacer si gênante
 
 ### Décisions
 - PA = colonne `energy` dans le code (pas de renommage en base) ; bonus de départ calculé depuis les évolutions, colonnes `challengerEnergy` / `opponentEnergy` ignorées
@@ -206,4 +205,25 @@
 - Rejeu mémorisé par appareil (stockage local) ; sans trace, seulement les coups adverses depuis mon dernier coup
 - Un combat fini reste affiché sur `/arene` une heure, pour rejouer le K.O. avant le résultat
 - Écartés : nouvelle action, chat, emotes, notification spéciale « l'Arène change »
+
+---
+
+## Suite : retours d'Adrien sur l'aperçu, mise en production de l'Arène v2
+
+### Réalisé
+- Étourdissement incompris : une seule barre (PA), actions restantes et pastille « 💫 étourdi » dans le bandeau du tour, raison sous chaque action grisée (#105, #106)
+- Fin du combat : pose K.O., « K.O. ! » ou « Temps écoulé ! » 2,2 s, puis le résultat s'ouvre tout seul chez les deux (#107)
+- Action grisée touchée : message de raison 3 s (pas ton tour, PA manquants, plus de potion, rejeu en cours) (#108)
+- Arènes purgées à la demande d'Adrien sur l'aperçu (2 combats, 48 actions, 31 notifications) et en local ; production non touchée
+- **Mise en production** sur accord d'Adrien (PR #109, commit de fusion) : déploiement OK, migration `arena_seen` appliquée, combat en cours lisible (fin le 20/11 17 h UTC = 18 h Paris)
+
+### Reste à faire
+- Prévenir Nicolas que l'Arène a changé (3 PA par tour, plus de lien avec les candidatures)
+- Vendredi 20/11 à 18 h 01 : fin du combat (résultat, couronne, notification), rappel du boss et duel
+- Base locale : plus d'Arène de test
+
+### Décisions
+- PA et actions restent deux limites distinctes (fusion écartée : 6 attaques d'un coup = K.O. en un tour)
+- Le message d'action bloquée reste dans l'écran, pas de notification push
+- Une action grisée est `aria-disabled` (touchable), plus `disabled`
 
