@@ -133,3 +133,14 @@
 
 ### Décisions
 - Région des fonctions fixée dans `vercel.json` (versionnée) plutôt que dans les réglages du projet Vercel
+
+---
+
+## Suite : bouton « Valider » bloqué
+
+### Réalisé
+- Cause : décalage de version, l'aperçu a été redéployé (fusion de #90) pendant le test d'Adrien ; l'action a bien été faite côté serveur (POST 200, coffre ouvert chez l'autre), mais l'ancienne page n'a pas pu lire la réponse
+- PR #92 fusionnée dans `dev` : un bouton qui charge plus de 8 s vérifie `/api/version` et recharge la page si la version a changé ; vérifié dans le navigateur (version simulée)
+
+### Décisions
+- Ne plus fusionner dans `dev` pendant qu'Adrien teste l'aperçu (mémoire `pas-de-deploiement-pendant-test`)
