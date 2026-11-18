@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LinkButton } from "@/components/LinkButton";
 import { ofName } from "@/lib/french";
 import { notFound } from "next/navigation";
 import { XP_QUEST_GIVEN } from "@/game/quests";
@@ -67,10 +67,10 @@ export default async function QuestPage({ params }: { params: Promise<{ id: stri
           <>
             <p className="num text-center text-2xl text-gold">+{XP_QUEST_GIVEN} XP</p>
             <p className="text-sm text-muted">{partner} ouvrira son coffre à sa prochaine visite. Tu peux lui lancer une nouvelle quête.</p>
-            <Link href="/quete/nouvelle" className="btn no-underline">Nouvelle quête</Link>
+            <LinkButton href="/quete/nouvelle" className="btn no-underline">Nouvelle quête</LinkButton>
           </>
         ) : null}
-        <Link href="/" className="btn ghost no-underline">Retour</Link>
+        <LinkButton href="/" className="btn ghost no-underline">Retour</LinkButton>
       </div>
     </main>
   );

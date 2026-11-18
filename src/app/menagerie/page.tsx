@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LinkButton } from "@/components/LinkButton";
 import { COMPANION_IDS, companionLabel, ownedCompanions } from "@/game/quests";
 import { loadGame } from "@/server/game";
 import { requirePlayer } from "@/server/session";
@@ -20,7 +20,7 @@ export default async function MenageriePage(): Promise<React.ReactElement> {
             ? `Aucun compagnon pour l'instant. Accomplis une quête de ${partner?.pseudo ?? "ton binôme"} pour ouvrir ton premier coffre.`
             : "Chaque quête validée ouvre un coffre. Touche un compagnon pour l'afficher à côté de ton héros."}
         </p>
-        <Link href="/" className="btn ghost no-underline md:max-w-xs">Retour</Link>
+        <LinkButton href="/" className="btn ghost no-underline md:max-w-xs">Retour</LinkButton>
       </div>
     </main>
   );

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import { BusyLabel } from "@/components/LinkButton";
 import { cancelArena, playArena, provokeArena, respondArena, type ArenaResult } from "@/app/arene-actions";
 import type { ArenaKind } from "@/game/arena";
 import { usePlayFx } from "./ArenaStage";
@@ -52,7 +53,7 @@ export function ArenaPanel({ partnerName, compare, onClose }: { partnerName: str
         {compare.partnerRusty ? `${partnerName} est rouillé : il entrera sans énergie. ` : ""}
         Chaque candidature te donne 2 ⚡. Fin au K.O., ou vendredi 18 h : le plus de PV restants gagne.
       </p>
-      <button type="button" className="btn arena" disabled={pending} onClick={() => run(provokeArena)}>Envoyer la provocation</button>
+      <button type="button" className="btn arena" disabled={pending} onClick={() => run(provokeArena)}><BusyLabel pending={pending}>Envoyer la provocation</BusyLabel></button>
       <button type="button" className="btn ghost" onClick={onClose}>Fermer</button>
       {error ? <p className="err">{error}</p> : null}
     </div>
@@ -67,8 +68,8 @@ export function ArenaIncoming({ id, rusty, children }: { id: string; rusty: bool
       <div className="flex min-w-0 items-end gap-3">{children}</div>
       {rusty ? <p className="text-sm text-muted">Ton héros est rouillé : il entre sans énergie. Une candidature et il reprend les armes.</p> : null}
       <div className="grid grid-cols-2 gap-2">
-        <button type="button" className="btn ghost" disabled={pending} onClick={() => run(() => respondArena(id, false))}>Pas cette fois</button>
-        <button type="button" className="btn arena" disabled={pending} onClick={() => run(() => respondArena(id, true))}>{rusty ? "Entrer quand même" : "Entrer dans l'Arène"}</button>
+        <button type="button" className="btn ghost" disabled={pending} onClick={() => run(() => respondArena(id, false))}><BusyLabel pending={pending}>Pas cette fois</BusyLabel></button>
+        <button type="button" className="btn arena" disabled={pending} onClick={() => run(() => respondArena(id, true))}><BusyLabel pending={pending}>{rusty ? "Entrer quand même" : "Entrer dans l'Arène"}</BusyLabel></button>
       </div>
       {error ? <p className="err">{error}</p> : null}
     </div>
@@ -82,7 +83,7 @@ export function ArenaPending({ id, partnerName, expires }: { id: string; partner
     <div className="flex flex-col gap-2 border-[3px] border-dashed border-magic p-3">
       <p className="text-[15px]">🛡️ Provocation envoyée à {partnerName}.</p>
       <p className="text-sm text-muted">Il a reçu une notification. Sans réponse d&apos;ici {expires}, elle s&apos;efface.</p>
-      <button type="button" className="btn ghost" disabled={pending} onClick={() => run(() => cancelArena(id))}>Retirer la provocation</button>
+      <button type="button" className="btn ghost" disabled={pending} onClick={() => run(() => cancelArena(id))}><BusyLabel pending={pending}>Retirer la provocation</BusyLabel></button>
       {error ? <p className="err">{error}</p> : null}
     </div>
   );
@@ -111,7 +112,7 @@ export function ArenaMoves({ id, moves, used, max, myTurn }: { id: string; moves
       {myTurn ? (
         <div className="flex items-center justify-between gap-3">
           <span className="num text-muted">Actions {used}/{max}</span>
-          <button type="button" className="btn ghost !w-auto !px-4" disabled={pending} onClick={() => run(() => playArena(id, "END"))}>Finir mon tour</button>
+          <button type="button" className="btn ghost !w-auto !px-4" disabled={pending} onClick={() => run(() => playArena(id, "END"))}><BusyLabel pending={pending}>Finir mon tour</BusyLabel></button>
         </div>
       ) : null}
       {error ? <p className="err">{error}</p> : null}

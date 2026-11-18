@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LinkButton } from "@/components/LinkButton";
 import type { QuestRow } from "@/game/quests";
 
 // Ligne « Ta quête pour X » dans la carte du binôme (maquette quetes v2), tant que la quête donnée est en cours.
@@ -9,7 +9,7 @@ export function QuestLine({ quest, partnerName }: { quest: QuestRow; partnerName
       <span className="lbl">Ta quête pour {partnerName}</span>
       <span className="txt">{quest.text}</span>
       <span className={`qstate ${done ? "todo" : "wait"}`}>{done ? "Faite · à valider" : "En cours"}</span>
-      <Link href={`/quete/${quest.id}`} className={`btn sm no-underline ${done ? "ok" : "ghost"}`}>{done ? "Valider" : "Voir"}</Link>
+      <LinkButton href={`/quete/${quest.id}`} className={`btn sm no-underline ${done ? "ok" : "ghost"}`}>{done ? "Valider" : "Voir"}</LinkButton>
     </div>
   );
 }

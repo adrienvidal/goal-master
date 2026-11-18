@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LinkButton } from "@/components/LinkButton";
 import { companionLabel, isCompanion, type CompanionId } from "@/game/quests";
 import { redirect } from "next/navigation";
 import { ArenaMoves, type Move } from "@/components/Arena";
@@ -132,7 +133,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
                 {s.previous?.playerId === player.id ? "Tour terminé : 3 actions au plus par tour. Ton énergie restante est gardée pour ton prochain tour, et tes candidatures d'ici là la rechargent." : "Tes candidatures d'ici là rechargent ton énergie pour ton prochain tour."}
               </p>
             ) : null}
-            <Link href="/" className="btn">+ Candidature</Link>
+            <LinkButton href="/" className="btn">+ Candidature</LinkButton>
           </div>
           </ArenaLive>
           <div className="flex flex-col gap-1.5 border-[3px] border-edge bg-night px-3 py-2.5">
