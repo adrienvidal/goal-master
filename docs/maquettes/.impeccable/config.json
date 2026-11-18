@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/maquettes/arene-botte.html"
+        ],
+        "createdAt": "2026-11-18T18:02:49.985Z",
+        "reason": "Claude: #frame est l'écran de jeu de l'Arène, plein cadre par nature ; le HUD a déjà 10 px de marge"
+      }
+    ]
+  }
+}
