@@ -6,6 +6,7 @@ import {
   arenaState,
   canPlay,
   canProvoke,
+  isStunned,
   mustPass,
   openArena,
   startBonus,
@@ -239,14 +240,16 @@ describe("rules v3 (balance)", () => {
     expect(rulesFor(3).version).toBe(3);
     expect(rulesFor(99).version).toBe(3);
     expect(state(arena(), [], 1).maxHp.a).toBe(34);
-    expect(state(v3(), [], 1).maxHp.a).toBe(51);
+    expect(state(v3(), [], 1).maxHp.a).toBe(54);
   });
 
-  test("the opener plays 2 actions on the first turn, the responder starts with 1 extra action point", () => {
-    const s = state(v3(), [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 5)], 2);
-    expect(s.turn).toMatchObject({ playerId: "n", number: 2, max: 3 });
+  test("only action points limit a turn; the responder starts with 1 extra", () => {
+    expect(state(v3(), [], 1)).toMatchObject({ energy: { a: 3, n: 1 }, turn: { playerId: "a", max: null } });
+    const s = state(v3(), [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 5), act("a", "END", 1.2)], 2);
+    expect(s.turn).toMatchObject({ playerId: "n", number: 2, max: null, stunned: 0 });
     expect(s.energy.n).toBe(4);
-    expect(state(v3(), [], 1).turn).toMatchObject({ playerId: "a", max: 2 });
+    const four = [1, 2, 3, 4].map((i) => act("n", "ATTACK", 2 + i / 10, 3));
+    expect(state(v3(), [act("a", "END", 1), ...four], 3).turn).toMatchObject({ playerId: "n", used: 4 });
   });
 
   test("the outsider gets 1 action point per 2 evolutions of gap", () => {
@@ -257,18 +260,41 @@ describe("rules v3 (balance)", () => {
 
   test("a botte costs 2 action points and the thrust damage is rolled", () => {
     expect(canPlay(state(v3(), [], 1), "a", "THRUST")).toEqual({ ok: true });
-    expect(rollValue("THRUST", 3, rulesFor(3), () => 0)).toBe(4);
-    expect(rollValue("THRUST", 3, rulesFor(3), () => 0.999)).toBe(12);
+    expect(rollValue("THRUST", 3, rulesFor(3), () => 0)).toBe(6);
+    expect(rollValue("THRUST", 3, rulesFor(3), () => 0.999)).toBe(14);
   });
 
   test("the whirl hurts as well as it heals, and the damage shows in the log", () => {
-    const s = state(v3(), [act("a", "WHIRL", 1, 4)], 2);
-    expect(s.hp.n).toBe(51 - 4);
-    expect(s.log.find((e) => e.kind === "WHIRL")).toMatchObject({ amount: 4, dealt: 4 });
+    const s = state(v3(), [act("a", "WHIRL", 1, 3)], 2);
+    expect(s.hp.n).toBe(54 - 3);
+    expect(s.log.find((e) => e.kind === "WHIRL")).toMatchObject({ amount: 3, dealt: 3 });
   });
 
   test("a parry halves the whirl damage too", () => {
     const actions = [act("a", "END", 1), act("n", "PARRY", 2), act("n", "END", 2.1), act("a", "WHIRL", 3, 4)];
-    expect(state(v3(), actions, 4).hp.n).toBe(51 - 2);
+    expect(state(v3(), actions, 4).hp.n).toBe(54 - 1);
+  });
+});
+
+describe("stunned", () => {
+  test("the opener's first turn is not a stun", () => {
+    const s = state(arena({ rules: 3 }), [act("a", "ATTACK", 1, 2)], 2);
+    expect(s.turn).toMatchObject({ playerId: "a", number: 1, stunned: 0 });
+    expect(isStunned(s, "a")).toBe(false);
+  });
+
+  test("v3: the whirl takes 1 action point from the next turn of the foe", () => {
+    const s = state(arena({ rules: 3 }), [act("a", "WHIRL", 1, 4), act("a", "END", 1.1)], 2);
+    expect(s.turn).toMatchObject({ playerId: "n", max: null, stunned: 1 });
+    expect(s.energy.n).toBe(1 + 2);
+    expect(isStunned(s, "n")).toBe(true);
+    expect(isStunned(s, "a")).toBe(false);
+  });
+
+  test("v2: the whirl still takes actions", () => {
+    const first = [act("a", "ATTACK", 1, 5), act("a", "ATTACK", 1.1, 5), act("a", "ATTACK", 1.2, 5), act("n", "ATTACK", 2, 5), act("n", "ATTACK", 2.1, 5), act("n", "ATTACK", 2.2, 5)];
+    const s = state(arena(), [...first, act("a", "WHIRL", 3, 10), act("a", "END", 3.1)], 4);
+    expect(s.turn).toMatchObject({ playerId: "n", max: 2, stunned: 1 });
+    expect(isStunned(s, "n")).toBe(true);
   });
 });

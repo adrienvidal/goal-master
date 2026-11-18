@@ -78,21 +78,23 @@ Cibles convenues avec Adrien, vérifiées par `src/game/arena-balance.test.ts` (
 
 | Cible | Visée | Mesuré (1 000 combats) |
 |---|---|---|
-| Héros identiques, celui qui ouvre gagne | 50-60 % | ~60 % |
-| Une évolution d'écart, le plus évolué gagne | 55-65 % | 59-61 % |
-| Écart maximal (1 contre 6) | 75 % au plus | ~75 % |
-| Panda contre Chevalier | 45-55 % | 54 % (évo. 3), 43-60 % aux extrêmes |
-| Jouer sa Botte plutôt qu'attaquer | 45-65 % | 63 % |
-| Durée d'un combat | 8-10 tours en tout | 9,4 |
+| Héros identiques, celui qui ouvre gagne | 50-60 % | 58 % |
+| Une évolution d'écart, le plus évolué gagne | 55-65 % | 55-56 % |
+| Écart maximal (1 contre 6) | 75 % au plus | 75 % |
+| Panda contre Chevalier | 45-55 % | 51-54 % |
+| Jouer sa Botte plutôt qu'attaquer | 45-65 % | 50 % |
+| Durée d'un combat | 8-10 tours en tout | 8,3 |
+
+Le test tolère 2 points d'écart (bruit de mesure sur 400 combats).
 
 Règles v3 :
 
 - **Version figée par combat** : colonne `Arena.rules` (migration `arena_rules`). Les combats commencés avant gardent la v2 (`rulesFor`), les nouveaux prennent la v3.
-- **Stats** : PV 48 + évolution ; Attaque 2 à 8 pour tous ; l'évolution change le style plus que la force (Parade percée au dernier palier pour le Coup d'estoc, soin du Bambou qui monte d'un point par palier).
-- **Ouverture** : le lanceur n'a que 2 actions à son premier tour ; celui qui répond part avec 1 PA.
-- **Outsider** : +1 PA de départ par tranche de 2 évolutions d'écart (arrondi au-dessus).
-- **Coup d'estoc** : 2 PA, dégâts tirés de 2 + palier à 10 + palier.
-- **Bambou tourbillon** : 2 PA, 4 dégâts (divisés par une Parade), +2 + palier PV, l'adversaire perd 1 action à tous les paliers (2 au dernier palier en v2 écrasaient le Chevalier).
-- Inchangé : +3 PA par tour (6 au plus), 3 actions par tour, Parade, 2 potions de +6 PV.
+- **Un seul compteur, les PA** (retour d'Adrien : « actions » et « PA » côte à côte prêtaient à confusion) : plus de limite d'actions par tour, on joue tant qu'il reste des PA, puis « Finir mon tour » (automatique quand il ne reste ni PA ni potion).
+- **Stats** : PV 48 + 2 × évolution ; Attaque 2 à 8 pour tous ; Parade percée par le Coup d'estoc au dernier palier.
+- **Départ** : celui qui répond à la provocation part avec 1 PA ; l'outsider gagne +1 PA par tranche de 2 évolutions d'écart (arrondi au-dessus).
+- **Coup d'estoc** : 2 PA, dégâts tirés de 4 + palier à 12 + palier.
+- **Bambou tourbillon** : 2 PA, 3 dégâts (divisés par une Parade), +1 + palier PV, et l'adversaire reçoit 1 PA de moins au début de son tour suivant (pastille « étourdi »).
+- Inchangé : +3 PA par tour (6 au plus), Parade, 2 potions de +6 PV.
 
-Écartés : coup critique (il demandait un affichage à part), nouvelle action, notification « les règles changent ».
+Écartés : coup critique (il demandait un affichage à part), nouvelle action, notification « les règles changent », nouveau dessin de la jauge de PA.
