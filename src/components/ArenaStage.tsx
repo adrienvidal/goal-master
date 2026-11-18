@@ -127,7 +127,8 @@ const FINALE_KO_MS = 2800;
  * puis le résultat s'ouvre tout seul (le bouton reste en secours).
  */
 /** Botte plein écran en cours : elle précède `show()` du coup, le mien comme celui du rejeu. */
-type Cut = { origin: "mine" | "replay"; by: string; kind: ArenaKind; n: number; spec: BotteCut; pierce: boolean };
+/** `hp` : PV des deux au départ, gardés à l'écran pendant la séquence (la réponse du serveur arrive avant le contact). */
+type Cut = { origin: "mine" | "replay"; by: string; kind: ArenaKind; n: number; spec: BotteCut; pierce: boolean; hp: Record<string, number> };
 
 export function ArenaLive({ arenaId, meId, foeName, hits, ended, fighters, children }: { arenaId: string; meId: string; foeName: string; hits: StageHit[]; ended: "ko" | "time" | null; fighters: StageFighter[]; children: React.ReactNode }): React.ReactElement {
   const router = useRouter();
@@ -161,7 +162,7 @@ export function ArenaLive({ arenaId, meId, foeName, hits, ended, fighters, child
       const spec = f ? botteCut(kind, f.levelForm, { replay: origin === "replay", reduced }) : null;
       if (!f || !spec) return null;
       const target = fighters.find((x) => x.id !== by);
-      return { origin, by, kind, n: Date.now(), spec, pierce: origin === "mine" && spec.cracks && !!target?.parry };
+      return { origin, by, kind, n: Date.now(), spec, pierce: origin === "mine" && spec.cracks && !!target?.parry, hp: Object.fromEntries(fighters.map((x) => [x.id, x.hp])) };
     },
     [fighters],
   );
@@ -274,7 +275,9 @@ export function ArenaLive({ arenaId, meId, foeName, hits, ended, fighters, child
 
   const busy = step !== null || queue.length > 0;
   const finale = finished ? ended : null;
-  const replay: Replay = step
+  const replay: Replay = cut?.origin === "mine"
+    ? { hp: cut.hp, logEnd: null, locked: false, finale }
+    : step
     ? { hp: landed ? step.hpAfter : step.hpBefore, logEnd: step.logEnd, locked: true, finale }
     : queue.length
       ? { hp: queue[0].hpBefore, logEnd: queue[0].logStart - 1, locked: true, finale }
