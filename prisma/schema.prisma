@@ -58,6 +58,8 @@ model Player {
   /// Catégories de notifications coupées (voir src/game/notifications.ts).
   mutedCategories String[]              @default([])
   createdAt       DateTime              @default(now())
+  /// Dernier affichage de /arene : présence « X est dans l'Arène » (spec arene v2)
+  arenaSeenAt     DateTime?
   goals           Goal[]
   applications    Application[]
   sentNudges      Nudge[]               @relation("sentNudges")
