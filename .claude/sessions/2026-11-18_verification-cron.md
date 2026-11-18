@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Fonds vivants fusionnés dans dev (animés, heure de Paris, forme de l'écran)
+✅ Fait      Fonds vivants en prod (animés, heure de Paris, forme de l'écran)
 ⛔ Bloqué    Aucun
-🎯 Priorité  Tester les fonds sur l'aperçu, puis duel du boss (échéance 20/11 18 h)
+🎯 Priorité  Prévenir Nicolas, vérifier le duel du boss (échéance 20/11 18 h)
 ```
 
 ## Réalisé
@@ -366,9 +366,10 @@
 - Cadrage `docs/specs/2026-11-18-fonds-vivants-design.md`, plan `docs/superpowers/plans/2026-11-18-fonds-vivants.md`
 - PR #127 fusionnée dans `dev` : logique testée `src/lib/landscapes.ts` (taille de toile, moment de la journée, heure de Paris, recentrage), moteur `src/lib/landscapeArt.ts`, composant `Landscape` (boucle 8 i/s, pause page cachée, mouvement réduit, redimensionnement), ancien château gardé pour l'en-tête e-mail (`src/lib/emailCastle.ts`) ; 251 tests verts, lint et build OK
 - Vérifié en local : téléphone 390 × 844 (fond 130 × 282) et ordinateur 1440 × 900 (288 × 180)
+- **Mise en production** sur accord d'Adrien (PR #129, commit de fusion) : déploiement Vercel réussi
 
 ### Reste à faire
-- Adrien teste les fonds sur l'aperçu de `dev` (de jour aussi : vérifié seulement de nuit en local), puis mise en production sur accord
+- Regarder les fonds en journée sur un vrai téléphone (vérifiés seulement de nuit en local)
 - Jeudi 19/11 et vendredi 20/11 à 18 h 01 : rappel du boss puis duel
 - Prévenir Nicolas : Arène remise à zéro, règles v3, effets d'impact, Bottes plein écran, fonds vivants
 
