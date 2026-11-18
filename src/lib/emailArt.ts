@@ -2,7 +2,7 @@
 import type { BossIndex } from "@/game/duel";
 import type { Form } from "@/game/levels";
 import { bossSprite } from "./bosses";
-import { drawLandscape, LANDSCAPE_W } from "./landscapes";
+import { drawEmailCastle, EMAIL_CASTLE_H, EMAIL_CASTLE_W } from "./emailCastle";
 import { CHARACTERS, COLORS, type CharacterId, type ColorId } from "./onboarding";
 import { drawText, encodePng, hexToRgba, PixelCanvas, type Rgba } from "./pixelPng";
 import { sprite, type Pose } from "./sprites";
@@ -15,14 +15,14 @@ const STONE = "#221e40";
 const HEADER_H = 40;
 
 export function headerPng(): Buffer {
-  const land = new PixelCanvas(LANDSCAPE_W, 108);
+  const land = new PixelCanvas(EMAIL_CASTLE_W, EMAIL_CASTLE_H);
   // Dans l'app, le bas du ciel laissé vide montre le fond de page : on le peint en nuit.
   land.fillStyle = "#16132a";
-  land.fillRect(0, 0, LANDSCAPE_W, 108);
-  drawLandscape(land as unknown as CanvasRenderingContext2D, "CASTLE");
-  const c = new PixelCanvas(LANDSCAPE_W, HEADER_H);
+  land.fillRect(0, 0, EMAIL_CASTLE_W, EMAIL_CASTLE_H);
+  drawEmailCastle(land);
+  const c = new PixelCanvas(EMAIL_CASTLE_W, HEADER_H);
   // Haut du paysage : tours et drapeau à gauche, lune à droite ; épée et titre sous la lune.
-  c.blit(land, 0, 8, LANDSCAPE_W, HEADER_H, 0, 0);
+  c.blit(land, 0, 8, EMAIL_CASTLE_W, HEADER_H, 0, 0);
   SWORD_ICON.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && c.set(99 + x, 13 + y, hexToRgba(SWORD_PALETTE[ch]))));
   drawText(c, "GOAL MASTER", 119, 19, "#f2c14e", "#0c0a1a");
   return encodePng(c, HEADER_SCALE);
