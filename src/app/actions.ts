@@ -83,7 +83,7 @@ async function applicationEvents(playerId: string, before: GameData, updated: Ga
   }
   // Une relance réussie fait aussi gagner de l'XP à l'expéditeur : chacun peut changer de forme.
   for (const [who, to] of [[me, partner], [partner, me]] as const) {
-    const form = formReached(who.id, before.apps, updated.apps, updated.nudges);
+    const form = formReached(who.id, before.apps, updated.apps, updated.nudges, updated.quests);
     if (form) items.push({ playerId: to.id, event: { kind: "evo", partnerId: who.id, partner: who.pseudo, form, formName: formName(who.character, form) } });
   }
   const [duelBefore, duelAfter] = await Promise.all([before, updated].map(async (g) => currentDuel(await loadDuelInput(g), now)));

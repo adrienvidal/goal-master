@@ -16,7 +16,7 @@ const KINDS: ArenaKind[] = ["ATTACK", "PARRY", "THRUST", "WHIRL", "POTION", "END
 const SPECIAL = { KNIGHT: "THRUST", PANDA: "WHIRL" } as const;
 
 function heroOf(p: Player, game: GameData, now: Date): { form: number; rusty: boolean } {
-  const v = buildPlayerView(p, game.apps, game.nudges, null, now);
+  const v = buildPlayerView(p, game.apps, game.nudges, game.quests, null, now);
   return { form: v.levelForm, rusty: v.mood === "tired" || v.mood === "exhausted" };
 }
 

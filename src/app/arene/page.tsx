@@ -56,7 +56,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   const input = inputs.find((i) => arenaPhase(i.arena, i.actions, now) === "running");
   if (!input) redirect(finishedArenas(inputs, now).length ? "/arene/resultat" : "/");
   const s = arenaState(input, now);
-  const views = game.players.map((p) => buildPlayerView(p, game.apps, game.nudges, null, now));
+  const views = game.players.map((p) => buildPlayerView(p, game.apps, game.nudges, game.quests, null, now));
   const me = views.find((v) => v.id === player.id)!;
   const foe = views.find((v) => v.id !== player.id)!;
   const myForm = (player.id === input.arena.challengerId ? input.arena.challengerForm : input.arena.opponentForm) ?? 1;

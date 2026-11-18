@@ -4,6 +4,7 @@ import { addDays, dayRange, isWorkday, parisDay, type Day } from "./calendar";
 import { BOSSES, type BossIndex, type Duel } from "./duel";
 import { formForLevel, levelFromXp, type Form } from "./levels";
 import { NUDGE_MESSAGES, type NudgeRow } from "./nudges";
+import type { QuestRow } from "./quests";
 import { activeApplications, nudgeSucceeded, totalXp, type Application } from "./xp";
 
 export const CATEGORIES = ["nudges", "partner", "duel", "reminders", "news"] as const;
@@ -163,14 +164,14 @@ export function rustDue(playerId: string, apps: Application[], today: Day): { la
   return idle >= RUST_AFTER_WORKDAYS ? { lastDay, idle } : null;
 }
 
-function formOf(playerId: string, apps: Application[], nudges: NudgeRow[]): Form {
-  return formForLevel(levelFromXp(totalXp(playerId, apps, nudges)).level);
+function formOf(playerId: string, apps: Application[], nudges: NudgeRow[], quests: QuestRow[]): Form {
+  return formForLevel(levelFromXp(totalXp(playerId, apps, nudges, quests)).level);
 }
 
 /** Nouvelle forme atteinte entre deux états des candidatures, ou null. */
-export function formReached(playerId: string, before: Application[], after: Application[], nudges: NudgeRow[]): Form | null {
-  const from = formOf(playerId, before, nudges);
-  const to = formOf(playerId, after, nudges);
+export function formReached(playerId: string, before: Application[], after: Application[], nudges: NudgeRow[], quests: QuestRow[] = []): Form | null {
+  const from = formOf(playerId, before, nudges, quests);
+  const to = formOf(playerId, after, nudges, quests);
   return to > from ? to : null;
 }
 

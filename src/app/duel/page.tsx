@@ -19,7 +19,7 @@ export default async function DuelPage(): Promise<React.ReactElement> {
   await syncAchievements(game, now);
   const firstWin = duel.won && past.filter((d) => d.won).length === 1;
   const next = currentDuel(input, now);
-  const views = game.players.map((p) => buildPlayerView(p, game.apps, game.nudges, null, now));
+  const views = game.players.map((p) => buildPlayerView(p, game.apps, game.nudges, game.quests, null, now));
   const name = (id: string) => views.find((v) => v.id === id)?.pseudo ?? "?";
   const fighters = fightersMeFirst(duel.fighters, player.id);
   const levels = fighters.map((f) => views.find((v) => v.id === f.playerId)?.level).filter(Boolean);

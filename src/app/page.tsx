@@ -1,4 +1,5 @@
 import { MyAvatar } from "@/components/MyAvatar";
+import { COMPANION_NAMES } from "@/game/quests";
 import { Sprite } from "@/components/Sprite";
 import { Bar } from "@/components/Bar";
 import { Flame } from "@/components/Flame";
@@ -76,6 +77,8 @@ function FeedText({ line, pseudo }: { line: FeedLine; pseudo: string }): React.R
       return <span className="text-gold">{pseudo} est devenu {line.formName} ⚔️</span>;
     case "application":
       return <span>{pseudo} → <b>{line.company}</b></span>;
+    case "quest":
+      return <span className="text-gold">{pseudo} a réussi sa quête{line.companion ? <> et adopté {COMPANION_NAMES[line.companion].the}</> : null}</span>;
   }
 }
 
@@ -222,10 +225,10 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const now = new Date();
   const myGoal = await goalFor(player.id);
   if (!myGoal) redirect("/objectif/nouveau");
-  const me = buildPlayerView(player, game.apps, game.nudges, myGoal, now);
+  const me = buildPlayerView(player, game.apps, game.nudges, game.quests, myGoal, now);
   if (me.goal && goalOutcome(me.goal.done, me.goal.target, me.goal.deadline, parisDay(now)) !== "active") redirect("/objectif/fin");
   const partnerRow = game.players.find((p) => p.id !== player.id);
-  const partner = partnerRow ? buildPlayerView(partnerRow, game.apps, game.nudges, await goalFor(partnerRow.id), now) : null;
+  const partner = partnerRow ? buildPlayerView(partnerRow, game.apps, game.nudges, game.quests, await goalFor(partnerRow.id), now) : null;
   const received = partner ? pendingNudge(player.id, game.nudges, game.apps, now) : null;
   const won = partner ? justWonNudge(player.id, game.nudges, game.apps, now) : null;
   const duelInput = await loadDuelInput(game);

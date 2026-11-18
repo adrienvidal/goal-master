@@ -7,6 +7,15 @@ export const QUEST_TEXT_MAX = 120;
 export const CHEST_OFFER_SIZE = 3;
 export const COMPANION_IDS = ["cat", "dog", "fox", "owl", "rabbit", "dragon"] as const;
 export type CompanionId = (typeof COMPANION_IDS)[number];
+/** Nom affiché, avec son article défini (« le renard »). */
+export const COMPANION_NAMES: Record<CompanionId, { name: string; the: string }> = {
+  cat: { name: "Chat", the: "le chat" },
+  dog: { name: "Chien", the: "le chien" },
+  fox: { name: "Renard", the: "le renard" },
+  owl: { name: "Hibou", the: "le hibou" },
+  rabbit: { name: "Lapin", the: "le lapin" },
+  dragon: { name: "Petit dragon", the: "le petit dragon" },
+};
 
 export type QuestStatus = "OPEN" | "DONE" | "VALIDATED" | "CANCELLED";
 export type QuestRow = {

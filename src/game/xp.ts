@@ -1,5 +1,6 @@
 import { parisDay } from "./calendar";
 import { DAILY_XP_CAP, XP_NUDGE_BONUS, XP_PER_APPLICATION } from "./levels";
+import { questXp, type QuestRow } from "./quests";
 
 export type Application = {
   id: string;
@@ -29,7 +30,8 @@ export function nudgeSucceeded(nudge: Nudge, apps: Application[]): boolean {
   );
 }
 
-export function totalXp(userId: string, apps: Application[], nudges: Nudge[]): number {
+/** XP totale : candidatures (plafonnées par jour), relances suivies d'effet et quêtes validées. */
+export function totalXp(userId: string, apps: Application[], nudges: Nudge[], quests: QuestRow[] = []): number {
   const perDay = new Map<string, number>();
   let xp = 0;
   const mine = activeApplications(apps)
@@ -44,5 +46,5 @@ export function totalXp(userId: string, apps: Application[], nudges: Nudge[]): n
   for (const n of nudges) {
     if ((n.senderId === userId || n.recipientId === userId) && nudgeSucceeded(n, apps)) xp += XP_NUDGE_BONUS;
   }
-  return xp;
+  return xp + questXp(userId, quests);
 }
