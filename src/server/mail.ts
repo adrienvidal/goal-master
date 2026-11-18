@@ -57,7 +57,7 @@ function linkLabel(event: NotificationEvent): string | null {
     case "challenge-end":
       return "Voir le défi";
     case "arena":
-      return "Entrer dans l'Arène";
+      return "Répondre à la provocation";
     case "arena-end":
     case "arena-turn":
       return "Voir l'Arène";
