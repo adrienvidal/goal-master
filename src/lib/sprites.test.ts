@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COLOR_HEX, crowned, poseGrid, sprite } from "./sprites";
+import { COLOR_HEX, crowned, poseGrid, sprite, spriteLayers } from "./sprites";
 
 describe("sprite", () => {
   it("dessine chaque forme des deux personnages", () => {
@@ -98,5 +98,30 @@ describe("arena poses", () => {
   it("lays the hero down on a knock-out: wider than tall", () => {
     const ko = poseGrid("KNIGHT", 5, "ko");
     expect(ko[0].length).toBeGreaterThan(ko.length);
+  });
+});
+
+describe("spriteLayers (Bottes plein écran)", () => {
+  const cells = (rects: { x: number; y: number; w: number; fill: string }[]) =>
+    rects.flatMap((r) => Array.from({ length: r.w }, (_, i) => `${r.x + i},${r.y},${r.fill}`)).sort();
+
+  it("corps et arme redonnent le sprite de repos, case pour case", () => {
+    for (const character of ["KNIGHT", "PANDA"] as const)
+      for (const form of [1, 2, 3, 4, 5, 6] as const) {
+        const l = spriteLayers(character, "BLUE", form);
+        expect(cells([...l.body, ...l.weapon])).toEqual(cells(sprite(character, "BLUE", form, "normal", "rest").rects));
+      }
+  });
+
+  it("isole une arme tenue à droite, avec le poing comme pivot", () => {
+    const l = spriteLayers("KNIGHT", "BLUE", 4);
+    expect(l.weapon.length).toBeGreaterThan(0);
+    expect(l.pivot).not.toBeNull();
+    expect(l.pivot!.x).toBeGreaterThan(l.width / 2);
+  });
+
+  it("n'a pas d'arme à l'évolution 1", () => {
+    expect(spriteLayers("KNIGHT", "RED", 1).weapon).toEqual([]);
+    expect(spriteLayers("PANDA", "RED", 1).pivot).toBeNull();
   });
 });
