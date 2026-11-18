@@ -13,7 +13,14 @@ import { db } from "./db";
 import { loginCodeMail, sendMail } from "./mail";
 
 const THIRTY_DAYS = 60 * 60 * 24 * 30;
-const GUARDED_PATHS = ["/email-otp/send-verification-otp", "/sign-in/email-otp"];
+const SEND_CODE_PATH = "/email-otp/send-verification-otp";
+const GUARDED_PATHS = [SEND_CODE_PATH, "/sign-in/email-otp"];
+const MAIL_FAILED_MESSAGE = "Le code n'a pas pu partir. Réessaie dans un instant.";
+
+// Better Auth lance l'envoi du code en tâche de fond et avale son erreur : l'écran attendrait un code qui
+// n'arrivera jamais. Le code est donc seulement noté sur le contexte de la requête (propre à chacune), et le
+// hook « après » l'envoie en l'attendant, pour répondre une erreur si l'e-mail ne part pas.
+type PendingCode = { pendingLoginCode?: { email: string; otp: string } };
 
 // Aperçus Vercel : leur adresse n'est pas celle de la production, il faut l'autoriser explicitement
 function trustedOrigins(): string[] {
@@ -39,6 +46,17 @@ function create() {
           throw new APIError("FORBIDDEN", { message: NOT_ALLOWED_MESSAGE, code: "NOT_ALLOWED" });
         }
       }),
+      after: createAuthMiddleware(async (ctx) => {
+        if (ctx.path !== SEND_CODE_PATH) return;
+        const pending = (ctx.context as PendingCode).pendingLoginCode;
+        if (!pending) return;
+        try {
+          await sendMail(loginCodeMail(pending.email, pending.otp));
+        } catch (e) {
+          console.error(`[connexion] code non envoyé à ${pending.email} :`, e);
+          throw new APIError("SERVICE_UNAVAILABLE", { message: MAIL_FAILED_MESSAGE, code: "MAIL_FAILED" });
+        }
+      }),
     },
     plugins: [
       emailOTP({
@@ -46,9 +64,9 @@ function create() {
         expiresIn: 600,
         allowedAttempts: 3,
         storeOTP: "hashed",
-        async sendVerificationOTP({ email, otp, type }) {
-          if (type !== "sign-in") return;
-          await sendMail(loginCodeMail(email, otp)).catch((e: unknown) => console.error(`[connexion] code non envoyé à ${email} :`, e));
+        async sendVerificationOTP({ email, otp, type }, ctx) {
+          if (type !== "sign-in" || !ctx) return;
+          (ctx.context as PendingCode).pendingLoginCode = { email, otp };
         },
       }),
       nextCookies(),

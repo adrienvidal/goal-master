@@ -9,6 +9,7 @@ type AuthError = { status: number; code?: string; message?: string };
 
 function errorMessage(error: AuthError): string {
   if (error.code === "NOT_ALLOWED") return error.message ?? "Cette adresse n'a pas accès à Goal Master.";
+  if (error.code === "MAIL_FAILED") return error.message ?? "Le code n'a pas pu partir. Réessaie dans un instant.";
   if (error.status === 429) return "Trop d'essais. Patiente une minute puis recommence.";
   if (error.code === "TOO_MANY_ATTEMPTS") return "Trop d'essais pour ce code. Demande un nouveau code.";
   return "Code incorrect ou expiré. Vérifie-le, ou demande un nouveau code.";

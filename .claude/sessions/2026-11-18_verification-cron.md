@@ -3,7 +3,7 @@
 ## Reprise
 
 ```
-✅ Fait      Quêtes et bilan du jour en prod, e-mails de test réservés à Adrien
+✅ Fait      Quêtes, coffre v3 et bilan du jour en prod ; erreur d'envoi du code visible (dev)
 ⛔ Bloqué    Aucun
 🎯 Priorité  Relire le premier bilan du jour et le rappel du boss (échéance 19/11)
 ```
@@ -155,10 +155,30 @@
 - Coffre v3 : maquette animée validée (entrée « Coffre v3 »), puis codé (PR #95) : trois coups, apparition une à une, collection x/6, XP qui monte à l'adoption ; testé en local à 390 px
 - Décision d'Adrien : mettre `dev` en production avant d'attaquer la prochaine fonctionnalité
 
+- **Mise en production** (PR #97, commit de fusion) : déploiement OK ; production servie depuis `fra1` (`x-vercel-id`) ; `/connexion` 98 ms de médiane contre 158 ms avant ; migrations `quests`, `notification_digest`, `companion_names` appliquées ; aucune quête encore en production
+
 ### Reste à faire
-- Après la mise en production : vérifier `x-vercel-id` en `fra1`, remesurer `/connexion` (158 ms avant), vérifier les tables `Quest` en production
 - Prochaine fonctionnalité : à cadrer avec Adrien (branche partie de `dev`, maquette d'abord)
 - Branche distante `fix/test-mail-only-to-dev` (contenu déjà fusionné par #80) : à supprimer sur accord d'Adrien
 
 ### Décisions
 - Pendant un test de l'aperçu, rien n'est fusionné dans `dev` ; les documents de session attendent la fin du test
+
+---
+
+## Suite : code de connexion qui ne part pas
+
+### Réalisé
+- Cause : Better Auth envoie le code en tâche de fond et avale l'erreur (`runInBackgroundOrAwait`), notre `.catch` n'y changeait rien
+- PR #99 fusionnée dans `dev` : le code est noté sur le contexte de la requête, un hook « après » l'envoie en l'attendant ; échec → 503 `MAIL_FAILED` et « Le code n'a pas pu partir. Réessaie dans un instant. » ; vérifié en local (SMTP faux puis vrai), 218 tests verts
+- Branche distante `fix/test-mail-only-to-dev` supprimée (accord d'Adrien)
+- Point « code de connexion qui ne part pas » du bilan du jour : refermé
+
+### Reste à faire
+- Mettre #99 en production sur accord d'Adrien (avec la prochaine livraison)
+- Ce soir 18 h 01 : premier bilan du jour en production ; jeudi et vendredi : rappel du boss, puis duel
+- Prochaine fonctionnalité : à cadrer avec Adrien
+
+### Décisions
+- Envoi du code dans le hook « après » plutôt que retirer `backgroundTasks` : les autres tâches de fond (limiteur de débit) restent confiées à `after()`
+
