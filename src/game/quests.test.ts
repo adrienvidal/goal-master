@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
+  checkCompanionName,
   checkLink,
   checkQuestText,
+  companionLabel,
   drawOffer,
   openQuest,
   ownedCompanions,
@@ -22,6 +24,7 @@ function quest(over: Partial<QuestRow>): QuestRow {
     status: "OPEN",
     offer: [],
     companion: null,
+    companionName: null,
     createdAt: new Date("2026-11-16T10:00:00Z"),
     doneAt: null,
     validatedAt: null,
@@ -119,5 +122,21 @@ describe("questXp", () => {
 
   test("quêtes données et validées", () => {
     expect(questsGivenValidated("adrien", [validated({}), validated({}), quest({})])).toBe(2);
+  });
+});
+
+describe("nom du compagnon", () => {
+  test("vide = nom de l'espèce, 16 caractères au plus", () => {
+    expect(checkCompanionName("  ", "fox")).toEqual({ ok: true, name: null });
+    expect(checkCompanionName("Renard", "fox")).toEqual({ ok: true, name: null });
+    expect(checkCompanionName(" Roux ", "fox")).toEqual({ ok: true, name: "Roux" });
+    expect(checkCompanionName("a".repeat(17), "fox")).toEqual({ ok: false, error: "16 caractères au plus." });
+  });
+
+  test("le libellé reprend le nom donné, sinon l'espèce", () => {
+    const quests = [validated({ companion: "fox", companionName: "Roux" }), validated({ companion: "cat" })];
+    expect(companionLabel("nicolas", "fox", quests)).toBe("Roux");
+    expect(companionLabel("nicolas", "cat", quests)).toBe("Chat");
+    expect(companionLabel("adrien", "fox", quests)).toBe("Renard");
   });
 });

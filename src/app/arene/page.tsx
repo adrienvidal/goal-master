@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { isCompanion, type CompanionId } from "@/game/quests";
+import { companionLabel, isCompanion, type CompanionId } from "@/game/quests";
 import { redirect } from "next/navigation";
 import { ArenaMoves, type Move } from "@/components/Arena";
 import { ArenaLive, StageFighterView, type StageFighter, type StageHit } from "@/components/ArenaStage";
@@ -83,10 +83,12 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
   ];
   const turnEnds = s.turn ? `${DAY.format(s.turn.endsAt)} ${TIME.format(s.turn.endsAt)}` : "";
   const log = [...s.log].reverse().slice(0, 12);
+  const petOf = (id: string) => companionOf(game.players.find((p) => p.id === id)?.companion ?? null);
   const stageOf = (v: PlayerView): StageFighter => ({
     id: v.id, name: v.pseudo, levelForm: (v.id === input.arena.challengerId ? input.arena.challengerForm : input.arena.opponentForm) ?? v.levelForm, character: v.character, color: v.color, displayedForm: v.displayedForm, mood: v.mood, title: v.title,
     hp: s.hp[v.id], maxHp: s.maxHp[v.id], parry: s.parry[v.id], stunned: s.turn?.playerId === v.id && s.turn.max < 3,
-    companion: companionOf(game.players.find((p) => p.id === v.id)?.companion ?? null),
+    companion: petOf(v.id),
+    companionName: ((c) => (c ? companionLabel(v.id, c, game.quests) : null))(petOf(v.id)),
   });
   const lastHit = lastMove(s);
 

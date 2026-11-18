@@ -312,6 +312,8 @@ model Quest {
   status      QuestStatus @default(OPEN)
   offer       String[]    @default([])
   companion   String?
+  /// Nom donné au compagnon adopté (16 caractères au plus) ; à défaut, le nom de l'espèce.
+  companionName String?
   createdAt   DateTime    @default(now())
   doneAt      DateTime?
   validatedAt DateTime?

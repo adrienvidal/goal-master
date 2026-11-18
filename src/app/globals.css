@@ -327,3 +327,18 @@ html[data-decor] main { visibility: hidden; }
 .pick[aria-checked="true"], .pick.shown { border-color: var(--gold); background: #3a3160; box-shadow: 0 0 0 3px var(--gold-dk); }
 .pick.locked { cursor: default; color: var(--muted); }
 @media (max-width: 360px) { .pick svg { zoom: .8; } }
+
+/* Quêtes v2 : bandeau reçu, ligne donnée, 4e action */
+.btn.quest { background: var(--quest); box-shadow: inset -4px -4px 0 var(--quest-dk), 4px 4px 0 #0c0a1a; }
+.qbanner { background: var(--quest); color: var(--quest-ink); border: 3px solid var(--quest-dk); box-shadow: 4px 4px 0 #0c0a1a; padding: 10px 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
+.qbanner p { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.qbanner q { quotes: "« " " »"; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+.qbanner .qstate { align-self: flex-start; }
+.qmini { border: 3px solid var(--quest-dk); background: rgb(233 217 176 / .08); padding: 10px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+.qmini .lbl { grid-column: 1 / -1; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--quest); }
+.qmini .txt { min-width: 0; font-size: 15px; overflow-wrap: anywhere; }
+.qmini .qstate { grid-column: 1; justify-self: start; }
+.qmini .qstate.wait { color: var(--muted); }
+.qmini .qstate.todo { color: var(--ember); }
+.qmini .btn { grid-column: 2; grid-row: 2 / span 2; }
+@media (max-width: 440px) { .partner-actions.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

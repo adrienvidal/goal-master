@@ -143,3 +143,25 @@ notifie à nouveau : la clé de dédoublonnage porte la quête et le numéro de 
 - Dessin exact des compagnons et de l'animation du coffre (dans la maquette).
 - Validation du lien (format URL simple, sans vérifier LinkedIn).
 - Placement exact de la carte Quête sur l'accueil par rapport aux cartes Défi et Arène.
+
+## v2 · après le test sur l'aperçu (18/11)
+
+Retours d'Adrien : la carte Quêtes permanente fait austère et mélange les actions (lancer à gauche, Motiver,
+Défier, Arène à droite) ; on doit pouvoir nommer son compagnon ; la Ménagerie est introuvable.
+Maquette v2 validée (même lien, écrans Accueil, Coffre, Ménagerie).
+
+- **Accueil** : la carte Quêtes disparaît. Tout ce qui vise le binôme est dans sa carte :
+  - 4e action « 📜 Quête » à côté de Motiver, Défier, Arène ; grisée avec la raison quand une quête est déjà en
+    cours dans ce sens ; mène à `/quete/nouvelle`.
+  - ligne « Ta quête pour X » (texte, état « En cours » ou « Faite · à valider », bouton « Voir » ou « Valider »)
+    tant que la quête donnée est en cours.
+  - à gauche, un bandeau parchemin « 📜 X te lance une quête » avec le héros du binôme, **seulement** quand une
+    quête reçue est en cours (« Faite · en attente » si on l'a déjà marquée faite), bouton « Voir ».
+  - ligne de trois boutons : Mes succès · Ménagerie · Réglages.
+- **Nom du compagnon** : `Quest.companionName String?`, posé à l'adoption, modifiable dans la Ménagerie.
+  `trim`, 16 caractères au plus ; vide = nom de l'espèce. Affiché sous le compagnon sur l'accueil (les deux
+  joueurs), dans le fil (« a adopté Roux »), dans le titre d'adoption (« Roux te suit ! ») et comme libellé du
+  compagnon dans l'Arène.
+- **Coffre** : champ « Son nom » prérempli avec l'espèce choisie, bouton « Adopter <nom> ».
+- **Ménagerie** : nom de chaque compagnon, espèce en dessous ; champ « Renommer ton <espèce> » pour le compagnon
+  affiché, bouton « Enregistrer ».

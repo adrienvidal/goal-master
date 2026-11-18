@@ -188,6 +188,32 @@ textarea:focus, input:focus { outline: none; border-color: var(--gold); }
 .new { font-family: var(--f-num); font-size: 16px; color: var(--ok); border: 2px solid var(--ok); padding: 0 4px; margin-left: 6px; }
 
 @media (prefers-reduced-motion: reduce) { .pet, .pet.joy, .shake, .chestwrap.open::before { animation: none; } }
+
+/* v2 : bandeau de quête reçue, ligne de quête donnée, 4 actions, 3 boutons, noms */
+.qbanner { background: var(--quest); color: var(--quest-ink); border: 3px solid var(--quest-dk); box-shadow: 4px 4px 0 var(--shadow); padding: 10px 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
+.qbanner .qb-txt { min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.qbanner q { quotes: "« " " »"; font-size: 15px; line-height: 1.3; }
+.qbanner .btn { color: #1a1626; }
+.qmini { border: 3px solid var(--quest-dk); background: rgb(233 217 176 / .08); padding: 10px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+.qmini .lbl { grid-column: 1 / -1; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--quest); }
+.qmini .txt { min-width: 0; font-size: 15px; }
+.qmini .state { grid-column: 1; justify-self: start; }
+.qmini .btn { grid-column: 2; grid-row: 2 / span 2; }
+.qmini .state.wait { color: var(--muted); }
+.qmini .state.todo { color: var(--ember); }
+.act4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.act4 .btn { flex-direction: column; font-size: 9px; padding: 10px 2px; min-height: 58px; }
+.act4 .btn .ico { font-size: 16px; font-family: var(--f-ui); }
+.btn.ember { background: var(--ember); box-shadow: inset -4px -4px 0 #b8512b, 4px 4px 0 var(--shadow); }
+.btn.arena { background: var(--magic); box-shadow: inset -4px -4px 0 #7a4fb0, 4px 4px 0 var(--shadow); }
+.btn.quest { background: var(--quest); box-shadow: inset -4px -4px 0 var(--quest-dk), 4px 4px 0 var(--shadow); }
+.btn3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.btn3 .btn { font-size: 9px; padding: 12px 4px; }
+.namefield { font: inherit; font-size: 16px; color: var(--ink); background: var(--night); border: 3px solid var(--edge); padding: 8px 10px; width: 100%; }
+.namefield:focus { outline: none; border-color: var(--gold); }
+.slot span small { display: block; font-size: 12px; color: var(--muted); }
+.rename { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+@media (max-width: 360px) { .act4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>
 
 <div class="wrap">
@@ -216,32 +242,45 @@ textarea:focus, input:focus { outline: none; border-color: var(--gold); }
     <div><b>Jamais retiré</b>Une validation ne s'annule pas : ni le compagnon, ni les XP.</div>
   </div>
 
-  <!-- 1. ACCUEIL -->
+  <!-- 1. ACCUEIL (v2 : quêtes rangées avec les actions vers le binôme) -->
   <section class="screen" id="accueil">
-    <header><span class="route">/</span><h2>Accueil</h2><p>La carte Quêtes a deux lignes : la quête reçue et la quête donnée. Le compagnon se tient à côté de chaque héros ; toucher le sien ouvre la Ménagerie.</p></header>
+    <header><span class="route">/</span><h2>Accueil</h2><p>v2 · Tout ce qu'on fait vers son binôme est dans sa carte : Motiver, Défier, Arène et Quête, plus le suivi de la quête donnée. À gauche, un bandeau parchemin n'apparaît que si on a reçu une quête. Bouton Ménagerie à côté de Mes succès et Réglages.</p></header>
     <div class="grid">
       <div class="device wide" id="accueil-cours">
-        <h4>Adrien · quête à valider <span class="viewtag"></span></h4>
+        <h4>Adrien · quête reçue + quête à valider <span class="viewtag"></span></h4>
         <div class="home"><div>
-        <div class="me">
-          <div class="duo"><div class="av" data-sprite="knight" data-color="p1" data-px="4"></div><a class="petlink" href="#menagerie" aria-label="Ma Ménagerie"><div class="av pet" data-pet="dog" data-px="3"></div><small>Chien</small></a></div>
-          <div class="who"><span class="name">Adrien · Niv. 7 <span style="color:var(--ember)">🔥4</span></span><span class="meta"><span class="num">62/100</span> XP · 2 candidatures aujourd'hui</span><div class="bar"><i style="width:62%"></i></div></div>
-        </div>
-        <div class="quests">
-          <h3>Quêtes</h3>
-          <div class="qline"><span class="lbl">Pour toi · de Nicolas</span><span class="txt">Mets ton CV à jour sur Welcome to the Jungle<em>depuis lundi</em></span><a class="btn sm" href="#recue">Voir</a></div>
-          <div class="qline"><span class="lbl">Pour Nicolas</span><span class="txt">Poste un article sur LinkedIn<em><span class="state todo">Faite · à valider</span></em></span><a class="btn sm" href="#donnee-valider">Valider</a></div>
-        </div>
+          <div class="qbanner">
+            <div class="av" data-sprite="panda" data-color="p2" data-px="2"></div>
+            <div class="qb-txt"><b>📜 Nicolas te lance une quête</b><q>Mets ton CV à jour sur Welcome to the Jungle</q></div>
+            <a class="btn sm" href="#recue">Voir</a>
+          </div>
+          <div class="me">
+            <div class="duo"><div class="av" data-sprite="knight" data-color="p1" data-px="4"></div><a class="petlink" href="#menagerie" aria-label="Ma Ménagerie"><div class="av pet" data-pet="dog" data-px="3"></div><small>Pixel</small></a></div>
+            <div class="who"><span class="name">Adrien · Niv. 7 <span style="color:var(--ember)">🔥4</span></span><span class="meta"><span class="num">62/100</span> XP · 2 candidatures aujourd'hui</span><div class="bar"><i style="width:62%"></i></div></div>
+          </div>
+          <div class="btn3"><a class="btn ghost" href="#succes">Mes succès</a><a class="btn ghost" href="#menagerie">Ménagerie</a><a class="btn ghost" href="#succes">Réglages</a></div>
         </div><div class="partner-col">
-        <div class="me">
-          <div class="duo"><div class="av" data-sprite="panda" data-color="p2" data-px="3"></div><div class="av pet" data-pet="cat" data-px="2"></div></div>
-          <div class="who"><span class="name">Nicolas · Niv. 9</span><span class="meta"><span class="num">38/100</span> · +2 aujourd'hui</span></div>
-        </div>
-        <ul class="feed">
-          <li><span class="t">14:32</span><span><b>Nicolas</b> a fait sa quête : <b>Poste un article sur LinkedIn</b></span></li>
-          <li><span class="t">11:05</span><span><b>Nicolas</b> a candidaté chez <b>Doctolib</b></span></li>
-          <li><span class="t">09:48</span><span><b>Adrien</b> a candidaté chez <b>Qonto</b></span></li>
-        </ul>
+          <div class="me">
+            <div class="duo"><div class="av" data-sprite="panda" data-color="p2" data-px="3"></div><div class="petlink"><div class="av pet" data-pet="cat" data-px="2"></div><small>Moustache</small></div></div>
+            <div class="who"><span class="name">Nicolas · Niv. 9</span><span class="meta"><span class="num">38/100</span> · +2 aujourd'hui</span></div>
+          </div>
+          <div class="qmini">
+            <span class="lbl">Ta quête pour Nicolas</span>
+            <span class="txt">Poste un article sur LinkedIn</span>
+            <span class="state todo">Faite · à valider</span>
+            <a class="btn sm ok" href="#donnee-valider">Valider</a>
+          </div>
+          <ul class="feed">
+            <li><span class="t">14:32</span><span><b>Nicolas</b> a fait sa quête : <b>Poste un article sur LinkedIn</b></span></li>
+            <li><span class="t">11:05</span><span><b>Nicolas</b> → <b>Doctolib</b></span></li>
+          </ul>
+          <div class="act4">
+            <a class="btn" href="#notifs"><span class="ico">⚔️</span>Motiver</a>
+            <a class="btn ember" href="#notifs"><span class="ico">🏁</span>Défier</a>
+            <a class="btn arena" href="#arene"><span class="ico">🛡️</span>Arène</a>
+            <span class="btn off" aria-disabled="true"><span class="ico">📜</span>Quête</span>
+          </div>
+          <p class="muted">Une quête est déjà en cours pour Nicolas.</p>
         </div></div>
       </div>
 
@@ -251,26 +290,32 @@ textarea:focus, input:focus { outline: none; border-color: var(--gold); }
           <div class="duo"><div class="av" data-sprite="knight" data-color="p1" data-px="4"></div></div>
           <div class="who"><span class="name">Adrien · Niv. 7</span><span class="meta">Pas encore de compagnon</span><div class="bar"><i style="width:62%"></i></div></div>
         </div>
-        <div class="quests">
-          <h3>Quêtes</h3>
-          <div class="qline"><span class="lbl">Pour toi</span><span class="txt">Rien pour l'instant.<em>Nicolas peut t'en lancer une.</em></span></div>
-          <div class="qline"><span class="lbl">Pour Nicolas</span><span class="txt">Pousse-le vers ce qui attire les recruteurs : un post, un contact, un salon.<em>Il gagne un compagnon, toi +5 XP.</em></span><a class="btn sm" href="#lancer">Lancer</a></div>
+        <div class="btn3"><a class="btn ghost" href="#succes">Mes succès</a><a class="btn ghost" href="#menagerie-vide">Ménagerie</a><a class="btn ghost" href="#succes">Réglages</a></div>
+        <h4>Carte de Nicolas</h4>
+        <div class="act4">
+          <a class="btn" href="#notifs"><span class="ico">⚔️</span>Motiver</a>
+          <a class="btn ember" href="#notifs"><span class="ico">🏁</span>Défier</a>
+          <a class="btn arena" href="#arene"><span class="ico">🛡️</span>Arène</a>
+          <a class="btn quest" href="#lancer"><span class="ico">📜</span>Quête</a>
         </div>
+        <p class="muted">Pas de bandeau ni de ligne de quête tant qu'il n'y en a pas.</p>
       </div>
 
       <div class="device" id="accueil-nicolas">
-        <h4>Nicolas · après adoption</h4>
+        <h4>Nicolas · quête donnée en cours</h4>
         <div class="me">
-          <div class="duo"><div class="av" data-sprite="panda" data-color="p2" data-px="4"></div><a class="petlink" href="#menagerie" aria-label="Ma Ménagerie"><div class="av pet joy" data-pet="fox" data-px="3"></div><small>Renard</small></a></div>
+          <div class="duo"><div class="av" data-sprite="panda" data-color="p2" data-px="4"></div><a class="petlink" href="#menagerie" aria-label="Ma Ménagerie"><div class="av pet joy" data-pet="fox" data-px="3"></div><small>Roux</small></a></div>
           <div class="who"><span class="name">Nicolas · Niv. 9</span><span class="meta"><span class="num">58/100</span> XP · +20 de la quête</span><div class="bar"><i style="width:58%"></i></div></div>
         </div>
-        <div class="quests">
-          <h3>Quêtes</h3>
-          <div class="qline"><span class="lbl">Pour toi</span><span class="txt">Rien pour l'instant.<em>Adrien peut t'en lancer une.</em></span></div>
-          <div class="qline"><span class="lbl">Pour Adrien · en cours</span><span class="txt">Mets ton CV à jour sur Welcome to the Jungle<em><span class="state wait">En cours</span></em></span><a class="btn sm ghost" href="#donnee-cours">Voir</a></div>
+        <h4>Carte d'Adrien</h4>
+        <div class="qmini">
+          <span class="lbl">Ta quête pour Adrien</span>
+          <span class="txt">Mets ton CV à jour sur Welcome to the Jungle</span>
+          <span class="state wait">En cours</span>
+          <a class="btn sm ghost" href="#donnee-cours">Voir</a>
         </div>
         <ul class="feed">
-          <li><span class="t">16:10</span><span><b>Nicolas</b> a adopté le <b>renard</b> 🦊</span></li>
+          <li><span class="t">16:10</span><span><b>Nicolas</b> a réussi sa quête et adopté <b>Roux</b> 🦊</span></li>
         </ul>
       </div>
     </div>
@@ -395,12 +440,15 @@ textarea:focus, input:focus { outline: none; border-color: var(--gold); }
           <button class="pick sel" role="radio" aria-checked="true"><div class="av pet joy" data-pet="fox" data-px="4"></div><span>Renard</span></button>
           <button class="pick" role="radio" aria-checked="false"><div class="av pet" data-pet="dragon" data-px="4"></div><span>Dragon</span></button>
         </div>
+        <label class="f" for="pet-name" style="width:100%;max-width:300px;text-align:left">Son nom
+          <input id="pet-name" type="text" maxlength="16" value="Roux" class="namefield">
+        </label>
         <p class="xp">+20 XP</p>
-        <a class="btn" style="max-width:260px" href="#coffre-adopte">Adopter le renard</a>
+        <a class="btn" style="max-width:260px" href="#coffre-adopte">Adopter Roux</a>
       </div>
       <div class="full" id="coffre-adopte">
         <div class="duo"><div class="av" data-sprite="panda" data-color="p2" data-px="5"></div><div class="av pet joy" data-pet="fox" data-px="4"></div></div>
-        <p class="h-title">Le renard te suit !</p>
+        <p class="h-title">Roux te suit !</p>
         <p class="muted">Il se tient à côté de ton héros. Change de compagnon quand tu veux dans ta Ménagerie.</p>
         <a class="btn" style="max-width:260px" href="#accueil-nicolas">Continuer</a>
       </div>
@@ -426,25 +474,31 @@ textarea:focus, input:focus { outline: none; border-color: var(--gold); }
     </div>
   </section>
 
-  <!-- 6. MÉNAGERIE -->
+  <!-- 6. MÉNAGERIE (v2 : noms) -->
   <section class="screen" id="menagerie">
-    <header><span class="route">/menagerie</span><h2>Ménagerie</h2><p>Ses compagnons, l'affiché en or. Toucher un autre l'affiche. Les silhouettes montrent ce qui reste à gagner.</p></header>
+    <header><span class="route">/menagerie</span><h2>Ménagerie</h2><p>v2 · Chaque compagnon a son nom (l'espèce en dessous). Toucher un compagnon l'affiche ; le champ du bas renomme celui qui est affiché. Accès : bouton « Ménagerie » de l'accueil, ou toucher son compagnon.</p></header>
     <div class="grid">
       <div class="device wide">
         <h4>Nicolas · 2 sur 6</h4>
         <p class="h-title">Ta Ménagerie</p>
         <div class="zoo all">
-          <a class="slot shown" href="#accueil-nicolas"><div class="av pet" data-pet="fox" data-px="4"></div><span>Renard</span></a>
-          <a class="slot" href="#accueil-nicolas"><div class="av" data-pet="cat" data-px="4"></div><span>Chat</span></a>
+          <a class="slot shown" href="#accueil-nicolas"><div class="av pet" data-pet="fox" data-px="4"></div><span>Roux<small>Renard</small></span></a>
+          <a class="slot" href="#accueil-nicolas"><div class="av" data-pet="cat" data-px="4"></div><span>Moustache<small>Chat</small></span></a>
           <div class="slot lock"><div class="av" data-pet="owl" data-px="4"></div><span>???</span></div>
           <div class="slot lock"><div class="av" data-pet="dog" data-px="4"></div><span>???</span></div>
           <div class="slot lock"><div class="av" data-pet="rabbit" data-px="4"></div><span>???</span></div>
           <div class="slot lock"><div class="av" data-pet="dragon" data-px="4"></div><span>???</span></div>
         </div>
-        <p class="muted">Chaque quête validée ouvre un coffre. Touche un compagnon pour l'afficher à côté de ton héros.</p>
+        <form class="rename" onsubmit="return false">
+          <label class="f" for="rename-pet">Renommer ton renard
+            <input id="rename-pet" type="text" maxlength="16" value="Roux" class="namefield">
+          </label>
+          <a class="btn sm" href="#menagerie">Enregistrer</a>
+        </form>
+        <p class="muted">16 caractères au plus. Chaque quête validée ouvre un coffre.</p>
         <a class="btn ghost" href="#accueil-nicolas" style="max-width:320px">Retour</a>
       </div>
-      <div class="device">
+      <div class="device" id="menagerie-vide">
         <h4>Vide</h4>
         <p class="h-title">Ta Ménagerie</p>
         <div class="zoo">
@@ -586,6 +640,9 @@ const adopt = document.querySelector('#coffre-ouvert .btn');
 document.querySelectorAll("#coffre-ouvert .pick").forEach((p) => p.addEventListener("click", () => {
   document.querySelectorAll("#coffre-ouvert .pick").forEach((q) => { q.classList.remove("sel"); q.setAttribute("aria-checked", "false"); q.querySelector(".av").classList.remove("joy"); });
   p.classList.add("sel"); p.setAttribute("aria-checked", "true"); p.querySelector(".av").classList.add("joy");
-  adopt.textContent = `Adopter le ${p.querySelector("span").textContent.toLowerCase()}`;
+  nameField.value = p.querySelector("span").textContent;
+  adopt.textContent = `Adopter ${nameField.value}`;
 }));
+const nameField = document.getElementById("pet-name");
+nameField.addEventListener("input", () => { adopt.textContent = `Adopter ${nameField.value.trim() || "ce compagnon"}`; });
 </script>
