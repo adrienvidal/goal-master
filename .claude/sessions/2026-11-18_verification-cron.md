@@ -5,7 +5,7 @@
 ```
 ✅ Fait      Arène v2 en prod : PA, rejeu, direct, K.O. animé
 ⛔ Bloqué    Aucun
-🎯 Priorité  Premier vrai tour en v2 avec Nicolas, fin du combat (échéance 20/11 17 h)
+🎯 Priorité  Prévenir Nicolas, puis fin du combat d'Arène (échéance 20/11 18 h)
 ```
 
 ## Réalisé
