@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Cron du 17/11 vérifié, Quêtes et compagnons sur dev
+✅ Fait      Quêtes et bilan du jour en prod, e-mails de test réservés à Adrien
 ⛔ Bloqué    Aucun
-🎯 Priorité  Tester les Quêtes sur l'aperçu de dev, puis mise en prod (échéance 19/11)
+🎯 Priorité  Relire le premier bilan du jour et le rappel du boss (échéance 19/11)
 ```
 
 ## Réalisé
@@ -56,3 +56,33 @@
 - Tirage stocké sur la quête à la validation (l'ajout d'un animal au catalogue ne rebrasse rien) ; collection calculée
 - Dernier compagnon restant : montré seul dans le coffre plutôt que donné en silence ; collection complète : XP seules, pas de coffre
 - Notifications des quêtes hors plafond quotidien, une par étape, chaque « pas encore » renotifie
+
+---
+
+## Suite : e-mails (bilan du jour)
+
+### Réalisé
+- Relecture des notifications e-mail : une notification ratée n'était jamais retentée, un code de connexion qui ne part pas ne prévient personne, et un joueur actif recevait un e-mail par événement
+- PR #80 : hors production, tout e-mail part vers DEV_MAIL_TO, et sans DEV_MAIL_TO rien ne part (avant, un aperçu sans la variable ou un `npm start` local écrivaient aux vraies adresses) ; CLAUDE.md aligné (#84)
+- Maquette du bilan du jour validée : https://claude.ai/artifact/SX3pyJ8tfcHwpts9w4p1BR (`docs/maquettes/bilan-du-jour.html`)
+- PR #81 : un seul e-mail par jour et par joueur, envoyé en fin de cron (18 h 01), qui regroupe les notifications en attente (compte du jour, résultat du duel encadré, liste horodatée) ; push inchangé ; migration `NotificationLog.event` / `mailedAt` ; spec `docs/specs/2026-11-18-bilan-du-jour-design.md`, plan `docs/superpowers/plans/2026-11-18-bilan-du-jour.md` ; 216 tests verts ; bilan réel envoyé en local vers DEV_MAIL_TO
+- PR #79 (tours d'Arène en push seul) fermée, reprise dans #81 ; #82 : deux faux positifs du contrôle de design, exceptions limitées à un fichier
+- Mise en production (#83, commit de fusion) : Quêtes et compagnons, #80, #81 ; déploiement Vercel réussi, migration appliquée par `vercel-build`. Le « Reste à faire » des Quêtes « mise en production » est donc fait, sans test préalable sur l'aperçu de `dev`
+
+### Reste à faire
+- Ce soir 18 h 01 : premier bilan du jour en production (relire n8n, `NotificationLog.mailedAt`, la boîte des deux joueurs)
+- Code de connexion qui ne part pas : l'erreur est avalée (`src/server/auth.ts`), l'écran attend un code qui n'arrivera pas ; la laisser remonter
+- Correction du point de ce matin « retirer `DEV_MAIL_TO` de Preview pour que Nicolas teste » : depuis #80, sans DEV_MAIL_TO plus rien ne part ; retirer seulement `PREVIEW_DIRECT_LOGIN`, et Adrien transmet le code
+- Tester les Quêtes en production avec Nicolas (pas faites sur l'aperçu de `dev`)
+
+### Blockers
+- Aucun
+
+### Décisions
+- Le push reste l'alerte instantanée ; l'e-mail devient un bilan quotidien à 18 h 01, rien les jours sans nouvelle ; seul le code de connexion part tout de suite
+- Le plafond de 2 par jour ne bloque plus que le push : une notification plafonnée figure quand même dans le bilan
+- Tours d'Arène hors bilan (périmés le soir) ; catégories coupées hors bilan ; résultat du duel en tête
+- Un envoi raté laisse les lignes en attente pour le bilan suivant
+- Écartés : second bilan à midi, réglage de l'heure, retrait de ce que le joueur a déjà vu
+- Scripts locaux avec `tsx --env-file` : charger `.env.local` avant `.env.development.local`, sinon la base Neon de développement prend le pas sur Docker
+
