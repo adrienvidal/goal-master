@@ -1,0 +1,341 @@
+<title>Bilan du jour Goal Master</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+/* Maquette d'e-mail empilée : une section par état, chacune = ligne de boîte de réception + e-mail 560 px fluide. */
+:root {
+  --night: #0e0c1d;      /* fond de l'e-mail et de la page */
+  --card: #16132a;       /* carte de l'e-mail */
+  --frame: #4a4380;      /* cadre épais 8 bits */
+  --scene: #221e40;      /* bande de scène */
+  --rule: #2e2958;       /* séparateurs */
+  --gold: #f2c14e;       /* titres, bouton */
+  --gold-dark: #b9831c;  /* relief du bouton */
+  --text: #f1ecff;
+  --muted: #a39dcc;
+  --win: #7fd18b;
+  --loss: #e88a7a;
+  --note-bg: #1d1938;
+  --pixel: 'Press Start 2P', 'Courier New', Courier, monospace;
+  --body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--night); color: var(--text); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+.page { max-width: 980px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 40px; }
+h1.doc { font-family: var(--pixel); font-size: 18px; line-height: 1.6; color: var(--gold); margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); margin: 8px 0 0; max-width: 65ch; }
+nav.menu { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.menu a { font-family: var(--pixel); font-size: 10px; color: var(--text); text-decoration: none; border: 3px solid var(--frame); padding: 8px 10px; background: var(--card); }
+nav.menu a:hover, nav.menu a:focus-visible { border-color: var(--gold); outline: none; }
+.rules { background: var(--note-bg); border: 3px dashed var(--frame); padding: 16px 18px; display: grid; gap: 6px; }
+.rules h2 { font-family: var(--pixel); font-size: 11px; color: var(--gold); margin: 0 0 6px; letter-spacing: .04em; }
+.rules ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.rules li { max-width: 80ch; }
+.rules b { color: var(--text); }
+.rules .open { color: var(--muted); }
+
+section.state { display: grid; gap: 14px; scroll-margin-top: 16px; }
+.state-head { display: grid; gap: 4px; }
+.state-head .route { font-family: var(--pixel); font-size: 10px; color: var(--muted); letter-spacing: .06em; }
+.state-head h2 { font-family: var(--pixel); font-size: 14px; line-height: 1.6; margin: 0; color: var(--text); }
+.state-head p { margin: 0; color: var(--muted); max-width: 70ch; }
+
+/* Ligne de boîte de réception : ce qui décide d'ouvrir. */
+.inbox { max-width: 560px; width: 100%; background: #f6f5fb; color: #1d1a2e; border-radius: 6px; padding: 10px 14px; display: grid; grid-template-columns: auto 1fr auto; gap: 2px 12px; font-size: 14px; }
+.inbox .from { font-weight: 700; }
+.inbox .when { color: #6b6785; font-size: 12px; text-align: right; }
+.inbox .subj { grid-column: 1 / -1; font-weight: 700; min-width: 0; }
+.inbox .pre { grid-column: 1 / -1; color: #6b6785; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* L'e-mail lui-même, fidèle au gabarit de src/server/mail.ts. */
+.mail { max-width: 560px; width: 100%; background: var(--card); border: 4px solid var(--frame); }
+.banner { border-bottom: 4px solid var(--frame); background: var(--scene); padding: 18px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.banner .logo { font-family: var(--pixel); font-size: 14px; color: var(--gold); letter-spacing: .04em; }
+.banner .note { font-size: 11px; color: var(--muted); text-align: right; }
+.scene { background: var(--scene); border-bottom: 3px dotted var(--rule); padding: 18px 12px 14px; display: flex; justify-content: center; align-items: flex-end; gap: 22px; }
+.sprite { width: 48px; height: 48px; image-rendering: pixelated; }
+.scene .cap { font-size: 11px; color: var(--muted); align-self: center; }
+.body { padding: 20px 22px 8px; display: grid; gap: 16px; }
+.body h3 { font-family: var(--pixel); font-size: 15px; line-height: 1.7; color: var(--gold); margin: 0; text-wrap: balance; }
+.date { color: var(--muted); font-size: 13px; margin-top: -10px; }
+.tally { display: grid; grid-template-columns: repeat(3, 1fr); border: 3px solid var(--rule); }
+.tally div { padding: 10px 8px; text-align: center; border-right: 3px solid var(--rule); }
+.tally div:last-child { border-right: 0; }
+.tally b { display: block; font-family: var(--pixel); font-size: 13px; color: var(--text); font-variant-numeric: tabular-nums; }
+.tally span { font-size: 11px; color: var(--muted); }
+.result { border: 3px solid var(--gold); padding: 12px 14px; display: grid; gap: 4px; }
+.result.loss { border-color: var(--loss); }
+.result b { font-family: var(--pixel); font-size: 12px; line-height: 1.6; color: var(--gold); }
+.result.loss b { color: var(--loss); }
+.result span { color: var(--text); }
+.list-title { font-family: var(--pixel); font-size: 10px; color: var(--muted); letter-spacing: .06em; margin: 0; }
+ul.events { list-style: none; margin: 0; padding: 0; display: grid; }
+ul.events li { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 10px 0; border-top: 2px solid var(--rule); }
+ul.events li:first-child { border-top: 0; padding-top: 2px; }
+.t { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; padding-top: 1px; }
+.ev { min-width: 0; display: grid; gap: 2px; }
+.ev strong { font-weight: 600; }
+.ev em { font-style: normal; color: var(--muted); font-size: 14px; }
+.ev a { color: var(--gold); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; justify-self: start; }
+.cta { display: inline-block; justify-self: start; font-family: var(--pixel); font-size: 12px; line-height: 1.4; color: #1a1626; background: var(--gold); padding: 13px 16px; border-right: 4px solid var(--gold-dark); border-bottom: 4px solid var(--gold-dark); text-decoration: none; margin: 4px 0 12px; }
+.foot { padding: 16px 22px 18px; border-top: 3px solid var(--rule); font-size: 12px; line-height: 1.5; color: var(--muted); }
+.foot a { color: var(--muted); }
+.nomail { max-width: 560px; border: 3px dashed var(--frame); padding: 22px; display: grid; gap: 8px; background: var(--note-bg); }
+.nomail b { font-family: var(--pixel); font-size: 12px; color: var(--muted); line-height: 1.6; }
+table.dest { border-collapse: collapse; width: 100%; max-width: 720px; font-size: 14px; }
+.dest-wrap { overflow-x: auto; }
+table.dest th, table.dest td { text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--rule); vertical-align: top; }
+table.dest th { font-family: var(--pixel); font-size: 10px; color: var(--muted); font-weight: 400; }
+table.dest code { color: var(--gold); }
+a:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+@media (max-width: 480px) {
+  .body { padding: 18px 16px 6px; }
+  .foot { padding: 14px 16px 16px; }
+  ul.events li { grid-template-columns: 1fr; gap: 2px; }
+  .tally b { font-size: 11px; }
+  .banner .note { display: none; }
+  .body h3 { font-size: 13px; }
+}
+</style>
+
+<div class="page">
+  <header>
+    <h1 class="doc">Bilan du jour</h1>
+    <p class="lede">Maquette de l'e-mail unique qui remplace les e-mails envoyés à chaque événement. Le push reste instantané ; l'e-mail arrive une fois par jour, à 18 h 01, et seulement s'il s'est passé quelque chose.</p>
+  </header>
+
+  <nav class="menu" aria-label="États de la maquette">
+    <a href="#chargee">Journée chargée</a>
+    <a href="#calme">Journée calme</a>
+    <a href="#vendredi">Vendredi, duel</a>
+    <a href="#defaite">Vendredi, défaite</a>
+    <a href="#vide">Rien à dire</a>
+    <a href="#liens">Où mènent les liens</a>
+  </nav>
+
+  <div class="rules">
+    <h2>Règles du bilan</h2>
+    <ul>
+      <li><b>Un e-mail par jour au plus</b>, envoyé par le cron de 18 h 01 (heure de Paris), après le résultat du duel et la rouille.</li>
+      <li><b>Contenu</b> : toutes les notifications du joueur depuis le bilan précédent, dans l'ordre où elles sont arrivées, chacune avec son lien.</li>
+      <li><b>En tête</b> : le compte du jour (candidatures, XP gagnées, coups portés au boss), calculé comme le reste, rien de stocké en plus.</li>
+      <li><b>Exclus</b> : les tours d'Arène « À toi de jouer » (push seul, périmés le soir) et les catégories coupées dans les réglages.</li>
+      <li><b>Hors bilan</b> : le code de connexion, qui part tout de suite.</li>
+      <li><b>Objet</b> : l'événement le plus important du jour, puis le nombre d'autres. Ordre : résultat du duel, quête, défi, Arène, relance, binôme, rouille, nouveauté.</li>
+      <li><b>Envoi raté</b> : les lignes restent en attente et partent avec le bilan du lendemain.</li>
+      <li class="open">Plafond de 2 par jour : il reste pour le push ; le bilan, lui, liste tout.</li>
+    </ul>
+  </div>
+
+  <!-- ========== Journée chargée ========== -->
+  <section class="state" id="chargee">
+    <div class="state-head">
+      <span class="route">ÉTAT 1 · MERCREDI 18/11 · À NICOLAS</span>
+      <h2>Journée chargée</h2>
+      <p>Les deux ont beaucoup joué : 8 événements dans la journée, 8 push, un seul e-mail. C'est le cas qui justifie le bilan.</p>
+    </div>
+    <div class="inbox" aria-label="Aperçu dans la boîte de réception">
+      <span class="from">Goal Master</span><span></span><span class="when">18:01</span>
+      <span class="subj">Ta journée : Adrien te lance une quête, et 7 autres nouvelles</span>
+      <span class="pre">4 candidatures, +75 XP, 11 coups sur le Golem ATS. Adrien te motive, défi lancé…</span>
+    </div>
+    <article class="mail">
+      <div class="banner"><span class="logo">GOAL MASTER</span><span class="note">bandeau réel : /api/email/header</span></div>
+      <div class="scene">
+        <canvas class="sprite" data-hero="knight" width="12" height="12" aria-label="Chevalier d'Adrien"></canvas>
+        <canvas class="sprite" data-hero="panda" width="12" height="12" aria-label="Panda de Nicolas"></canvas>
+      </div>
+      <div class="body">
+        <h3>Ta journée dans Goal Master</h3>
+        <div class="date">Mercredi 18 novembre · 8 nouvelles</div>
+        <div class="tally">
+          <div><b>4</b><span>candidatures</span></div>
+          <div><b>+75</b><span>XP</span></div>
+          <div><b>11/16</b><span>coups sur le boss</span></div>
+        </div>
+        <p class="list-title">CE QUI S'EST PASSÉ</p>
+        <ul class="events">
+          <li><span class="t">09:12</span><div class="ev"><strong>⚔️ Adrien te motive : « Allez, on lâche rien ! 💪 »</strong><em>Candidate avant demain 9 h 12 : +15 XP pour vous deux.</em><a href="#liens">Candidater</a></div></li>
+          <li><span class="t">10:40</span><div class="ev"><strong>📜 Adrien te lance une quête</strong><em>« Relancer les 3 recruteurs vus au salon de Station F ». Un coffre à la clé.</em><a href="#liens">Voir la quête</a></div></li>
+          <li><span class="t">11:05</span><div class="ev"><strong>Ta relance a fait mouche</strong><em>Adrien a candidaté après ta relance : +15 XP pour vous deux.</em></div></li>
+          <li><span class="t">13:30</span><div class="ev"><strong>🏁 Adrien te défie</strong><em>5 candidatures avant vendredi 18 h. Le premier arrivé gagne la couronne.</em><a href="#liens">Relever le défi</a></div></li>
+          <li><span class="t">14:52</span><div class="ev"><strong>Adrien est devenu Écuyer ⚔️</strong><em>Ton binôme vient de changer de forme.</em></div></li>
+          <li><span class="t">15:20</span><div class="ev"><strong>🛡️ Adrien te provoque en Arène</strong><em>Tour par tour, tes candidatures font tes coups.</em><a href="#liens">Entrer dans l'Arène</a></div></li>
+          <li><span class="t">16:47</span><div class="ev"><strong>🎁 Quête validée, un coffre t'attend</strong><em>Adrien a validé « Mettre à jour mon profil Welcome to the Jungle ». +20 XP.</em><a href="#liens">Ouvrir le coffre</a></div></li>
+          <li><span class="t">17:58</span><div class="ev"><strong>Nouveau dans Goal Master : les quêtes</strong><em>Viens voir ce qui a changé.</em><a href="#liens">Voir la nouveauté</a></div></li>
+        </ul>
+        <a class="cta" href="#liens">Ouvrir Goal Master</a>
+      </div>
+      <div class="foot">Tu reçois ce bilan une fois par jour, à 18 h, quand il s'est passé quelque chose. Il suit les catégories activées dans tes réglages. <a href="#liens">Régler mes notifications</a></div>
+    </article>
+  </section>
+
+  <!-- ========== Journée calme ========== -->
+  <section class="state" id="calme">
+    <div class="state-head">
+      <span class="route">ÉTAT 2 · LUNDI 23/11 · À ADRIEN</span>
+      <h2>Journée calme</h2>
+      <p>Un seul événement : le bilan garde la même forme, sans liste à rallonge. Le compte du jour à zéro dit déjà l'essentiel.</p>
+    </div>
+    <div class="inbox">
+      <span class="from">Goal Master</span><span></span><span class="when">18:01</span>
+      <span class="subj">Ta journée : ton chevalier commence à rouiller</span>
+      <span class="pre">0 candidature aujourd'hui. Une candidature suffit à le réveiller.</span>
+    </div>
+    <article class="mail">
+      <div class="banner"><span class="logo">GOAL MASTER</span><span class="note">bandeau réel : /api/email/header</span></div>
+      <div class="scene">
+        <canvas class="sprite" data-hero="knight" data-rust="1" width="12" height="12" aria-label="Chevalier rouillé"></canvas>
+        <span class="cap">forme rouillée</span>
+      </div>
+      <div class="body">
+        <h3>Ta journée dans Goal Master</h3>
+        <div class="date">Lundi 23 novembre · 1 nouvelle</div>
+        <div class="tally">
+          <div><b>0</b><span>candidature</span></div>
+          <div><b>+0</b><span>XP</span></div>
+          <div><b>3/14</b><span>coups sur le boss</span></div>
+        </div>
+        <ul class="events">
+          <li><span class="t">18:01</span><div class="ev"><strong>Ton chevalier commence à rouiller</strong><em>3 jours sans candidature. Une candidature suffit à le réveiller.</em><a href="#liens">Candidater</a></div></li>
+        </ul>
+        <a class="cta" href="#liens">Ouvrir Goal Master</a>
+      </div>
+      <div class="foot">Tu reçois ce bilan une fois par jour, à 18 h, quand il s'est passé quelque chose. Il suit les catégories activées dans tes réglages. <a href="#liens">Régler mes notifications</a></div>
+    </article>
+  </section>
+
+  <!-- ========== Vendredi, victoire ========== -->
+  <section class="state" id="vendredi">
+    <div class="state-head">
+      <span class="route">ÉTAT 3 · VENDREDI 20/11 · À ADRIEN</span>
+      <h2>Vendredi, boss vaincu</h2>
+      <p>Le résultat du duel prend la tête du bilan, dans son propre cadre : c'est le rendez-vous de la semaine. Le reste de la journée suit.</p>
+    </div>
+    <div class="inbox">
+      <span class="from">Goal Master</span><span></span><span class="when">18:01</span>
+      <span class="subj">Ta journée : boss vaincu ! et 3 autres nouvelles</span>
+      <span class="pre">Le Golem ATS est tombé : 18 coups contre 16 PV. 3 candidatures aujourd'hui…</span>
+    </div>
+    <article class="mail">
+      <div class="banner"><span class="logo">GOAL MASTER</span><span class="note">bandeau réel : /api/email/header</span></div>
+      <div class="scene">
+        <canvas class="sprite" data-hero="knight" width="12" height="12" aria-label="Chevalier d'Adrien"></canvas>
+        <canvas class="sprite" data-hero="panda" width="12" height="12" aria-label="Panda de Nicolas"></canvas>
+        <canvas class="sprite" data-hero="golem" data-down="1" width="12" height="12" aria-label="Golem ATS à terre"></canvas>
+      </div>
+      <div class="body">
+        <h3>Ta journée dans Goal Master</h3>
+        <div class="date">Vendredi 20 novembre · 4 nouvelles</div>
+        <div class="result"><b>BOSS VAINCU !</b><span>Le Golem ATS est tombé : 18 coups contre 16 PV.</span><a href="#liens" style="color:var(--gold);font-size:13px">Voir le duel</a></div>
+        <div class="tally">
+          <div><b>3</b><span>candidatures</span></div>
+          <div><b>+45</b><span>XP</span></div>
+          <div><b>18/16</b><span>coups sur le boss</span></div>
+        </div>
+        <p class="list-title">AUSSI AUJOURD'HUI</p>
+        <ul class="events">
+          <li><span class="t">10:15</span><div class="ev"><strong>📜 Nicolas a fait sa quête</strong><em>« Relancer les 3 recruteurs vus au salon de Station F ». À toi de valider.</em><a href="#liens">Valider la quête</a></div></li>
+          <li><span class="t">16:02</span><div class="ev"><strong>Nicolas a mis le Golem ATS K.O. !</strong><em>Victoire assurée vendredi 18 h.</em></div></li>
+          <li><span class="t">18:00</span><div class="ev"><strong>Défi gagné ! Tu as battu Nicolas 5 à 3.</strong><em>La couronne est à toi jusqu'à demain soir.</em><a href="#liens">Voir le défi</a></div></li>
+        </ul>
+        <a class="cta" href="#liens">Ouvrir Goal Master</a>
+      </div>
+      <div class="foot">Tu reçois ce bilan une fois par jour, à 18 h, quand il s'est passé quelque chose. Il suit les catégories activées dans tes réglages. <a href="#liens">Régler mes notifications</a></div>
+    </article>
+  </section>
+
+  <!-- ========== Vendredi, défaite ========== -->
+  <section class="state" id="defaite">
+    <div class="state-head">
+      <span class="route">ÉTAT 4 · VENDREDI 27/11 · À NICOLAS</span>
+      <h2>Vendredi, le boss s'échappe</h2>
+      <p>Le cas qui fait mal : la défaite. Même cadre que la victoire, ton sobre, et la phrase qui dit que rien n'est perdu côté XP.</p>
+    </div>
+    <div class="inbox">
+      <span class="from">Goal Master</span><span></span><span class="when">18:01</span>
+      <span class="subj">Ta journée : la Pile de refus s'échappe</span>
+      <span class="pre">9 coups contre 15 PV. Vous êtes blessés jusqu'à la prochaine victoire.</span>
+    </div>
+    <article class="mail">
+      <div class="banner"><span class="logo">GOAL MASTER</span><span class="note">bandeau réel : /api/email/header</span></div>
+      <div class="scene">
+        <canvas class="sprite" data-hero="knight" data-hurt="1" width="12" height="12" aria-label="Chevalier blessé"></canvas>
+        <canvas class="sprite" data-hero="panda" data-hurt="1" width="12" height="12" aria-label="Panda blessé"></canvas>
+      </div>
+      <div class="body">
+        <h3>Ta journée dans Goal Master</h3>
+        <div class="date">Vendredi 27 novembre · 1 nouvelle</div>
+        <div class="result loss"><b>LE BOSS S'ÉCHAPPE</b><span>La Pile de refus tient : 9 coups contre 15 PV. Vous êtes blessés jusqu'à la prochaine victoire. Tes XP et tes succès ne bougent pas.</span><a href="#liens" style="color:var(--gold);font-size:13px">Voir le duel</a></div>
+        <div class="tally">
+          <div><b>1</b><span>candidature</span></div>
+          <div><b>+15</b><span>XP</span></div>
+          <div><b>9/15</b><span>coups sur le boss</span></div>
+        </div>
+        <a class="cta" href="#liens">Ouvrir Goal Master</a>
+      </div>
+      <div class="foot">Tu reçois ce bilan une fois par jour, à 18 h, quand il s'est passé quelque chose. Il suit les catégories activées dans tes réglages. <a href="#liens">Régler mes notifications</a></div>
+    </article>
+  </section>
+
+  <!-- ========== Rien ========== -->
+  <section class="state" id="vide">
+    <div class="state-head">
+      <span class="route">ÉTAT 5 · DIMANCHE 22/11</span>
+      <h2>Rien à dire : pas d'e-mail</h2>
+      <p>Aucune notification depuis le dernier bilan, ou toutes les catégories coupées : le cron passe et n'envoie rien.</p>
+    </div>
+    <div class="nomail"><b>AUCUN E-MAIL</b><span>Pas de « rien de neuf aujourd'hui » : un e-mail vide apprend à ignorer les suivants.</span></div>
+  </section>
+
+  <!-- ========== Liens ========== -->
+  <section class="state" id="liens">
+    <div class="state-head">
+      <span class="route">DESTINATIONS</span>
+      <h2>Où mènent les liens</h2>
+      <p>Les liens de l'e-mail ouvrent l'app sur l'écran existant ; aucun nouvel écran n'est créé par ce lot.</p>
+    </div>
+    <div class="dest-wrap">
+      <table class="dest">
+        <thead><tr><th>Lien</th><th>Route</th></tr></thead>
+        <tbody>
+          <tr><td>Candidater, Ouvrir Goal Master</td><td><code>/</code></td></tr>
+          <tr><td>Voir la quête, Valider la quête</td><td><code>/quete/[id]</code></td></tr>
+          <tr><td>Ouvrir le coffre</td><td><code>/coffre</code></td></tr>
+          <tr><td>Relever le défi</td><td><code>/</code></td></tr>
+          <tr><td>Voir le défi</td><td><code>/defi</code></td></tr>
+          <tr><td>Entrer dans l'Arène</td><td><code>/</code></td></tr>
+          <tr><td>Voir le duel</td><td><code>/duel</code></td></tr>
+          <tr><td>Voir la nouveauté</td><td><code>/intro</code></td></tr>
+          <tr><td>Régler mes notifications</td><td><code>/reglages#notifications</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <nav class="menu"><a href="#chargee">Retour en haut</a></nav>
+  </section>
+</div>
+
+<script>
+// Sprites 12×12 de remplacement : les vrais PNG viennent de /api/email/scene.
+const P = {
+  knight: ["....AAAA....","...ABBBBA...","...ABCCBA...","...ABBBBA....","....AAAA....","..DDDDDDDD..",".DDEDDDDEDD.",".D.DDDDDD.D.","...DDDDDD...","...DD..DD...","...FF..FF...","..FFF..FFF.."],
+  panda: ["..GG....GG..","..GHHHHHHG..","..HGGHHGGH..","..HGWHHWGH..","..HHHGGHHH..","...HHHHHH...","..GGHHHHGG..",".GG.HHHH.GG.","....HHHH....","...GG..GG...","...GG..GG...","............"],
+  golem: ["...IIIIII...","..IJJJJJJI..","..IJKJJKJI..","..IJJJJJJI..","..IIIIIIII..",".IIJJJJJJII.","IIJJJJJJJJII","I.IJJJJJJI.I","..IJJJJJJI..","..II....II..","..II....II..",".III....III."],
+};
+const C = { A:"#c9cfe0", B:"#8b93ad", C:"#f2c14e", D:"#5b6fd6", E:"#f2c14e", F:"#4a4380", G:"#1d1a2e", H:"#f1ecff", W:"#ffffff", I:"#6d6a8a", J:"#9c98b8", K:"#e88a7a" };
+document.querySelectorAll("canvas.sprite").forEach((cv) => {
+  const ctx = cv.getContext("2d");
+  const rows = P[cv.dataset.hero];
+  const rust = cv.dataset.rust, hurt = cv.dataset.hurt;
+  if (cv.dataset.down) { ctx.translate(12, 12); ctx.rotate(Math.PI / 2); ctx.translate(0, -12); ctx.globalAlpha = .7; }
+  rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    let col = C[ch];
+    if (rust && (ch === "A" || ch === "B" || ch === "D")) col = ch === "D" ? "#8a5a3c" : "#b07a4f";
+    ctx.fillStyle = col; ctx.fillRect(x, y, 1, 1);
+  }));
+  if (hurt) { ctx.fillStyle = "#f1ecff"; ctx.fillRect(3, 1, 6, 1); ctx.fillStyle = "#e88a7a"; ctx.fillRect(6, 1, 1, 1); }
+});
+</script>
