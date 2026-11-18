@@ -182,6 +182,42 @@
         ],
         "createdAt": "2026-11-18T17:18:32.579Z",
         "reason": "Claude: même convention de police pixel que l'app"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "docs/maquettes/fonds-vivants.html"
+        ],
+        "createdAt": "2026-11-18T20:47:08.729Z",
+        "reason": "Claude: les paires signalées (sur #ffffff, #4e4b66) n'existent pas ; texte en tokens clairs sur fond var(--night) explicite, variables CSS non résolues par le scanner (même cas que goal-master-maquettes.html)"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          "docs/maquettes/fonds-vivants.html"
+        ],
+        "createdAt": "2026-11-18T20:47:08.746Z",
+        "reason": "Claude: police pixel Press Start 2P à 8-10px, taille établie de l'app (cf. exception notifications.html), plus large qu'une police normale de 11px"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/maquettes/fonds-vivants.html"
+        ],
+        "createdAt": "2026-11-18T20:47:44.971Z",
+        "reason": "Claude: .desk n'a pas de texte direct ; son enfant .screen, en position absolue, a 22px de marge et 18% sur les côtés, le scanner ne le voit pas"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "docs/maquettes/fonds-vivants.html"
+        ],
+        "createdAt": "2026-11-18T21:05:13.913Z",
+        "reason": "Claude: police pixel Press Start 2P à 7-9px dans les cartes simulées de l'accueil, taille établie de l'app (même exception que notifications.html)"
       }
     ]
   }

@@ -1,0 +1,834 @@
+<title>Fonds vivants</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
+<style>
+/* Mise en page : une colonne de sections empilées, chacune annoncée par sa route ; univers 8 bits de l'app (thème sombre unique). */
+:root {
+  color-scheme: dark;
+  --night: #16132a;
+  --stone: #221e40;
+  --stone-2: #2e2958;
+  --edge: #4a4380;
+  --ink: #f1ecff;
+  --muted: #a39dcc;
+  --gold: #f2c14e;
+  --gold-dk: #b9831c;
+  --ember: #ff7a45;
+  --ok: #6fd49a;
+  --font-display: "Press Start 2P", ui-monospace, monospace;
+  --font-ui: "Pixelify Sans", system-ui, sans-serif;
+  --font-num: "VT323", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { background: var(--night); color: var(--ink); font-family: var(--font-ui); font-size: 17px; line-height: 1.5; margin: 0; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; display: flex; flex-direction: column; gap: 56px; }
+h1, h2 { font-family: var(--font-display); font-weight: 400; line-height: 1.5; text-wrap: balance; margin: 0; }
+h1 { font-size: 20px; color: var(--gold); }
+h2 { font-size: 14px; }
+p { margin: 0; max-width: 68ch; }
+.muted { color: var(--muted); }
+.route { font-family: var(--font-num); font-size: 22px; color: var(--ember); }
+header.top { display: flex; flex-direction: column; gap: 14px; }
+nav.anchors { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--night); border-bottom: 3px solid var(--edge); display: flex; flex-wrap: wrap; gap: 6px 14px; padding-block: 10px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--night); }
+nav.anchors a { font-family: var(--font-display); font-size: 9px; color: var(--muted); text-decoration: none; padding: 6px 0; }
+nav.anchors a:hover, nav.anchors a:focus-visible { color: var(--gold); }
+section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 60px; }
+.sec-head { display: flex; flex-direction: column; gap: 6px; }
+canvas.px { display: block; image-rendering: pixelated; max-width: 100%; }
+canvas.fit { width: 100%; height: auto; }
+.stage { border: 4px solid var(--edge); box-shadow: 4px 4px 0 #0c0a1a; background: #000; }
+.lab-wrap { display: flex; justify-content: center; }
+.lab-wrap .stage { display: inline-block; max-width: 100%; }
+.controls { display: flex; flex-direction: column; gap: 14px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { font-family: var(--font-num); font-size: 22px; line-height: 1.1; padding: 4px 12px; border: 3px solid var(--edge); color: var(--muted); background: transparent; cursor: pointer; }
+.chip[aria-pressed="true"] { border-color: var(--gold); color: var(--ink); background: #3a3220; }
+.chip:focus-visible, input:focus-visible, a:focus-visible, .pick:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.clock { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: center; }
+.clock output { font-family: var(--font-num); font-size: 30px; color: var(--gold); min-width: 8ch; }
+input[type=range] { width: 100%; accent-color: var(--gold); }
+.ticks { grid-column: 2; display: flex; justify-content: space-between; font-family: var(--font-num); font-size: 18px; color: var(--muted); }
+.legend { font-size: 15px; color: var(--muted); }
+.grid-out { font-family: var(--font-num); font-size: 20px; color: var(--muted); }
+/* Planches */
+.board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.board figure { margin: 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.board figcaption { font-family: var(--font-num); font-size: 18px; color: var(--muted); }
+.board .rowname { grid-column: 1 / -1; font-family: var(--font-display); font-size: 10px; color: var(--ink); padding-top: 8px; }
+.board canvas { border: 3px solid var(--edge); }
+.board.tall { max-width: 720px; }
+@media (max-width: 640px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Contexte : téléphone, tablette, ordinateur */
+.ctx { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.dev { position: relative; border: 6px solid #0c0a1a; box-shadow: 0 0 0 3px var(--edge); overflow: hidden; max-width: 100%; }
+.dev.phone { width: 240px; aspect-ratio: 390 / 844; }
+.dev.tablet { width: 330px; aspect-ratio: 820 / 1180; }
+.dev.desk { flex: 1 1 100%; aspect-ratio: 1440 / 900; }
+.dev-cap { font-family: var(--font-num); font-size: 18px; color: var(--muted); margin-top: 6px; }
+.bg { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+.veil { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(22,19,42,.15), rgba(22,19,42,.55)); }
+.screen { position: absolute; inset: 0; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+.tablet .screen { padding: 18px 22px; }
+.desk .screen { padding: 22px 22%; }
+.bar { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-display); font-size: 8px; color: var(--gold); }
+.bar a { color: var(--muted); text-decoration: none; font-family: var(--font-num); font-size: 17px; }
+.card { background: rgb(34 30 64 / .8); border: 4px solid var(--edge); box-shadow: 4px 4px 0 #0c0a1a; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+.card .t { font-family: var(--font-display); font-size: 7px; color: var(--muted); }
+.card .big { font-family: var(--font-num); font-size: 24px; line-height: 1; }
+.xp { height: 10px; border: 3px solid var(--edge); background: var(--night); }
+.xp i { display: block; height: 100%; width: 72%; background: var(--gold); }
+.mini { font-family: var(--font-num); font-size: 17px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.cta { display: block; text-align: center; font-family: var(--font-display); font-size: 8px; color: #1a1626; background: var(--gold); padding: 11px 8px; text-decoration: none; box-shadow: inset -4px -4px 0 var(--gold-dk); }
+.spacer { flex: 1; }
+/* Réglages */
+.settings { max-width: 520px; display: flex; flex-direction: column; gap: 12px; background: rgb(34 30 64 / .8); border: 4px solid var(--edge); box-shadow: 4px 4px 0 #0c0a1a; padding: 18px; }
+.settings h3 { font-family: var(--font-display); font-size: 11px; font-weight: 400; margin: 0; }
+.picks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.pick { display: flex; flex-direction: column; gap: 4px; background: none; border: 3px solid var(--edge); padding: 4px; cursor: pointer; color: var(--ink); font: inherit; text-align: left; }
+.pick[aria-pressed="true"] { border-color: var(--gold); }
+.pick span { font-family: var(--font-num); font-size: 20px; padding-inline: 4px; }
+/* États */
+.states { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 640px) { .states { grid-template-columns: minmax(0, 1fr); } }
+.state { border: 3px solid var(--edge); padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.state b { font-family: var(--font-display); font-size: 9px; font-weight: 400; color: var(--gold); line-height: 1.6; }
+.state p { font-size: 16px; }
+ul.changes { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; max-width: 72ch; }
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.compare figure { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.compare figcaption { font-family: var(--font-num); font-size: 18px; color: var(--muted); }
+@media (max-width: 640px) { .compare { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Fonds vivants</h1>
+    <p>Les quatre paysages redessinés en 8 bits plus fins, en couches, animés, dont le ciel suit l'heure de Paris, et dessinés à la forme de chaque écran plutôt que recadrés. Maquette à valider avant tout code.</p>
+    <nav class="anchors" aria-label="Sections">
+      <a href="#labo">Labo</a>
+      <a href="#telephone">Sur téléphone</a>
+      <a href="#avant-apres">Avant / après</a>
+      <a href="#planche">Planche</a>
+      <a href="#accueil">Accueil</a>
+      <a href="#reglages">Réglages</a>
+      <a href="#etats">États</a>
+      <a href="#regles">Règles</a>
+    </nav>
+  </header>
+
+  <section id="labo">
+    <div class="sec-head">
+      <span class="route">Laboratoire</span>
+      <h2>Un paysage, toutes les heures, tous les écrans</h2>
+      <p class="muted">Choisis un paysage, un format d'écran, et fais glisser l'heure. « Heure de Paris » montre ce que verrait le joueur maintenant ; « Journée en 2 min » fait défiler une journée entière.</p>
+    </div>
+    <div class="lab-wrap"><div class="stage"><canvas id="lab" class="px" width="320" height="180" role="img" aria-label="Paysage animé"></canvas></div></div>
+    <div class="controls">
+      <div class="row" id="scenePick" role="group" aria-label="Paysage"></div>
+      <div class="row" id="fmtPick" role="group" aria-label="Format d'écran"></div>
+      <span class="grid-out" id="gridOut"></span>
+      <div class="clock">
+        <output id="hourOut" for="hour">14 h 00</output>
+        <input id="hour" type="range" min="0" max="23.75" step="0.25" value="14" aria-label="Heure">
+        <span class="ticks"><span>0 h</span><span>6 h</span><span>12 h</span><span>18 h</span><span>24 h</span></span>
+      </div>
+      <div class="row">
+        <button class="chip" id="autoBtn" aria-pressed="false">Heure de Paris</button>
+        <button class="chip" id="fastBtn" aria-pressed="false">Journée en 2 min</button>
+        <button class="chip" id="rmBtn" aria-pressed="false">Réduire les animations</button>
+      </div>
+      <p class="legend">Paliers : nuit jusqu'à 5 h 30, aube de 6 h 30 à 7 h 45, jour de 9 h à 17 h 30, crépuscule de 19 h à 20 h 15, nuit dès 21 h 30. Entre deux, les couleurs glissent par quarts d'heure, en quatre paliers, comme les fondus des vieilles consoles.</p>
+    </div>
+  </section>
+
+  <section id="telephone">
+    <div class="sec-head">
+      <span class="route">Sur téléphone</span>
+      <h2>Les quatre paysages, tenus droit</h2>
+      <p class="muted">390 × 844 (iPhone courant), à l'heure du labo. Le château, la pagode, le chalet et le donjon se recentrent quand la largeur manque ; les sapins et les arbres de bord restent accrochés aux bords.</p>
+    </div>
+    <div class="board tall" id="phoneBoard"></div>
+  </section>
+
+  <section id="avant-apres">
+    <div class="sec-head">
+      <span class="route">Avant / après</span>
+      <h2>Le même paysage, version actuelle et nouvelle</h2>
+      <p class="muted">Sur un écran 1920 × 1080. Suit le paysage choisi dans le labo. La version actuelle est fixe ; la nouvelle à l'heure du labo.</p>
+    </div>
+    <div class="compare">
+      <figure><canvas id="oldCv" class="px fit stage" width="192" height="108" role="img" aria-label="Version actuelle"></canvas><figcaption>Aujourd'hui · 192 × 108, fixe, recadré</figcaption></figure>
+      <figure><canvas id="newCv" class="px fit stage" width="320" height="180" role="img" aria-label="Nouvelle version"></canvas><figcaption>Nouveau · 320 × 180, animé, pixels de 6 × 6</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="planche">
+    <div class="sec-head">
+      <span class="route">Planche</span>
+      <h2>Quatre paysages, quatre moments</h2>
+      <p class="muted">Sur un écran 1920 × 1080, à 7 h, 13 h, 19 h 45 et 23 h. Seules les vignettes visibles à l'écran s'animent.</p>
+    </div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section id="accueil">
+    <div class="sec-head">
+      <span class="route">/ · Accueil</span>
+      <h2>Le fond derrière l'app</h2>
+      <p class="muted">Contenu de l'accueil schématisé, il ne change pas. Chaque appareil a son propre dessin, à sa forme ; le paysage et l'heure suivent le labo. Le voile sombre reste, pour que les cartes se lisent même en plein jour.</p>
+    </div>
+    <div class="ctx">
+      <div>
+        <div class="dev phone"><canvas class="bg" data-dev="phone" width="130" height="282" aria-hidden="true"></canvas><div class="veil"></div>
+          <div class="screen">
+            <div class="bar"><span>GOAL MASTER</span><a href="#reglages">⚙ Réglages</a></div>
+            <div class="card"><span class="t">ADRIEN · CHEVALIER</span><span class="big">Niveau 7</span><div class="xp"><i></i></div><div class="mini"><span>1 080 / 1 500 XP</span><span>🔥 5 j</span></div></div>
+            <div class="card"><span class="t">AUJOURD'HUI</span><span class="big">3 candidatures</span><div class="mini"><span>Doctolib, Alan, Qonto</span></div></div>
+            <div class="card"><span class="t">NICOLAS · PANDA</span><div class="mini"><span>Niveau 6</span><span>2 aujourd'hui</span></div></div>
+            <div class="spacer"></div>
+            <a class="cta" href="#accueil">+ CANDIDATURE</a>
+          </div>
+        </div>
+        <div class="dev-cap">Téléphone · 390 × 844</div>
+      </div>
+      <div>
+        <div class="dev tablet"><canvas class="bg" data-dev="tablet" width="137" height="197" aria-hidden="true"></canvas><div class="veil"></div>
+          <div class="screen">
+            <div class="bar"><span>GOAL MASTER</span><a href="#reglages">⚙ Réglages</a></div>
+            <div class="card"><span class="t">ADRIEN · CHEVALIER</span><span class="big">Niveau 7</span><div class="xp"><i></i></div><div class="mini"><span>1 080 / 1 500 XP</span><span>🔥 5 j</span></div></div>
+            <div class="card"><span class="t">AUJOURD'HUI</span><span class="big">3 candidatures</span><div class="mini"><span>Doctolib, Alan, Qonto</span><span>Nicolas : 2</span></div></div>
+            <div class="spacer"></div>
+            <a class="cta" href="#accueil">+ CANDIDATURE</a>
+          </div>
+        </div>
+        <div class="dev-cap">Tablette · 820 × 1180</div>
+      </div>
+      <div class="dev desk"><canvas class="bg" data-dev="desktop" width="288" height="180" aria-hidden="true"></canvas><div class="veil"></div>
+        <div class="screen">
+          <div class="bar"><span>GOAL MASTER</span><a href="#reglages">⚙ Réglages</a></div>
+          <div class="card"><span class="t">ADRIEN · CHEVALIER</span><span class="big">Niveau 7</span><div class="xp"><i></i></div><div class="mini"><span>1 080 / 1 500 XP</span><span>🔥 5 j</span></div></div>
+          <div class="card"><span class="t">AUJOURD'HUI</span><span class="big">3 candidatures</span><div class="mini"><span>Doctolib, Alan, Qonto</span><span>Nicolas : 2</span></div></div>
+          <a class="cta" href="#accueil">+ CANDIDATURE</a>
+        </div>
+      </div>
+    </div>
+    <div class="dev-cap">Ordinateur · 1440 × 900</div>
+  </section>
+
+  <section id="reglages">
+    <div class="sec-head">
+      <span class="route">/reglages · Paysage</span>
+      <h2>Le choix du paysage</h2>
+      <p class="muted">Même écran qu'aujourd'hui. Les noms perdent leur moment de la journée, puisque c'est l'heure qui le décide. Les vignettes montrent le paysage à l'heure actuelle, sans animation.</p>
+    </div>
+    <div class="settings">
+      <h3>PAYSAGE</h3>
+      <div class="picks" id="picks"></div>
+      <p class="legend">Le ciel suit l'heure de Paris : aube, jour, crépuscule, nuit.</p>
+      <a class="cta" href="#accueil">Retour à l'accueil</a>
+    </div>
+  </section>
+
+  <section id="etats">
+    <div class="sec-head">
+      <span class="route">États</span>
+      <h2>Les cas qui comptent</h2>
+    </div>
+    <div class="states">
+      <div class="state"><b>TÉLÉPHONE TENU DROIT</b><p>Le dessin prend la forme de l'écran : plus de ciel en hauteur, moins de largeur. L'élément principal se recentre s'il ne tient pas à sa place, et reste entier.</p></div>
+      <div class="state"><b>ROTATION, FENÊTRE REDIMENSIONNÉE</b><p>Le paysage se redessine à la nouvelle forme, une fois le mouvement fini. Les pixels gardent une taille entière : jamais de pixel plus large que son voisin.</p></div>
+      <div class="state"><b>RÉDUIRE LES ANIMATIONS</b><p>Le paysage est figé : ni nuages, ni bambous, ni lucioles. Le ciel suit quand même l'heure, il se redessine au quart d'heure. Essaie le bouton du labo.</p></div>
+      <div class="state"><b>ONGLET CACHÉ OU APP EN FOND</b><p>Plus aucune image n'est dessinée tant que la page n'est pas à l'écran : pas de batterie dépensée pour rien. Au retour, le ciel se recale sur l'heure.</p></div>
+      <div class="state"><b>PASSAGE D'UN MOMENT À L'AUTRE</b><p>Les couleurs changent par palier tous les quarts d'heure. Quelqu'un qui garde l'app ouverte à 19 h voit le ciel rougir puis bleuir en une heure et demie. Au crépuscule, les fenêtres s'allument une à une.</p></div>
+      <div class="state"><b>ARÈNE, INTRO, E-MAILS</b><p>L'Arène, l'intro et l'évolution gardent leurs propres décors. Le mode « décor » (bouton œil) profite du fond animé, les héros s'y promènent comme avant. L'en-tête des e-mails reste le Château de nuit actuel.</p></div>
+    </div>
+  </section>
+
+  <section id="regles">
+    <div class="sec-head">
+      <span class="route">Règles de dessin</span>
+      <h2>Ce qui change dans le trait</h2>
+    </div>
+    <ul class="changes">
+      <li>Une scène de référence de 320 × 180 ; l'écran en montre plus ou moins, selon sa forme. Taille d'un pixel : entière, de 3 à 8 pixels d'écran, choisie pour garder au moins 120 pixels de large et 180 de haut.</li>
+      <li>Le sol reste en bas, le ciel s'étend vers le haut sur un écran haut, les collines s'étendent sur les côtés sur un écran large.</li>
+      <li>Ciels en trame régulière (damier de Bayer) au lieu de bandes plates.</li>
+      <li>Perspective par l'air : plus une couche est loin, plus elle prend la couleur de l'horizon.</li>
+      <li>Une lumière qui vient du soleil ou de la lune : le côté éclairé des reliefs, des tours et des bambous reçoit un liseré.</li>
+      <li>Ombres teintées (violettes la nuit, pourpres au crépuscule) plutôt qu'un simple assombrissement.</li>
+      <li>Animations en peu d'images, au rythme de 8 images par seconde : drapeaux, nuages, fumée, oiseaux, chauves-souris, lucioles, étoiles filantes, bambous et herbes au vent, feuilles qui tombent.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+/* ---------- Cadre : scène de référence 320 × 180, toile à la forme de l'écran ---------- */
+const SW = 320, SH = 180;
+let W = SW, H = SH, VX0 = 0, VX1 = SW, TOP = 0, HX = 0, HERO0 = 0, HERO1 = 0;
+const span = () => VX1 - VX0;
+const LE = (x) => VX0 + x, RI = (x) => VX1 - x; // accroché au bord gauche / droit
+function dims(vw, vh) { const s = Math.max(2, Math.min(Math.floor(vh / 180), Math.floor(vw / 120))); return { W: Math.ceil(vw / s), H: Math.ceil(vh / s), s }; }
+function frameFor(cw, ch) { W = cw; H = ch; const ox = Math.round((W - SW) / 2), oy = H - SH; VX0 = -ox; VX1 = W - ox; TOP = -oy; return { ox, oy }; }
+function heroShift(x0, x1, m = 6) { if (x0 >= VX0 + m && x1 <= VX1 - m) return 0; return Math.round((VX0 + VX1) / 2 - (x0 + x1) / 2); }
+const inHero = (x, pad = 6) => x >= HERO0 - pad && x <= HERO1 + pad;
+const visible = (x, m = 0) => x >= VX0 - m && x <= VX1 + m;
+const tiled = (xs) => xs.flatMap((x) => [x - SW, x, x + SW]).filter((x) => visible(x, 12));
+
+const rng = (seed) => { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; };
+const noise = (x, seed) => { const v = Math.sin(x * 12.9898 + seed * 78.233) * 43758.5453; return v - Math.floor(v); };
+const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+const h2r = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const r2h = (a) => "#" + a.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
+const mix = (a, b, t) => { const A = h2r(a), B = h2r(b); return r2h(A.map((v, i) => v + (B[i] - v) * t)); };
+const mul = (a, m) => r2h(h2r(a).map((v) => v * m));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+/* ---------- Lumière selon le moment ---------- */
+const LIGHT = {
+  nuit: { tint: "#1c1c50", amt: 0.55, mult: 0.45, rim: "#9fb4ff", rimK: 0.35, glow: 1, stars: 1 },
+  aube: { tint: "#7a5a9a", amt: 0.3, mult: 0.82, rim: "#ffc4a0", rimK: 0.55, glow: 0.35, stars: 0.25 },
+  jour: { tint: "#ffffff", amt: 0, mult: 1, rim: "#fff6d0", rimK: 0.45, glow: 0, stars: 0 },
+  crep: { tint: "#6a2a5a", amt: 0.4, mult: 0.68, rim: "#ffa055", rimK: 0.6, glow: 0.8, stars: 0.3 },
+};
+const LABEL = { nuit: "Nuit", aube: "Aube", jour: "Jour", crep: "Crépuscule" };
+const KF = [[0, "nuit"], [5.5, "nuit"], [6.5, "aube"], [7.75, "aube"], [9, "jour"], [17.5, "jour"], [19, "crep"], [20.25, "crep"], [21.5, "nuit"], [24, "nuit"]];
+
+function momentOf(hour) {
+  const h = ((hour % 24) + 24) % 24; let i = 0;
+  while (i < KF.length - 2 && h >= KF[i + 1][0]) i++;
+  const [a, ma] = KF[i], [b, mb] = KF[i + 1];
+  return { h, ma, mb, t: Math.round(((h - a) / (b - a)) * 4) / 4 };
+}
+function envFor(scene, hour) {
+  const { h, ma, mb, t } = momentOf(hour);
+  const A = LIGHT[ma], B = LIGHT[mb], SA = SCENES[scene].sky[ma], SB = SCENES[scene].sky[mb];
+  const e = {
+    hour: h, moment: t < 0.5 ? ma : mb,
+    sky: SA.map((c, k) => mix(c, SB[k], t)),
+    tint: mix(A.tint, B.tint, t), amt: lerp(A.amt, B.amt, t), mult: lerp(A.mult, B.mult, t),
+    rim: mix(A.rim, B.rim, t), rimK: lerp(A.rimK, B.rimK, t), glow: lerp(A.glow, B.glow, t), stars: lerp(A.stars, B.stars, t),
+  };
+  e.orbs = orbsFor(h, SCENES[scene].horizon);
+  const main = e.orbs.find((o) => o.kind === (e.glow > 0.6 ? "moon" : "sun")) || e.orbs[0];
+  e.L = main && main.x < SW / 2 ? -1 : 1;
+  e.key = scene + "|" + Math.round(h * 4) + "|" + W + "x" + H;
+  return e;
+}
+const shade = (e, base, depth = 0) => { let c = mix(base, e.tint, e.amt); c = mul(c, e.mult); return depth ? mix(c, e.sky[3], depth) : c; };
+const lit = (e, base, depth = 0, k = 1) => mix(shade(e, base, depth), e.rim, e.rimK * k * (1 - depth * 0.6));
+
+function orbsFor(h, horizon) {
+  const out = [], top = TOP + 24, x = (u) => Math.round(VX0 + 20 + u * (span() - 40));
+  if (h >= 6 && h <= 21) { const u = (h - 6) / 15; out.push({ kind: "sun", u, x: x(u), y: Math.round(horizon - Math.sin(Math.PI * u) * (horizon - top)) }); }
+  const mh = (h - 20.5 + 24) % 24;
+  if (mh <= 10) { const u = mh / 10; out.push({ kind: "moon", u, x: x(u), y: Math.round(horizon - Math.sin(Math.PI * u) * (horizon - top - 4)) }); }
+  return out;
+}
+
+/* ---------- Primitives au pixel ---------- */
+function disc(c, cx, cy, r, col, maxDy = r) {
+  c.fillStyle = col;
+  for (let dy = -r; dy <= Math.min(r, maxDy); dy++) { const w = Math.floor(Math.sqrt(r * r - dy * dy + r * 0.6)); c.fillRect(cx - w, cy + dy, w * 2 + 1, 1); }
+}
+function dither(c, x0, y0, w, h, col, level) { // level 0..16
+  c.fillStyle = col;
+  for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) if (BAYER[y & 3][x & 3] < level) c.fillRect(x, y, 1, 1);
+}
+function mk() { const cv = document.createElement("canvas"); cv.width = W; cv.height = H; return cv; }
+function skyImage(colors, bottom) {
+  const cv = mk(); const c = cv.getContext("2d"); const img = c.createImageData(W, H); const d = img.data;
+  const rgb = colors.map(h2r); const n = colors.length - 1;
+  for (let y = 0; y < H; y++) {
+    const p = Math.min(1, y / bottom) * n; const i = Math.min(n - 1, Math.floor(p)); const f = p - i;
+    for (let x = 0; x < W; x++) { const col = f * 16 > BAYER[y & 3][x & 3] + 0.5 ? rgb[i + 1] : rgb[i]; const o = (y * W + x) * 4; d[o] = col[0]; d[o + 1] = col[1]; d[o + 2] = col[2]; d[o + 3] = 255; }
+  }
+  c.putImageData(img, 0, 0); return cv;
+}
+function heights(base, amp, f1, f2, seed, jag = 0) {
+  const r = rng(seed), p1 = r() * 6, p2 = r() * 6, hs = {};
+  for (let x = VX0 - 1; x <= VX1; x++) {
+    let v = 0.6 * Math.sin(x * f1 + p1) + 0.4 * Math.sin(x * f2 + p2);
+    if (jag) { const t1 = 1 - 2 * Math.abs(((x * f1 * 0.5 + p1) % 1 + 1) % 1 - 0.5); const t2 = 1 - 2 * Math.abs(((x * f2 * 0.5 + p2) % 1 + 1) % 1 - 0.5); v = lerp(v, (t1 * 0.65 + t2 * 0.35) * 2 - 1, jag); }
+    hs[x] = Math.round(base - amp * v - noise(x, seed) * 1.2);
+  }
+  return hs;
+}
+function plateau(hs, x0, x1, y, ramp = 14) { // replat sous un bâtiment, raccordé en pente douce
+  for (let x = x0 - ramp; x < x1 + ramp; x++) {
+    if (hs[x] === undefined) continue;
+    const d = x < x0 ? (x0 - x) / ramp : x > x1 ? (x - x1) / ramp : 0; const w = 1 - d * d * (3 - 2 * d);
+    hs[x] = Math.round(lerp(hs[x], y + (((x % 5) + 5) % 5 === 0 ? 1 : 0), w));
+  }
+  return hs;
+}
+function ridge(c, e, hs, base, depth, rimK = 1) {
+  const body = shade(e, base, depth), rim = lit(e, base, depth, rimK);
+  for (let x = VX0; x < VX1; x++) {
+    c.fillStyle = body; c.fillRect(x, hs[x], 1, SH - hs[x]);
+    const nb = hs[x + e.L] ?? hs[x];
+    if (nb >= hs[x]) { c.fillStyle = rim; c.fillRect(x, hs[x], 1, nb - hs[x] > 1 ? 2 : 1); }
+  }
+}
+function mist(c, e, y, h, level = 6) { dither(c, VX0, y, span(), h, e.sky[4], level); }
+function band(c, col, y, h) { c.fillStyle = col; c.fillRect(VX0, y, span(), h); }
+const scaled = (n) => Math.max(3, Math.round((n * span()) / SW));
+
+/* ---------- Éléments animés partagés ---------- */
+function drawOrbs(c, e) {
+  for (const o of e.orbs) {
+    if (o.kind === "sun") {
+      const low = 1 - Math.sin(Math.PI * o.u);
+      const col = mix("#fff3b8", "#ff8a4a", Math.min(1, low * 1.3));
+      dither(c, o.x - 11, o.y - 11, 23, 23, mix(col, e.sky[2], 0.4), 3);
+      disc(c, o.x, o.y, 7, col);
+      disc(c, o.x - 2, o.y - 2, 3, mix(col, "#ffffff", 0.5));
+    } else if (e.glow > 0.3) {
+      disc(c, o.x, o.y, 6, "#f4f0d8");
+      disc(c, o.x + 3, o.y - 2, 5, e.sky[1]);
+      c.fillStyle = "#d8d2b0"; c.fillRect(o.x - 3, o.y + 1, 2, 2); c.fillRect(o.x - 1, o.y - 3, 1, 1);
+    }
+  }
+}
+function drawStars(c, e, f, S) {
+  if (e.stars <= 0.05) return;
+  const n = Math.round(S.starList.length * e.stars);
+  for (let i = 0; i < n; i++) {
+    const s = S.starList[i]; const tw = (f + s.p) % 40;
+    const x = Math.floor(VX0 + s.fx * span()), y = Math.round(TOP + s.fy * (S.starMaxY - TOP));
+    c.fillStyle = tw < 3 ? "#ffffff" : tw < 8 ? "#c9c4ee" : s.c;
+    c.fillRect(x, y, 1, 1);
+    if (s.big && tw < 3) { c.fillRect(x - 1, y, 3, 1); c.fillRect(x, y - 1, 1, 3); }
+  }
+  if (e.stars > 0.8) { // étoile filante
+    const cyc = f % 260, k = Math.floor(f / 260);
+    if (cyc < 7) { const r = rng(k * 7 + 3); const sx = Math.round(VX0 + 10 + r() * (span() - 50)), sy = Math.round(TOP + 8 + r() * 30);
+      c.fillStyle = "#ffffff"; c.fillRect(sx + cyc * 4, sy + cyc * 2, 2, 1); c.fillStyle = "#a39dcc"; c.fillRect(sx + cyc * 4 - 4, sy + cyc * 2 - 2, 3, 1); }
+  }
+}
+const CLOUD = [[0, 0, 6], [8, -3, 8], [17, 0, 6], [-7, 2, 4], [24, 2, 4]];
+function drawClouds(c, e, f, S) {
+  const body = shade(e, "#eef2ff"), sh = shade(e, "#b4c0e0"), hi = mix(body, e.rim, 0.55);
+  const sp = span() + 80;
+  for (const cl of S.clouds) {
+    const x = VX0 - 40 + Math.round((((cl.x * span()) / SW + f * cl.v) % sp + sp) % sp); const s = cl.s; const y = cl.y + Math.round(TOP * 0.45);
+    for (const [dx, dy, r] of CLOUD) disc(c, x + dx * s, y + dy * s + 2, Math.round(r * s), sh, 3);
+    for (const [dx, dy, r] of CLOUD) disc(c, x + dx * s, y + dy * s, Math.round(r * s) - 1, body, 2);
+    for (const [dx, dy, r] of CLOUD) if (r > 5) disc(c, x + dx * s + e.L, y + dy * s - 2, Math.round(r * s) - 4, hi, 0);
+  }
+}
+function flyer(c, x, y, up, col) { c.fillStyle = col; c.fillRect(x - 1, y, 3, 1); const d = up ? -1 : 1; c.fillRect(x - 2, y + d, 1, 1); c.fillRect(x + 2, y + d, 1, 1); }
+function drawBirds(c, e, f, y0) {
+  if (e.glow > 0.5) return;
+  const dur = (span() + 40) / 1.1, t = f % Math.round(dur + 90); if (t > dur) return;
+  const col = shade(e, "#2a2840"), y = y0 + Math.round(TOP * 0.4);
+  for (let i = 0; i < 3; i++) flyer(c, Math.round(VX0 - 10 + t * 1.1 - i * 7), y + i * 3 + Math.round(Math.sin((t + i * 5) / 9) * 2), ((f >> 1) + i) % 2 === 0, col);
+}
+function drawBats(c, e, f, cx, cy) {
+  if (e.glow < 0.6) return;
+  for (let i = 0; i < 3; i++) flyer(c, cx + Math.round(Math.cos(f / 14 + i * 2.1) * 30), cy + Math.round(Math.sin(f / 9 + i * 2.1) * 9), (f + i) % 2 === 0, "#0c0a18");
+}
+function drawFireflies(c, e, f, S) {
+  if (e.glow < 0.6) return;
+  for (const p of S.flies) {
+    if ((f + p.p) % 26 > 15) continue;
+    const x = Math.round(VX0 + p.fx * span() + Math.sin(f / 11 + p.p) * 6), y = p.y + Math.round(Math.cos(f / 13 + p.p) * 4);
+    c.fillStyle = "#e8ff7a"; c.fillRect(x, y, 1, 1);
+    if ((f + p.p) % 26 < 4) { c.fillStyle = "#8fae3a"; c.fillRect(x - 1, y, 1, 1); c.fillRect(x + 1, y, 1, 1); c.fillRect(x, y - 1, 1, 1); c.fillRect(x, y + 1, 1, 1); }
+  }
+}
+function drawFlag(c, x, y, w, h, col, dk, f) {
+  for (let i = 0; i < w; i++) { const off = Math.round(Math.sin(i * 0.9 - f * 0.7) * (i / w) * 1.6); c.fillStyle = off < 0 ? dk : col; c.fillRect(x + i, y + off, 1, h - (i === w - 1 ? 1 : 0)); }
+}
+function drawWindows(c, e, f, list) {
+  list.forEach(([x, y, w, h, th], i) => {
+    const on = e.glow >= th;
+    c.fillStyle = on ? (((f >> 3) * 7 + i * 13) % 29 === 0 ? "#ff9f40" : "#ffd36a") : shade(e, "#2a2a44");
+    c.fillRect(x, y, w, h);
+    if (on && h > 2) { c.fillStyle = "#fff2b0"; c.fillRect(x, y, 1, 1); }
+  });
+}
+function drawSmoke(c, e, f, x0, y0) {
+  for (let i = 0; i < 5; i++) {
+    const age = (f * 0.5 + i * 8) % 40; const s = 1 + Math.floor(age / 13);
+    c.fillStyle = mix(shade(e, "#d0d0e0"), e.sky[2], age / 40);
+    c.fillRect(Math.round(x0 + Math.sin(age / 6) * 2 + age * 0.2), Math.round(y0 - age * 0.7), s, s);
+  }
+}
+function bricks(c, e, x, y, w, h, base, depth) {
+  c.fillStyle = mix(shade(e, base, depth), "#000000", 0.18);
+  for (let yy = y + 3; yy < y + h; yy += 4) for (let xx = x + ((yy >> 2) % 2) * 3; xx < x + w; xx += 7) c.fillRect(xx, yy, 2, 1);
+}
+function block(c, e, x, y, w, h, base, depth = 0) { // volume éclairé d'un côté
+  c.fillStyle = shade(e, base, depth); c.fillRect(x, y, w, h);
+  c.fillStyle = lit(e, base, depth); c.fillRect(e.L > 0 ? x + w - 2 : x, y, 2, h);
+  c.fillStyle = mix(shade(e, base, depth), "#000000", 0.25); c.fillRect(e.L > 0 ? x : x + w - 1, y, 1, h);
+  bricks(c, e, x, y, w, h, base, depth);
+}
+function crenel(c, e, x, y, w, base, depth = 0) { c.fillStyle = shade(e, base, depth); for (let xx = x; xx < x + w; xx += 4) c.fillRect(xx, y - 3, 2, 3); }
+function cone(c, e, cx, y, r, h, col) {
+  for (let i = 0; i < h; i++) { const w = Math.round((i / h) * r); c.fillStyle = shade(e, col); c.fillRect(cx - w, y + i, w * 2 + 1, 1); c.fillStyle = lit(e, col); c.fillRect(e.L > 0 ? cx + Math.max(0, w - 1) : cx - w, y + i, Math.max(1, Math.ceil(w / 2)), 1); }
+}
+function pine(c, e, x, base, h, col, depth = 0) {
+  c.fillStyle = shade(e, "#3a2a20", depth); c.fillRect(x, base - 3, 1, 3);
+  for (let i = 0; i < h; i++) { const w = Math.floor(((i % Math.ceil(h / 3)) + i / 3) * 0.55) + 1; const y = base - 3 - h + i;
+    c.fillStyle = shade(e, col, depth); c.fillRect(x - w, y, w * 2 + 1, 1);
+    c.fillStyle = lit(e, col, depth, 0.8); c.fillRect(e.L > 0 ? x + w : x - w, y, 1, 1); }
+}
+function tree(c, e, x, base, r, col) {
+  c.fillStyle = shade(e, "#5a3e28"); c.fillRect(x - 1, base - r, 2, r);
+  disc(c, x, base - r - r + 2, r, shade(e, col));
+  disc(c, x + e.L * Math.ceil(r / 3), base - 2 * r + 1, Math.ceil(r / 2), lit(e, col));
+}
+function path(c, e, x, y0, y1, col, wide = 3) {
+  let xx = x;
+  for (let y = y1; y > y0; y--) { const w = Math.max(1, Math.round(wide * (y - y0) / (y1 - y0)) + 1); c.fillStyle = shade(e, col); c.fillRect(Math.round(xx - w / 2), y, w, 1); xx += (y % 9 < 4 ? 0.6 : -0.6); }
+}
+function hero(c, fn) { c.save(); c.translate(HX, 0); fn(); c.restore(); }
+
+/* ---------- Bambous ---------- */
+function stalk(c, e, x, top, w, base, depth, sway, seed) {
+  const body = shade(e, base, depth), rim = lit(e, base, depth), node = mix(body, "#000000", 0.3), leaf = shade(e, mix(base, "#6ac060", 0.3), depth);
+  const r = rng(seed); const seg = 14 + Math.floor(r() * 6);
+  for (let y = top; y < SH; y += 2) {
+    const dx = sway ? sway(y) : 0;
+    c.fillStyle = body; c.fillRect(x + dx, y, w, 2);
+    if (w > 1) { c.fillStyle = rim; c.fillRect(e.L > 0 ? x + dx + w - 1 : x + dx, y, 1, 2); }
+    if ((y - top) % seg === 0 && y > top) {
+      c.fillStyle = node; c.fillRect(x + dx - 1, y, w + 2, 1);
+      if (r() < 0.45) { const s = r() < 0.5 ? -1 : 1; c.fillStyle = leaf; const lx = s > 0 ? x + dx + w : x + dx - 1;
+        for (let k = 0; k < 6; k++) c.fillRect(lx + s * k, y - Math.floor(k / 2), 1, 1 + (k > 1 && k < 4 ? 1 : 0)); }
+    }
+  }
+}
+
+/* ---------- Les quatre paysages ---------- */
+const stars = (seed, n) => { const r = rng(seed); return Array.from({ length: n }, () => ({ fx: r(), fy: r(), p: Math.floor(r() * 40), big: r() < 0.08, c: r() < 0.5 ? "#a39dcc" : "#fffbe0" })); };
+const flies = (seed, n, y0, y1) => { const r = rng(seed); return Array.from({ length: n }, () => ({ fx: r(), y: y0 + Math.floor(r() * (y1 - y0)), p: Math.floor(r() * 26) })); };
+
+const SCENES = {
+  CASTLE: {
+    name: "Château", horizon: 118, hero: [66, 178],
+    sky: {
+      nuit: ["#0b0a1f", "#12102e", "#1b1742", "#262059", "#33296e"],
+      aube: ["#2a2a5e", "#5a4a86", "#a0679a", "#e08f8f", "#f6c49a"],
+      jour: ["#2f5fc4", "#3f74d6", "#5a8fe4", "#7eaaee", "#b2d2f6"],
+      crep: ["#1d1a4a", "#3d2a66", "#7a3a6e", "#d0595a", "#f59a52"],
+    },
+    starList: stars(7, 110), starMaxY: 100, flies: flies(5, 10, 140, 172),
+    clouds: [{ x: 20, y: 30, v: 0.12, s: 1 }, { x: 170, y: 52, v: 0.08, s: 0.8 }, { x: 260, y: 22, v: 0.15, s: 1.2 }],
+    build(c, e) {
+      ridge(c, e, heights(116, 10, 0.03, 0.07, 3), "#3a5a8a", 0.6);
+      mist(c, e, 112, 10, 5);
+      const g = "#8a86a6";
+      hero(c, () => {
+        block(c, e, 84, 86, 76, 46, g, 0.1); crenel(c, e, 84, 86, 76, g, 0.1);
+        block(c, e, 70, 64, 18, 68, g, 0.05); block(c, e, 156, 64, 18, 68, g, 0.05);
+        cone(c, e, 78, 46, 10, 18, "#5a3a8a"); cone(c, e, 164, 46, 10, 18, "#5a3a8a");
+        block(c, e, 110, 52, 24, 36, g, 0.05); crenel(c, e, 110, 52, 24, g, 0.05);
+        c.fillStyle = shade(e, "#5a4a3a"); c.fillRect(121, 30, 1, 22);
+        c.fillStyle = shade(e, "#14101f"); c.fillRect(114, 112, 16, 20); c.fillRect(116, 110, 12, 2);
+        c.fillStyle = shade(e, "#3a3040"); for (let x = 116; x < 128; x += 3) c.fillRect(x, 112, 1, 20); for (let y = 114; y < 132; y += 4) c.fillRect(114, y, 16, 1);
+      });
+      ridge(c, e, plateau(heights(134, 7, 0.025, 0.06, 9), 66 + HX, 178 + HX, 128), "#33603e", 0.3);
+      hero(c, () => { c.fillStyle = shade(e, "#14101f"); c.fillRect(114, 127, 16, 2); path(c, e, 122, 128, 180, "#a88a60", 22); });
+      const near = heights(150, 4, 0.06, 0.15, 21);
+      ridge(c, e, near, "#24452c", 0);
+      for (const [x, d, h] of [[LE(14), 6, 26], [LE(30), 10, 20], [LE(44), 14, 14], [RI(28), 4, 28], [RI(14), 12, 18]]) if (!inHero(x, 2)) pine(c, e, x, near[x] + d, h, "#1f4a30");
+      const r = rng(77); c.fillStyle = lit(e, "#3a6a3a", 0, 0.6);
+      for (let i = 0, n = scaled(40); i < n; i++) c.fillRect(Math.floor(VX0 + r() * span()), 154 + Math.floor(r() * 24), 1, 2);
+      band(c, shade(e, "#162a1c"), 174, 6);
+    },
+    anim(c, e, f) {
+      hero(c, () => {
+        drawWindows(c, e, f, [[74, 72, 3, 5, 0.3], [160, 72, 3, 5, 0.5], [74, 92, 3, 5, 0.75], [160, 92, 3, 5, 0.4], [94, 98, 3, 5, 0.6], [104, 98, 3, 5, 0.9], [140, 98, 3, 5, 0.55], [150, 98, 3, 5, 0.85], [119, 62, 5, 7, 0.2], [96, 116, 3, 4, 0.95], [146, 116, 3, 4, 0.7]]);
+        drawFlag(c, 122, 30, 11, 6, shade(e, "#ff7a45"), shade(e, "#c04a28"), f);
+        drawSmoke(c, e, f, 150, 82);
+        drawBats(c, e, f, 120, 40);
+      });
+      drawFireflies(c, e, f, this);
+    },
+    back(c, e, f) { drawBirds(c, e, f, 40); },
+  },
+
+  BAMBOO: {
+    name: "Forêt de bambous", horizon: 112, hero: [198, 276],
+    sky: {
+      nuit: ["#0c1020", "#121a30", "#18263f", "#1f3148", "#2a3e52"],
+      aube: ["#2e3358", "#5b5880", "#9b7d98", "#d9a8a0", "#f5d6b0"],
+      jour: ["#3d74b8", "#5a8fc8", "#86b0d6", "#b6d2dc", "#e6ecc8"],
+      crep: ["#2a1f4a", "#4a2c5c", "#7a3d5e", "#b5545a", "#f2a65a"],
+    },
+    starList: stars(13, 80), starMaxY: 80, flies: flies(9, 14, 90, 170),
+    clouds: [{ x: 60, y: 26, v: 0.07, s: 0.8 }, { x: 220, y: 40, v: 0.05, s: 0.7 }],
+    build(c, e) {
+      ridge(c, e, heights(104, 8, 0.02, 0.05, 4), "#5a6a8a", 0.65);
+      hero(c, () => { // pagode au loin
+        c.fillStyle = shade(e, "#4a3a4a", 0.5); c.fillRect(242, 78, 12, 26); c.fillRect(240, 70, 16, 4);
+        for (const [y, w] of [[66, 26], [80, 30], [94, 34]]) { c.fillStyle = shade(e, "#3a2a3a", 0.45); c.fillRect(248 - w / 2, y, w, 3); c.fillRect(248 - w / 2 - 2, y - 1, 3, 2); c.fillRect(248 + w / 2 - 1, y - 1, 3, 2); }
+        c.fillRect(247, 56, 2, 10);
+      });
+      mist(c, e, 100, 14, 7);
+      const r = rng(5);
+      for (let i = 0, n = scaled(26); i < n; i++) stalk(c, e, Math.floor(VX0 + r() * span()), 20 + Math.floor(r() * 30), 2, "#5a8a5a", 0.5, null, 100 + i);
+      mist(c, e, 140, 20, 4);
+      band(c, shade(e, "#2c4a2c"), 168, 12);
+      c.fillStyle = shade(e, "#6a6a72"); for (const [fx, y, w] of [[0.12, 170, 6], [0.4, 172, 4], [0.78, 169, 7]]) c.fillRect(Math.round(VX0 + fx * span()), y, w, 2);
+      hero(c, () => { // lanterne de pierre
+        c.fillStyle = shade(e, "#8a8690"); c.fillRect(203, 150, 10, 3); c.fillRect(206, 153, 4, 16); c.fillRect(204, 140, 8, 10); c.fillRect(201, 136, 14, 4); c.fillRect(205, 133, 6, 3);
+        c.fillStyle = lit(e, "#8a8690"); c.fillRect(e.L > 0 ? 213 : 201, 136, 2, 4);
+      });
+    },
+    anim(c, e, f) {
+      hero(c, () => drawWindows(c, e, f, [[206, 143, 4, 4, 0.3], [246, 84, 2, 3, 0.5], [250, 84, 2, 3, 0.8]]));
+      const sw = (ph, amp) => { const s = Math.round(Math.sin(f / 11 + ph) * 2) / 2; return (y) => Math.round(s * amp * Math.pow((SH - y) / SH, 2)); };
+      const r = rng(11);
+      for (let i = 0, n = scaled(14); i < n; i++) { const x = Math.floor(VX0 + r() * span()), t = 6 + Math.floor(r() * 18); stalk(c, e, x, t, 3, "#3f7a46", 0.15, sw(i * 0.7, 3), 200 + i); }
+      const r2 = rng(17);
+      for (let i = 0, n = scaled(9); i < n; i++) { const x = Math.floor(VX0 + r2() * span()), t = Math.floor(r2() * 8) - 4; if (x > HERO0 - 6 && x < HERO0 + 20) continue; /* laisse voir la lanterne */ stalk(c, e, x, t, 6, "#2a5a32", 0, sw(i * 1.3 + 2, 5), 300 + i); }
+      const leaf = shade(e, "#8ab85a");
+      for (let i = 0; i < 6; i++) { const t = (f + i * 47) % 200; const x = Math.round(VX0 + ((i * 61) % span()) + Math.sin(t / 8) * 5 - t * 0.3); c.fillStyle = leaf; c.fillRect(x, TOP - 4 + Math.round(t * 0.95 * (SH - TOP) / SH), (t >> 3) % 2 ? 2 : 1, (t >> 3) % 2 ? 1 : 2); }
+      drawFireflies(c, e, f, this);
+    },
+    back(c, e, f) { drawBirds(c, e, f, 34); },
+  },
+
+  MOUNTAINS: {
+    name: "Montagnes", horizon: 96, hero: [208, 236],
+    sky: {
+      nuit: ["#0a0d24", "#10163a", "#18204f", "#222c64", "#2e3a78"],
+      aube: ["#1e2a5a", "#3a4a8a", "#8a78b0", "#d39aa8", "#f4c39a"],
+      jour: ["#2a64c8", "#3c7ad8", "#5c96e6", "#86b6f0", "#c4def8"],
+      crep: ["#241c4c", "#4a2a6a", "#8c3c6c", "#d6605a", "#f8a860"],
+    },
+    starList: stars(19, 100), starMaxY: 70, flies: flies(23, 8, 150, 176),
+    clouds: [{ x: 40, y: 34, v: 0.1, s: 0.9 }, { x: 200, y: 46, v: 0.07, s: 1.1 }],
+    build(c, e) {
+      const peaks = (hs, base, depth, snowLine) => {
+        ridge(c, e, hs, base, depth);
+        const snow = lit(e, "#eef2ff", depth, 0.8), snowSh = shade(e, "#b8c4e8", depth);
+        for (let x = VX0; x < VX1; x++) if (hs[x] < snowLine) { const nb = hs[x + e.L] ?? hs[x]; c.fillStyle = nb >= hs[x] ? snow : snowSh; const d = snowLine - hs[x]; c.fillRect(x, hs[x], 1, Math.min(d, 3 + (((x * 7) % 5) + 5) % 5 + Math.floor(d / 3))); }
+      };
+      peaks(heights(78, 30, 0.035, 0.09, 31, 0.8), "#8a9ac4", 0.55, 66);
+      mist(c, e, 92, 10, 5);
+      peaks(heights(104, 24, 0.05, 0.12, 37, 0.7), "#6a78ac", 0.38, 90);
+      mist(c, e, 118, 10, 4);
+      const mid = plateau(heights(132, 12, 0.04, 0.1, 41, 0.3), 212 + HX, 234 + HX, 128, 10);
+      for (const [x, h] of tiled([96, 120, 134, 180]).map((x, i) => [x, [11, 10, 8, 9][i % 4]])) if (!inHero(x, 4) && mid[x] !== undefined) pine(c, e, x, mid[x] + 3, h, "#24404a", 0.18);
+      hero(c, () => { // chalet posé sur son replat (y 128)
+        c.fillStyle = shade(e, "#6a4a32"); c.fillRect(214, 117, 18, 13);
+        for (let i = 0; i < 6; i++) { c.fillStyle = shade(e, "#7a3a2a"); c.fillRect(212 + i, 117 - i, 22 - 2 * i, 1); }
+        c.fillStyle = lit(e, "#eef2ff", 0, 0.6); c.fillRect(213, 116, 20, 1);
+        c.fillStyle = shade(e, "#4a3a32"); c.fillRect(226, 107, 3, 6);
+      });
+      ridge(c, e, mid, "#4a5a7a", 0.18);
+      const near = heights(156, 5, 0.07, 0.17, 43);
+      ridge(c, e, near, "#2e3a52", 0);
+      for (const [x, h] of [[LE(20), 24], [LE(38), 18], [RI(50), 26], [RI(32), 20], [RI(16), 24]]) pine(c, e, x, near[x] + 4, h, "#24404a", 0);
+      path(c, e, 160, near[160], 180, "#c99a5b", 14);
+    },
+    anim(c, e, f) {
+      hero(c, () => { drawWindows(c, e, f, [[218, 121, 3, 4, 0.35], [225, 121, 3, 4, 0.7]]); drawSmoke(c, e, f, 227, 105); });
+      if (e.glow < 0.5) { const a = f / 40; flyer(c, 150 + Math.round(Math.cos(a) * Math.min(40, span() / 3)), 50 + Math.round(TOP * 0.4) + Math.round(Math.sin(a) * 10), (f >> 2) % 3 === 0, shade(e, "#2a2030")); }
+      drawFireflies(c, e, f, this);
+    },
+    back(c, e, f) { drawBirds(c, e, f, 58); },
+  },
+
+  PLAINS: {
+    name: "Plaine au donjon", horizon: 120, hero: [218, 266],
+    sky: {
+      nuit: ["#0c0f26", "#131a3c", "#1c2752", "#263466", "#33447a"],
+      aube: ["#34407a", "#6a5a92", "#b47a9a", "#ec9e8e", "#fbd2a0"],
+      jour: ["#3d6fd0", "#4f85de", "#66a0ea", "#88b9f2", "#b8daf8"],
+      crep: ["#22204e", "#50306c", "#9a4068", "#e46a52", "#fbb058"],
+    },
+    starList: stars(29, 110), starMaxY: 100, flies: flies(31, 16, 130, 176),
+    clouds: [{ x: 10, y: 24, v: 0.14, s: 1.3 }, { x: 130, y: 44, v: 0.1, s: 1 }, { x: 240, y: 18, v: 0.18, s: 1.5 }, { x: 330, y: 60, v: 0.09, s: 0.8 }],
+    build(c, e) {
+      ridge(c, e, heights(116, 8, 0.03, 0.08, 51), "#5a8a8a", 0.6);
+      mist(c, e, 112, 8, 4);
+      const s = "#8a8496";
+      hero(c, () => {
+        block(c, e, 224, 70, 22, 58, s, 0.15); crenel(c, e, 222, 70, 26, s, 0.15);
+        c.fillStyle = shade(e, s, 0.15); c.fillRect(222, 66, 26, 4);
+        block(c, e, 246, 98, 16, 30, s, 0.2); crenel(c, e, 246, 98, 16, s, 0.2);
+        c.fillStyle = shade(e, "#4a3a2a", 0.15); c.fillRect(234, 52, 1, 14);
+        c.fillStyle = shade(e, "#1a1424", 0.15); c.fillRect(231, 116, 8, 12);
+      });
+      const midP = plateau(heights(130, 7, 0.022, 0.05, 53), 220 + HX, 264 + HX, 125);
+      ridge(c, e, midP, "#5d9a4e", 0.25);
+      hero(c, () => { c.fillStyle = shade(e, "#1a1424", 0.15); c.fillRect(231, 124, 8, 2); path(c, e, 235, 125, 180, "#c8a870", 26); });
+      const R = { 40: 7, 56: 9, 74: 6, 150: 5, 290: 8 };
+      for (const x of tiled([40, 56, 74, 150, 290])) { if (inHero(x, 10) || midP[x] === undefined) continue; tree(c, e, x, midP[x] + 2, R[((x % SW) + SW) % SW], "#3f8a3a"); }
+      ridge(c, e, heights(152, 4, 0.05, 0.12, 59), "#46803c", 0);
+      const r = rng(61);
+      for (let i = 0, n = scaled(46); i < n; i++) { c.fillStyle = shade(e, ["#f2c14e", "#ffffff", "#ff8aa0"][i % 3]); c.fillRect(Math.floor(VX0 + r() * span()), 156 + Math.floor(r() * 22), 1, 1); }
+      band(c, shade(e, "#3a6a30"), 174, 6);
+    },
+    anim(c, e, f) {
+      hero(c, () => {
+        drawWindows(c, e, f, [[233, 80, 3, 5, 0.25], [233, 96, 3, 5, 0.6], [252, 106, 3, 4, 0.8]]);
+        drawFlag(c, 235, 52, 10, 6, shade(e, "#d94848"), shade(e, "#902a30"), f);
+      });
+      const r = rng(71), col = shade(e, "#5aa04a"), hi = lit(e, "#5aa04a");
+      for (let i = 0, n = scaled(34); i < n; i++) { const x = Math.floor(VX0 + r() * span()), y = 160 + Math.floor(r() * 18), o = ((f >> 2) + i) % 3 === 0 ? 1 : 0;
+        c.fillStyle = col; c.fillRect(x, y - 2, 1, 3); c.fillRect(x - 2, y - 1, 1, 2); c.fillStyle = hi; c.fillRect(x + o, y - 3, 1, 1); c.fillRect(x + 2, y - 1 - o, 1, 2); }
+      drawFireflies(c, e, f, this);
+    },
+    back(c, e, f) { drawBirds(c, e, f, 50); },
+  },
+};
+const IDS = Object.keys(SCENES);
+
+/* ---------- Rendu avec cache des couches fixes ---------- */
+const cache = new Map();
+function draw(cv, scene, hour, f, d) {
+  if (cv.width !== d.W) cv.width = d.W;
+  if (cv.height !== d.H) cv.height = d.H;
+  const { ox, oy } = frameFor(d.W, d.H);
+  const S = SCENES[scene];
+  HX = heroShift(S.hero[0], S.hero[1]); HERO0 = S.hero[0] + HX; HERO1 = S.hero[1] + HX;
+  const e = envFor(scene, hour);
+  let L = cache.get(e.key);
+  if (!L) {
+    if (cache.size > 120) cache.clear();
+    const fg = mk(); const fc = fg.getContext("2d"); fc.translate(ox, oy); S.build(fc, e);
+    L = { sky: skyImage(e.sky, S.horizon + oy), fg }; cache.set(e.key, L);
+  }
+  const c = cv.getContext("2d"); c.imageSmoothingEnabled = false;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(L.sky, 0, 0);
+  c.setTransform(1, 0, 0, 1, ox, oy); drawOrbs(c, e); drawStars(c, e, f, S); S.back(c, e, f); drawClouds(c, e, f, S);
+  c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(L.fg, 0, 0);
+  c.setTransform(1, 0, 0, 1, ox, oy); S.anim(c, e, f);
+  c.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+/* ---------- Ancienne version (192 × 108, fixe) ---------- */
+function drawOld(cv, id) {
+  const c = cv.getContext("2d"), OW = 192, OH = 108;
+  const bands = (cols, top, bottom) => { const h = (bottom - top) / cols.length; cols.forEach((col, i) => { c.fillStyle = col; c.fillRect(0, Math.round(top + i * h), OW, Math.ceil(h) + 1); }); };
+  const ridgeO = (color, base, amp, f1, f2, seed) => { const r = rng(seed), p1 = r() * 6, p2 = r() * 6; c.fillStyle = color; for (let x = 0; x < OW; x++) { const y = Math.round(base - amp * (0.6 * Math.sin(x * f1 + p1) + 0.4 * Math.sin(x * f2 + p2)) - r() * 1.5); c.fillRect(x, y, 1, OH - y); } };
+  const starsO = (n, seed, maxY, cols) => { const r = rng(seed); for (let i = 0; i < n; i++) { c.fillStyle = cols[i % cols.length]; c.fillRect(Math.floor(r() * OW), Math.floor(r() * maxY), 1, 1); } };
+  if (id === "CASTLE") {
+    bands(["#0f0c22", "#141030", "#1a1540", "#221b4f", "#2b2160", "#352870"], 0, 70); starsO(70, 7, 55, ["#fffbe0", "#a39dcc", "#ffffff"]);
+    c.fillStyle = "#fffbe0"; c.fillRect(150, 12, 10, 10); c.fillRect(149, 14, 12, 6); c.fillStyle = "#e9e1b8"; c.fillRect(153, 15, 2, 2); c.fillRect(156, 18, 2, 1);
+    ridgeO("#2a2358", 72, 8, 0.03, 0.07, 3); ridgeO("#1f1946", 82, 6, 0.05, 0.11, 9);
+    c.fillStyle = "#120f26"; c.fillRect(40, 48, 44, 40); c.fillRect(34, 38, 12, 50); c.fillRect(78, 38, 12, 50); c.fillRect(56, 30, 12, 20);
+    for (let x = 34; x < 90; x += 4) c.fillRect(x, 36, 2, 2); for (const x of [56, 60, 64, 66]) c.fillRect(x, 28, 2, 2); c.fillRect(61, 20, 1, 8);
+    c.fillStyle = "#ff7a45"; c.fillRect(62, 20, 4, 3); c.fillStyle = "#f2c14e"; for (const [x, y] of [[38, 46], [82, 46], [60, 36], [48, 58], [72, 58], [60, 58]]) c.fillRect(x, y, 2, 3);
+    c.fillStyle = "#0b0918"; c.fillRect(58, 74, 8, 14); ridgeO("#16122f", 94, 3, 0.08, 0.2, 21); c.fillStyle = "#100d22"; c.fillRect(0, 100, OW, 8);
+  } else if (id === "BAMBOO") {
+    bands(["#2a1f4a", "#4a2c5c", "#7a3d5e", "#b5545a", "#e07a4e", "#f2a65a"], 0, 76); c.fillStyle = "#ffd27a"; c.fillRect(88, 40, 18, 18); c.fillRect(86, 43, 22, 12);
+    ridgeO("#5c3a5a", 66, 5, 0.04, 0.09, 4);
+    const layer = (color, node, count, seed, w, top) => { const r = rng(seed); for (let i = 0; i < count; i++) { const x = Math.floor(r() * OW); c.fillStyle = color; c.fillRect(x, top + Math.floor(r() * 10), w, OH); c.fillStyle = node; for (let y = top + 6; y < OH; y += 9 + Math.floor(r() * 4)) c.fillRect(x, y, w, 1); c.fillStyle = color; c.fillRect(x + w, top + 10 + Math.floor(r() * 30), 4, 1); } };
+    layer("#3b4a3a", "#2c382c", 18, 5, 2, 18); c.fillStyle = "rgba(242,166,90,.2)"; c.fillRect(0, 70, OW, 10); layer("#2e5a36", "#1f4026", 14, 11, 3, 6); layer("#1c3a22", "#132a18", 9, 17, 4, 0);
+    c.fillStyle = "#132a18"; c.fillRect(0, 98, OW, 10);
+  } else if (id === "MOUNTAINS") {
+    bands(["#1e2a5a", "#2e3f7a", "#4a5a9a", "#8a78b0", "#d39aa8", "#f4c39a"], 0, 64); starsO(20, 13, 20, ["#ffffff", "#c9c4ee"]);
+    ridgeO("#6a6aa4", 52, 14, 0.035, 0.09, 31); ridgeO("#4a4a86", 66, 12, 0.05, 0.12, 37); ridgeO("#33336a", 80, 9, 0.06, 0.15, 41); ridgeO("#24244e", 92, 5, 0.09, 0.2, 43);
+    c.fillStyle = "#c99a5b"; let x = 96; for (let y = 107; y > 84; y--) { c.fillRect(x, y, 3, 1); x += y % 6 < 3 ? 1 : -1; }
+  } else {
+    bands(["#3d6fd0", "#4a80dc", "#5a92e6", "#6ea5ee", "#88b9f2", "#a8cff6"], 0, 72); c.fillStyle = "#ffffff";
+    for (const [x, y] of [[20, 14], [110, 22], [160, 10]]) { c.fillRect(x, y, 22, 5); c.fillRect(x + 4, y - 3, 12, 3); c.fillRect(x + 2, y + 5, 18, 2); }
+    ridgeO("#7fb36a", 70, 6, 0.03, 0.08, 51); c.fillStyle = "#5d5a73"; c.fillRect(140, 46, 10, 26); c.fillRect(138, 44, 14, 3); for (let x = 138; x < 152; x += 3) c.fillRect(x, 42, 2, 2);
+    c.fillStyle = "#d94848"; c.fillRect(145, 34, 1, 8); c.fillRect(146, 34, 5, 3); ridgeO("#5d9a4e", 82, 6, 0.05, 0.1, 53); ridgeO("#46803c", 94, 4, 0.07, 0.17, 59);
+    const r = rng(61); c.fillStyle = "#f2c14e"; for (let i = 0; i < 18; i++) c.fillRect(Math.floor(r() * OW), 92 + Math.floor(r() * 14), 1, 1); c.fillStyle = "#3a6a30"; c.fillRect(0, 102, OW, 6);
+  }
+}
+
+/* ---------- État, formats et boucle ---------- */
+let reduce = false; try { reduce = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) {}
+const FORMATS = {
+  phone: { label: "Téléphone", vw: 390, vh: 844 },
+  tablet: { label: "Tablette", vw: 820, vh: 1180 },
+  desktop: { label: "Ordinateur", vw: 1440, vh: 900 },
+  wide: { label: "Écran large", vw: 2560, vh: 1080 },
+};
+const D = Object.fromEntries(Object.entries(FORMATS).map(([k, v]) => [k, dims(v.vw, v.vh)]));
+const HD = dims(1920, 1080);
+const state = { scene: "CASTLE", hour: 14, auto: false, fast: false, fmt: "phone" };
+const parisHour = () => { const p = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "numeric", minute: "numeric", hourCycle: "h23" }).formatToParts(new Date()); const g = (t) => +p.find((x) => x.type === t).value; return g("hour") + g("minute") / 60; };
+const fmt = (h) => { const q = Math.round(h * 4) / 4; const hh = Math.floor(q) % 24, mm = Math.round((q % 1) * 60); return hh + " h " + String(mm).padStart(2, "0"); };
+
+const renderers = [];
+const vis = new Map();
+const io = "IntersectionObserver" in window ? new IntersectionObserver((es) => es.forEach((x) => vis.set(x.target, x.isIntersecting)), { rootMargin: "60px" }) : null;
+function reg(cv, scene, hour, dim, still = false) { const r = { cv, scene, hour, dim, still, last: "" }; renderers.push(r); if (io) io.observe(cv); else vis.set(cv, true); return r; }
+
+const labCv = document.getElementById("lab");
+reg(labCv, () => state.scene, () => state.hour, () => D[state.fmt]);
+reg(document.getElementById("newCv"), () => state.scene, () => state.hour, () => HD);
+document.querySelectorAll("canvas[data-dev]").forEach((cv) => reg(cv, () => state.scene, () => state.hour, () => D[cv.dataset.dev]));
+
+const phoneBoard = document.getElementById("phoneBoard");
+for (const id of IDS) {
+  const fg = document.createElement("figure"); const cv = document.createElement("canvas"); cv.className = "px fit"; cv.setAttribute("role", "img"); cv.setAttribute("aria-label", SCENES[id].name + " sur téléphone");
+  const cap = document.createElement("figcaption"); cap.textContent = SCENES[id].name; fg.append(cv, cap); phoneBoard.append(fg); reg(cv, () => id, () => state.hour, () => D.phone);
+}
+const board = document.getElementById("board");
+const MOMENTS = [[7, "Aube · 7 h"], [13, "Jour · 13 h"], [19.75, "Crépuscule · 19 h 45"], [23, "Nuit · 23 h"]];
+for (const id of IDS) {
+  const rn = document.createElement("div"); rn.className = "rowname"; rn.textContent = SCENES[id].name.toUpperCase(); board.append(rn);
+  for (const [h, label] of MOMENTS) {
+    const fg = document.createElement("figure"); const cv = document.createElement("canvas"); cv.className = "px fit"; cv.setAttribute("role", "img"); cv.setAttribute("aria-label", SCENES[id].name + ", " + label);
+    const cap = document.createElement("figcaption"); cap.textContent = label; fg.append(cv, cap); board.append(fg); reg(cv, () => id, () => h, () => HD);
+  }
+}
+const picks = document.getElementById("picks"), scenePick = document.getElementById("scenePick"), fmtPick = document.getElementById("fmtPick");
+for (const id of IDS) {
+  const b = document.createElement("button"); b.className = "pick"; b.dataset.id = id; b.setAttribute("aria-pressed", String(id === state.scene));
+  const cv = document.createElement("canvas"); cv.className = "px fit"; cv.setAttribute("aria-hidden", "true");
+  const s = document.createElement("span"); s.textContent = SCENES[id].name; b.append(cv, s); picks.append(b); reg(cv, () => id, () => state.hour, () => ({ W: 320, H: 180 }), true);
+  const ch = document.createElement("button"); ch.className = "chip"; ch.dataset.id = id; ch.textContent = SCENES[id].name; ch.setAttribute("aria-pressed", String(id === state.scene)); scenePick.append(ch);
+}
+for (const [k, v] of Object.entries(FORMATS)) { const ch = document.createElement("button"); ch.className = "chip"; ch.dataset.fmt = k; ch.textContent = v.label; ch.setAttribute("aria-pressed", String(k === state.fmt)); fmtPick.append(ch); }
+
+function sizeLab() {
+  const d = D[state.fmt]; const wrapW = labCv.closest(".lab-wrap").clientWidth - 8;
+  let h = Math.min(window.innerHeight * 0.68, 620), w = (h * d.W) / d.H;
+  if (w > wrapW) { w = wrapW; h = (w * d.H) / d.W; }
+  labCv.style.width = Math.round(w) + "px"; labCv.style.height = Math.round(h) + "px";
+  const f = FORMATS[state.fmt];
+  document.getElementById("gridOut").textContent = f.vw + " × " + f.vh + " → dessin de " + d.W + " × " + d.H + " pixels, chacun de " + d.s + " × " + d.s;
+}
+function setScene(id) { state.scene = id; document.querySelectorAll("[data-id]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.id === id))); drawOld(document.getElementById("oldCv"), id); kick(); }
+picks.addEventListener("click", (ev) => { const b = ev.target.closest(".pick"); if (b) setScene(b.dataset.id); });
+scenePick.addEventListener("click", (ev) => { const b = ev.target.closest(".chip"); if (b) setScene(b.dataset.id); });
+fmtPick.addEventListener("click", (ev) => { const b = ev.target.closest(".chip"); if (!b) return; state.fmt = b.dataset.fmt; fmtPick.querySelectorAll(".chip").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); sizeLab(); kick(); });
+window.addEventListener("resize", sizeLab);
+
+const slider = document.getElementById("hour"), out = document.getElementById("hourOut");
+const autoBtn = document.getElementById("autoBtn"), fastBtn = document.getElementById("fastBtn"), rmBtn = document.getElementById("rmBtn");
+function syncUi() { const m = momentOf(state.hour); slider.value = String((Math.round(state.hour * 4) / 4) % 24); out.textContent = fmt(state.hour) + " · " + LABEL[m.t < 0.5 ? m.ma : m.mb]; autoBtn.setAttribute("aria-pressed", String(state.auto)); fastBtn.setAttribute("aria-pressed", String(state.fast)); rmBtn.setAttribute("aria-pressed", String(reduce)); }
+slider.addEventListener("input", () => { state.hour = +slider.value; state.auto = false; state.fast = false; syncUi(); kick(); });
+autoBtn.addEventListener("click", () => { state.auto = !state.auto; state.fast = false; if (state.auto) state.hour = parisHour(); syncUi(); kick(); });
+fastBtn.addEventListener("click", () => { state.fast = !state.fast; state.auto = false; syncUi(); });
+rmBtn.addEventListener("click", () => { reduce = !reduce; syncUi(); kick(); });
+
+let frame = 0, acc = 0, lastT = 0;
+function paint(force) {
+  for (const r of renderers) {
+    if (!vis.get(r.cv) && !force) continue;
+    const sc = r.scene(), h = r.hour(), d = r.dim(); const key = sc + "|" + Math.round(h * 4) + "|" + d.W + "x" + d.H;
+    if ((r.still || reduce) && r.last === key && !force) continue;
+    draw(r.cv, sc, h, r.still || reduce ? 0 : frame, d); r.last = key;
+  }
+}
+function kick() { renderers.forEach((r) => (r.last = "")); paint(true); syncUi(); }
+function tick(t) {
+  const dt = Math.min(250, t - (lastT || t)); lastT = t; acc += dt;
+  if (state.fast) state.hour = (state.hour + (dt / 120000) * 24) % 24;
+  if (state.auto && frame % 80 === 0) state.hour = parisHour();
+  if (acc >= 125) { acc = 0; if (!document.hidden) { if (!reduce) frame++; paint(false); if (state.fast || state.auto) syncUi(); } }
+  requestAnimationFrame(tick);
+}
+drawOld(document.getElementById("oldCv"), state.scene);
+sizeLab();
+kick();
+requestAnimationFrame(tick);
+})();
+</script>

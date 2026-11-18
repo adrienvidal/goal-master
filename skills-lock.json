@@ -15,6 +15,13 @@
       "skillPath": "skills/disciplines/game-ui-ux/SKILL.md",
       "computedHash": "8bf85f22ef57c78fd2a5b14c086e6cb4a1a0f6b729111abeed29be96cf615610"
     },
+    "pixel-art-sprites": {
+      "source": "omer-metin/skills-for-antigravity",
+      "commit": "e8dcf4e8737921a10088bd5c9eb65e81f74c051f",
+      "sourceType": "github",
+      "skillPath": "skills/pixel-art-sprites/SKILL.md",
+      "computedHash": "cabda30ca48ffd72abd378d93474b767476f10b7b479dac0b0603754dbe39ba5"
+    },
     "rpg": {
       "source": "gamedev-skills/awesome-gamedev-agent-skills",
       "commit": "c6ca6c41c839b68319ffc08430b99ab768debc32",
