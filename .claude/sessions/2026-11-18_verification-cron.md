@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Quêtes, coffre v3 et bilan du jour en prod ; erreur d'envoi du code visible (dev)
+✅ Fait      Arène v2 sur l'aperçu : PA à chaque tour, rejeu des coups, direct à deux
 ⛔ Bloqué    Aucun
-🎯 Priorité  Relire le premier bilan du jour et le rappel du boss (échéance 19/11)
+🎯 Priorité  Tester l'Arène v2 sur l'aperçu puis la mettre en prod (échéance 20/11, fin du combat)
 ```
 
 ## Réalisé
@@ -173,12 +173,37 @@
 - PR #99 fusionnée dans `dev` : le code est noté sur le contexte de la requête, un hook « après » l'envoie en l'attendant ; échec → 503 `MAIL_FAILED` et « Le code n'a pas pu partir. Réessaie dans un instant. » ; vérifié en local (SMTP faux puis vrai), 218 tests verts
 - Branche distante `fix/test-mail-only-to-dev` supprimée (accord d'Adrien)
 - Point « code de connexion qui ne part pas » du bilan du jour : refermé
+- Mise en production sur accord d'Adrien (PR #101, commit de fusion) : déploiement Vercel réussi
 
 ### Reste à faire
-- Mettre #99 en production sur accord d'Adrien (avec la prochaine livraison)
 - Ce soir 18 h 01 : premier bilan du jour en production ; jeudi et vendredi : rappel du boss, puis duel
 - Prochaine fonctionnalité : à cadrer avec Adrien
 
 ### Décisions
 - Envoi du code dans le hook « après » plutôt que retirer `backgroundTasks` : les autres tâches de fond (limiteur de débit) restent confiées à `after()`
+
+---
+
+## Suite : Arène v2 (jeu à part)
+
+### Réalisé
+- Cadrage avec Adrien : l'Arène ne dépend plus des candidatures ; stats toujours selon l'évolution ; « Énergie » devient « PA » ; rejeu des coups adverses au retour ; combat en direct à deux
+- Maquette validée : https://claude.ai/artifact/Uk8K3M2Zt568hcMHccvVX1 (`docs/maquettes/arene-v2.html`)
+- Cadrage mis à jour (`docs/specs/2026-11-17-arene-design.md`, sections v2), plan `docs/superpowers/plans/2026-11-18-arene-v2.md`
+- PR #103 fusionnée dans `dev` : +3 PA par tour (gardés, 6 au plus), +1 PA de départ pour le moins évolué, Parade encaissée = +1 PA, 2 potions au départ ; rejeu un par un avec bandeau et « Passer », jusqu'au K.O. puis « Voir le résultat » ; rafraîchissement 3 s et pastille de présence (migration `arena_seen`, `Player.arenaSeenAt`) ; textes accueil, provocation, intro, notifications, résultat
+- Combat en cours en production rejoué en lecture seule avec le nouveau moteur : pas d'erreur ; Adrien 12/30, Nicolas 22/32, 6 PA chacun, main à Nicolas jusqu'au 19/11 15 h 12
+- Relecture indépendante : 6 points d'affichage, tous corrigés ; testé en local à 390 px (rejeu, direct, Parade, K.O.) ; 214 tests verts, build OK ; aperçu de `dev` reconstruit
+- Exceptions du détecteur de design pour la maquette v2 (faux positifs de contraste, police pixel) dans `.impeccable/config.json`
+
+### Reste à faire
+- Adrien teste l'Arène v2 sur l'aperçu de `dev`, puis mise en production sur accord (avant la fin du combat, vendredi 20/11 18 h)
+- Prévenir Nicolas du changement de règles
+- Base locale : Arène de test `v2-test` (finie), à effacer si gênante
+
+### Décisions
+- PA = colonne `energy` dans le code (pas de renommage en base) ; bonus de départ calculé depuis les évolutions, colonnes `challengerEnergy` / `opponentEnergy` ignorées
+- Présence par une date notée à chaque affichage de `/arene` plutôt qu'une connexion permanente ; présent = vu il y a moins de 10 s
+- Rejeu mémorisé par appareil (stockage local) ; sans trace, seulement les coups adverses depuis mon dernier coup
+- Un combat fini reste affiché sur `/arene` une heure, pour rejouer le K.O. avant le résultat
+- Écartés : nouvelle action, chat, emotes, notification spéciale « l'Arène change »
 

@@ -39,7 +39,7 @@ export type NotificationEvent =
   | { kind: "news"; step: number; title: string }
   | { kind: "challenge"; challengeId: string; from: string; target: number; until: string }
   | { kind: "challenge-end"; challengeId: string; won: boolean; partner: string; mine: number; theirs: number }
-  | { kind: "arena"; arenaId: string; from: string; rusty: boolean }
+  | { kind: "arena"; arenaId: string; from: string }
   | { kind: "arena-turn"; arenaId: string; turn: number; partner: string; summary: string; hp: number }
   | { kind: "arena-end"; arenaId: string; won: boolean | null; ko: boolean; partner: string }
   | { kind: "quest"; questId: string; from: string; text: string }
@@ -158,7 +158,7 @@ export function textOf(event: NotificationEvent): NotificationText {
       return {
         title: `🛡️ ${event.from} te provoque en Arène`,
         headline: `${event.from} te provoque en Arène.`,
-        detail: event.rusty ? "Ton héros est rouillé : il entre sans énergie. Une candidature et il reprend les armes." : "Tour par tour, tes candidatures font tes coups.",
+        detail: "Tour par tour, 3 PA à chaque tour. Premier K.O. perdu.",
         url: "/",
       };
     case "arena-turn":
@@ -167,7 +167,7 @@ export function textOf(event: NotificationEvent): NotificationText {
       if (event.won === null) return t(`Arène : match nul contre ${event.partner}.`, "Même nombre de PV vendredi 18 h, pas de couronne cette fois.", "/arene/resultat");
       return event.won
         ? t(event.ko ? `K.O. ! Tu as battu ${event.partner} dans l'Arène.` : `Victoire aux points contre ${event.partner} !`, "La couronne est à toi jusqu'à demain soir.", "/arene/resultat")
-        : t(`${event.partner} l'emporte dans l'Arène.`, "Tes candidatures comptent quand même pour l'XP et pour le boss.", "/arene/resultat");
+        : t(`${event.partner} l'emporte dans l'Arène.`, "Prends ta revanche : provoque-le de nouveau.", "/arene/resultat");
     case "quest":
       return { title: `📜 ${event.from} te lance une quête`, headline: `${event.from} te lance une quête`, detail: `« ${event.text} ». Un coffre à la clé.`, url: `/quete/${event.questId}` };
     case "quest-done":

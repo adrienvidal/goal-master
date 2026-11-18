@@ -285,9 +285,39 @@ html[data-decor] main { visibility: hidden; }
 .arena-dmg.heal { color: var(--ok); }
 .energy-cell { width: 18px; height: 18px; display: inline-block; background: var(--energy); box-shadow: inset -3px -3px 0 var(--energy-dk); }
 .energy-cell.empty { background: var(--night); box-shadow: inset 0 0 0 2px var(--edge); }
+/* Arène v2 : PA gardés du tour d'avant, PA reçus ce tour, présence du binôme, bandeau de rejeu */
+.energy-cell.kept { background: #4fb8d8; }
+.energy-cell.gain { outline: 2px solid var(--gold); outline-offset: 1px; }
+/* État du tour (étourdi…) : pastille qui s'ouvre au toucher pour expliquer */
+.arena-state { position: relative; display: inline-block; font-size: 13px; }
+.arena-state[open] { flex-basis: 100%; }
+.arena-state summary { display: inline-block; list-style: none; cursor: pointer; border: 2px solid var(--magic); background: #261c3a; padding: 1px 8px; }
+.arena-state summary::-webkit-details-marker { display: none; }
+.arena-state[open] span { display: block; margin-top: 6px; max-width: 34ch; line-height: 1.4; color: var(--ink); }
+.arena-presence { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; border: 2px solid var(--edge); background: var(--night); padding: 3px 8px; font-size: 13px; }
+.arena-presence i { width: 8px; height: 8px; background: var(--ok); animation: arena-blink 1.6s steps(2) infinite; }
+.arena-presence.off i { background: var(--muted); animation: none; }
+.arena-presence.lost { border-color: var(--danger); }
+.arena-presence.lost i { background: var(--danger); animation: none; }
+@keyframes arena-blink { 50% { opacity: .35; } }
+.arena-replay { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; border: 3px solid #5aa9ff; background: #16243e; padding: 10px 12px; }
+.arena-replay.done { border-color: var(--gold); background: #3a2f17; }
+.arena-replay .dots { display: flex; gap: 5px; }
+.arena-replay .dots i { width: 10px; height: 10px; background: var(--night); box-shadow: inset 0 0 0 2px var(--edge); }
+.arena-replay .dots i.on { background: #5aa9ff; box-shadow: none; }
+/* Fin du combat : annonce au-dessus de la scène, avant l'ouverture du résultat */
+.arena-finale { position: fixed; left: 50%; top: 38%; z-index: 40; transform: translate(-50%, -50%); font-family: var(--font-display); font-size: 28px; line-height: 1.3; color: var(--gold); text-shadow: 4px 4px 0 #0c0a1a; white-space: nowrap; pointer-events: none; animation: arena-finale .5s steps(3) both; }
+@keyframes arena-finale { from { transform: translate(-50%, -50%) scale(.4); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .arena-finale { animation: none; } }
+.arena-log-fresh { outline: 2px solid #5aa9ff; outline-offset: 1px; background: #24345a; }
+@media (prefers-reduced-motion: reduce) { .arena-presence i { animation: none; } }
 .arena-move { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; padding: 10px; border: 3px solid var(--edge); background: var(--stone); box-shadow: 3px 3px 0 #0c0a1a; min-width: 0; cursor: pointer; }
-.arena-move:hover:not(:disabled) { border-color: var(--gold); }
-.arena-move:disabled { opacity: .45; cursor: not-allowed; }
+.arena-move:hover:not(:disabled):not(.off) { border-color: var(--gold); }
+.arena-move:disabled, .arena-move.off { opacity: .45; cursor: not-allowed; }
+/* Toucher une action grisée : la raison s'affiche au-dessus des actions, puis s'efface */
+.arena-hint { margin: 0; border-left: 4px solid var(--gold); background: #3a2f17; padding: 6px 10px; font-size: 14px; line-height: 1.4; animation: arena-hint 3s steps(1) both; }
+@keyframes arena-hint { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .arena-hint { animation: none; } }
 .arena-move.special { border-color: var(--magic); background: #2a1f42; }
 .arena-go { animation: arena-blink 1.2s steps(2) infinite; }
 @keyframes arena-rise { 0% { transform: translate(-50%, 6px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -18px); opacity: 0; } }

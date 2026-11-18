@@ -2,9 +2,11 @@
 
 Maquettes validées : https://claude.ai/artifact/SM7mSDbDSK1K7V4e1DKX7j (`docs/maquettes/arene.html`).
 
+**v2 (18/11)** : l'Arène devient un jeu à part, sans lien avec les candidatures ; seule l'évolution (le chemin parcouru) fixe les stats. Maquette v2 : https://claude.ai/artifact/Uk8K3M2Zt568hcMHccvVX1 (`docs/maquettes/arene-v2.html`).
+
 Pourquoi : Adrien veut **piloter son héros** contre celui de Nicolas, en RPG, chacun quand il peut. Le Défi (la course) reste à côté, inchangé. Comme le Défi, c'est une exception assumée au « pas de compétition » du cadrage : rien n'est en jeu sur l'XP, et seules les candidatures font avancer le combat.
 
-**Anti-objectifs** : un jeu qui récompense la tactique plus que les candidatures ; un combat joué d'avance par celui qui a de l'avance ; un héros rouillé exclu au moment où il a besoin d'un coup de pouce.
+**Anti-objectifs** : ~~un jeu qui récompense la tactique plus que les candidatures~~ (levé en v2) ; un combat joué d'avance par celui qui a de l'avance ; un héros rouillé exclu au moment où il a besoin d'un coup de pouce.
 
 ## Règles
 
@@ -19,13 +21,13 @@ Pourquoi : Adrien veut **piloter son héros** contre celui de Nicolas, en RPG, c
 | 3-4 | 34 / 36 | 5-7 | 14 dégâts | +10 PV, adversaire −1 action |
 | 5-6 | 38 / 40 | 6-8 | 16 dégâts, perce la Parade | +12 PV, adversaire −2 actions |
 
-- **Énergie ⚡** : départ 2 ; +1 pour le moins évolué si les évolutions diffèrent (outsider) ; 0 pour un héros rouillé ou déchu à l'acceptation. Chaque candidature active envoyée après l'acceptation donne 2 ⚡ (1 ⚡ au départ, porté à 2 le 17/11 : une candidature pour une seule action frustrait), réserve plafonnée à 6. Une candidature retirée retire ses ⚡ (l'énergie ne descend jamais sous 0, les actions déjà jouées restent).
-- **Tour** : le lanceur ouvre. 3 actions au plus (moins en cas d'étourdissement, jamais moins de 1), puis « Finir mon tour », ou fin automatique à la dernière action. 24 h sans action : le tour passe tout seul en Parade (calculé, rien de stocké). Un tour commencé mais pas fini au bout de 24 h se termine tel quel. **Tour injouable** : sans énergie, la main passe aussitôt à l'autre dès qu'il a de quoi jouer (énergie ou potion), sans Parade ; une potion seule ne retient la main que si l'autre n'a pas d'énergie. Si aucun des deux ne peut jouer, rien ne bouge. Calculé, rien de stocké ; un coup enregistré garde sa main même si la candidature qui l'avait donnée est retirée ensuite. « À toi de jouer » part dès la candidature qui redonne la main.
-- **Actions** : Attaque (1 ⚡, dégâts tirés dans la fourchette) ; Parade (1 ⚡, le prochain coup reçu est divisé par deux, arrondi au-dessous ; ne se cumule pas) ; Botte (3 ⚡) ; Potion (+6 PV, sans énergie). PV jamais au-dessus du maximum.
-- **Potions** : chaque relance réussie (le destinataire candidate dans les 24 h) pendant le combat en donne une à chacun, 2 en réserve au plus.
-- **Victoire** : déduite des actions seules (PV, temps morts, parades), donc figée dès le K.O. ou l'échéance : un retrait de candidature ne change que l'énergie, jamais un coup déjà porté. Couronne du Défi sur le gagnant jusqu'à la fin du lendemain ; si les deux ont une couronne le même jour, chacun garde la sienne. **Aucune XP en jeu.**
+- **PA (points d'action)**, depuis la v2 (18/11) : chaque tour donne +3 PA, plafond 6 ; les PA non dépensés passent au tour suivant. Au départ, 0 PA en réserve, +1 pour le moins évolué (outsider), calculé depuis les évolutions figées (les colonnes `challengerEnergy` / `opponentEnergy` ne servent plus). Un héros rouillé part comme les autres. Les candidatures ne donnent plus rien. Une Parade qui encaisse un coup (non percé) rend 1 PA, plafond 6.
+- **Tour** : le lanceur ouvre. 3 actions au plus (moins en cas d'étourdissement, jamais moins de 1), puis « Finir mon tour », ou fin automatique à la dernière action, ou quand il ne reste ni PA ni potion. 24 h sans action : le tour passe tout seul en Parade (calculé, rien de stocké). Un tour commencé mais pas fini au bout de 24 h se termine tel quel. Le « tour injouable » de la v1 disparaît : on a toujours des PA au début de son tour. Un coup enregistré garde sa main au rejeu.
+- **Actions** : Attaque (1 PA, dégâts tirés dans la fourchette) ; Parade (1 PA, le prochain coup reçu est divisé par deux, arrondi au-dessous ; ne se cumule pas) ; Botte (3 PA) ; Potion (+6 PV, sans PA). PV jamais au-dessus du maximum.
+- **Potions** : 2 chacun au départ, sans en regagner (v2 : les relances n'en donnent plus).
+- **Victoire** : déduite des actions seules (PV, temps morts, parades), donc figée dès le K.O. ou l'échéance : rien d'extérieur au combat ne le change. Couronne du Défi sur le gagnant jusqu'à la fin du lendemain ; si les deux ont une couronne le même jour, chacun garde la sienne. **Aucune XP en jeu.**
 
-Tout se déduit de l'Arène, de ses actions, des candidatures et des relances ; seuls la provocation, la réponse et les actions (avec leur valeur tirée) sont stockés.
+Tout se déduit de l'Arène et de ses actions (v2 : plus rien ne vient des candidatures ni des relances) ; seuls la provocation, la réponse et les actions (avec leur valeur tirée) sont stockés.
 
 ## Succès
 
@@ -60,3 +62,10 @@ Une seule notification par tour, jamais une par action.
 ## Sprites
 
 Poses dérivées par le code de la pose Repos (section 10 de la maquette) : en garde, attaque (l'arme pivote autour du poing), parade (bouclier du Chevalier passé devant ; bambou en travers pour le Panda), potion (fiole), touché, étourdi, K.O., victoire (arme brandie par le bras, couronne, étincelles, saut). Effets et images des Bottes dessinés une fois. Le correctif de la pose Action actuelle (épée détachée de la main, pixels de garde orphelins) part dans une PR à part, avant l'Arène, car le défaut est en production.
+
+## v2 : rejeu et direct (18/11)
+
+- **Rejeu au retour** : l'appareil retient la dernière action vue de chaque Arène (stockage local). À l'ouverture de `/arene`, les actions de l'adversaire jouées depuis se rejouent une par une (1,5 s chacune) : animation, PV qui baissent, ligne qui s'ajoute au journal ; bandeau « Pendant ton absence, X a joué · k/n » avec « Passer ». Les actions sont verrouillées pendant le rejeu. Sans action vue retenue, seules les actions de l'adversaire depuis ton dernier coup se rejouent.
+- **Direct** : `/arene` se rafraîchit toutes les 3 s, quel que soit le tour ; chaque nouvelle action de l'adversaire passe par le même rejeu (sans bandeau). Pastille de présence « X est dans l'Arène » : chaque affichage de `/arene` note l'heure sur le joueur (`Player.arenaSeenAt`, une migration) ; présent = vu il y a moins de 10 s. Hors connexion : « Connexion perdue · on réessaie ».
+- **Textes** : « Énergie ⚡ » devient « PA » partout ; plus de bouton « + Candidature » dans l'Arène ; écran « L'Arène » de l'intro réécrit (pas de nouvel écran) ; notification de provocation sans variante « rouillé ».
+- **Combat en cours** : passe aux nouvelles règles au déploiement (le rejeu recalcule tout).

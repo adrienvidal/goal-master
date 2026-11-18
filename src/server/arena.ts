@@ -15,7 +15,7 @@ export function turnSummary(from: string, entries: LogEntry[]): string {
   if (healed > 0) parts.push(`s'est soigné de ${healed}`);
   if (entries.some((e) => e.kind === "PARRY" || e.kind === "TIMEOUT")) parts.push("s'est mis en garde");
   if (entries.some((e) => e.kind === "WHIRL")) parts.push("t'a étourdi");
-  if (parts.length === 0) return entries.some((e) => e.kind === "STUCK") ? `${from} est à court d'énergie : tu reprends la main.` : `${from} a passé son tour.`;
+  if (parts.length === 0) return `${from} a passé son tour.`;
   const last = parts.pop()!;
   return `${from} ${parts.length ? `${parts.join(", ")} et ${last}` : last}.`;
 }
@@ -33,7 +33,7 @@ export function arenaEvents(input: ArenaInput, game: GameData, now: Date): Item[
   }
   if (!s.turn || !s.previous) return [];
   const { playerId: foe, startedAt, endedAt } = s.previous;
-  const played = s.log.filter((e) => e.playerId === foe && e.at >= startedAt && e.at <= endedAt && e.kind !== "ENERGY" && e.kind !== "POTION_GAIN");
+  const played = s.log.filter((e) => e.playerId === foe && e.at >= startedAt && e.at <= endedAt && e.kind !== "ENERGY" && e.kind !== "REFUND");
   return [{ playerId: s.turn.playerId, event: { kind: "arena-turn", arenaId: input.arena.id, turn: s.turn.number, partner: pseudo(foe), summary: turnSummary(pseudo(foe), played), hp: s.hp[s.turn.playerId] } }];
 }
 

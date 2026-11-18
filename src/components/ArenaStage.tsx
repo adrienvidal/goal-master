@@ -1,4 +1,6 @@
 "use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Companion } from "./Companion";
 import type { CompanionId } from "@/game/quests";
@@ -32,14 +34,17 @@ export type StageFighter = {
   /** Nom donné au compagnon (ou l'espèce). */
   companionName: string | null;
 };
-/** Le dernier coup joué, `key` change à chaque nouveau coup. */
-export type StageHit = { key: string; by: string; kind: ArenaKind; amount: number; at: string };
+/**
+ * Un coup visible du journal, dans l'ordre du combat. `hpBefore` / `hpAfter` : PV des deux avant et après,
+ * `logStart` / `logEnd` : premières et dernières lignes du journal qui l'accompagne (Parade qui rend 1 PA comprise), pour le rejeu pas à pas.
+ */
+export type StageHit = { key: string; by: string; kind: ArenaKind; amount: number; at: string; label: string; hpBefore: Record<string, number>; hpAfter: Record<string, number>; logStart: number; logEnd: number };
 
 type Fx = { by: string; kind: ArenaKind; amount: number | null; replay: boolean; n: number };
 
 const FX_MS = 1000;
-/** Un coup plus ancien que ça, trouvé en arrivant sur la page, ne se rejoue pas. */
-const FRESH_MS = 30_000;
+/** Durée d'un coup de l'adversaire rejoué (spec arene v2). */
+const STEP_MS = 1500;
 /** Délai dans lequel la réponse du serveur confirme le coup déjà animé au clic, sans le rejouer. */
 const CONFIRM_MS = 15_000;
 const VISUAL: ArenaKind[] = ["ATTACK", "THRUST", "WHIRL", "POTION", "PARRY"];
@@ -69,17 +74,55 @@ function PixelFx({ name, at }: FxSpot): React.ReactElement {
 
 const PlayCtx = createContext<(kind: ArenaKind) => void>(() => {});
 const FxCtx = createContext<Fx | null>(null);
+/** Pendant un rejeu : PV affichés, dernière ligne du journal visible, actions verrouillées. */
+type Replay = { hp: Record<string, number> | null; logEnd: number | null; locked: boolean };
+const ReplayCtx = createContext<Replay>({ hp: null, logEnd: null, locked: false });
 
 /** Lance l'animation de mon coup, avant la réponse du serveur. */
 export function usePlayFx(): (kind: ArenaKind) => void {
   return useContext(PlayCtx);
 }
+export function useReplay(): Replay {
+  return useContext(ReplayCtx);
+}
 
-export function ArenaLive({ meId, last, children }: { meId: string; last: StageHit | null; children: React.ReactNode }): React.ReactElement {
+const seenKey = (arenaId: string) => `gm-arena-seen:${arenaId}`;
+function readSeen(arenaId: string): string | null {
+  try {
+    return localStorage.getItem(seenKey(arenaId));
+  } catch {
+    return null;
+  }
+}
+function writeSeen(arenaId: string, at: string): void {
+  try {
+    localStorage.setItem(seenKey(arenaId), at);
+  } catch {
+    /* stockage indisponible (navigation privée) : on rejouera un peu plus la prochaine fois */
+  }
+}
+
+/**
+ * Rejeu et direct (spec arene v2) : les coups de l'adversaire pas encore vus sur cet appareil se rejouent un par un,
+ * à l'arrivée (avec le bandeau « Pendant ton absence ») comme à chaque rafraîchissement de 3 s. Mon coup s'anime au clic.
+ */
+/** Pause sur « K.O. ! » ou « Temps écoulé ! » avant d'ouvrir le résultat. */
+const FINALE_MS = 2200;
+
+/**
+ * `ended` : le combat est fini, par K.O. ou à l'échéance. Le rejeu va jusqu'au bout, la scène annonce la fin,
+ * puis le résultat s'ouvre tout seul (le bouton reste en secours).
+ */
+export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { arenaId: string; meId: string; foeName: string; hits: StageHit[]; ended: "ko" | "time" | null; children: React.ReactNode }): React.ReactElement {
+  const router = useRouter();
   const [fx, setFx] = useState<Fx | null>(null);
-  const seen = useRef<string | null>(null);
+  const [queue, setQueue] = useState<StageHit[]>([]);
+  const [step, setStep] = useState<StageHit | null>(null);
+  const [banner, setBanner] = useState<{ total: number; done: number; lost: number } | null>(null);
+  const known = useRef<string | null>(null);
   const optimistic = useRef<{ kind: ArenaKind; at: number } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const lastAt = hits.at(-1)?.at ?? null;
 
   const show = useCallback((f: Omit<Fx, "n">) => {
     setFx({ ...f, n: Date.now() });
@@ -87,24 +130,66 @@ export function ArenaLive({ meId, last, children }: { meId: string; last: StageH
     timer.current = setTimeout(() => setFx(null), FX_MS);
   }, []);
 
+  // Coups arrivés depuis le dernier passage : à l'ouverture, ceux que cet appareil n'a pas vus ; ensuite, les nouveaux.
   useEffect(() => {
-    if (!last || last.key === seen.current) return;
-    const first = seen.current === null;
-    seen.current = last.key;
-    if (first && Date.now() - new Date(last.at).getTime() > FRESH_MS) return;
+    const first = known.current === null;
+    const since = first ? readSeen(arenaId) : known.current;
+    known.current = lastAt ?? "";
+    // Sans trace sur cet appareil : seulement les coups de l'adversaire depuis mon dernier coup.
+    const fresh = since !== null ? hits.filter((h) => h.at > since) : hits.slice(hits.findLastIndex((h) => h.by === meId) + 1);
+    const mine = fresh.filter((h) => h.by === meId);
+    const theirs = fresh.filter((h) => h.by !== meId);
+    // Confirmation de mon coup : l'animation lancée au clic continue, seul le chiffre tiré s'ajoute.
     const o = optimistic.current;
-    optimistic.current = null;
-    const already = o !== null && last.by === meId && o.kind === last.kind && Date.now() - o.at < CONFIRM_MS;
-    if (!already) {
-      show({ by: last.by, kind: last.kind, amount: last.amount, replay: true });
+    const confirmed = mine.at(-1);
+    if (o && confirmed && confirmed.kind === o.kind && Date.now() - o.at < CONFIRM_MS) {
+      optimistic.current = null;
+      if (Date.now() - o.at < FX_MS) setFx((cur) => (cur ? { ...cur, amount: confirmed.amount } : cur));
+    }
+    if (theirs.length === 0) {
+      if (lastAt && queue.length === 0 && !step) writeSeen(arenaId, lastAt);
       return;
     }
-    // Confirmation de mon coup : l'animation lancée au clic continue, seul le chiffre tiré s'ajoute.
-    if (Date.now() - o.at < FX_MS) setFx((cur) => (cur ? { ...cur, amount: last.amount } : cur));
-    else show({ by: last.by, kind: last.kind, amount: last.amount, replay: false });
-  }, [last, meId, show]);
+    setBanner(first ? { total: theirs.length, done: 0, lost: theirs[0].hpBefore[meId] - theirs[theirs.length - 1].hpAfter[meId] } : null);
+    setQueue((q) => [...q, ...theirs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seuls les nouveaux coups déclenchent le rejeu
+  }, [lastAt]);
+
+  // Un coup à la fois : animation, PV et journal de ce coup, puis le suivant après STEP_MS.
+  useEffect(() => {
+    if (step || queue.length === 0) return;
+    const [next, ...rest] = queue;
+    setStep(next);
+    setQueue(rest);
+    show({ by: next.by, kind: next.kind, amount: next.amount, replay: true });
+    setBanner((b) => (b ? { ...b, done: Math.min(b.total, b.done + 1) } : b));
+    writeSeen(arenaId, next.at);
+  }, [queue, step, show, arenaId]);
+
+  useEffect(() => {
+    if (!step) return;
+    const t = setTimeout(() => setStep(null), STEP_MS);
+    return () => clearTimeout(t);
+  }, [step]);
 
   useEffect(() => () => clearTimeout(timer.current), []);
+
+  // Fin du combat, une fois le dernier coup joué ou rejoué : annonce, puis le résultat s'ouvre tout seul.
+  const finished = ended !== null && step === null && queue.length === 0;
+  useEffect(() => {
+    if (!finished) return;
+    if (hits.at(-1)) writeSeen(arenaId, hits.at(-1)!.at);
+    const t = setTimeout(() => router.replace("/arene/resultat"), FINALE_MS);
+    return () => clearTimeout(t);
+  }, [finished, router, arenaId, hits]);
+
+  const skip = useCallback(() => {
+    setQueue([]);
+    setStep(null);
+    setFx(null);
+    setBanner((b) => (b ? { ...b, done: b.total } : b));
+    if (lastAt) writeSeen(arenaId, lastAt);
+  }, [arenaId, lastAt]);
 
   const play = useCallback(
     (kind: ArenaKind) => {
@@ -115,9 +200,36 @@ export function ArenaLive({ meId, last, children }: { meId: string; last: StageH
     [meId, show],
   );
 
+  const busy = step !== null || queue.length > 0;
+  const replay: Replay = step
+    ? { hp: step.hpAfter, logEnd: step.logEnd, locked: true }
+    : queue.length
+      ? { hp: queue[0].hpBefore, logEnd: queue[0].logStart - 1, locked: true }
+      : { hp: null, logEnd: null, locked: false };
+
   return (
     <PlayCtx.Provider value={play}>
-      <FxCtx.Provider value={fx}>{children}</FxCtx.Provider>
+      <FxCtx.Provider value={fx}>
+        <ReplayCtx.Provider value={replay}>
+          {banner ? (
+            <div className={`arena-replay ${busy ? "" : "done"}`} role="status">
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <small className="text-[13px] text-muted">{busy ? `Pendant ton absence, ${foeName} a joué · ${banner.done}/${banner.total}` : `${foeName} a joué ${banner.total} action${banner.total > 1 ? "s" : ""}`}</small>
+                <b className="font-display text-[10px] leading-relaxed">{busy ? (step?.label ?? "…") : banner.lost > 0 ? `Tu as perdu ${banner.lost} PV` : "Aucun dégât pour toi"}</b>
+              </div>
+              <div className="dots" aria-hidden>{Array.from({ length: banner.total }, (_, i) => <i key={i} className={!busy || i < banner.done ? "on" : ""} />)}</div>
+              {busy ? <button type="button" className="btn ghost !w-auto !px-3 !py-2 !text-[9px]" onClick={skip}>Passer</button> : <button type="button" className="text-sm text-muted underline" onClick={() => setBanner(null)}>Fermer</button>}
+            </div>
+          ) : null}
+          {ended && !busy ? (
+            <>
+              <div className="arena-finale" role="status" aria-live="assertive">{ended === "ko" ? "K.O. !" : "Temps écoulé !"}</div>
+              <Link href="/arene/resultat" className="text-center text-sm text-muted underline">Voir le résultat</Link>
+            </>
+          ) : null}
+          {children}
+        </ReplayCtx.Provider>
+      </FxCtx.Provider>
     </PlayCtx.Provider>
   );
 }
@@ -131,7 +243,7 @@ function botteFx(mine: boolean, fx: Fx): FxSpot[] {
 }
 
 function staging(f: StageFighter, fx: Fx | null): { pose: Pose; recoil: boolean; moving: boolean; float: { text: string; heal: boolean } | null; effects: FxSpot[] } {
-  const rest: Pose = f.parry ? "parry" : "rest";
+  const rest: Pose = f.hp === 0 ? "ko" : f.parry ? "parry" : "rest";
   if (!fx) return { pose: rest, recoil: false, moving: false, float: null, effects: [] };
   const mine = fx.by === f.id;
   const strike = fx.kind === "ATTACK" || fx.kind === "THRUST";
@@ -150,8 +262,10 @@ function staging(f: StageFighter, fx: Fx | null): { pose: Pose; recoil: boolean;
   return { pose, recoil, moving: recoil || pose !== rest, float, effects: botteFx(mine, fx) };
 }
 
-export function StageFighterView({ f, right, isMe }: { f: StageFighter; right: boolean; isMe: boolean }): React.ReactElement {
+export function StageFighterView({ f: given, right, isMe }: { f: StageFighter; right: boolean; isMe: boolean }): React.ReactElement {
   const fx = useContext(FxCtx);
+  const { hp } = useContext(ReplayCtx);
+  const f = hp ? { ...given, hp: hp[given.id] ?? given.hp } : given;
   const st = staging(f, fx);
   const low = f.hp <= f.maxHp / 3;
   const body = ["arena-body", right ? "flip" : "", f.stunned ? "stun" : "", st.recoil ? (right ? "recoil-right" : "recoil-left") : ""].filter(Boolean).join(" ");
@@ -175,4 +289,41 @@ export function StageFighterView({ f, right, isMe }: { f: StageFighter; right: b
       </div>
     </div>
   );
+}
+
+const JOURNAL_LINES = 14;
+export type JournalLine = { index: number; time: string; text: string; tone: "me" | "foe" | "sys" };
+
+/** Journal du combat, du plus récent au plus ancien ; pendant un rejeu, les lignes pas encore rejouées attendent leur tour. */
+export function ArenaJournal({ lines, empty }: { lines: JournalLine[]; empty: string }): React.ReactElement {
+  const { logEnd } = useContext(ReplayCtx);
+  const shown = (logEnd === null ? lines : lines.filter((l) => l.index <= logEnd)).slice(0, JOURNAL_LINES);
+  return (
+    <ol className="flex flex-col gap-1.5 text-sm">
+      {shown.length === 0 ? <li className="text-muted">{empty}</li> : null}
+      {shown.map((l) => (
+        <li key={l.index} className="grid grid-cols-[52px_1fr] gap-2">
+          <time className="num text-muted">{l.time}</time>
+          <span className={`${l.tone === "sys" ? "italic text-muted" : l.tone === "me" ? "text-[#5aa9ff]" : "text-[#e5533d]"} ${logEnd !== null && l.index > logEnd - 2 ? "arena-log-fresh" : ""}`}>{l.text}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** Pastille de présence : le binôme a l'Arène ouverte (vu il y a moins de 10 s), ou la connexion est perdue. */
+export function ArenaPresence({ name, here }: { name: string; here: boolean }): React.ReactElement {
+  const [online, setOnline] = useState(true);
+  useEffect(() => {
+    const sync = () => setOnline(navigator.onLine);
+    sync();
+    window.addEventListener("online", sync);
+    window.addEventListener("offline", sync);
+    return () => {
+      window.removeEventListener("online", sync);
+      window.removeEventListener("offline", sync);
+    };
+  }, []);
+  if (!online) return <span className="arena-presence lost" role="status"><i />Connexion perdue · on réessaie</span>;
+  return <span className={`arena-presence ${here ? "" : "off"}`}><i />{here ? `${name} est dans l'Arène` : `${name} n'est pas dans l'Arène`}</span>;
 }

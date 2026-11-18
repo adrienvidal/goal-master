@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { ArenaContinue } from "@/components/DuelWatcher";
 import { Sprite } from "@/components/Sprite";
 import { arenaState, finishedArenas } from "@/game/arena";
-import { activeApplications } from "@/game/xp";
 import { buildPlayerView } from "@/lib/playerView";
 import { arenaInputs, loadGame, syncAchievements } from "@/server/game";
 import { requirePlayer } from "@/server/session";
@@ -26,14 +25,13 @@ export default async function ArenaResultPage(): Promise<React.ReactElement> {
   const partner = views.find((v) => v.id !== player.id);
   if (!me || !partner) redirect("/");
   const outcome = over.winnerId === me.id ? "won" : over.winnerId ? "lost" : "draw";
-  const inFight = (id: string) => activeApplications(game.apps).filter((a) => a.userId === id && a.createdAt > input.arena.acceptedAt! && a.createdAt <= over.at).length;
   const dealt = (id: string) => s.log.filter((e) => e.playerId === id && (e.kind === "ATTACK" || e.kind === "THRUST")).reduce((n, e) => n + e.amount, 0);
   const wins = finished.filter((f) => f.over.winnerId === me.id).length;
   const badge = outcome === "won" ? (over.byBotte ? "Coup de maître · K.O. dans le tour de ta Botte" : wins === 1 ? "Gladiateur · gagner une Arène" : null) : null;
   const title =
     outcome === "won" ? (over.ko ? `K.O. ! Tu as battu ${partner.pseudo}.` : "Victoire aux points") : outcome === "lost" ? `${partner.pseudo} l'emporte.` : "Match nul";
   const winnerPose = (id: string) => (over.winnerId === id ? "victory" : over.ko ? "ko" : "rest");
-  const myApps = inFight(me.id);
+  const bottes = (id: string) => s.log.filter((e) => e.playerId === id && (e.kind === "THRUST" || e.kind === "WHIRL")).length;
 
   return (
     <main className="mx-auto grid min-h-dvh max-w-xl content-center px-4 py-8">
@@ -51,14 +49,12 @@ export default async function ArenaResultPage(): Promise<React.ReactElement> {
           <span className="text-xs uppercase tracking-wider text-muted">Toi</span>
           <span className="text-xs uppercase tracking-wider text-muted">{partner.pseudo}</span>
           <span>PV restants</span><span className="num text-right">{s.hp[me.id]}</span><span className="num text-right">{s.hp[partner.id]}</span>
-          <span>Candidatures</span><span className="num text-right">{myApps}</span><span className="num text-right">{inFight(partner.id)}</span>
+          <span>Bottes lancées</span><span className="num text-right">{bottes(me.id)}</span><span className="num text-right">{bottes(partner.id)}</span>
           <span>Dégâts infligés</span><span className="num text-right">{dealt(me.id)}</span><span className="num text-right">{dealt(partner.id)}</span>
         </div>
         {outcome === "won" ? <p className="text-sm text-muted">Ta couronne reste sur ton avatar jusqu&apos;à demain minuit.</p> : null}
         {outcome === "lost" ? (
-          <p className="text-sm text-muted">
-            {myApps === 0 ? "Aucune candidature pendant ce combat : au prochain, chacune te donne 2 ⚡." : `${myApps === 1 ? "Ta candidature" : `Tes ${myApps} candidatures`} pendant le combat ${myApps === 1 ? "compte" : "comptent"} quand même pour ton XP et pour le boss.`}
-          </p>
+          <p className="text-sm text-muted">Prends ta revanche : provoque {partner.pseudo} de nouveau depuis sa carte.</p>
         ) : null}
         {outcome === "draw" ? <p className="text-sm text-muted">Même nombre de PV : pas de couronne cette fois.</p> : null}
         {badge ? <p className="border-[3px] border-gold px-3 py-2 text-sm">🏆 Succès débloqué : {badge}</p> : null}
