@@ -358,3 +358,29 @@ html[data-decor] main { visibility: hidden; }
 .dots-over { position: absolute; inset: 0; }
 @keyframes dot-blink { 0%, 100% { opacity: .25; } 40% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .btn { transition: none; } .btn:active { transform: none; } .dots i { animation: none; opacity: .8; } }
+
+/* ---------- Coffre v3 (maquette quetes, « Coffre v3 ») ---------- */
+.chest-tap { position: relative; display: grid; place-items: center; background: none; border: 0; padding: 0; cursor: pointer; }
+.chest-tap:disabled { cursor: default; }
+.chest-tap > span:not(.chest-ray):not(.chest-sparks) { position: relative; z-index: 1; }
+.chest-hit1 { animation: chest-hit1 .35s steps(4) 1; }
+.chest-hit2 { animation: chest-hit2 .4s steps(5) 1; }
+@keyframes chest-hit1 { 25% { transform: translateX(-3px) rotate(-2deg); } 75% { transform: translateX(3px) rotate(2deg); } }
+@keyframes chest-hit2 { 20% { transform: translate(-5px, -2px) rotate(-4deg); } 60% { transform: translate(5px, -3px) rotate(4deg); } }
+.chest-ray { position: absolute; bottom: 30%; left: 50%; width: 70px; height: 0; transform: translateX(-50%); background: linear-gradient(to top, rgb(255 243 176 / .85), transparent); transition: height .5s ease-out; }
+.chest-tap.opened .chest-ray { height: 220px; }
+.chest-sparks { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.chest-sparks i { position: absolute; left: 50%; top: 55%; width: 4px; height: 4px; background: #fff3b0; animation: chest-spark .6s ease-out forwards; }
+@keyframes chest-spark { to { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+.chest-count { width: 12px; height: 12px; border: 2px solid var(--gold); }
+.chest-count.on { background: var(--gold); }
+.chest-pick { opacity: 0; transform: translateY(16px) scale(.8); transition: opacity .3s, transform .3s; }
+.chest-pick.out { opacity: 1; transform: none; }
+.chest-pick.sil svg { filter: brightness(0); }
+.chest-jump { display: inline-flex; animation: chest-jump .6s steps(4) 1; }
+@keyframes chest-jump { 0% { transform: translate(-60px, -40px); } 60% { transform: translate(0, -14px); } 100% { transform: none; } }
+.chest-xp { transition: width 1.2s steps(10); }
+@media (prefers-reduced-motion: reduce) {
+  .chest-hit1, .chest-hit2, .chest-jump, .chest-sparks i { animation: none; }
+  .chest-ray, .chest-pick, .chest-xp { transition: none; }
+}
