@@ -2,7 +2,7 @@ import Link from "next/link";
 import { companionLabel, isCompanion, type CompanionId } from "@/game/quests";
 import { redirect } from "next/navigation";
 import { ArenaMoves, type Move } from "@/components/Arena";
-import { ArenaJournal, ArenaLive, ArenaPresence, StageFighterView, type JournalLine, type StageFighter, type StageHit } from "@/components/ArenaStage";
+import { ArenaJournal, ArenaLive, ArenaPresence, ArenaStageBox, StageFighterView, type JournalLine, type StageFighter, type StageHit } from "@/components/ArenaStage";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { ACTIONS_PER_TURN, arenaPhase, arenaState, canPlay, ENERGY_PER_TURN, isStunned, finishedArenas, MAX_ENERGY, rulesFor, statsFor, type ArenaState, type Rules, type LogEntry } from "@/game/arena";
 import { timeLeft } from "@/game/challenge";
@@ -79,7 +79,7 @@ function stageHits(s: ArenaState): StageHit[] {
     const v = e as LogEntry & { kind: Visible };
     const before = i > 0 ? s.log[i - 1].hp : s.maxHp;
     const logEnd = s.log[i + 1]?.kind === "REFUND" ? i + 1 : i;
-    hits.push({ key: `${e.at.toISOString()}-${e.playerId}-${e.kind}`, by: e.playerId, kind: v.kind, amount: e.amount, at: e.at.toISOString(), label: hitLabel(v), hpBefore: before, hpAfter: s.log[logEnd].hp, logStart: i, logEnd });
+    hits.push({ key: `${e.at.toISOString()}-${e.playerId}-${e.kind}`, by: e.playerId, kind: v.kind, amount: e.amount, at: e.at.toISOString(), label: hitLabel(v), hpBefore: before, hpAfter: s.log[logEnd].hp, logStart: i, logEnd, parried: s.log[i + 1]?.kind === "REFUND" });
   });
   return hits;
 }
@@ -177,10 +177,10 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
           <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:items-start">
             <div className="flex min-w-0 flex-col gap-3">
               <ArenaPresence name={foe.pseudo} here={foeHere} />
-              <div className="arena-stage">
+              <ArenaStageBox>
                 <StageFighterView f={stageOf(me)} right={false} isMe />
                 <StageFighterView f={stageOf(foe)} right isMe={false} />
-              </div>
+              </ArenaStageBox>
               <div className={`flex flex-wrap items-center justify-between gap-2 border-[3px] px-3 py-2 ${myTurn ? "border-gold bg-[#3a2f17]" : "border-edge bg-night"}`}>
                 <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
                   <span className="font-display text-[10px] leading-relaxed">{s.over ? "Combat terminé" : myTurn ? "À toi de jouer" : `${foe.pseudo} joue…${s.turn?.max != null ? ` ${s.turn.used}/${s.turn.max}` : ""}`}</span>
