@@ -1,6 +1,7 @@
 // Cron quotidien, appelé par n8n (workflow « Goal Master · cron quotidien » sur auto.webnrolls.com) à 18 h 01, heure de Paris :
 // juste après le duel du vendredi 18 h. Chaque envoi est dédoublonné, un second appel ne renvoie rien.
-// Jeudi : rappel si le boss tient encore. Vendredi : résultat du duel. Chaque jour : Arène, rouille et nouveauté.
+// Jeudi : rappel si le boss tient encore. Vendredi : résultat du duel. Chaque jour : Arène, rouille, nouveauté, puis le
+// bilan du jour par e-mail (src/server/digest.ts).
 import { arenaPhase, arenaState } from "@/game/arena";
 import { parisDay, type Day } from "@/game/calendar";
 import { currentDuel, pastDuels } from "@/game/duel";
@@ -8,6 +9,7 @@ import { rustDue, type NotificationEvent } from "@/game/notifications";
 import { INTRO_STEP_COUNT, LATEST_NEWS } from "@/lib/intro";
 import { arenaEvents } from "@/server/arena";
 import { arenaInputs, loadDuelInput, loadGame } from "@/server/game";
+import { sendDigests } from "@/server/digest";
 import { notifyAll } from "@/server/notify";
 
 const HERO = { KNIGHT: "chevalier", PANDA: "panda" } as const;
@@ -52,5 +54,7 @@ export async function GET(request: Request): Promise<Response> {
   for (const p of game.players) items.push({ playerId: p.id, event: { kind: "news", step: INTRO_STEP_COUNT, title: LATEST_NEWS } });
 
   await notifyAll(items, now);
-  return Response.json({ considered: items.length });
+  // Bilan du jour en dernier : il reprend tout ce qui vient d'être noté, résultat du duel compris.
+  const digests = await sendDigests(game, now);
+  return Response.json({ considered: items.length, digests });
 }
