@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Arène v3 en prod, combat en cours gardé en v2
+✅ Fait      Arène v3 en prod, Arènes de prod purgées
 ⛔ Bloqué    Aucun
-🎯 Priorité  Prévenir Nicolas, vérifier la fin du combat (échéance 20/11 18 h)
+🎯 Priorité  Prévenir Nicolas, vérifier le duel du boss (échéance 20/11 18 h)
 ```
 
 ## Réalisé
@@ -288,3 +288,20 @@
 - Prévenir Nicolas : nouvelles règles de l'Arène (valables à partir du prochain combat)
 - Vendredi 20/11 à 18 h 01 : fin du combat v2 (résultat, couronne, notification), rappel du boss et duel
 - Premier vrai combat v3 : regarder si le Bambou tourbillon ou la Botte sont abusés (piste : recharge) avant toute attaque ultime
+
+---
+
+## Suite : purge des Arènes en production
+
+### Réalisé
+- À la demande d'Adrien : combat v2 en cours supprimé en production (1 Arène, 10 actions) avec ses 7 notifications d'Arène (`arena:*`, `arena-turn:*`), en une transaction ; aucun succès d'Arène n'était débloqué ; XP, candidatures, quêtes intactes
+- Le « Reste à faire » « vendredi : fin du combat v2 (résultat, couronne) » tombe : plus de combat en cours
+
+### Reste à faire
+- Prévenir Nicolas : Arène remise à zéro, règles v3 (3 PA par tour, plus de lien avec les candidatures)
+- Jeudi 19/11 et vendredi 20/11 à 18 h 01 : rappel du boss puis duel (inchangés, indépendants de l'Arène)
+- Premier vrai combat v3 : regarder si le Bambou tourbillon ou la Botte sont abusés
+- Prochaine fonctionnalité : à cadrer avec Adrien
+
+### Décisions
+- Le duel du vendredi contre le boss est gardé : il ne dépend que des candidatures et des niveaux, pas des règles de l'Arène
