@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Companion } from "./Companion";
 import type { CompanionId } from "@/game/quests";
@@ -105,8 +106,15 @@ function writeSeen(arenaId: string, at: string): void {
  * Rejeu et direct (spec arene v2) : les coups de l'adversaire pas encore vus sur cet appareil se rejouent un par un,
  * à l'arrivée (avec le bandeau « Pendant ton absence ») comme à chaque rafraîchissement de 3 s. Mon coup s'anime au clic.
  */
-/** `ended` : le combat est fini (K.O. ou échéance) ; le rejeu va jusqu'au bout, puis mène au résultat. */
-export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { arenaId: string; meId: string; foeName: string; hits: StageHit[]; ended: boolean; children: React.ReactNode }): React.ReactElement {
+/** Pause sur « K.O. ! » ou « Temps écoulé ! » avant d'ouvrir le résultat. */
+const FINALE_MS = 2200;
+
+/**
+ * `ended` : le combat est fini, par K.O. ou à l'échéance. Le rejeu va jusqu'au bout, la scène annonce la fin,
+ * puis le résultat s'ouvre tout seul (le bouton reste en secours).
+ */
+export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { arenaId: string; meId: string; foeName: string; hits: StageHit[]; ended: "ko" | "time" | null; children: React.ReactNode }): React.ReactElement {
+  const router = useRouter();
   const [fx, setFx] = useState<Fx | null>(null);
   const [queue, setQueue] = useState<StageHit[]>([]);
   const [step, setStep] = useState<StageHit | null>(null);
@@ -166,6 +174,15 @@ export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { a
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
+  // Fin du combat, une fois le dernier coup joué ou rejoué : annonce, puis le résultat s'ouvre tout seul.
+  const finished = ended !== null && step === null && queue.length === 0;
+  useEffect(() => {
+    if (!finished) return;
+    if (hits.at(-1)) writeSeen(arenaId, hits.at(-1)!.at);
+    const t = setTimeout(() => router.replace("/arene/resultat"), FINALE_MS);
+    return () => clearTimeout(t);
+  }, [finished, router, arenaId, hits]);
+
   const skip = useCallback(() => {
     setQueue([]);
     setStep(null);
@@ -205,7 +222,10 @@ export function ArenaLive({ arenaId, meId, foeName, hits, ended, children }: { a
             </div>
           ) : null}
           {ended && !busy ? (
-            <Link href="/arene/resultat" className="btn arena">Voir le résultat</Link>
+            <>
+              <div className="arena-finale" role="status" aria-live="assertive">{ended === "ko" ? "K.O. !" : "Temps écoulé !"}</div>
+              <Link href="/arene/resultat" className="text-center text-sm text-muted underline">Voir le résultat</Link>
+            </>
           ) : null}
           {children}
         </ReplayCtx.Provider>
@@ -223,7 +243,7 @@ function botteFx(mine: boolean, fx: Fx): FxSpot[] {
 }
 
 function staging(f: StageFighter, fx: Fx | null): { pose: Pose; recoil: boolean; moving: boolean; float: { text: string; heal: boolean } | null; effects: FxSpot[] } {
-  const rest: Pose = f.parry ? "parry" : "rest";
+  const rest: Pose = f.hp === 0 ? "ko" : f.parry ? "parry" : "rest";
   if (!fx) return { pose: rest, recoil: false, moving: false, float: null, effects: [] };
   const mine = fx.by === f.id;
   const strike = fx.kind === "ATTACK" || fx.kind === "THRUST";

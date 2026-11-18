@@ -151,7 +151,7 @@ export default async function ArenaPage(): Promise<React.ReactElement> {
           <h1 className="h-title">🛡️ Arène</h1>
           <Link href="/" className="text-sm text-muted underline">Accueil</Link>
         </div>
-        <ArenaLive arenaId={input.arena.id} meId={player.id} foeName={foe.pseudo} hits={stageHits(s)} ended={s.over !== null}>
+        <ArenaLive arenaId={input.arena.id} meId={player.id} foeName={foe.pseudo} hits={stageHits(s)} ended={s.over ? (s.over.ko ? "ko" : "time") : null}>
           <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:items-start">
             <div className="flex min-w-0 flex-col gap-3">
               <ArenaPresence name={foe.pseudo} here={foeHere} />
