@@ -3,7 +3,7 @@
 ## Reprise
 
 ```
-✅ Fait      Arène purgée en prod, lot Impact (effets de combat) en prod
+✅ Fait      Bottes plein écran en prod (estoc et tourbillon, 3 paliers)
 ⛔ Bloqué    Aucun
 🎯 Priorité  Prévenir Nicolas, vérifier le duel du boss (échéance 20/11 18 h)
 ```
@@ -330,3 +330,28 @@
 - La chute au K.O. se joue quand les PV passent à zéro sous les yeux, pas à l'ouverture d'un combat fini
 - Mode « réduire les animations » : pas de mouvement du corps (règle existante de l'app), teinte rouge au lieu du flash ; la maquette gardait l'élan
 - Scripts de test locaux : écrire les dates en UTC (`now() at time zone 'UTC'`), sinon le pilote `pg` décale d'une heure et les coups passent « dans le futur »
+
+---
+
+## Suite : Bottes plein écran
+
+### Réalisé
+- Recherche de skills d'animation (`find-skills`) : rien à installer, l'Arène garde CSS et Web Animations
+- Maquette animée validée (mobile, ordinateur en fenêtre entière, mouvements niveau B) : https://claude.ai/artifact/Ki46GFJCGM5Wi2GeAenQnV (`docs/maquettes/arene-botte.html`)
+- Spec `docs/specs/2026-11-18-arene-bottes-plein-ecran-design.md`, plan `docs/superpowers/plans/2026-11-18-arene-bottes-plein-ecran.md`, une relecture
+- PR #124 fusionnée dans `dev` : barème `src/lib/arenaBotte.ts` (testé), `tierOf` exporté des règles, `spriteLayers` (corps et arme séparés, testé), composant `BotteCutIn`, branchement dans `ArenaLive` (mon coup et rejeu) ; 244 tests verts
+- Vérifié en local à deux joueurs : estoc ★★★ téléphone, tourbillon ★★ ordinateur, rejeu par la droite, réduire les animations, tap pour passer ; correctif : PV figés pendant ma propre séquence
+- Testé par Adrien sur l'aperçu, **mise en production** sur son accord (PR #125)
+
+### Reste à faire
+- Prévenir Nicolas : Arène remise à zéro, règles v3, effets d'impact et Bottes plein écran
+- Jeudi 19/11 et vendredi 20/11 à 18 h 01 : rappel du boss puis duel
+- Premier vrai combat v3 : Bambou tourbillon ou Botte abusés ?
+- Base locale : Arène de test en cours (Adrien évol. 6 contre Nicolas évol. 4), à effacer si gênante
+- Plus tard si besoin : son et vibration, style des encadrés à barre gauche (`.err`, `.arena-hint`, `.note`) signalé par impeccable
+
+### Décisions
+- Palier de la mise en scène = `tierOf(levelForm)` des règles ; sprite du bandeau = forme affichée
+- « PERCE LA PARADE ! » seulement sur mon coup (l'état de Parade d'un coup passé n'est pas connu au rejeu)
+- Sur ordinateur, la séquence couvre toute la fenêtre, pas la scène seule
+- Pendant ma séquence, les PV gardent leur valeur de départ ; la confirmation du serveur est appliquée au départ de l'impact
