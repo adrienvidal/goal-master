@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Encart job-finder en prod, boss adouci et coups d'entraide dans dev
+✅ Fait      Encart job-finder en prod, boss adouci et coups d'entraide en prod
 ⛔ Bloqué    Aucun
-🎯 Priorité  Boss adouci à essayer sur l'aperçu puis en prod, lot 2 job-finder (duel 20/11 18 h)
+🎯 Priorité  Vérifier le duel du boss adouci (échéance 20/11 18 h), puis lot 2 job-finder
 ```
 
 ## Réalisé
@@ -22,12 +22,12 @@
 - Soir : PR #135 fusionnée dans `dev` (maquette de l'encart : rond dans la barre de job-finder à la place de la case du profil, plus d'état « Replié », encart affiché par défaut ; suit la PR job-finder-claude #241) ; maquette publiée en version 5
 - Soir : mise en production sur accord d'Adrien (documentation seule : note de passation, maquette, résumés de session)
 - Soir : archivage vérifié, rien à archiver (16/11 porte toujours le duel du boss)
-- Fin de soirée : PR #139 fusionnée dans `dev` (boss adouci). PV = le plus doux du rythme de départ (objectif ÷ vendredis de l'objectif) et du rythme qui reste : le retard ne fait plus grossir le boss, l'avance le fait maigrir. Coups d'entraide : relance suivie d'effet avant le duel = 1 coup pour qui relance, quête validée dans la semaine = 1 coup pour qui l'a faite. Écran de résultat « dont n d'entraide », texte de l'intro du boss, règle du CLAUDE.md ; 281 tests verts
-- Fin de soirée : archivage vérifié, rien à archiver
+- Fin de soirée : boss adouci arrivé dans `dev` par la PR #140 (une autre session, dans le même dossier, a emporté ces commits ; #139 fermée comme doublon). PV = le plus doux du rythme de départ (objectif ÷ vendredis de l'objectif) et du rythme qui reste : le retard ne fait plus grossir le boss, l'avance le fait maigrir. Coups d'entraide : relance suivie d'effet avant le duel = 1 coup pour qui relance, quête validée dans la semaine = 1 coup pour qui l'a faite. Écran de résultat « dont n d'entraide », texte de l'intro du boss, règle du CLAUDE.md ; 281 tests verts
+- Fin de soirée : **mise en production** du boss adouci sur accord d'Adrien
+- Fin de soirée : archivage vérifié, rien à archiver (16/11 porte toujours le duel du boss)
 
 ## Reste à faire
-- **Boss adouci** : essayer sur l'aperçu de `dev`, puis mise en production sur accord d'Adrien (avant le duel du 20/11 18 h si on veut qu'il compte déjà)
-- `docs/maquettes/encart-modes.html` traîne non suivi dans le dépôt (venu d'une autre session) : à committer ou effacer
+- **Vendredi 20/11 18 h** : vérifier que le duel affiche les PV adoucis et les coups d'entraide
 - **Lot 2 dans job-finder-claude**, depuis une session dans ce dépôt, d'après `docs/passation/2026-11-19-encart-job-finder-lot2.md` : réglage du profil, file « à compter » dans `changerStatut`, envoi et reprises, encart, `/collect` qui se met à jour
 - Puis Nicolas : « mets à jour job-finder et branche Goal Master » à Claude, et clic sur « Relier »
 - Jeudi 19/11 (ce soir) et vendredi 20/11 à 18 h 01 : rappel du boss puis duel
@@ -46,5 +46,6 @@
 - Saisie à la main de la même entreprise le jour même : rattachée, pas recomptée ; une saisie déjà rattachée ne se rattache pas à une deuxième offre
 - Pas d'écran d'intro ni de « Nouveauté » : la fonctionnalité vit dans job-finder
 - Boss : pas de ligne « retard » (l'écran de l'objectif montre déjà la progression) ; texte de l'intro modifié sans nouvel écran, donc pas de « Nouveauté »
+- Deux sessions Claude dans le même dossier se volent les branches : une copie du dépôt (worktree) par session en parallèle
 - Boss : une candidature déclenchée par une relance compte deux coups (candidature + entraide), voulu ; le coup de grâce reste affiché à part, pas dans la barre de vie
 - Écartés : Goal Master entier dans un panneau (cadrage du matin côté job-finder), base en ligne pour job-finder, import des anciennes candidatures, annulation par job-finder
