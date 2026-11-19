@@ -218,6 +218,42 @@
         ],
         "createdAt": "2026-11-18T21:05:13.913Z",
         "reason": "Claude: police pixel Press Start 2P à 7-9px dans les cartes simulées de l'accueil, taille établie de l'app (même exception que notifications.html)"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "docs/maquettes/encart-job-finder.html"
+        ],
+        "createdAt": "2026-11-19T17:44:12.433Z",
+        "reason": "Claude: paires inexistantes (pas de texte #000, ni texte clair sur blanc) ; le scanner ne résout pas les variables CSS, thème sombre unique comme les autres maquettes"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          "docs/maquettes/encart-job-finder.html"
+        ],
+        "createdAt": "2026-11-19T17:44:12.454Z",
+        "reason": "Claude: Press Start 2P à 9-10 px, taille établie de l'app (boutons !text-[10px]) ; les 7-8 px ont été remontés à 9"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "docs/maquettes/encart-job-finder.html"
+        ],
+        "createdAt": "2026-11-19T17:44:12.471Z",
+        "reason": "Claude: même convention de police pixel que l'app (étiquettes Press Start 2P 9-10 px)"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/maquettes/encart-job-finder.html"
+        ],
+        "createdAt": "2026-11-19T17:44:12.487Z",
+        "reason": "Claude: .gm-stage est la scène du héros (plein cadre par nature) et .top un bandeau collant pleine largeur, comme les autres maquettes"
       }
     ]
   }
