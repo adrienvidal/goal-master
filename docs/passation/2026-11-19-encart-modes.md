@@ -10,6 +10,8 @@
    - **small** : une tête, le niveau et les candidatures du jour (l'état « Replié » de la maquette, écran 1, à reprendre) ;
    - **free** : le personnage se balade sur la page de job-finder.
 
+Maquette validée par Adrien le 19/11 : https://claude.ai/artifact/S7LLMZcTPg4dxT2hAU5Kek (`docs/maquettes/encart-modes.html`).
+
 ## Ce qui est à faire ici, sur `/widget`
 
 - **Le mode se lit dans l'adresse** : `/widget?mode=normal|small|free`, `normal` par défaut (une valeur inconnue vaut `normal`). job-finder recharge l'iframe quand le mode change ; la clé repart par le même échange `goal-master:ready` → `goal-master:key`, rien à changer au protocole.
@@ -19,9 +21,10 @@
   - free : la fenêtre entière de job-finder (voir plus bas).
   Ces chiffres sont ceux que job-finder posera sur l'iframe. S'ils ne tiennent pas, les changer ici et le dire dans la PR : job-finder les reprendra.
 - **La victoire tient dans la boîte** :
-  - normal : le message (« Doctolib compte dans Goal Master », « NIV. 8 ! », « Nouvelle forme : Écuyer ») remplace la ligne « n auj. / série » le temps de la victoire (`VICTORY_MS`), sur une ligne, coupée par « … » si besoin ; le lien « Voir dans Goal Master » devient un clic sur le héros (il ouvre déjà `/`). Plus de `.gm-msg` sous le corps.
+  - normal : un message court (« **Doctolib** compte », « **Alan** compte · niveau 9 », « **Back Market** · plafond, sans XP », « **Qonto** · la rouille part ») remplace la ligne « n auj. / série » le temps de la victoire (`VICTORY_MS`), sur une ligne, coupée par « … » si besoin ; le lien « Voir dans Goal Master » devient un clic sur le héros (il ouvre déjà `/`). Plus de `.gm-msg` sous le corps.
   - small : « +10 » (ou « NIV. 8 ! ») à côté de la tête, saut et étincelles dans la tête ; pas de texte d'entreprise.
   - free : le héros saute là où il est, « +10 XP » au-dessus de lui.
+- **Nouvelle forme : annoncée, pas montrée** (décision du 19/11 au soir). Dans les trois modes : flash, héros en silhouette blanche (`filter: brightness(0) invert(1)`) le temps de la victoire, et « NOUVELLE FORME ! Va la voir » (normal), « ÉVOLUE ! » (small), « NOUVELLE FORME ! » au-dessus de lui (free). Jamais le nom de la forme. La transformation elle-même se jouera dans Goal Master, avec une notification au joueur qui l'y ramène : c'est le lot suivant, hors de cette passation. D'ici là, la nouvelle forme apparaît dans l'encart une fois la victoire finie.
 - **Mode free** :
   - Fond **transparent** (`body` et `.gm-widget` sans fond, sans bord), rien d'autre que le personnage. job-finder pose l'iframe sur toute sa page avec `pointer-events: none` : **les clics traversent**, donc pas de clic sur le héros dans ce mode (on garde ce geste en normal et small).
   - Le personnage marche le long du bas de la fenêtre, s'arrête, repart, change de sens. `DecorView` fait déjà marcher des personnages (`walker`, `sitting`) : partir de là plutôt que d'écrire une marche neuve.

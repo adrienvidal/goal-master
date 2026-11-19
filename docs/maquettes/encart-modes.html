@@ -1,0 +1,676 @@
+<title>Goal Master · Modes de l'encart</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&family=Oswald:wght@500;600&family=Archivo:wght@400;500;600&family=JetBrains+Mono&display=swap">
+<style>
+/* Maquette : écrans empilés, chacun annoncé par sa route. Tokens Goal Master (globals.css), un seul thème sombre assumé.
+   Les écrans job-finder reprennent ses propres tokens (« pochette de billets »). Chaque encart est dessiné à sa taille réelle, celle de l'iframe. */
+:root {
+  color-scheme: dark;
+  --night: #16132a; --stone: #221e40; --stone-2: #2e2958; --edge: #4a4380;
+  --ink: #f1ecff; --muted: #a39dcc; --gold: #f2c14e; --gold-dk: #b9831c;
+  --danger: #ff6b6b; --ok: #6fd49a;
+  --page: #0e0c1d; --shadow: #0c0a1a; --rust: #c9774a;
+  --f-display: "Press Start 2P", ui-monospace, monospace;
+  --f-ui: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-num: "VT323", ui-monospace, monospace;
+  /* job-finder */
+  --jf-marine: #16295a; --jf-rouge: #c8202f; --jf-carbone: #5b3d8f; --jf-stock: #fdfcf8; --jf-fond: #e4e7ee;
+  --jf-encre: #1b2236; --jf-doux: #566079; --jf-ligne: #d3d7e0; --jf-ligne-forte: #b9bfcd;
+  --jf-tete: Oswald, "Arial Narrow", sans-serif; --jf-corps: Archivo, system-ui, sans-serif; --jf-chiffre: "JetBrains Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--page); color: var(--ink); font-family: var(--f-ui); font-size: 16px; margin: 0; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--page); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 1080px; margin: 0 auto; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--page); padding: 14px 0 10px; border-bottom: 3px solid var(--edge); }
+.top h1 { font-family: var(--f-display); font-size: 12px; margin: 0 0 10px; line-height: 1.6; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: 13px; text-decoration: none; padding: 4px 8px; border: 2px solid var(--edge); color: var(--muted); }
+.toc a:hover { color: var(--ink); border-color: var(--gold); }
+.intro { color: var(--muted); max-width: 72ch; line-height: 1.5; margin: 22px 0 6px; }
+.rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin: 16px 0 8px; }
+.rules div { border: 2px dashed var(--edge); padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.rules b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+.screen { margin-top: 56px; scroll-margin-top: 110px; }
+.screen > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 14px; }
+.route { font-family: var(--f-num); font-size: 22px; color: var(--gold); }
+.screen > header h2 { font-family: var(--f-display); font-size: 11px; margin: 0; line-height: 1.6; }
+.screen > header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 80ch; }
+.states { display: grid; gap: 22px 16px; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); }
+.states.tight { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.state { display: flex; flex-direction: column; gap: 8px; min-width: 0; scroll-margin-top: 110px; }
+.state > h4 { font-family: var(--f-display); font-size: 9px; line-height: 1.7; margin: 0; color: var(--gold); }
+.state > p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.dim { font-family: var(--f-num); font-size: 16px; color: var(--muted); }
+.replay, .ctl { align-self: flex-start; font: inherit; font-size: 13px; color: var(--muted); background: none; border: 2px solid var(--edge); padding: 3px 8px; cursor: pointer; }
+.replay:hover, .ctl:hover { color: var(--ink); border-color: var(--gold); }
+.ctl[aria-pressed="true"] { color: var(--ink); border-color: var(--gold); background: var(--stone); }
+.ctls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+/* ---------- L'encart, commun ---------- */
+.gm { position: relative; flex: none; background: var(--night); border: 3px solid var(--edge); box-shadow: 3px 3px 0 var(--shadow); color: var(--ink); font-family: var(--f-ui); overflow: hidden; }
+.gm-stage { position: relative; display: flex; align-items: flex-end; justify-content: center; background: linear-gradient(#1d1938, #2a2450); border: 2px solid var(--edge); text-decoration: none; overflow: hidden; }
+.gm-hero { position: relative; z-index: 1; transform-origin: 50% 100%; line-height: 0; }
+.gm-hero svg { display: block; }
+.pop { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); font-family: var(--f-display); font-size: 10px; color: var(--gold); text-shadow: 2px 2px 0 var(--shadow); z-index: 3; white-space: nowrap; opacity: 0; pointer-events: none; }
+.pop.muted { color: var(--muted); font-size: 9px; }
+.spark { position: absolute; width: 4px; height: 4px; background: var(--gold); z-index: 2; opacity: 0; }
+.rusty .gm-hero { filter: sepia(.85) saturate(1.6) hue-rotate(-12deg) brightness(.82); }
+.ghosted .gm-hero { opacity: .35; filter: grayscale(1); }
+
+/* Normal : 260 × 130, barre + héros + infos, rien en dessous */
+.gm.normal { width: 260px; height: 130px; display: flex; flex-direction: column; }
+.gm-bar { display: flex; align-items: center; padding: 5px 8px; background: var(--stone); border-bottom: 2px solid var(--edge); }
+.gm-bar b { font-family: var(--f-display); font-size: 9px; letter-spacing: .04em; color: var(--gold); }
+.normal .gm-body { flex: 1; display: grid; grid-template-columns: 72px 1fr; gap: 10px; align-items: end; padding: 8px 10px 9px; position: relative; min-height: 0; }
+.normal .gm-stage { width: 72px; height: 76px; padding-bottom: 8px; }
+.normal .gm-stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: #3a6b3f; border-top: 2px solid #24452a; }
+.gm-info { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.gm-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; }
+.gm-lvl { font-family: var(--f-display); font-size: 9px; color: var(--gold); }
+.xp { height: 10px; background: var(--shadow); border: 2px solid var(--edge); position: relative; }
+.xp i { position: absolute; inset: 0 auto 0 0; background: var(--gold); box-shadow: inset 0 -2px 0 var(--gold-dk); transition: width .9s steps(12); }
+.gm-sub { font-family: var(--f-num); font-size: 17px; color: var(--muted); line-height: 1; height: 17px; display: flex; justify-content: space-between; gap: 6px; }
+.gm-sub .r { color: var(--rust); }
+/* La ligne de victoire prend la place de « n auj. / série », sur une ligne, coupée par « … » */
+.gm-say { display: none; font-size: 13px; line-height: 17px; height: 17px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gm-say b { color: var(--ink); font-weight: 600; }
+.gm-say.gold b { color: var(--gold); }
+.gm.win .gm-say { display: block; }
+.gm.win .gm-sub { display: none; }
+/* Nouvelle forme : le widget l'annonce sans la montrer (silhouette blanche) ; la transformation se joue dans Goal Master */
+.evo .gm-hero, .free-layer.evo .gm-hero { filter: brightness(0) invert(1); }
+.small .s-say.evo-say { font-size: 8px; }
+.gm-note { font-size: 12px; line-height: 1.3; color: var(--muted); }
+
+/* Small : 130 × 50, une tête, le niveau, les candidatures du jour */
+.gm.small { width: 130px; height: 50px; display: grid; grid-template-columns: 48px 1fr; gap: 8px; align-items: center; padding: 0 8px 0 0; }
+.small .gm-stage { width: 48px; height: 44px; border-width: 0 2px 0 0; align-items: center; }
+.small .gm-hero { transform-origin: 50% 60%; }
+.small .s-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.small .s-lvl { font-family: var(--f-display); font-size: 9px; color: var(--gold); white-space: nowrap; }
+.small .s-line { font-family: var(--f-num); font-size: 18px; line-height: 15px; height: 15px; color: var(--muted); white-space: nowrap; overflow: hidden; }
+.small .s-line .r { color: var(--rust); }
+.small .s-say { display: none; font-family: var(--f-display); font-size: 9px; line-height: 15px; height: 15px; color: var(--gold); white-space: nowrap; }
+.small .s-say.muted { color: var(--muted); }
+.small.win .s-say { display: block; animation: blink .4s steps(2) 4; }
+.small.win .s-line { display: none; }
+.small.lvlup .s-lvl { animation: blink .4s steps(2) 4; }
+
+/* Animations */
+@keyframes jump { 0%,100% { transform: translateY(0) scale(1,1); } 15% { transform: translateY(0) scale(1.15,.85); } 40% { transform: translateY(-16px) scale(.92,1.1); } 60% { transform: translateY(-16px) scale(1,1); } 80% { transform: translateY(0) scale(1.1,.9); } }
+@keyframes hop { 0%,100% { transform: translateY(0); } 40%,60% { transform: translateY(-5px); } }
+@keyframes pop { 0% { opacity: 0; transform: translate(-50%, 10px); } 15%,70% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -12px); } }
+@keyframes spark { 0% { opacity: 1; transform: translate(0,0); } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
+@keyframes flash { 0%,100% { background: transparent; } 20% { background: rgb(255 243 176 / .85); } }
+@keyframes derust { from { filter: sepia(.85) saturate(1.6) hue-rotate(-12deg) brightness(.82); } to { filter: none; } }
+@keyframes blink { 50% { opacity: .25; } }
+@keyframes bob { 50% { transform: translateY(-2px); } }
+@keyframes wait { 50% { opacity: .15; } }
+.normal.win .gm-hero { animation: jump .8s steps(8) 2; }
+.normal.derust .gm-hero { animation: jump .8s steps(8) 2, derust 1.6s steps(6) forwards; }
+.small.win .gm-hero { animation: hop .4s steps(4) 3; }
+.small.derust .gm-hero { animation: hop .4s steps(4) 3, derust 1.6s steps(6) forwards; }
+.normal.win .pop { animation: pop 1.8s ease-out forwards; }
+.win .spark { animation: spark .7s steps(6) forwards; }
+.evo .gm-body::before, .small.evo::before { content: ""; position: absolute; inset: 0; z-index: 4; animation: flash .9s steps(4); pointer-events: none; }
+.dots::after { content: "…"; animation: wait 1s steps(2) infinite; }
+
+/* Libre : calque transparent sur toute la page de job-finder, les clics le traversent */
+.free-layer { position: absolute; inset: 0; z-index: 6; pointer-events: none; overflow: hidden; background: transparent; }
+.walker { position: absolute; left: 0; bottom: 6px; display: flex; flex-direction: column; align-items: center; will-change: transform; }
+.walker .pop { top: -18px; }
+.walker .flip { line-height: 0; }
+.walker .shadow { width: 34px; height: 4px; margin-top: -1px; background: rgb(12 10 26 / .25); border-radius: 50%; }
+.walker.walking .gm-hero { animation: bob .3s steps(2) infinite; }
+.free-layer.cheer .gm-hero { animation: jump .8s steps(8) 2; }
+.free-layer.cheer .pop { animation: pop 1.8s ease-out forwards; }
+.free-layer.cheer.derust .gm-hero { animation: jump .8s steps(8) 2, derust 1.6s steps(6) forwards; }
+.free-layer.still.cheer .gm-hero { animation: none; }
+.free-layer.still.cheer .pop { animation: none; opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .normal.win .gm-hero, .normal.derust .gm-hero, .small.win .gm-hero, .small.derust .gm-hero, .free-layer.cheer .gm-hero, .walker.walking .gm-hero { animation: none; }
+  .derust .gm-hero { filter: none; }
+  .win .pop, .free-layer.cheer .pop { animation: none; opacity: 1; }
+  .win .spark, .small.win .s-say, .small.lvlup .s-lvl, .dots::after { animation: none; }
+  .xp i { transition: none; }
+}
+
+/* ---------- job-finder ---------- */
+.jf { background: var(--jf-fond); color: var(--jf-encre); font-family: var(--jf-corps); font-size: 14px; border: 1px solid var(--jf-ligne-forte); min-width: 0; position: relative; overflow: hidden; }
+.jf-bar { background: var(--jf-marine); color: #fff; border-bottom: 3px solid var(--jf-rouge); display: flex; align-items: center; gap: 18px; padding: 0 14px; min-height: 46px; overflow-x: auto; scrollbar-width: none; }
+.jf-bar b { font-family: var(--jf-tete); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 15px; white-space: nowrap; }
+.jf-bar .jf-sp { flex: 1; }
+.jf-tabs { display: flex; gap: 2px; }
+.jf-tabs span { font-family: var(--jf-tete); font-weight: 500; text-transform: uppercase; letter-spacing: .1em; font-size: 12px; padding: 14px 10px 12px; color: #c6cfe6; white-space: nowrap; }
+.jf-tabs span.on { color: #fff; box-shadow: inset 0 -3px 0 #fff; }
+.jf-tabs em { font-style: normal; font-family: var(--jf-chiffre); font-size: 11px; opacity: .8; margin-left: 4px; }
+.jf-main { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.jf-filters { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 10px; border-bottom: 2px dotted var(--jf-ligne-forte); }
+.jf-filters span { border: 1px solid var(--jf-ligne-forte); background: var(--jf-stock); padding: 4px 9px; font-size: 13px; border-radius: 2px; }
+.jf-filters span.on { background: var(--jf-marine); color: #fff; border-color: var(--jf-marine); }
+.jf-scroll { overflow-x: auto; }
+.jf table { color: inherit; font: inherit; width: 100%; border-collapse: collapse; background: var(--jf-stock); min-width: 560px; }
+.jf th { background: var(--jf-marine); color: #fff; font-family: var(--jf-tete); font-weight: 500; text-transform: uppercase; letter-spacing: .1em; font-size: 11.5px; text-align: left; padding: 8px 10px; }
+.jf td { border-bottom: 1px solid var(--jf-ligne); padding: 9px 10px; vertical-align: middle; }
+.jf td.n { font-family: var(--jf-chiffre); font-size: 12.5px; color: var(--jf-carbone); white-space: nowrap; }
+.jf td small { display: block; color: var(--jf-doux); font-size: 12.5px; }
+.stamp { display: inline-block; border: 1.5px solid currentColor; border-radius: 2px; font-family: var(--jf-tete); text-transform: uppercase; letter-spacing: .1em; font-size: 11px; padding: 2px 6px; white-space: nowrap; }
+.stamp.built { color: var(--jf-marine); }
+.stamp.sent { color: var(--jf-carbone); }
+.jf-act { font: inherit; font-size: 13px; background: var(--jf-marine); color: #fff; border: 0; border-radius: 3px; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
+.jf-act:disabled { background: var(--jf-ligne); color: var(--jf-doux); cursor: default; }
+.jf-pad { height: 120px; }
+.jf-dock { position: absolute; right: 14px; bottom: 14px; z-index: 5; }
+.jf-card { background: var(--jf-stock); border: 1px solid var(--jf-ligne-forte); box-shadow: 0 2px 6px rgb(27 34 54 / .15); padding: 10px 12px; width: 230px; font-size: 13px; line-height: 1.4; display: flex; flex-direction: column; gap: 8px; }
+.jf-card h6 { margin: 0; font-family: var(--jf-tete); font-weight: 600; letter-spacing: .1em; text-transform: uppercase; font-size: 12px; color: var(--jf-marine); }
+.jf-btn { font: inherit; border-radius: 3px; padding: 6px 12px; border: 1px solid var(--jf-marine); background: var(--jf-marine); color: #fff; cursor: pointer; text-decoration: none; align-self: flex-start; }
+
+/* Le rond de la barre et son menu */
+.jf-rond { position: relative; flex: none; width: 36px; height: 36px; border: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #22397a; color: #aab6d6; box-shadow: inset 0 0 0 2px #2b3f78; cursor: pointer; }
+.jf-rond[data-on="true"] { color: #fff; box-shadow: inset 0 0 0 2px rgb(255 255 255 / .7); }
+.jf-menu { position: absolute; top: 50px; right: 14px; z-index: 8; width: 210px; background: var(--jf-stock); color: var(--jf-encre); border: 1px solid var(--jf-ligne-forte); box-shadow: 0 6px 18px rgb(27 34 54 / .22); padding: 6px 0; }
+.jf-menu.static { position: relative; top: auto; right: auto; }
+.jf-menu h6 { margin: 0; padding: 4px 12px 6px; font-family: var(--jf-tete); font-weight: 500; letter-spacing: .1em; text-transform: uppercase; font-size: 11px; color: var(--jf-doux); }
+.jf-menu a, .jf-menu button { display: grid; grid-template-columns: 16px 1fr auto; gap: 8px; align-items: center; width: 100%; padding: 7px 12px; font: inherit; font-size: 14px; color: inherit; background: none; border: 0; text-align: left; text-decoration: none; cursor: pointer; }
+.jf-menu a:hover, .jf-menu button:hover { background: var(--jf-fond); }
+.jf-menu i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--jf-ligne-forte); }
+.jf-menu [aria-checked="true"] i { border: 4px solid var(--jf-marine); }
+.jf-menu small { font-family: var(--jf-chiffre); font-size: 11px; color: var(--jf-doux); }
+.jf-menu hr { border: 0; border-top: 1px solid var(--jf-ligne); margin: 4px 0; }
+.menu-demo { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.menu-demo .jf { flex: 1 1 340px; }
+.menu-demo .jf-main { min-height: 230px; align-items: flex-end; }
+
+@media (max-width: 640px) {
+  .top h1 { font-size: 10px; margin-bottom: 8px; }
+  .toc { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); padding-right: 16px; }
+  .toc a { flex: none; }
+  .jf-dock { right: 8px; bottom: 8px; }
+  .jf-tabs span:nth-child(n+3) { display: none; }
+}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Modes de l'encart Goal Master</h1>
+    <nav class="toc" aria-label="Écrans">
+      <a href="#parcours">Parcours</a>
+      <a href="#mode-normal">1 · Normal</a>
+      <a href="#mode-small">2 · Small</a>
+      <a href="#mode-libre">3 · Libre</a>
+      <a href="#menu">4 · Menu du rond</a>
+      <a href="#en-place">5 · En place</a>
+    </nav>
+  </div>
+
+  <p class="intro" id="parcours">L'encart ne grandit plus jamais, même pour fêter une candidature. Le rond de la barre de job-finder ouvre un petit menu : Normal, Small, Libre ou Masqué. Chaque encart est dessiné ici à sa taille réelle. Le parcours : rond de la barre → menu → mode choisi (gardé) → « Marquer envoyée » → la victoire se joue dans la boîte.</p>
+  <div class="rules">
+    <div><b>Normal · 260 × 130</b>L'encart d'aujourd'hui sans le vide du bas. La victoire remplace la ligne « n auj. / série » le temps de l'animation.</div>
+    <div><b>Small · 130 × 50</b>Une tête, le niveau, les candidatures du jour. La victoire : « +10 » à la place du compte, un petit saut.</div>
+    <div><b>Libre · toute la page</b>Le personnage marche le long du bas de job-finder. Calque transparent : les clics passent au travers.</div>
+    <div><b>Nouvelle forme</b>Le widget l'annonce sans la montrer : flash, silhouette blanche, « NOUVELLE FORME ! ». La transformation se joue dans Goal Master (lot suivant), où une notification te ramène.</div>
+    <div><b>Ce qui reste à job-finder</b>Non relié, ajout raté, en attente, lien coupé en mode libre : job-finder les dessine lui-même, à la taille du mode.</div>
+  </div>
+
+  <!-- 1 · NORMAL -->
+  <section class="screen" id="mode-normal">
+    <header>
+      <span class="route">/widget?mode=normal</span>
+      <h2>1 · Normal</h2>
+      <p>Le mode par défaut (une valeur inconnue vaut normal). Plus de message sous le corps : la victoire tient sur la ligne du bas, coupée par « … » si elle déborde. Le lien « Voir dans Goal Master » devient le clic sur le héros, qui ouvre déjà Goal Master.</p>
+    </header>
+    <div class="states">
+
+      <div class="state" id="n-repos">
+        <h4>Repos</h4>
+        <div class="gm normal">
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
+          <div class="gm-body">
+            <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="knight" data-px="3"></div></a>
+            <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 7</span><div class="xp"><i style="width:62%"></i></div><span class="gm-sub"><span>2 auj.</span><span>🔥 4 j</span></span></div>
+          </div>
+        </div>
+        <span class="dim">260 × 130</span>
+      </div>
+
+      <div class="state" id="n-victoire">
+        <h4>Candidature envoyée · +10 XP</h4>
+        <div class="gm normal" data-anim="win" data-from="62" data-to="74">
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
+          <div class="gm-body">
+            <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><span class="pop">+10 XP</span><div class="gm-hero" data-sprite="knight" data-px="3"></div></a>
+            <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 7</span><div class="xp"><i style="width:62%"></i></div><span class="gm-sub"><span>3 auj.</span><span>🔥 4 j</span></span><span class="gm-say"><b>Doctolib</b> compte</span></div>
+          </div>
+        </div>
+        <button class="replay" data-replay>▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="n-niveau">
+        <h4>Niveau 9, même forme</h4>
+        <div class="gm normal" data-anim="win" data-from="95" data-to="8">
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
+          <div class="gm-body">
+            <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><span class="pop">NIV. 9 !</span><div class="gm-hero" data-sprite="knight" data-px="3"></div></a>
+            <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 9</span><div class="xp"><i style="width:95%"></i></div><span class="gm-sub"><span>4 auj.</span><span>🔥 6 j</span></span><span class="gm-say"><b>Alan</b> compte · niveau 9</span></div>
+          </div>
+        </div>
+        <button class="replay" data-replay>▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="n-forme">
+        <h4>Niveau 8 · nouvelle forme</h4>
+        <div class="gm normal" data-anim="win evo" data-from="94" data-to="6">
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
+          <div class="gm-body">
+            <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><span class="pop">NIV. 8 !</span><div class="gm-hero" data-sprite="knight" data-px="3"></div></a>
+            <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 8</span><div class="xp"><i style="width:94%"></i></div><span class="gm-sub"><span>5 auj.</span><span>🔥 5 j</span></span><span class="gm-say gold"><b>NOUVELLE FORME !</b> Va la voir</span></div>
+          </div>
+        </div>
+        <p>Silhouette blanche pendant la victoire, pas de nom de forme : la surprise reste pour Goal Master, ouvert d'un clic sur le héros. Tant que le lot suivant n'est pas là, la nouvelle forme apparaît dans l'encart une fois la victoire finie.</p>
+        <button class="replay" data-replay>▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="n-plafond">
+        <h4>Plafond des 15 atteint</h4>
+        <div class="gm normal" data-anim="win" data-from="40" data-to="40">
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
+          <div class="gm-body">
+            <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><span class="pop muted">+0 XP</span><div class="gm-hero" data-sprite="panda" data-px="3"></div></a>
+            <div class="gm-info"><span class="gm-name">Nicolas</span><span class="gm-lvl">NIV. 5</span><div class="xp"><i style="width:40%"></i></div><span class="gm-sub"><span>16 auj.</span><span>🔥 9 j</span></span><span class="gm-say"><b>Back Market</b> · plafond, sans XP</span></div>
+          </div>
+        </div>
+        <button class="replay" data-replay>▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="n-rouille">
+        <h4>Rouillé, puis dérouillé</h4>
+        <div class="gm normal rusty" data-anim="win derust" data-from="18" data-to="30">
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
+          <div class="gm-body">
+            <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><span class="pop">+10 XP</span><div class="gm-hero" data-sprite="panda" data-px="3"></div></a>
+            <div class="gm-info"><span class="gm-name">Nicolas</span><span class="gm-lvl">NIV. 5</span><div class="xp"><i style="width:18%"></i></div><span class="gm-sub"><span>0 auj.</span><span class="r">3 j sans</span></span><span class="gm-say"><b>Qonto</b> · la rouille part</span></div>
+          </div>
+        </div>
+        <button class="replay" data-replay>▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="n-attente">
+        <h4>Ton héros arrive…</h4>
+        <div class="gm normal ghosted">
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
+          <div class="gm-body">
+            <div class="gm-stage"><div class="gm-hero" data-sprite="knight" data-px="3"></div></div>
+            <div class="gm-info"><span class="gm-name">Ton héros arrive<span class="dots"></span></span><span class="gm-note">Le temps de recevoir la clé de job-finder.</span></div>
+          </div>
+        </div>
+        <p>Une fraction de seconde en temps normal.</p>
+      </div>
+
+      <div class="state" id="n-coupe">
+        <h4>Lien coupé</h4>
+        <div class="gm normal ghosted">
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
+          <div class="gm-body">
+            <div class="gm-stage"><div class="gm-hero" data-sprite="knight" data-px="3"></div></div>
+            <div class="gm-info"><span class="gm-name">Lien coupé</span><span class="gm-note">Tes candidatures ne comptent plus. Relie à nouveau depuis job-finder.</span></div>
+          </div>
+        </div>
+        <p>Juste avant que job-finder ne prenne le relais avec son propre encart « Relier à nouveau ».</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · SMALL -->
+  <section class="screen" id="mode-small">
+    <header>
+      <span class="route">/widget?mode=small</span>
+      <h2>2 · Small</h2>
+      <p>Une tête, le niveau, les candidatures du jour. Pas de barre « GOAL MASTER », pas de pseudo, pas de barre d'XP, pas de nom d'entreprise. Un clic sur la tête ouvre Goal Master.</p>
+    </header>
+    <div class="states tight">
+
+      <div class="state" id="s-repos">
+        <h4>Repos</h4>
+        <div class="gm small">
+          <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="knight" data-head data-px="3"></div></a>
+          <div class="s-info"><span class="s-lvl">NIV. 7</span><span class="s-line">2 auj. 🔥4</span></div>
+        </div>
+        <span class="dim">130 × 50</span>
+      </div>
+
+      <div class="state" id="s-victoire">
+        <h4>+10 XP</h4>
+        <div class="gm small" data-anim="win">
+          <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="knight" data-head data-px="3"></div></a>
+          <div class="s-info"><span class="s-lvl">NIV. 7</span><span class="s-line">3 auj. 🔥4</span><span class="s-say">+10 XP</span></div>
+        </div>
+        <button class="replay" data-replay>▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="s-niveau">
+        <h4>Niveau 9</h4>
+        <div class="gm small" data-anim="win lvlup">
+          <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="knight" data-head data-px="3"></div></a>
+          <div class="s-info"><span class="s-lvl">NIV. 9</span><span class="s-line">4 auj. 🔥6</span><span class="s-say">NIV. 9 !</span></div>
+        </div>
+        <button class="replay" data-replay>▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="s-forme">
+        <h4>Nouvelle forme</h4>
+        <div class="gm small" data-anim="win lvlup evo">
+          <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="knight" data-head data-px="3"></div></a>
+          <div class="s-info"><span class="s-lvl">NIV. 8</span><span class="s-line">5 auj. 🔥5</span><span class="s-say evo-say">ÉVOLUE !</span></div>
+        </div>
+        <p>Flash, tête en silhouette. Un clic ouvre Goal Master.</p>
+        <button class="replay" data-replay>▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="s-plafond">
+        <h4>Plafond atteint</h4>
+        <div class="gm small" data-anim="win">
+          <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="panda" data-head data-px="3"></div></a>
+          <div class="s-info"><span class="s-lvl">NIV. 5</span><span class="s-line">16 auj. 🔥9</span><span class="s-say muted">+0 XP</span></div>
+        </div>
+        <button class="replay" data-replay>▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="s-rouille">
+        <h4>Rouillé, puis dérouillé</h4>
+        <div class="gm small rusty" data-anim="win derust">
+          <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="panda" data-head data-px="3"></div></a>
+          <div class="s-info"><span class="s-lvl">NIV. 5</span><span class="s-line"><span class="r">3 j sans</span></span><span class="s-say">+10 XP</span></div>
+        </div>
+        <button class="replay" data-replay>▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="s-attente">
+        <h4>Attente</h4>
+        <div class="gm small ghosted">
+          <div class="gm-stage"><div class="gm-hero" data-sprite="knight" data-head data-px="3"></div></div>
+          <div class="s-info"><span class="s-lvl">&nbsp;</span><span class="s-line"><span class="dots"></span></span></div>
+        </div>
+      </div>
+
+      <div class="state" id="s-coupe">
+        <h4>Lien coupé</h4>
+        <div class="gm small ghosted">
+          <div class="gm-stage"><div class="gm-hero" data-sprite="knight" data-head data-px="3"></div></div>
+          <div class="s-info"><span class="s-lvl" style="color:var(--muted)">COUPÉ</span><span class="s-line">relier ?</span></div>
+        </div>
+        <p>Tête grisée. job-finder prend ensuite le relais.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · LIBRE -->
+  <section class="screen" id="mode-libre">
+    <header>
+      <span class="route">/widget?mode=free</span>
+      <h2>3 · Libre</h2>
+      <p>job-finder pose l'iframe sur toute sa page, transparente, sans clic : le personnage marche le long du bas, s'arrête, repart, change de sens. Pas de pseudo ni de barre d'XP. Essaie les boutons du tableau : ils restent cliquables même quand il passe devant.</p>
+    </header>
+    <div class="jf" id="free-demo">
+      <div class="jf-bar"><b>Job-finder</b><div class="jf-tabs"><span>À valider<em>12</em></span><span class="on">Candidatures<em>9</em></span><span>Écartées</span></div><span class="jf-sp"></span><div class="jf-tabs"><span>Profil</span></div><button class="jf-rond" type="button" data-on="true" aria-label="Goal Master : mode libre" data-icon></button></div>
+      <div class="jf-main">
+        <div class="jf-filters"><span class="on">À préparer · 3</span><span>En attente de réponse · 4</span><span>Entretien · 1</span></div>
+        <div class="jf-scroll">
+          <table>
+            <thead><tr><th>N°</th><th>Offre</th><th>Étape</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="n">318</td><td>Développeur front-end React senior<small>Alan · Paris · CDI</small></td><td><span class="stamp built">Dossier prêt</span></td><td><button class="jf-act" data-free-send>Marquer envoyée</button></td></tr>
+              <tr><td class="n">311</td><td>Ingénieur fullstack TypeScript<small>Pennylane · Remote · CDI</small></td><td><span class="stamp built">Dossier prêt</span></td><td><button class="jf-act" data-free-send>Marquer envoyée</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="jf-pad"></div>
+      </div>
+      <div class="free-layer" id="free-layer">
+        <div class="walker"><span class="pop">+10 XP</span><div class="flip"><div class="gm-hero" data-sprite="knight" data-px="3"></div></div><span class="shadow"></span></div>
+      </div>
+      <div class="jf-dock" id="free-cut" hidden>
+        <div class="jf-card"><h6>Goal Master</h6><span>Le lien a été coupé depuis Goal Master. Tes candidatures ne comptent plus.</span><a class="jf-btn" href="#en-place">Relier à nouveau</a></div>
+      </div>
+    </div>
+    <div class="ctls" aria-label="États du mode libre">
+      <button class="ctl" type="button" id="free-win">▶ Candidature envoyée</button>
+      <button class="ctl" type="button" id="free-evo">▶ Nouvelle forme</button>
+      <button class="ctl" type="button" id="free-rust" aria-pressed="false">Rouillé</button>
+      <button class="ctl" type="button" id="free-still" aria-pressed="false">Mouvement réduit</button>
+      <button class="ctl" type="button" id="free-cutbtn" aria-pressed="false">Lien coupé</button>
+    </div>
+    <div class="states" style="margin-top:16px">
+      <div class="state"><h4>Victoire</h4><p>Il s'arrête, saute sur place, « +10 XP » au-dessus de lui (ou « NIV. 9 ! »). Pas de nom d'entreprise.</p></div>
+      <div class="state"><h4>Nouvelle forme</h4><p>Il s'arrête, devient une silhouette blanche, « NOUVELLE FORME ! » au-dessus de lui. Pas de clic possible ici : c'est la notification qui ramène vers Goal Master.</p></div>
+      <div class="state"><h4>Mouvement réduit</h4><p>Immobile dans le coin en bas à gauche, loin de l'encart des autres modes. La victoire sans saut, seulement « +10 XP ».</p></div>
+      <div class="state"><h4>Lien coupé, attente</h4><p>Le personnage disparaît. job-finder dessine lui-même son encart « Lien coupé ». L'attente ne montre rien.</p></div>
+    </div>
+  </section>
+
+  <!-- 4 · MENU DU ROND -->
+  <section class="screen" id="menu">
+    <header>
+      <span class="route">job-finder · barre</span>
+      <h2>4 · Le menu du rond</h2>
+      <p>À construire côté job-finder, montré ici pour lire le parcours en entier. Le rond n'affiche plus et ne masque plus d'un clic : il ouvre ce menu. Le choix est gardé par le navigateur. Rond allumé dans tous les modes sauf Masqué.</p>
+    </header>
+    <div class="menu-demo">
+      <div class="jf">
+        <div class="jf-bar"><b>Job-finder</b><div class="jf-tabs"><span class="on">Candidatures<em>9</em></span></div><span class="jf-sp"></span><div class="jf-tabs"><span>Profil</span></div><button class="jf-rond" type="button" data-on="true" aria-expanded="true" aria-label="Goal Master" data-icon></button></div>
+        <div class="jf-main">
+          <div class="jf-menu static" role="menu" aria-label="Goal Master">
+            <h6>Goal Master</h6>
+            <a role="menuitemradio" aria-checked="true" href="#mode-normal"><i></i>Normal<small>260 × 130</small></a>
+            <a role="menuitemradio" aria-checked="false" href="#mode-small"><i></i>Small<small>130 × 50</small></a>
+            <a role="menuitemradio" aria-checked="false" href="#mode-libre"><i></i>Libre<small>page</small></a>
+            <hr>
+            <a role="menuitemradio" aria-checked="false" href="#en-place"><i></i>Masqué<small></small></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · EN PLACE -->
+  <section class="screen" id="en-place">
+    <header>
+      <span class="route">job-finder · Candidatures</span>
+      <h2>5 · Les trois modes en place</h2>
+      <p>Clique le rond de la barre pour changer de mode, puis « Marquer envoyée » sur une ligne.</p>
+    </header>
+    <div class="jf" id="live">
+      <div class="jf-bar"><b>Job-finder</b><div class="jf-tabs"><span>À valider<em>12</em></span><span class="on">Candidatures<em>9</em></span><span>Écartées</span></div><span class="jf-sp"></span><div class="jf-tabs"><span>Profil</span></div><button class="jf-rond" type="button" id="live-rond" data-on="true" aria-expanded="false" aria-controls="live-menu" aria-label="Goal Master : choisir l'affichage" data-icon></button></div>
+      <div class="jf-menu" id="live-menu" role="menu" aria-label="Goal Master" hidden>
+        <h6>Goal Master</h6>
+        <button type="button" role="menuitemradio" aria-checked="true" data-mode="normal"><i></i>Normal<small>260 × 130</small></button>
+        <button type="button" role="menuitemradio" aria-checked="false" data-mode="small"><i></i>Small<small>130 × 50</small></button>
+        <button type="button" role="menuitemradio" aria-checked="false" data-mode="free"><i></i>Libre<small>page</small></button>
+        <hr>
+        <button type="button" role="menuitemradio" aria-checked="false" data-mode="off"><i></i>Masqué<small></small></button>
+      </div>
+      <div class="jf-main">
+        <div class="jf-filters"><span class="on">À préparer · 3</span><span>En attente de réponse · 4</span><span>Entretien · 1</span><span>Closes · 1</span></div>
+        <div class="jf-scroll">
+          <table>
+            <thead><tr><th>N°</th><th>Offre</th><th>Note</th><th>Étape</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="n">318</td><td>Développeur front-end React senior<small>Alan · Paris · CDI</small></td><td class="n">8,4</td><td><span class="stamp built">Dossier prêt</span></td><td><button class="jf-act" data-company="Alan">Marquer envoyée</button></td></tr>
+              <tr><td class="n">311</td><td>Ingénieur fullstack TypeScript<small>Pennylane · Remote · CDI</small></td><td class="n">7,9</td><td><span class="stamp built">Dossier prêt</span></td><td><button class="jf-act" data-company="Pennylane">Marquer envoyée</button></td></tr>
+              <tr><td class="n">297</td><td>Mission Next.js · 3 mois<small>Malt · Lyon · Freelance</small></td><td class="n">7,1</td><td><span class="stamp built">Dossier prêt</span></td><td><button class="jf-act" data-company="Malt">Marquer envoyée</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="jf-pad"></div>
+      </div>
+      <div class="jf-dock">
+        <div class="gm normal" id="live-normal">
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
+          <div class="gm-body">
+            <a class="gm-stage" href="#n-repos" title="Ouvrir Goal Master"><span class="pop">+10 XP</span><div class="gm-hero" data-sprite="knight" data-px="3"></div></a>
+            <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 7</span><div class="xp"><i style="width:62%"></i></div><span class="gm-sub"><span class="live-today">2 auj.</span><span>🔥 4 j</span></span><span class="gm-say"><b class="live-company"></b> compte</span></div>
+          </div>
+        </div>
+        <div class="gm small" id="live-small" hidden>
+          <a class="gm-stage" href="#s-repos" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="knight" data-head data-px="3"></div></a>
+          <div class="s-info"><span class="s-lvl">NIV. 7</span><span class="s-line"><span class="live-today">2 auj.</span> 🔥4</span><span class="s-say">+10 XP</span></div>
+        </div>
+      </div>
+      <div class="free-layer" id="live-free" hidden>
+        <div class="walker"><span class="pop">+10 XP</span><div class="flip"><div class="gm-hero" data-sprite="knight" data-px="3"></div></div><span class="shadow"></span></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const PAL = {K:'#1a1626',E:'#1a1626',S:'#f4c7a1',R:'#e8838a',W:'#dfe6ee',G:'#8b93a7',T:'#c99a5b',B:'#7a4a26',Y:'#f2c14e',O:'#b9831c',L:'#fffbe0',F:'#f3f1f6',N:'#26232f',I:'#ffffff',V:'#6fae4a'};
+const SQUIRE = ["....KKKKKKK.....","...KBBBBBBBK....","..KBBBBBBBBBK...","..KBSSSSSSSBK.W.","..KSSESSSESSK.W.","..KSSSSSSSSSK.W.","...KSSSKKSSK..W.","....KKSSSSKK..W.","...KKPPPPPPKKYWY",".KKKPPPPPPPPKSB.","KPPPKPPYYPPPKSB.","KPYPKPPPPPPKKK..","KPPPKBBBBBBK....",".KKKKPPPPPPK....","....KPPKKPPK....","....KGGK.KGGK...","....KBBK.KBBK...","...KKKKK.KKKKK.."];
+const P_NOV = ["....KKK......KKK....","...KNNNKKKKKKNNNK...","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNNFFFFFFFFFNNK.NV",".KNNKFFFFFFFFFKNNNNV","KNNKFFFFFFFFFFFKNNNV","KNNKFFFFFFFFFFFK...V","KNNKFFFFFFFFFFFK...V",".KKKBBBBBBBBBBBK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK....V","....KNNNK.KNNNK....V","...KKKKKK.KKKKKK...."];
+// La tête seule pour le mode small : [x0, y0, x1, y1] dans la grille du sprite.
+const HEAD = { knight: [1, 0, 13, 10], panda: [1, 0, 17, 10] };
+function svg(grid, player, px, crop) {
+  const [x0, y0, x1, y1] = crop || [0, 0, Math.max(...grid.map((r) => r.length)), grid.length];
+  let r = "";
+  grid.forEach((row, y) => {
+    if (y < y0 || y >= y1) return;
+    [...row].forEach((ch, x) => {
+      if (ch === "." || x < x0 || x >= x1) return;
+      r += `<rect x="${x - x0}" y="${y - y0}" width="1" height="1" fill="${ch === "P" ? player : PAL[ch]}"/>`;
+    });
+  });
+  return `<svg width="${(x1 - x0) * px}" height="${(y1 - y0) * px}" viewBox="0 0 ${x1 - x0} ${y1 - y0}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+document.querySelectorAll("[data-sprite]").forEach((el) => {
+  const panda = el.dataset.sprite === "panda";
+  const crop = el.dataset.head !== undefined ? HEAD[el.dataset.sprite] : null;
+  el.insertAdjacentHTML("afterbegin", svg(panda ? P_NOV : SQUIRE, panda ? "#d94848" : "#3d7bd9", Number(el.dataset.px || 3), crop));
+});
+const ICON = ["..####..", ".######.", ".#.##.#.", ".######.", "..####..", ".######.", "#.####.#", "..#..#.."];
+document.querySelectorAll("[data-icon]").forEach((el) => {
+  let r = "";
+  ICON.forEach((l, y) => [...l].forEach((c, x) => { if (c === "#") r += `<rect x="${x}" y="${y}" width="1" height="1" fill="currentColor"/>`; }));
+  el.insertAdjacentHTML("afterbegin", `<svg width="16" height="16" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`);
+});
+
+const VICTORY_MS = 3200;
+function sparks(stage) {
+  stage.querySelectorAll(".spark").forEach((s) => s.remove());
+  const cx = stage.clientWidth / 2 - 2, cy = stage.clientHeight / 2 - 2, d = Math.min(30, stage.clientWidth / 2);
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement("i");
+    s.className = "spark";
+    const a = (i / 8) * Math.PI * 2;
+    s.style.left = cx + "px"; s.style.top = cy + "px";
+    s.style.setProperty("--dx", Math.round(Math.cos(a) * d) + "px");
+    s.style.setProperty("--dy", Math.round(Math.sin(a) * d) + "px");
+    stage.appendChild(s);
+  }
+}
+// Joue une victoire dans un encart normal ou small, puis revient au repos (la boîte ne bouge jamais).
+function play(gm, cls, from, to) {
+  const all = ["win", "evo", "derust", "lvlup"];
+  clearTimeout(gm._t);
+  all.forEach((c) => gm.classList.remove(c));
+  if (gm.dataset.rusty !== undefined) gm.classList.add("rusty");
+  const bar = gm.querySelector(".xp i");
+  if (bar && from !== undefined) { bar.style.transition = "none"; bar.style.width = from + "%"; void bar.offsetWidth; bar.style.transition = ""; }
+  void gm.offsetWidth;
+  sparks(gm.querySelector(".gm-stage"));
+  cls.split(" ").forEach((c) => gm.classList.add(c));
+  if (bar && to !== undefined) setTimeout(() => {
+    if (to < from) { bar.style.width = "100%"; setTimeout(() => { bar.style.transition = "none"; bar.style.width = "0%"; void bar.offsetWidth; bar.style.transition = ""; bar.style.width = to + "%"; }, 950); }
+    else bar.style.width = to + "%";
+  }, 300);
+  if (cls.includes("derust")) setTimeout(() => gm.classList.remove("rusty"), 1700);
+  gm._t = setTimeout(() => all.forEach((c) => gm.classList.remove(c)), VICTORY_MS);
+}
+document.querySelectorAll("[data-anim]").forEach((gm) => {
+  if (gm.classList.contains("rusty")) gm.dataset.rusty = "";
+  const run = () => play(gm, gm.dataset.anim, gm.dataset.from && +gm.dataset.from, gm.dataset.to && +gm.dataset.to);
+  setTimeout(run, 700);
+  const btn = gm.closest(".state").querySelector("[data-replay]");
+  if (btn) btn.addEventListener("click", run);
+});
+
+// Mode libre : marche le long du bas, s'arrête, repart, change de sens.
+const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+function walker(layer) {
+  const w = layer.querySelector(".walker"), flip = w.querySelector(".flip");
+  let x = 40, dir = 1, pause = 0, last = performance.now();
+  function tick(t) {
+    const dt = Math.min(0.05, (t - last) / 1000); last = t;
+    const max = Math.max(8, layer.clientWidth - w.offsetWidth - 8);
+    let walking = false;
+    if (layer.classList.contains("still") || reduced.matches) { x = 12; dir = 1; }
+    else if (layer.classList.contains("cheer") || layer.hidden) { /* reste sur place */ }
+    else if (pause > 0) pause -= dt;
+    else {
+      walking = true;
+      x += dir * 36 * dt;
+      if (x > max) { x = max; dir = -1; pause = 1.2; }
+      else if (x < 8) { x = 8; dir = 1; pause = 1.2; }
+      else if (Math.random() < dt * 0.3) { pause = 0.8 + Math.random() * 1.6; if (Math.random() < 0.4) dir = -dir; }
+    }
+    w.classList.toggle("walking", walking);
+    w.style.transform = `translateX(${x}px)`;
+    flip.style.transform = `scaleX(${dir})`;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+function cheer(layer, label) {
+  clearTimeout(layer._t);
+  layer.classList.remove("cheer", "derust", "evo");
+  if (label) layer.querySelector(".pop").textContent = label;
+  void layer.offsetWidth;
+  layer.classList.add("cheer");
+  if (label === "NOUVELLE FORME !") layer.classList.add("evo");
+  if (layer.classList.contains("rusty")) { layer.classList.add("derust"); setTimeout(() => layer.classList.remove("rusty"), 1700); }
+  layer._t = setTimeout(() => layer.classList.remove("cheer", "derust", "evo"), VICTORY_MS);
+}
+
+const freeLayer = document.getElementById("free-layer");
+walker(freeLayer);
+document.querySelectorAll("[data-free-send], #free-win").forEach((b) => b.addEventListener("click", () => {
+  if (!freeLayer.hidden) cheer(freeLayer, "+10 XP");
+  if (b.dataset.freeSend !== undefined) { b.disabled = true; b.textContent = "Envoyée"; const st = b.closest("tr").querySelector(".stamp"); st.className = "stamp sent"; st.textContent = "Envoyée"; }
+}));
+function toggle(id, fn) {
+  const b = document.getElementById(id);
+  b.addEventListener("click", () => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", String(on)); fn(on); });
+}
+document.getElementById("free-evo").addEventListener("click", () => { if (!freeLayer.hidden) cheer(freeLayer, "NOUVELLE FORME !"); });
+toggle("free-rust", (on) => freeLayer.classList.toggle("rusty", on));
+toggle("free-still", (on) => freeLayer.classList.toggle("still", on));
+toggle("free-cutbtn", (on) => { freeLayer.hidden = on; document.getElementById("free-cut").hidden = !on; });
+
+// Démo vivante : le menu du rond change de mode.
+const liveRond = document.getElementById("live-rond"), menu = document.getElementById("live-menu");
+const liveNormal = document.getElementById("live-normal"), liveSmall = document.getElementById("live-small"), liveFree = document.getElementById("live-free");
+let mode = "normal", xp = 62, count = 2;
+walker(liveFree);
+liveRond.addEventListener("click", () => { menu.hidden = !menu.hidden; liveRond.setAttribute("aria-expanded", String(!menu.hidden)); });
+menu.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => {
+  mode = b.dataset.mode;
+  menu.querySelectorAll("[data-mode]").forEach((o) => o.setAttribute("aria-checked", String(o === b)));
+  liveNormal.hidden = mode !== "normal"; liveSmall.hidden = mode !== "small"; liveFree.hidden = mode !== "free";
+  liveRond.dataset.on = String(mode !== "off");
+  menu.hidden = true; liveRond.setAttribute("aria-expanded", "false");
+}));
+document.querySelectorAll("#live .jf-act").forEach((b) => b.addEventListener("click", () => {
+  const from = xp; xp = Math.min(xp + 12, 98); count += 1;
+  document.querySelectorAll(".live-today").forEach((s) => (s.textContent = count + " auj."));
+  liveNormal.querySelector(".live-company").textContent = b.dataset.company;
+  if (mode === "normal") play(liveNormal, "win", from, xp);
+  else if (mode === "small") play(liveSmall, "win");
+  else if (mode === "free") cheer(liveFree, "+10 XP");
+  b.disabled = true; b.textContent = "Envoyée";
+  const st = b.closest("tr").querySelector(".stamp"); st.className = "stamp sent"; st.textContent = "Envoyée";
+}));
+</script>
