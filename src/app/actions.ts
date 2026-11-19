@@ -1,18 +1,12 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
 import { parisDay } from "@/game/calendar";
-import { currentDuel } from "@/game/duel";
-import { formReached, koCrossed, nudgesJustSucceeded, type NotificationEvent } from "@/game/notifications";
-import { formName } from "@/lib/forms";
 import { findDuplicate, removalImpact } from "@/lib/playerView";
 import { db } from "@/server/db";
-import { loadDuelInput, loadGame, syncAchievements, type GameData } from "@/server/game";
-import { settleChallenge } from "@/server/challenge";
-import { notifyAll } from "@/server/notify";
+import { createApplication, MAX_COMPANY } from "@/server/applications";
+import { loadGame } from "@/server/game";
 import { requirePlayer } from "@/server/session";
 
-const MAX_COMPANY = 80;
 const UNDO_WINDOW_MS = 60_000;
 
 export type DuplicateInfo = { company: string; when: string; sure: boolean };
@@ -35,14 +29,8 @@ export async function addApplication(company: string, confirmDuplicate: boolean)
   if (previous && !confirmDuplicate) {
     return { ok: false, duplicate: { company: previous.app.company, when: whenLabel(previous.app.createdAt, new Date()), sure: previous.sure } };
   }
-  const row = await db().application.create({ data: { playerId: player.id, company: name } });
-  const now = new Date();
-  const updated = await loadGame();
-  const challengeEvents = await settleChallenge(player.id, updated, now);
-  await syncAchievements(updated, now);
-  after(async () => notifyAll([...challengeEvents, ...(await applicationEvents(player.id, game, updated, now))], now));
-  revalidatePath("/");
-  return { ok: true, id: row.id };
+  const { id } = await createApplication(player.id, name, game);
+  return { ok: true, id };
 }
 
 /** Annule une candidature qu'on vient d'ajouter (le lien « Annuler » reste quelques secondes). */
@@ -68,25 +56,4 @@ export async function removeApplication(id: string): Promise<RemoveResult> {
   await db().application.updateMany({ where: { id, playerId: player.id, cancelledAt: null }, data: { cancelledAt: now } });
   revalidatePath("/");
   return { ok: true, xp };
-}
-
-/** Ce que la candidature qu'on vient d'ajouter change pour le binôme : relance réussie, nouvelle forme, boss K.O. */
-async function applicationEvents(playerId: string, before: GameData, updated: GameData, now: Date): Promise<{ playerId: string; event: NotificationEvent }[]> {
-  const me = updated.players.find((p) => p.id === playerId);
-  const partner = updated.players.find((p) => p.id !== playerId);
-  if (!me || !partner) return [];
-  const items: { playerId: string; event: NotificationEvent }[] = [];
-  for (const n of nudgesJustSucceeded(playerId, updated.nudges, before.apps, updated.apps)) {
-    items.push({ playerId: n.senderId, event: { kind: "nudge-ok", nudgeId: n.id, partner: me.pseudo } });
-  }
-  // Une relance réussie fait aussi gagner de l'XP à l'expéditeur : chacun peut changer de forme.
-  for (const [who, to] of [[me, partner], [partner, me]] as const) {
-    const form = formReached(who.id, before.apps, updated.apps, updated.nudges, updated.quests);
-    if (form) items.push({ playerId: to.id, event: { kind: "evo", partnerId: who.id, partner: who.pseudo, form, formName: formName(who.character, form) } });
-  }
-  const [duelBefore, duelAfter] = await Promise.all([before, updated].map(async (g) => currentDuel(await loadDuelInput(g), now)));
-  if (duelAfter && koCrossed(duelBefore, duelAfter)) {
-    items.push({ playerId: partner.id, event: { kind: "ko", friday: duelAfter.id, partner: me.pseudo, boss: duelAfter.boss } });
-  }
-  return items;
 }

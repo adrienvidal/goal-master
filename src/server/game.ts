@@ -29,7 +29,7 @@ export async function loadGame(): Promise<GameData> {
   ]);
   return {
     players,
-    apps: rows.map((r) => ({ id: r.id, userId: r.playerId, company: r.company, createdAt: r.createdAt, cancelledAt: r.cancelledAt })),
+    apps: rows.map((r) => ({ id: r.id, userId: r.playerId, company: r.company, createdAt: r.createdAt, cancelledAt: r.cancelledAt, externalRef: r.externalRef, source: r.source })),
     nudges: nudgeRows.map((n) => ({ id: n.id, senderId: n.senderId, recipientId: n.recipientId, message: n.message, sentAt: n.sentAt })),
     challenges,
     arenas: arenas.map(({ actions, ...arena }) => ({ arena, actions })),

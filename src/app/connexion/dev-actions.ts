@@ -4,10 +4,11 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { isAllowedEmail, parseAllowedEmails } from "@/lib/allowlist";
 import { DEV_USER_COOKIE, devLoginEnabled } from "@/lib/devLogin";
+import { safeReturnPath } from "@/lib/widgetLink";
 import { db } from "@/server/db";
 
 /** Local et aperçus de test : se connecter directement avec une adresse autorisée, sans code. */
-export async function devLogin(email: string): Promise<void> {
+export async function devLogin(email: string, retour = "/"): Promise<void> {
   if (!devLoginEnabled(process.env)) throw new Error("Connexion directe désactivée");
   if (!isAllowedEmail(email, parseAllowedEmails(process.env.ALLOWED_EMAILS))) throw new Error("Adresse non autorisée");
   const address = email.trim().toLowerCase();
@@ -17,7 +18,7 @@ export async function devLogin(email: string): Promise<void> {
     update: {},
   });
   (await cookies()).set(DEV_USER_COOKIE, address, { httpOnly: true, sameSite: "lax", path: "/", secure: Boolean(process.env.VERCEL) });
-  redirect("/");
+  redirect(safeReturnPath(retour));
 }
 
 export async function devLogout(): Promise<void> {

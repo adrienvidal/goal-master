@@ -16,7 +16,7 @@ function errorMessage(error: AuthError): string {
 }
 
 // Deux temps : l'adresse, puis le code reçu par e-mail (cadrage §4.1).
-export default function LoginForm(): React.ReactElement {
+export default function LoginForm({ retour = "/" }: { retour?: string }): React.ReactElement {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
@@ -46,7 +46,7 @@ export default function LoginForm(): React.ReactElement {
       setError(errorMessage(error));
       return;
     }
-    location.href = "/";
+    location.href = retour;
   }
 
   if (step === "email") {

@@ -18,16 +18,16 @@ export async function currentUser(): Promise<CurrentUser | null> {
   return session ? { id: session.user.id, email: session.user.email } : null;
 }
 
-/** Utilisateur connecté, sinon redirection vers /connexion. */
-export async function requireUser(): Promise<CurrentUser> {
+/** Utilisateur connecté, sinon redirection vers /connexion (puis retour à `returnTo`, chemin interne). */
+export async function requireUser(returnTo?: string): Promise<CurrentUser> {
   const user = await currentUser();
-  if (!user) redirect("/connexion");
+  if (!user) redirect(returnTo ? `/connexion?retour=${encodeURIComponent(returnTo)}` : "/connexion");
   return user;
 }
 
 /** Joueur connecté et déjà passé par le premier lancement, sinon redirection. */
-export async function requirePlayer(): Promise<Player> {
-  const user = await requireUser();
+export async function requirePlayer(returnTo?: string): Promise<Player> {
+  const user = await requireUser(returnTo);
   const player = await db().player.findUnique({ where: { id: user.id } });
   if (!player) redirect("/bienvenue");
   return player;
