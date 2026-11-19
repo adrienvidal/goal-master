@@ -4,6 +4,7 @@ import { Sprite } from "@/components/Sprite";
 import { isLocalOrigin } from "@/lib/localOrigin";
 import type { WidgetMode } from "@/lib/widgetMode";
 import { victoryFor, victoryLine, victoryPop, type Victory } from "@/lib/widgetVictory";
+import { FreeScene } from "./FreeScene";
 import type { WidgetState } from "@/lib/widgetState";
 
 const REFRESH_MS = 30_000;
@@ -95,7 +96,7 @@ export function WidgetView({ mode }: { mode: WidgetMode }): React.ReactElement {
   const hero = status === "ready" ? state : null;
   const classes = ["widget-root", `gm-${mode}`, mode === "free" ? "" : "gm-widget", hero ? "" : "gm-ghost", victory ? "win" : "", victory?.newForm ? "evo" : "", victory?.derust ? "derust" : "", hero?.evolutionPending ? "evo-pending" : ""];
   const className = classes.filter(Boolean).join(" ");
-  if (mode === "free") return <FreeView className={className} state={hero} victory={victory} />;
+  if (mode === "free") return <FreeScene className={className} state={hero} victory={victory} parentOrigin={parentOrigin} />;
   if (mode === "small") return <SmallView className={className} state={hero ?? state ?? ghost} ready={hero !== null} unlinked={status === "unlinked"} victory={victory} />;
   if (!hero) {
     const shown = state ?? ghost;
@@ -204,26 +205,6 @@ function SmallView({ className, state, ready, unlinked, victory }: { className: 
           <span className="gm-sline">{line}</span>
         )}
       </div>
-    </div>
-  );
-}
-
-/** Free : le personnage patrouille le long du bas de job-finder (patrouille du décor) ; rien en attente ni lien coupé. */
-const PATROL = { "--from": "10%", "--to": "90%", "--dur": "80s", "--steps": 320, "--face": 1, "--delay": "0s" } as React.CSSProperties;
-
-function FreeView({ className, state, victory }: { className: string; state: WidgetState | null; victory: Victory | null }): React.ReactElement {
-  return (
-    <div className={className}>
-      {state && (
-        <span className="walker" style={PATROL}>
-          {victory ? <span className="gm-pop">{victoryPop(victory, state, "free")}</span> : state.evolutionPending ? <span className="gm-pop still">!</span> : null}
-          <span className="facer">
-            <span className="sizer">
-              <HeroSprite state={state} victory={victory} px={state.displayedForm >= 4 ? 2 : 3} />
-            </span>
-          </span>
-        </span>
-      )}
     </div>
   );
 }

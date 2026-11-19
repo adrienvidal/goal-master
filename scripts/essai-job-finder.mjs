@@ -1,5 +1,6 @@
 // Page d'essai locale qui joue le rôle de job-finder pour l'encart Goal Master (cadrage encart-job-finder).
-// Le mode de l'encart (normal, small, free) se choisit par les boutons de la page ou par ?mode= dans l'adresse.
+// Le mode de l'encart (normal, small, free) se choisit par les boutons de la page ou par ?mode= dans l'adresse ;
+// ?vitesse=10 accélère les visites et les monstres du mode libre (Goal Master local seulement).
 // Usage : node scripts/essai-job-finder.mjs [adresse de Goal Master, défaut http://localhost:3000] [port, défaut 5199]
 // Comme le fera job-finder : la clé est gardée par ce serveur local, l'envoi part du serveur, l'iframe ne fait qu'afficher.
 import { createServer } from "node:http";
@@ -54,7 +55,9 @@ function showUnlinked(text) {
   document.getElementById("link").onclick = () => window.open(GM + "/relier?origin=" + encodeURIComponent(location.origin), "goal-master-relier", "width=420,height=640");
 }
 function showWidget() {
-  dock.innerHTML = '<iframe title="Goal Master" src="' + GM + '/widget?mode=' + mode + '"></iframe>';
+  boxes = [];
+  const speed = new URLSearchParams(location.search).get("vitesse");
+  dock.innerHTML = '<iframe title="Goal Master" src="' + GM + '/widget?mode=' + mode + (speed ? "&vitesse=" + encodeURIComponent(speed) : "") + '"></iframe>';
   frame = dock.querySelector("iframe");
 }
 window.addEventListener("message", async (e) => {
@@ -65,6 +68,8 @@ window.addEventListener("message", async (e) => {
   } else if (e.data?.type === "goal-master:ready" && e.source === frame?.contentWindow) {
     const { key } = await (await fetch("/cle")).json();
     frame.contentWindow.postMessage({ type: "goal-master:key", key }, GM);
+  } else if (e.data?.type === "goal-master:hitboxes" && e.source === frame?.contentWindow) {
+    boxes = Array.isArray(e.data.boxes) ? e.data.boxes : [];
   } else if (e.data?.type === "goal-master:unlinked") {
     await fetch("/cle", { method: "DELETE" }); showUnlinked("Le lien a été coupé depuis Goal Master.");
   }
@@ -75,6 +80,17 @@ document.querySelectorAll("[data-company]").forEach((b) => b.onclick = async () 
   if (r.status === 401) showUnlinked("Le lien a été coupé depuis Goal Master.");
   frame?.contentWindow.postMessage({ type: "goal-master:refresh" }, GM);
 });
+// Relais des clics du mode libre, comme le fera job-finder : main au survol d'un personnage, clic gardé et renvoyé.
+let boxes = [];
+const boxAt = (x, y) => (mode === "free" ? boxes.find((b) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) : undefined);
+document.addEventListener("mousemove", (e) => { document.body.style.cursor = boxAt(e.clientX, e.clientY) ? "pointer" : ""; });
+document.addEventListener("click", (e) => {
+  const hit = boxAt(e.clientX, e.clientY);
+  if (!hit) return;
+  e.preventDefault(); e.stopPropagation();
+  frame?.contentWindow.postMessage({ type: "goal-master:poke", target: hit.target }, GM);
+  log("clic → " + hit.target);
+}, true);
 setMode(mode);
 linked ? showWidget() : showUnlinked("Relie ton compte pour que tes candidatures envoyées comptent.");
 </script>`;

@@ -1,4 +1,5 @@
 import type { Player } from "@/generated/prisma/client";
+import { companionLabel, isCompanion, ownedCompanions } from "@/game/quests";
 import { buildPlayerView } from "@/lib/playerView";
 import { bearerKey, hashWidgetKey } from "@/lib/widgetLink";
 import { widgetState, type WidgetState } from "@/lib/widgetState";
@@ -21,7 +22,9 @@ export async function playerForKey(req: Request): Promise<Player | null> {
 export function stateOf(game: GameData, player: Player, now: Date): WidgetState {
   const row = game.players.find((p) => p.id === player.id) ?? player;
   const view = buildPlayerView(row, game.apps, game.nudges, game.quests, activeGoal(game, player.id), now);
-  return widgetState(view, game.apps, player.id, row.seenForm);
+  const owned = ownedCompanions(player.id, game.quests);
+  const companions = row.walkers.filter(isCompanion).filter((c) => owned.includes(c)).map((id) => ({ id, name: companionLabel(player.id, id, game.quests) }));
+  return widgetState(view, game.apps, player.id, row.seenForm, companions);
 }
 
 export function json(body: unknown, status = 200): Response {
