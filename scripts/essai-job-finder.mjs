@@ -41,7 +41,7 @@ const page = () => `<!doctype html><meta charset="utf-8"><meta name="viewport" c
 <script>
 const GM = ${JSON.stringify(GM)};
 const dock = document.getElementById("dock"), log = (t) => (document.getElementById("log").textContent = t + "\\n" + document.getElementById("log").textContent);
-let linked = ${key ? "true" : "false"}, frame = null, mode = new URLSearchParams(location.search).get("mode") ?? "normal";
+let linked = ${key ? "true" : "false"}, frame = null, mode = ["normal", "small", "free"].includes(new URLSearchParams(location.search).get("mode")) ? new URLSearchParams(location.search).get("mode") : "normal";
 function setMode(m) {
   mode = m; dock.className = m;
   document.querySelectorAll("[data-mode]").forEach((b) => b.classList.toggle("on", b.dataset.mode === m));

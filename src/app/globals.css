@@ -536,7 +536,6 @@ body:has(.widget-root) > .landscape-bg, body:has(.widget-root) > .landscape-veil
 .gm-sinfo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .gm-slvl { font-family: var(--font-display); font-size: 9px; color: var(--gold); white-space: nowrap; }
 .gm-sline { height: 15px; font-family: var(--font-num); font-size: 18px; line-height: 15px; color: var(--muted); white-space: nowrap; overflow: hidden; }
-.gm-fire { font-size: 11px; }
 .gm-ssay { height: 15px; font-family: var(--font-display); font-size: 9px; line-height: 15px; color: var(--gold); white-space: nowrap; animation: gm-wait .4s steps(2) 4; }
 .gm-ssay.muted { color: var(--muted); }
 .gm-ssay.evo { font-size: 8px; }

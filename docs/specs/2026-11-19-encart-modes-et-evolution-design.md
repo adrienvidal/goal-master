@@ -30,7 +30,7 @@ Deux lots, chacun livrable seul :
   - rouille partie : « **Qonto** · la rouille part » ;
   - nouvelle forme : « **NOUVELLE FORME !** Va la voir » (or, jamais le nom de la forme).
   Le héros reste un lien vers `/` (nouvel onglet), qui remplace « Voir dans Goal Master ».
-- **Small** : tête seule (le haut du sprite, cadré dans une case de 48 × 44), niveau, « n auj. 🔥s » (ou « n j sans » en rouille). Victoire : « +10 XP », « +0 XP », « NIV. 9 ! » ou « ÉVOLUE ! » à la place du compte, petit saut et étincelles dans la case, sans nom d'entreprise. La tête est un lien vers `/`.
+- **Small** : tête seule (le haut du sprite, cadré dans une case de 48 × 44), niveau, « n auj. » (ou « n j sans » en rouille, tant qu'aucune candidature du jour ; la série ne tient pas à côté dès deux chiffres). Victoire : « +10 XP », « +0 XP », « NIV. 9 ! » ou « ÉVOLUE ! » à la place du compte, petit saut et étincelles dans la case, sans nom d'entreprise. La tête est un lien vers `/`.
 - **Free** : fond transparent, pas de barre, ni pseudo, ni XP ; le personnage patrouille le long du bas en reprenant la patrouille de `DecorView` (`.walker`, `patrol`, `face`, `walk-bob`). Victoire : il saute sur place, « +10 XP » / « NIV. 9 ! » / « NOUVELLE FORME ! » au-dessus de lui. Pas de lien (les clics traversent l'iframe). `prefers-reduced-motion` : immobile en bas à gauche, victoire sans saut.
 - **Nouvelle forme** (trois modes) : flash, héros en silhouette blanche (`filter: brightness(0) invert(1)`) pendant la victoire.
 - **Attente et lien coupé** : normal, « Ton héros arrive… » / « Lien coupé · Tes candidatures ne comptent plus. » dans la boîte ; small, tête grisée (« … » ou « COUPÉ ») ; free, rien. Le message `goal-master:unlinked` part comme aujourd'hui.

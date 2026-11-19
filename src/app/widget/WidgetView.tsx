@@ -15,7 +15,9 @@ type Status = "waiting" | "ready" | "unlinked";
 function readLast(): WidgetState | null {
   try {
     const raw = localStorage.getItem(LAST_SEEN);
-    return raw ? (JSON.parse(raw) as WidgetState) : null;
+    const last = raw ? (JSON.parse(raw) as WidgetState) : null;
+    // Il sert aussi à dessiner le héros en attente : une entrée abîmée ou ancienne ne doit pas casser l'encart.
+    return last && typeof last.character === "string" && typeof last.displayedForm === "number" ? last : null;
   } catch {
     return null;
   }
@@ -94,9 +96,9 @@ export function WidgetView({ mode }: { mode: WidgetMode }): React.ReactElement {
   const classes = ["widget-root", `gm-${mode}`, mode === "free" ? "" : "gm-widget", hero ? "" : "gm-ghost", victory ? "win" : "", victory?.newForm ? "evo" : "", victory?.derust ? "derust" : ""];
   const className = classes.filter(Boolean).join(" ");
   if (mode === "free") return <FreeView className={className} state={hero} victory={victory} />;
-  if (mode === "small") return <SmallView className={className} state={hero ?? ghost} ready={hero !== null} unlinked={status === "unlinked"} victory={victory} />;
+  if (mode === "small") return <SmallView className={className} state={hero ?? state ?? ghost} ready={hero !== null} unlinked={status === "unlinked"} victory={victory} />;
   if (!hero) {
-    const shown = ghost;
+    const shown = state ?? ghost;
     return (
       <div className={className}>
         <Bar />
@@ -173,17 +175,8 @@ function SmallView({ className, state, ready, unlinked, victory }: { className: 
   let line: React.ReactNode = <span className="gm-dots" />;
   if (unlinked) line = "relier ?";
   else if (ready && state) {
-    line =
-      state.streak > 0 ? (
-        <>
-          {state.today} auj. <span className="gm-fire">🔥</span>
-          {state.streak}
-        </>
-      ) : state.idleWorkdays > 0 ? (
-        <span className="gm-rust">{state.idleWorkdays} j sans</span>
-      ) : (
-        `${state.today} auj.`
-      );
+    // Les candidatures du jour seulement (la série ne tient pas à côté dès deux chiffres) ; la rouille à la place.
+    line = state.idleWorkdays > 0 && state.today === 0 ? <span className="gm-rust">{state.idleWorkdays} j sans</span> : `${state.today} auj.`;
   }
   return (
     <div className={className}>
@@ -211,7 +204,7 @@ function SmallView({ className, state, ready, unlinked, victory }: { className: 
 }
 
 /** Free : le personnage patrouille le long du bas de job-finder (patrouille du décor) ; rien en attente ni lien coupé. */
-const PATROL = { "--from": "6%", "--to": "94%", "--dur": "80s", "--steps": 320, "--face": 1, "--delay": "0s" } as React.CSSProperties;
+const PATROL = { "--from": "10%", "--to": "90%", "--dur": "80s", "--steps": 320, "--face": 1, "--delay": "0s" } as React.CSSProperties;
 
 function FreeView({ className, state, victory }: { className: string; state: WidgetState | null; victory: Victory | null }): React.ReactElement {
   return (
