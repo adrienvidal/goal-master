@@ -40,7 +40,7 @@ export default async function DuelPage(): Promise<React.ReactElement> {
           {fighters.map((f) => (
             <div key={f.playerId} className="flex justify-between border-b-2 border-dotted border-stone-2 pb-1">
               <dt>{name(f.playerId)}</dt>
-              <dd className="num">{f.hits} coup{f.hits > 1 ? "s" : ""}</dd>
+              <dd className="num">{f.hits} coup{f.hits > 1 ? "s" : ""}{f.support > 0 ? ` (dont ${f.support} d'entraide)` : ""}</dd>
             </div>
           ))}
           <div className="flex justify-between border-b-2 border-dotted border-stone-2 pb-1">
