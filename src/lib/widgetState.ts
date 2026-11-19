@@ -3,10 +3,11 @@ import { parisDay } from "@/game/calendar";
 import { shownForm } from "@/game/evolution";
 import { DAILY_XP_CAP, XP_PER_APPLICATION, type Form } from "@/game/levels";
 import { activeApplications, type Application } from "@/game/xp";
+import type { Duel } from "@/game/duel";
 import type { CompanionId } from "@/game/quests";
 import { formName } from "./forms";
 import type { CharacterId, ColorId } from "./onboarding";
-import type { PlayerView } from "./playerView";
+import { splitCompany, type PlayerView } from "./playerView";
 
 /** Ce que l'encart job-finder affiche (cadrage encart-job-finder). */
 export type WidgetState = {
@@ -31,12 +32,60 @@ export type WidgetState = {
   companions: { id: CompanionId; name: string }[];
   /** Les dernières candidatures arrivées par job-finder, la plus récente d'abord, avec l'XP qu'elles ont rapportée. */
   recent: { id: string; company: string; at: string; xp: number }[];
+  /** Le héros de l'ami, qui passe dans la scène du mode libre (cadrage encart-sans-compagnon). */
+  friend: WidgetFriend | null;
+  /** Le boss de la semaine : coups qui manquent encore, ou déjà battu. */
+  boss: { left: number; won: boolean } | null;
+  /** La relance du jour vers l'ami est encore possible et il n'a pas candidaté aujourd'hui. */
+  canNudge: boolean;
 };
+
+export type WidgetFriend = {
+  pseudo: string;
+  character: CharacterId;
+  color: ColorId;
+  displayedForm: Form;
+  formName: string;
+  mood: Mood;
+  level: number;
+  today: number;
+  streak: number;
+  idleWorkdays: number;
+  last: { company: string; at: string } | null;
+};
+
+export type WidgetExtras = { friend?: WidgetFriend | null; boss?: WidgetState["boss"]; canNudge?: boolean };
+
+/** L'ami vu depuis l'encart : jamais une forme qu'il n'a pas encore vue lui-même. */
+export function widgetFriend(view: PlayerView, apps: Application[], seenForm: number | null): WidgetFriend {
+  const last = activeApplications(apps)
+    .filter((a) => a.userId === view.id)
+    .reduce<Application | null>((best, a) => (!best || a.createdAt > best.createdAt ? a : best), null);
+  const displayedForm = shownForm(view.displayedForm, view.levelForm, seenForm);
+  return {
+    pseudo: view.pseudo,
+    character: view.character,
+    color: view.color,
+    displayedForm,
+    formName: formName(view.character, displayedForm),
+    mood: view.mood,
+    level: view.level,
+    today: view.today.count,
+    streak: view.streak,
+    idleWorkdays: view.idleWorkdays,
+    last: last ? { company: splitCompany(last.company).name, at: last.createdAt.toISOString() } : null,
+  };
+}
+
+export function widgetBoss(duel: Pick<Duel, "hp" | "hits" | "bonus" | "won"> | null): WidgetState["boss"] {
+  if (!duel) return null;
+  return { left: duel.won ? 0 : Math.max(0, duel.hp - duel.hits - duel.bonus), won: duel.won };
+}
 
 const RECENT = 5;
 
 /** `seenForm` : dernière scène d'évolution vue ; l'encart n'affiche pas une forme plus haute (la surprise reste pour /). */
-export function widgetState(view: PlayerView, apps: Application[], playerId: string, seenForm: number | null = null, companions: WidgetState["companions"] = []): WidgetState {
+export function widgetState(view: PlayerView, apps: Application[], playerId: string, seenForm: number | null = null, companions: WidgetState["companions"] = [], extras: WidgetExtras = {}): WidgetState {
   const mine = activeApplications(apps)
     .filter((a) => a.userId === playerId)
     .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
@@ -72,5 +121,8 @@ export function widgetState(view: PlayerView, apps: Application[], playerId: str
     evolutionPending: seenForm !== null && view.levelForm > seenForm,
     companions,
     recent,
+    friend: extras.friend ?? null,
+    boss: extras.boss ?? null,
+    canNudge: extras.canNudge ?? false,
   };
 }
