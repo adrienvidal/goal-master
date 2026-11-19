@@ -4,7 +4,7 @@ import type { PlayerView } from "./playerView";
 import { widgetState } from "./widgetState";
 
 const view = {
-  id: "adrien", pseudo: "Adrien", character: "knight", color: "BLUE", level: 7, xpInLevel: 62, xpForNext: 100,
+  id: "adrien", pseudo: "Adrien", character: "KNIGHT", color: "BLUE", level: 7, xpInLevel: 62, xpForNext: 100,
   levelForm: 2, displayedForm: 2, mood: "normal", idleWorkdays: 0, streak: 4,
   today: { count: 2, items: [] },
 } as unknown as PlayerView;
@@ -19,6 +19,13 @@ describe("widgetState", () => {
   test("reprend niveau, XP, forme et série de la vue", () => {
     const s = widgetState(view, [], "adrien");
     expect(s).toMatchObject({ pseudo: "Adrien", level: 7, xpInLevel: 62, xpForNext: 100, displayedForm: 2, streak: 4, today: 2, capReached: false, recent: [] });
+  });
+
+  test("nom de la forme affichée et compagnons choisis", () => {
+    const s = widgetState({ ...view, levelForm: 3, displayedForm: 3 } as PlayerView, [], "adrien", 2, [{ id: "cat", name: "Biscotte" }]);
+    expect(s.formName).toBe("Gamin");
+    expect(s.companions).toEqual([{ id: "cat", name: "Biscotte" }]);
+    expect(widgetState(view, [], "adrien").companions).toEqual([]);
   });
 
   test("forme plafonnée à la dernière scène vue, niveau et victoire inchangés", () => {

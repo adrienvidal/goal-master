@@ -3,6 +3,8 @@ import { parisDay } from "@/game/calendar";
 import { shownForm } from "@/game/evolution";
 import { DAILY_XP_CAP, XP_PER_APPLICATION, type Form } from "@/game/levels";
 import { activeApplications, type Application } from "@/game/xp";
+import type { CompanionId } from "@/game/quests";
+import { formName } from "./forms";
 import type { CharacterId, ColorId } from "./onboarding";
 import type { PlayerView } from "./playerView";
 
@@ -23,6 +25,10 @@ export type WidgetState = {
   streak: number;
   /** Une forme atteinte dont la scène n'a pas encore été vue sur / : l'encart l'annonce en silhouette jusque-là. */
   evolutionPending: boolean;
+  /** Nom de la forme affichée (bulle du mode libre). */
+  formName: string;
+  /** Compagnons choisis pour passer dans la scène du mode libre, avec le nom donné dans la Ménagerie. */
+  companions: { id: CompanionId; name: string }[];
   /** Les dernières candidatures arrivées par job-finder, la plus récente d'abord, avec l'XP qu'elles ont rapportée. */
   recent: { id: string; company: string; at: string; xp: number }[];
 };
@@ -30,7 +36,7 @@ export type WidgetState = {
 const RECENT = 5;
 
 /** `seenForm` : dernière scène d'évolution vue ; l'encart n'affiche pas une forme plus haute (la surprise reste pour /). */
-export function widgetState(view: PlayerView, apps: Application[], playerId: string, seenForm: number | null = null): WidgetState {
+export function widgetState(view: PlayerView, apps: Application[], playerId: string, seenForm: number | null = null, companions: WidgetState["companions"] = []): WidgetState {
   const mine = activeApplications(apps)
     .filter((a) => a.userId === playerId)
     .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
@@ -47,11 +53,13 @@ export function widgetState(view: PlayerView, apps: Application[], playerId: str
     .slice(-RECENT)
     .reverse()
     .map((a) => ({ id: a.id, company: a.company, at: a.createdAt.toISOString(), xp: (rankInDay.get(a.id) ?? 0) > DAILY_XP_CAP ? 0 : XP_PER_APPLICATION }));
+  const displayedForm = shownForm(view.displayedForm, view.levelForm, seenForm);
   return {
     pseudo: view.pseudo,
     character: view.character,
     color: view.color,
-    displayedForm: shownForm(view.displayedForm, view.levelForm, seenForm),
+    displayedForm,
+    formName: formName(view.character, displayedForm),
     levelForm: view.levelForm,
     mood: view.mood,
     idleWorkdays: view.idleWorkdays,
@@ -62,6 +70,7 @@ export function widgetState(view: PlayerView, apps: Application[], playerId: str
     capReached: view.today.count >= DAILY_XP_CAP,
     streak: view.streak,
     evolutionPending: seenForm !== null && view.levelForm > seenForm,
+    companions,
     recent,
   };
 }
