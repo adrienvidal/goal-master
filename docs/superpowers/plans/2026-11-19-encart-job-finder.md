@@ -186,3 +186,14 @@ test("safeReturnPath", () => {
 ## Lot 2 : job-finder (plan à écrire dans son dépôt, après fusion du lot 1)
 
 Dans `~/Workspace/apps/job-finder-claude`, selon son CLAUDE.md : réglage `goalMaster` du profil et ligne d'édition ; clé dans `donnees/` ; table `goal_master_a_compter` remplie dans `changerStatut` quand `de !== 'envoyee'` et `vers === 'envoyee'` ; envoi immédiat et reprises (démarrage du serveur, passage suivant, « Réessayer ») ; 401 → clé effacée ; encart (non relié rendu par job-finder, relié = iframe), marge en bas de page, repli ; `/collect` qui se met à jour (`git pull` si arbre propre sur `main`, `npm install` si le lockfile change) ; adresse de Goal Master en dur, surchargeable par `JF_GOAL_MASTER_URL`.
+
+## Corrections après relecture du plan (prévalent sur les tâches)
+
+1. `intakeDecision` : une `ref` déjà reçue compte comme `known` même annulée (la contrainte unique couvre les annulées) ; la route traite aussi P2002 comme `known` (deux envois simultanés).
+2. Pas de CORS : l'API n'est appelée que par le serveur local de job-finder (Node) et par `/widget` (même origine). La page d'essai devient un petit serveur Node `scripts/essai-job-finder.mjs` qui sert la page et fait le POST, comme le fera job-finder.
+3. `/widget` ne doit pas porter le fond vivant ni `VersionWatcher` du layout racine : le layout racine les omet quand l'en-tête `x-pathname` (posé par `proxy.ts`) vaut `/widget`, ou à défaut la page les masque. `goal-master:ready` est envoyé à chaque montage pour redemander la clé.
+4. Retour après connexion : `requirePlayer(returnTo?)` le transmet à `requireUser` ; `/connexion` lit `retour` et y redirige aussi quand on est déjà connecté.
+5. Champs `externalRef` / `source` optionnels dans le type `Application` du jeu (fait).
+6. La route valide l'entreprise (vide ou plus de `MAX_COMPANY`) et la `ref` (1 à 64 caractères) → 400.
+7. Rattachement : on pose seulement `externalRef`, pas `source` ; une saisie rattachée n'entre donc ni dans `recent` (pas de fausse victoire) ni dans le compte « comptées par job-finder ».
+8. `frame-ancestors 'none'` sur `/relier` ; `WidgetView` vérifie `event.source === window.parent` en plus de l'origine.
