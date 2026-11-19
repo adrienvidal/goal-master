@@ -62,6 +62,7 @@ model Player {
   arenaSeenAt     DateTime?
   goals           Goal[]
   applications    Application[]
+  widgetKeys      WidgetKey[]
   sentNudges      Nudge[]               @relation("sentNudges")
   gotNudges       Nudge[]               @relation("receivedNudges")
   sentChallenges  Challenge[]           @relation("sentChallenges")
@@ -98,8 +99,26 @@ model Application {
   company     String
   createdAt   DateTime  @default(now())
   cancelledAt DateTime?
+  /// Identifiant de l'offre côté job-finder (encart) : une même offre ne compte qu'une fois.
+  externalRef String?
+  /// "job-finder" quand la candidature vient de l'encart, vide pour une saisie à la main.
+  source      String?
 
+  @@unique([playerId, externalRef])
   @@index([playerId, createdAt])
+}
+
+/// Clé qui relie job-finder à un joueur (cadrage encart-job-finder). Hachée ; au plus une active par joueur.
+model WidgetKey {
+  id         String    @id @default(cuid())
+  playerId   String
+  player     Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  hash       String    @unique
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+  lastUsedAt DateTime?
+
+  @@index([playerId])
 }
 
 /// `message` is the index (0-3) of the fixed nudge messages.
