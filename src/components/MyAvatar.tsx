@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { Mood } from "@/game/avatar";
+import { sceneDue } from "@/game/evolution";
 import type { Form } from "@/game/levels";
+import { seeEvolution } from "@/app/actions";
 import { formName } from "@/lib/forms";
 import type { CharacterId, ColorId } from "@/lib/onboarding";
 import { Sprite } from "./Sprite";
@@ -9,7 +11,7 @@ import { Sprite } from "./Sprite";
 /** Événement envoyé par « + Candidature » pour jouer la pose Action. */
 export const ACTION_EVENT = "gm:action";
 
-type Props = { id: string; character: CharacterId; color: ColorId; form: Form; level: number; mood: Mood; fallen: boolean; px?: number; hurt?: boolean; crown?: boolean };
+type Props = { id: string; character: CharacterId; color: ColorId; form: Form; seenForm: number; level: number; mood: Mood; fallen: boolean; px?: number; hurt?: boolean; crown?: boolean };
 type Moment = { kind: "evolution" | "grace"; from: Form; to: Form } | null;
 
 function read(key: string): string | null {
@@ -28,8 +30,9 @@ function write(key: string, value: string): void {
 }
 
 // Mon avatar : pose Repos en boucle, Action à chaque candidature, Victoire à la montée de niveau.
-// Évolution et « Retour en grâce » en plein écran, une fois par appareil (dernier état vu gardé en local).
-export function MyAvatar({ id, character, color, form, level, mood, fallen, px = 4, hurt = false, crown = false }: Props): React.ReactElement {
+// Évolution en plein écran tant que la forme affichée dépasse la forme vue (gardée en base : une seule fois, tous appareils
+// confondus) ; « Retour en grâce » une fois par appareil (dernier état vu gardé en local).
+export function MyAvatar({ id, character, color, form, seenForm, level, mood, fallen, px = 4, hurt = false, crown = false }: Props): React.ReactElement {
   const [pose, setPose] = useState<"rest" | "action" | "victory">("rest");
   const [moment, setMoment] = useState<Moment>(null);
 
@@ -46,20 +49,25 @@ export function MyAvatar({ id, character, color, form, level, mood, fallen, px =
     const key = `gm-seen-${id}`;
     const seen = read(key);
     write(key, JSON.stringify({ form, level, fallen }));
-    if (!seen) return;
-    let last: { form: Form; level: number; fallen: boolean };
+    let last: { form: Form; level: number; fallen: boolean } | null = null;
     try {
-      last = JSON.parse(seen);
+      last = seen ? JSON.parse(seen) : null;
     } catch {
-      return;
+      last = null;
     }
-    if (last.fallen && !fallen) setMoment({ kind: "grace", from: last.form, to: form });
-    else if (form > last.form && !fallen) setMoment({ kind: "evolution", from: last.form, to: form });
-    else if (level > last.level) {
+    if (last?.fallen && !fallen) setMoment({ kind: "grace", from: last.form, to: form });
+    else if (sceneDue(form, seenForm) && !fallen) setMoment({ kind: "evolution", from: Math.max(1, seenForm) as Form, to: form });
+    else if (last && level > last.level) {
       setPose("victory");
       setTimeout(() => setPose("rest"), 2400);
     }
-  }, [id, form, level, fallen]);
+  }, [id, form, seenForm, level, fallen]);
+
+  function close(): void {
+    // La forme est vue (évolution, ou retour en grâce qui la montre aussi) : l'encart et les autres appareils suivent.
+    if (sceneDue(form, seenForm)) void seeEvolution();
+    setMoment(null);
+  }
 
   return (
     <>
@@ -83,7 +91,7 @@ export function MyAvatar({ id, character, color, form, level, mood, fallen, px =
             )}
           </p>
           <p className="evo-after text-muted">Niveau {level}</p>
-          <button type="button" className="btn evo-after max-w-[260px]" onClick={() => setMoment(null)} autoFocus>
+          <button type="button" className="btn evo-after max-w-[260px]" onClick={close} autoFocus>
             Continuer
           </button>
         </div>

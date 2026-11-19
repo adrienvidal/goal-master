@@ -21,7 +21,7 @@ export async function playerForKey(req: Request): Promise<Player | null> {
 export function stateOf(game: GameData, player: Player, now: Date): WidgetState {
   const row = game.players.find((p) => p.id === player.id) ?? player;
   const view = buildPlayerView(row, game.apps, game.nudges, game.quests, activeGoal(game, player.id), now);
-  return widgetState(view, game.apps, player.id);
+  return widgetState(view, game.apps, player.id, row.seenForm);
 }
 
 export function json(body: unknown, status = 200): Response {

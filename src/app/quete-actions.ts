@@ -84,6 +84,7 @@ export async function validateQuest(id: string): Promise<QuestResult> {
     const to = updated.players.find((p) => p.id !== who.id);
     const form = questFormReached(who.id, game.apps, game.nudges, game.quests, updated.quests);
     if (form && to) items.push({ playerId: to.id, event: { kind: "evo", partnerId: who.id, partner: who.pseudo, form, formName: formName(who.character, form) } });
+    if (form) items.push({ playerId: who.id, event: { kind: "evo-me", form } });
   }
   after(() => notifyAll(items));
   return { ok: true };

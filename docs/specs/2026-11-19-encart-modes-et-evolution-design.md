@@ -46,6 +46,7 @@ La scène existe déjà : `MyAvatar` (`src/components/MyAvatar.tsx`) joue sur `/
 - **Encart** : la forme affichée est plafonnée à la forme vue, `min(displayedForm, seenForm ?? levelForm)`, dans `widgetState` (via `stateOf`, `src/server/widget.ts`). La victoire « nouvelle forme » se détecte toujours sur `levelForm`.
 - **Notification au joueur** : nouvel événement `evo-me` `{ form }` envoyé au joueur qui change de forme, partout où `evo` part déjà vers son binôme (`applicationEvents` dans `src/server/applications.ts`, qui couvre la saisie et job-finder ; validation de quête dans `src/app/quete-actions.ts`). Texte : « Ton héros a évolué ! », « Viens découvrir sa nouvelle forme. », adresse `/`. Jamais le nom de la forme. Catégorie `reminders` (aide : « Ton avatar change de forme ou commence à rouiller. »), non plafonnée, clé `evo-me:<form>`. Dans le bilan du jour : rang juste après `evo` (`src/game/digest.ts`), lien « Voir ton héros » (`src/server/mail.ts`), image sans la nouvelle forme (`src/lib/emailScene.ts` : le héros à sa forme vue, ou pas d'image).
 - La notification `evo` au binôme ne change pas.
+- **Ailleurs avant la scène** : l'image du bilan et le coffre montrent aussi le joueur à sa forme vue. Reste connu, rare : `/objectif/fin` montre la forme du niveau quand la candidature qui finit l'objectif fait aussi évoluer.
 
 ## No-gos
 

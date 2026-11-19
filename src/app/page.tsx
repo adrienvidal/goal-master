@@ -31,6 +31,7 @@ import { COLOR_HEX } from "@/lib/sprites";
 import { goalOutcome } from "@/lib/goal";
 import { buildPlayerView, removalImpact, splitCompany, type FeedItem, type PlayerView } from "@/lib/playerView";
 import { DAILY_XP_CAP } from "@/game/levels";
+import { db } from "@/server/db";
 import { activeGoal, arenaInputs, loadDuelInput, loadGame } from "@/server/game";
 import { requirePlayer } from "@/server/session";
 import AddApplication from "./AddApplication";
@@ -228,6 +229,9 @@ export default async function HomePage(): Promise<React.ReactElement> {
   if (!myGoal) redirect("/objectif/nouveau");
   const me = buildPlayerView(player, game.apps, game.nudges, game.quests, myGoal, now);
   if (me.goal && goalOutcome(me.goal.done, me.goal.target, me.goal.deadline, parisDay(now)) !== "active") redirect("/objectif/fin");
+  // Forme vue (scène d'évolution) : un joueur d'avant la scène fiable reçoit sa forme actuelle, sans scène.
+  if (player.seenForm === null) await db().player.updateMany({ where: { id: player.id, seenForm: null }, data: { seenForm: me.levelForm } });
+  const seenForm = player.seenForm ?? me.levelForm;
   const partnerRow = game.players.find((p) => p.id !== player.id);
   const partner = partnerRow ? buildPlayerView(partnerRow, game.apps, game.nudges, game.quests, activeGoal(game, partnerRow.id), now) : null;
   const received = partner ? pendingNudge(player.id, game.nudges, game.apps, now) : null;
@@ -317,7 +321,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
           {arenaClosed ? <ChallengeClosedBanner id={arenaClosed.id} text={arenaClosed.text} storageKey="gm-arena-closed" /> : null}
           <div className="flex items-end gap-4 pr-9">
             <div className="flex items-end gap-1">
-              <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} level={me.level} mood={me.mood} fallen={me.fallen} hurt={wounded} crown={crownIds.has(me.id)} />
+              <MyAvatar id={me.id} character={me.character} color={me.color} form={me.displayedForm} seenForm={seenForm} level={me.level} mood={me.mood} fallen={me.fallen} hurt={wounded} crown={crownIds.has(me.id)} />
               {myCompanion ? (
                 <Link href="/menagerie" className="flex flex-col items-center gap-0.5 no-underline" aria-label="Ma Ménagerie">
                   <Companion id={myCompanion} px={3} />

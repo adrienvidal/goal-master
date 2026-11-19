@@ -1,5 +1,6 @@
 import type { Mood } from "@/game/avatar";
 import { parisDay } from "@/game/calendar";
+import { shownForm } from "@/game/evolution";
 import { DAILY_XP_CAP, XP_PER_APPLICATION, type Form } from "@/game/levels";
 import { activeApplications, type Application } from "@/game/xp";
 import type { CharacterId, ColorId } from "./onboarding";
@@ -26,7 +27,8 @@ export type WidgetState = {
 
 const RECENT = 5;
 
-export function widgetState(view: PlayerView, apps: Application[], playerId: string): WidgetState {
+/** `seenForm` : dernière scène d'évolution vue ; l'encart n'affiche pas une forme plus haute (la surprise reste pour /). */
+export function widgetState(view: PlayerView, apps: Application[], playerId: string, seenForm: number | null = null): WidgetState {
   const mine = activeApplications(apps)
     .filter((a) => a.userId === playerId)
     .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
@@ -47,7 +49,7 @@ export function widgetState(view: PlayerView, apps: Application[], playerId: str
     pseudo: view.pseudo,
     character: view.character,
     color: view.color,
-    displayedForm: view.displayedForm,
+    displayedForm: shownForm(view.displayedForm, view.levelForm, seenForm),
     levelForm: view.levelForm,
     mood: view.mood,
     idleWorkdays: view.idleWorkdays,
