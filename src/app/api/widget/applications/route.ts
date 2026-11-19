@@ -34,5 +34,5 @@ export async function POST(req: Request): Promise<Response> {
       if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e;
     }
   }
-  return json({ added, attached: decision.kind === "attach", state: stateOf(await loadGame(), player, new Date()) });
+  return json({ added, attached: decision.kind === "attach", state: await stateOf(await loadGame(), player, new Date()) });
 }

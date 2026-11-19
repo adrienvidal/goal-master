@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest";
 import type { Application } from "@/game/xp";
 import type { PlayerView } from "./playerView";
-import { widgetState } from "./widgetState";
+import type { Duel } from "@/game/duel";
+import { widgetBoss, widgetFriend, widgetState } from "./widgetState";
 
 const view = {
   id: "adrien", pseudo: "Adrien", character: "KNIGHT", color: "BLUE", level: 7, xpInLevel: 62, xpForNext: 100,
@@ -67,4 +68,36 @@ describe("widgetState", () => {
     const s = widgetState(view, [...manual, app("j1", 9)], "adrien");
     expect(s.recent[0]).toMatchObject({ id: "j1", xp: 0 });
   });
+});
+
+describe("widgetFriend", () => {
+  const nico = { ...view, id: "nicolas", pseudo: "Nicolas", character: "PANDA", level: 6, levelForm: 3, displayedForm: 3, mood: "tired", idleWorkdays: 3, streak: 0, today: { count: 0, items: [] } } as unknown as PlayerView;
+
+  test("héros, journée et dernière candidature active de l'ami", () => {
+    const apps = [app("n1", 8, { userId: "nicolas", company: "Qonto - Dev" }), app("n2", 9, { userId: "nicolas", cancelledAt: at(10) }), app("a1", 11)];
+    const f = widgetFriend(nico, apps, 3);
+    expect(f).toMatchObject({ pseudo: "Nicolas", character: "PANDA", displayedForm: 3, formName: "Novice", mood: "tired", level: 6, today: 0, streak: 0, idleWorkdays: 3 });
+    expect(f.last).toEqual({ company: "Qonto", at: at(8).toISOString() });
+  });
+
+  test("jamais une forme qu'il n'a pas encore vue", () => {
+    expect(widgetFriend(nico, [], 2)).toMatchObject({ displayedForm: 2, last: null });
+  });
+});
+
+describe("widgetBoss", () => {
+  const duel = { hp: 12, hits: 4, bonus: 2, won: false } as Duel;
+  test("coups restants : PV moins coups et coups de grâce", () => {
+    expect(widgetBoss(duel)).toEqual({ left: 6, won: false });
+  });
+  test("gagné : plus rien à frapper", () => {
+    expect(widgetBoss({ ...duel, hits: 11, won: true })).toEqual({ left: 0, won: true });
+  });
+  test("pas de duel cette semaine", () => {
+    expect(widgetBoss(null)).toBeNull();
+  });
+});
+
+test("sans extras : ni ami, ni boss, ni relance", () => {
+  expect(widgetState(view, [], "adrien")).toMatchObject({ friend: null, boss: null, canNudge: false });
 });
