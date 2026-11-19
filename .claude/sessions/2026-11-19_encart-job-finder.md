@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Modes de l'encart et scène d'évolution dans dev, boss adouci en prod
+✅ Fait      Modes de l'encart et scène d'évolution en prod, boss adouci en prod
 ⛔ Bloqué    Aucun
-🎯 Priorité  Duel du boss adouci (échéance 20/11 18 h), mise en prod des modes
+🎯 Priorité  Duel du boss adouci (échéance 20/11 18 h), menu du rond dans job-finder
 ```
 
 ## Réalisé
@@ -32,10 +32,10 @@
 - Nuit : **PR #144 fusionnée dans `dev`** (lot B) : `Player.seenForm` (migration `seen_form`), scène existante de l'accueil jouée une fois tous appareils confondus, encart / image du bilan / coffre plafonnés à la forme vue, notification « Ton héros a évolué ! » au joueur lui-même. Vérifié en local ; 307 tests verts
 - Nuit : **PR #146 fusionnée dans `dev`**, à la demande d'Adrien : l'annonce de nouvelle forme reste dans l'encart (silhouette, « NOUVELLE FORME ! Va la voir », « ÉVOLUE ! », « ! » en libre) tant que la scène n'a pas été vue ; 308 tests verts
 - Nuit : base locale préparée pour l'essai de l'évolution (5 candidatures « Essai niveau n » sur des jours passés, Adrien à 190 XP, forme vue 2)
+- Nuit : **mise en production** sur accord d'Adrien (PR #148, commit de fusion) : déploiement réussi, migration `seen_form` passée, `/widget?mode=small|free` et `/connexion` vérifiés sur goal.viloris.io ; serveurs locaux arrêtés
 - Nuit : archivage vérifié, rien à archiver (16/11 porte toujours le duel du boss)
 
 ## Reste à faire
-- **Mise en production** des lots A et B (`dev` → `main`), sur accord d'Adrien ; la migration `seen_form` part avec
 - **Côté job-finder-claude** : mise en production de #241, puis menu du rond (Normal, Small, Libre, Masqué), taille de l'iframe par mode et `?mode=`, d'après `docs/passation/2026-11-19-encart-modes.md` (section « Livré côté Goal Master ») ; garder un `color-scheme` clair pour la transparence du mode libre
 - **Vendredi 20/11 18 h** : vérifier que le duel affiche les PV adoucis et les coups d'entraide
 - Puis Nicolas : « mets à jour job-finder et branche Goal Master » à Claude, et clic sur « Relier »
