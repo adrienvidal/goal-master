@@ -569,3 +569,18 @@ body:has(.gm-free) { background: transparent; }
   .gm-pop { animation: none; }
   .gm-xp i { transition: none; }
 }
+
+/* Ménagerie : compagnons en balade dans job-finder (maquette encart-libre-vivant, écran 3) */
+.walkers-title { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-family: var(--font-press-start); font-size: 11px; line-height: 1.6; color: var(--gold); }
+.walkers-title .num { font-size: 20px; line-height: 1; }
+.walkers { display: flex; flex-direction: column; border: 3px solid var(--edge); }
+.walk-row { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; background: var(--stone); cursor: pointer; }
+.walk-row + .walk-row { border-top: 3px solid var(--night); }
+.walk-row .pet { justify-self: center; }
+.walk-row.off { opacity: .5; cursor: not-allowed; }
+.switch { position: relative; width: 48px; height: 28px; flex: none; appearance: none; margin: 0; background: var(--night); border: 3px solid var(--edge); cursor: pointer; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: var(--muted); }
+.switch:checked { background: var(--ok); border-color: var(--ok); }
+.switch:checked::after { left: 23px; background: var(--night); }
+.switch:disabled { cursor: not-allowed; }
+.switch:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
