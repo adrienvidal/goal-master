@@ -30,6 +30,8 @@
 - Nuit : cadrage `docs/specs/2026-11-19-encart-modes-et-evolution-design.md`, plan `docs/superpowers/plans/2026-11-19-encart-modes-et-evolution.md`, une relecture du cadrage et une de chaque branche, points corrigés
 - Nuit : **PR #143 fusionnée dans `dev`** (lot A) : `/widget?mode=normal|small|free`, tailles fixes 260 × 130, 130 × 50, page entière ; victoire dans la boîte ; nouvelle forme en silhouette ; paysage plus dessiné quand il est caché (plantait dans l'iframe de 50 px) ; page d'essai avec choix du mode. Vérifié au navigateur, trois modes
 - Nuit : **PR #144 fusionnée dans `dev`** (lot B) : `Player.seenForm` (migration `seen_form`), scène existante de l'accueil jouée une fois tous appareils confondus, encart / image du bilan / coffre plafonnés à la forme vue, notification « Ton héros a évolué ! » au joueur lui-même. Vérifié en local ; 307 tests verts
+- Nuit : **PR #146 fusionnée dans `dev`**, à la demande d'Adrien : l'annonce de nouvelle forme reste dans l'encart (silhouette, « NOUVELLE FORME ! Va la voir », « ÉVOLUE ! », « ! » en libre) tant que la scène n'a pas été vue ; 308 tests verts
+- Nuit : base locale préparée pour l'essai de l'évolution (5 candidatures « Essai niveau n » sur des jours passés, Adrien à 190 XP, forme vue 2)
 - Nuit : archivage vérifié, rien à archiver (16/11 porte toujours le duel du boss)
 
 ## Reste à faire
