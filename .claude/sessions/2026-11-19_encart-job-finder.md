@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Mode libre vivant en prod (compagnons, monstres, clics relayés)
+✅ Fait      Mode libre vivant, boss final et attaque ultime en prod
 ⛔ Bloqué    Aucun
-🎯 Priorité  Duel du boss adouci (échéance 20/11 18 h), relais des clics dans job-finder
+🎯 Priorité  Duel du 20/11 18 h, puis trancher les 3 cas du boss à l'échéance
 ```
 
 ## Réalisé
@@ -40,6 +40,12 @@
 - Fin de nuit : **mise en production** du mode libre vivant sur accord d'Adrien (PR #152, commit de fusion) : déploiement réussi, `/widget?mode=free`, `/connexion` et `/menagerie` répondent sur goal.viloris.io
 - Fin de nuit : archivage vérifié, rien à archiver (16/11 porte toujours le duel du boss)
 
+- Soirée (session boss) : scénarios du boss à l'échéance mis en maquette : https://claude.ai/artifact/NYZmyyH5vXkNPjGFGborNM (`docs/maquettes/boss-echeance.html`) ; trois cas jamais tranchés relevés (voir Reste à faire)
+- Soirée (session boss) : écran de fin d'objectif rejoué en combat de boss. Pistes successives : https://claude.ai/artifact/USnNG33h19E6M9wFiw2HPX puis https://claude.ai/artifact/B6eTpXLdGazWdda5zna4hY (écartées) ; **maquette validée** : https://claude.ai/artifact/CnUpSPrQnsL2qjY1QTyDJo (`docs/maquettes/boss-final-duo.html`, version 5 : une attaque par héros et par semaine, chiffre à l'impact, arrêt sur image, 15 à 19 s)
+- Soirée (session boss) : **maquette validée** de l'attaque ultime du boss quand le duel est perdu : https://claude.ai/artifact/2hv4Me1VAQbHWrpLgZ7jV1 (`docs/maquettes/boss-ultime-ko.html`)
+- Soirée (session boss) : cadrage `docs/specs/2026-11-19-boss-finale-design.md`, plan `docs/superpowers/plans/2026-11-19-boss-finale.md` ; **PR #154 fusionnée dans `dev`** : `src/game/finale.ts` (testé d'abord), moteur canvas `src/components/arena/` (engine, finale, ultimate, `useArenaScene`), `BossFinale` sur `/objectif/fin`, `BossUltimate` sur `/duel` (titre « … vous met K.O. »), espace manquant du bouton « Reprendre le combat jusqu'au … » corrigé ; une passe de simplification ; 331 tests verts, build OK ; joué au navigateur en local, 1280 et 390 px, avec une quête d'exemple de 13 semaines (base locale sauvegardée puis restaurée)
+- Soirée (session boss) : **mise en production** sur accord d'Adrien (PR #155) : déploiement réussi, goal.viloris.io répond
+- Soirée (session boss) : archivage vérifié, rien à archiver (16/11 porte toujours le duel du boss)
 ## Reste à faire
 - **Côté job-finder-claude** : relais des clics du mode libre d'après `docs/passation/2026-11-19-encart-libre-vivant.md`, puis mise en production de #241, puis menu du rond (Normal, Small, Libre, Masqué), taille de l'iframe par mode et `?mode=`, d'après `docs/passation/2026-11-19-encart-modes.md` (section « Livré côté Goal Master ») ; garder un `color-scheme` clair pour la transparence du mode libre
 - **Vendredi 20/11 18 h** : vérifier que le duel affiche les PV adoucis et les coups d'entraide
@@ -50,6 +56,9 @@
 - Petit reste connu : `/objectif/fin` montre la nouvelle forme si la candidature qui finit l'objectif fait aussi évoluer (avant la scène)
 - Plus tard si besoin : faire tenir l'aperçu de `dev` pour l'encart (protection Vercel), aujourd'hui seule la production ou un Goal Master local sont visables
 
+- **Boss à l'échéance, trois cas à trancher** (maquette `boss-echeance.html`) : nouvel objectif après une victoire en avance (100 sur la date commune, boss énorme ; recommandé : plafonner sa part au rythme de l'objectif précédent), échéance en milieu de semaine (recommandé : duel final le jour de l'échéance au prorata), bandage après le dernier duel (recommandé : laisser tel quel)
+- **Vendredi 20/11 18 h** : si le duel est perdu, regarder l'attaque ultime sur un vrai téléphone
+- Boss final : les coups du binôme ne comptent que s'il a un objectif en cours (les semaines d'un ancien objectif à lui n'apparaissent pas) ; à revoir seulement si ça se voit
 ## Blockers
 - Aucun
 
@@ -68,4 +77,8 @@
 - Deux sessions Claude dans le même dossier se volent les branches : une copie du dépôt (worktree) par session en parallèle
 - Boss : une candidature déclenchée par une relance compte deux coups (candidature + entraide), voulu ; le coup de grâce reste affiché à part, pas dans la barre de vie
 - Mode libre : monstres et compagnons ne sont que du décor (ni XP, ni dégâts) ; un seul compagnon de passage et un seul monstre à la fois ; par défaut le compagnon affiché se balade ; l'iframe garde `pointer-events: none` et job-finder relaie les clics
+- Boss final : une attaque par héros et par semaine, un seul impact avec le chiffre de ses coups ; coup ultime à deux entre 40 et 60 % des coups chacun, sinon celui qui a le plus frappé ; binôme sans coup absent ; au-delà de 12 semaines, regroupement ; barre = somme des PV des boss de la quête, une semaine n'enlève jamais plus que son boss
+- Temps écoulé : le boss de l'animation est « sonné » (jamais vainqueur) ; c'est une mise en scène de l'objectif raté, sans lien avec les duels du vendredi, où le boss perdant reste « en fuite » côté règles
+- Duel perdu : attaque ultime propre à chaque boss, les deux héros K.O. même sans coup ; défaite toujours visuelle ; pas d'animation de victoire du duel pour l'instant
+- Pas d'écran d'intro ni de « Nouveauté » pour le boss final et l'attaque ultime : aucune règle nouvelle
 - Écartés : Goal Master entier dans un panneau (cadrage du matin côté job-finder), base en ligne pour job-finder, import des anciennes candidatures, annulation par job-finder
