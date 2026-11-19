@@ -75,11 +75,15 @@ a { color: inherit; }
 .gm.ghosted .gm-stage .gm-hero { opacity: .35; filter: grayscale(1); }
 .toast { font-family: var(--f-ui); font-size: 13px; }
 
-/* Replié : une tête et un niveau */
-.gm-mini { display: inline-flex; align-items: center; gap: 8px; background: var(--night); border: 3px solid var(--edge); box-shadow: 3px 3px 0 var(--shadow); padding: 4px 10px 4px 4px; color: var(--ink); cursor: pointer; font: inherit; }
-.gm-mini .head { width: 36px; height: 30px; overflow: hidden; display: flex; justify-content: center; align-items: flex-start; background: var(--stone); }
-.gm-mini span { font-family: var(--f-display); font-size: 9px; color: var(--gold); }
-.gm-mini small { font-family: var(--f-num); font-size: 16px; color: var(--muted); }
+/* Le rond de la barre job-finder : affiche ou masque l'encart */
+.jf-rond { position: relative; flex: none; width: 36px; height: 36px; border: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #22397a; color: #aab6d6; box-shadow: inset 0 0 0 2px #2b3f78; cursor: pointer; }
+.jf-rond[aria-pressed="true"] { color: #fff; box-shadow: inset 0 0 0 2px rgb(255 255 255 / .7); }
+.jf-rond .badge { position: absolute; top: -5px; right: -7px; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box; border-radius: 8px; background: var(--jf-rouge); color: #fff; font: 600 10px/16px var(--jf-chiffre); text-align: center; }
+.jf-bar .jf-sp { flex: 1; }
+.jf-search { flex: none; border: 1px solid #2b3f78; background: #101f49; color: #aab6d6; padding: 6px 10px; border-radius: 3px; font-size: 13px; width: 150px; }
+.rond-etats { display: flex; flex-wrap: wrap; gap: 12px; }
+.rond-etats > div { display: flex; flex-direction: column; align-items: center; gap: 8px; background: var(--jf-marine); padding: 14px 18px 10px; min-width: 110px; }
+.rond-etats span.l { color: #c6cfe6; font-family: var(--jf-tete); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; }
 
 /* Animations */
 @keyframes jump { 0%,100% { transform: translateY(0) scale(1,1); } 15% { transform: translateY(0) scale(1.15,.85); } 40% { transform: translateY(-16px) scale(.92,1.1); } 60% { transform: translateY(-16px) scale(1,1); } 80% { transform: translateY(0) scale(1.1,.9); } }
@@ -184,17 +188,17 @@ a { color: inherit; }
       <a href="#encart">1 · Encart</a>
       <a href="#relier">2 · Relier</a>
       <a href="#reglages">3 · Réglages</a>
-      <a href="#profil">4 · Profil job-finder</a>
+      <a href="#profil">4 · Rond de la barre</a>
       <a href="#principal">5 · job-finder + encart</a>
     </nav>
   </div>
 
   <p class="intro" id="parcours">Ton personnage Goal Master vit dans un coin de job-finder. Quand une candidature passe à « envoyée », elle compte dans Goal Master : l'XP monte, le héros saute. Chacun le sien : Adrien voit son Chevalier, Nicolas son Panda. Les boutons mènent d'un écran à l'autre.</p>
   <div class="rules">
-    <div><b>Une fois, côté Nicolas</b>« Mets à jour job-finder et branche Goal Master » à Claude, puis un clic sur Relier. Rien à copier.</div>
-    <div><b>Ce qui part de job-finder</b>Le nom de l'entreprise, au passage à « envoyée ». Rien d'autre : ni offre, ni CV, ni lettre.</div>
+    <div><b>Une fois, côté Nicolas</b>« Mets à jour job-finder » à Claude, puis un clic sur Relier dans l'encart. Rien à copier, rien à cocher.</div>
+    <div><b>Ce qui part de job-finder</b>Une fois relié : le nom de l'entreprise, le numéro de l'offre et l'heure, au passage à « envoyée ». Rien d'autre : ni offre, ni CV, ni lettre. Pas relié : rien.</div>
     <div><b>Ce qui ne bouge pas</b>Doublon d'entreprise : compte sans demander. Retour en arrière dans job-finder : rien n'est annulé. Pas d'import des anciennes.</div>
-    <div><b>Masqué par défaut</b>Les autres amis qui utilisent job-finder sans Goal Master ne voient rien.</div>
+    <div><b>Un rond pour le masquer</b>L'encart est affiché par défaut. Un rond dans la barre de job-finder l'affiche ou le masque, choix gardé. Masqué, tout compte quand même.</div>
   </div>
 
   <!-- 1 · ENCART -->
@@ -202,14 +206,14 @@ a { color: inherit; }
     <header>
       <span class="route">/widget</span>
       <h2>1 · L'encart</h2>
-      <p>Une petite page de Goal Master, affichée dans job-finder. Repliable en une tête. Un clic sur le personnage ouvre Goal Master dans un nouvel onglet. Tous les états, du premier lancement au lien coupé.</p>
+      <p>Une petite page de Goal Master, affichée dans job-finder. Le rond de la barre l'affiche ou la masque (écran 4). Un clic sur le personnage ouvre Goal Master dans un nouvel onglet. Tous les états, du premier lancement au lien coupé.</p>
     </header>
     <div class="states">
 
       <div class="state" id="etat-non-relie">
         <h4>Pas encore relié</h4>
         <div class="gm ghosted">
-          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
           <div class="gm-body">
             <div class="gm-stage"><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></div>
             <div class="gm-info"><span class="gm-name">Ton héros</span><span class="gm-sub"><span>t'attend</span></span></div>
@@ -222,7 +226,7 @@ a { color: inherit; }
       <div class="state" id="etat-repos">
         <h4>Repos</h4>
         <div class="gm">
-          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
           <div class="gm-body">
             <a class="gm-stage" href="#principal" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></a>
             <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 7</span><div class="xp"><i style="width:62%"></i></div><span class="gm-sub"><span>2 auj.</span><span>🔥 4 j</span></span></div>
@@ -234,7 +238,7 @@ a { color: inherit; }
       <div class="state" id="etat-victoire">
         <h4>Candidature envoyée · +10 XP</h4>
         <div class="gm" data-anim="win" data-from="62" data-to="74">
-          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
           <div class="gm-body">
             <div class="gm-stage"><span class="pop">+10 XP</span><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></div>
             <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 7</span><div class="xp"><i style="width:62%"></i></div><span class="gm-sub"><span>3 auj.</span><span>🔥 4 j</span></span></div>
@@ -247,7 +251,7 @@ a { color: inherit; }
       <div class="state" id="etat-evo">
         <h4>Niveau 8 · nouvelle forme</h4>
         <div class="gm" data-anim="win evo" data-from="94" data-to="6">
-          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
           <div class="gm-body">
             <div class="gm-stage"><span class="pop">NIV. 8 !</span><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></div>
             <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 8</span><div class="xp"><i style="width:94%"></i></div><span class="gm-sub"><span>5 auj.</span><span>🔥 5 j</span></span></div>
@@ -260,7 +264,7 @@ a { color: inherit; }
       <div class="state" id="etat-plafond">
         <h4>Plafond des 15 atteint</h4>
         <div class="gm" data-anim="win" data-from="40" data-to="40">
-          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
           <div class="gm-body">
             <div class="gm-stage"><span class="pop muted">+0 XP</span><div class="gm-hero" data-sprite="panda" data-color="p2" data-px="3"></div></div>
             <div class="gm-info"><span class="gm-name">Nicolas</span><span class="gm-lvl">NIV. 5</span><div class="xp"><i style="width:40%"></i></div><span class="gm-sub"><span>16 auj.</span><span>🔥 9 j</span></span></div>
@@ -273,7 +277,7 @@ a { color: inherit; }
       <div class="state" id="etat-rouille">
         <h4>Rouillé, puis dérouillé</h4>
         <div class="gm rusty" data-anim="win derust" data-from="18" data-to="30">
-          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
           <div class="gm-body">
             <div class="gm-stage"><span class="pop">+10 XP</span><div class="gm-hero" data-sprite="panda" data-color="p2" data-px="3"></div></div>
             <div class="gm-info"><span class="gm-name">Nicolas</span><span class="gm-lvl">NIV. 5</span><div class="xp"><i style="width:18%"></i></div><span class="gm-sub"><span>0 auj.</span><span>3 j sans</span></span></div>
@@ -286,7 +290,7 @@ a { color: inherit; }
       <div class="state" id="etat-rate">
         <h4>Ajout raté</h4>
         <div class="gm fail-state">
-          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
           <div class="gm-body">
             <div class="gm-stage"><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></div>
             <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 7</span><div class="xp"><i style="width:62%"></i></div><span class="gm-sub"><span>2 auj.</span><span>🔥 4 j</span></span></div>
@@ -299,7 +303,7 @@ a { color: inherit; }
       <div class="state" id="etat-coupe">
         <h4>Lien coupé</h4>
         <div class="gm ghosted">
-          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
           <div class="gm-body">
             <div class="gm-stage"><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></div>
             <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-sub"><span>déconnecté</span></span></div>
@@ -309,10 +313,10 @@ a { color: inherit; }
         <p>Après « Couper le lien » dans les réglages, ou une clé révoquée.</p>
       </div>
 
-      <div class="state" id="etat-replie">
-        <h4>Replié</h4>
-        <button class="gm-mini" type="button"><span class="head" data-sprite="knight" data-color="p1" data-px="2"></span><span>NIV. 7</span><small>2 auj.</small></button>
-        <p>Une tête et le niveau. Au passage à « envoyée », l'encart se déplie le temps de la victoire, puis se replie.</p>
+      <div class="state" id="etat-masque">
+        <h4>Masqué</h4>
+        <div class="rond-etats"><div><button class="jf-rond" type="button" aria-pressed="false" data-hero><i class="badge">1</i></button><span class="l">Rond éteint</span></div></div>
+        <p>Plus d'encart à l'écran : seul le rond de la barre reste, éteint. La pastille rouge dit les candidatures pas encore comptées.</p>
       </div>
     </div>
   </section>
@@ -393,24 +397,21 @@ a { color: inherit; }
     </div>
   </section>
 
-  <!-- 4 · PROFIL JOB-FINDER -->
+  <!-- 4 · ROND DE LA BARRE -->
   <section class="screen" id="profil">
     <header>
-      <span class="route">job-finder · Profil</span>
-      <h2>4 · Case « Goal Master »</h2>
-      <p>À côté de l'onglet Intermédiaires, décochée par défaut. Quand Nicolas dit « branche Goal Master » à Claude, c'est cette case que Claude coche pour lui.</p>
+      <span class="route">job-finder · barre</span>
+      <h2>4 · Le rond de la barre</h2>
+      <p>Entre « Profil » et la recherche. Un clic masque l'encart, un autre le réaffiche ; le choix est gardé. Il n'y a pas de case dans le profil : rien ne compte tant que « Relier » n'a pas été cliqué.</p>
     </header>
     <div class="jf">
-      <div class="jf-bar"><b>Job-finder</b><div class="jf-tabs"><span>À valider<em>12</em></span><span>Candidatures<em>9</em></span><span>Écartées</span><span class="on">Profil</span></div></div>
+      <div class="jf-bar"><b>Job-finder</b><div class="jf-tabs"><span>À valider<em>12</em></span><span>Candidatures<em>9</em></span><span>Écartées</span></div><span class="jf-sp"></span><div class="jf-tabs"><span>Profil</span></div><button class="jf-rond" type="button" aria-pressed="true" aria-label="Masquer Goal Master" data-hero></button><span class="jf-search">Rechercher une offre</span></div>
       <div class="jf-main">
-        <div class="jf-profile">
-          <h5>Affichage</h5>
-          <div class="jf-line"><span>Onglet Intermédiaires</span><label><input type="checkbox" id="inter" checked> <span>Affiché</span></label></div>
-          <div class="jf-line"><span>Goal Master</span>
-            <label><input type="checkbox" id="gm-case" checked> <span>Afficher mon héros Goal Master<small>Tes candidatures passées à « envoyée » comptent dans Goal Master : seul le nom de l'entreprise part.</small><small class="ok">✓ Relié au compte d'Adrien</small></span></label>
-          </div>
+        <div class="rond-etats">
+          <div><button class="jf-rond" type="button" aria-pressed="true" data-hero></button><span class="l">Allumé</span></div>
+          <div><button class="jf-rond" type="button" aria-pressed="false" data-hero></button><span class="l">Éteint</span></div>
+          <div><button class="jf-rond" type="button" aria-pressed="false" data-hero><i class="badge">1</i></button><span class="l">En attente</span></div>
         </div>
-        <div class="jf-btns"><span class="jf-btn">Annuler</span><a class="jf-btn main" href="#principal">Enregistrer</a></div>
       </div>
     </div>
   </section>
@@ -420,10 +421,10 @@ a { color: inherit; }
     <header>
       <span class="route">job-finder · Candidatures</span>
       <h2>5 · L'encart en place</h2>
-      <p>En bas à droite, par-dessus le bas de la liste (une marge sous le tableau lui laisse sa place). Essaie : « Marquer envoyée » sur une ligne.</p>
+      <p>En bas à droite, par-dessus le bas de la liste (une marge sous le tableau lui laisse sa place). Essaie : « Marquer envoyée » sur une ligne, puis le rond de la barre.</p>
     </header>
     <div class="jf" id="jf-demo">
-      <div class="jf-bar"><b>Job-finder</b><div class="jf-tabs"><span>À valider<em>12</em></span><span class="on">Candidatures<em>9</em></span><span>Écartées</span><span>Intermédiaires</span><span>Profil</span></div></div>
+      <div class="jf-bar"><b>Job-finder</b><div class="jf-tabs"><span>À valider<em>12</em></span><span class="on">Candidatures<em>9</em></span><span>Écartées</span><span>Intermédiaires</span></div><span class="jf-sp"></span><div class="jf-tabs"><span>Profil</span></div><button class="jf-rond" type="button" id="live-rond" aria-pressed="true" aria-label="Masquer Goal Master" data-hero></button></div>
       <div class="jf-main">
         <div class="jf-filters"><span class="on">À préparer · 3</span><span>En attente de réponse · 4</span><span>Entretien · 1</span><span>Closes · 1</span></div>
         <div class="jf-scroll">
@@ -440,14 +441,13 @@ a { color: inherit; }
       </div>
       <div class="jf-dock">
         <div class="gm" id="live">
-          <div class="gm-bar"><b>GOAL MASTER</b><button id="live-fold" aria-label="Replier">▾</button></div>
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
           <div class="gm-body">
             <a class="gm-stage" href="#etat-repos" title="Ouvrir Goal Master"><span class="pop">+10 XP</span><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></a>
             <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl" id="live-lvl">NIV. 7</span><div class="xp"><i id="live-xp" style="width:62%"></i></div><span class="gm-sub"><span id="live-today">2 auj.</span><span>🔥 4 j</span></span></div>
           </div>
           <div class="gm-msg toast" id="live-msg" hidden></div>
         </div>
-        <button class="gm-mini" type="button" id="live-mini" hidden><span class="head" data-sprite="knight" data-color="p1" data-px="2"></span><span id="live-mini-lvl">NIV. 7</span><small id="live-mini-today">2 auj.</small></button>
       </div>
     </div>
   </section>
@@ -467,6 +467,12 @@ function svg(grid, player, px) {
   }));
   return `<svg width="${w * px}" height="${h * px}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
 }
+const HEROS = ["..####..", ".######.", ".#.##.#.", ".######.", "..####..", ".######.", "#.####.#", "..#..#.."];
+document.querySelectorAll("[data-hero]").forEach((el) => {
+  let r = "";
+  HEROS.forEach((l, y) => [...l].forEach((c, x) => { if (c === "#") r += `<rect x="${x}" y="${y}" width="1" height="1" fill="currentColor"/>`; }));
+  el.insertAdjacentHTML("afterbegin", `<svg width="16" height="16" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`);
+});
 document.querySelectorAll("[data-sprite]").forEach((el) => {
   el.insertAdjacentHTML("afterbegin", svg(el.dataset.sprite === "panda" ? P_NOV : SQUIRE, PLAYER[el.dataset.color || "p1"], Number(el.dataset.px || 3)));
 });
@@ -506,21 +512,22 @@ document.querySelectorAll("[data-anim]").forEach((gm) => {
 });
 
 /* Démo vivante dans job-finder */
-const live = document.getElementById("live"), mini = document.getElementById("live-mini");
+const live = document.getElementById("live"), rond = document.getElementById("live-rond");
 const msg = document.getElementById("live-msg"), today = document.getElementById("live-today");
-let xp = 62, count = 2, folded = false;
-function setFold(f) { folded = f; live.hidden = f; mini.hidden = !f; }
-document.getElementById("live-fold").addEventListener("click", () => setFold(true));
-mini.addEventListener("click", () => setFold(false));
+let xp = 62, count = 2;
+rond.addEventListener("click", () => {
+  const visible = rond.getAttribute("aria-pressed") !== "true";
+  rond.setAttribute("aria-pressed", String(visible));
+  rond.setAttribute("aria-label", visible ? "Masquer Goal Master" : "Afficher Goal Master");
+  live.hidden = !visible;
+});
 document.querySelectorAll(".jf-act").forEach((b) => b.addEventListener("click", () => {
-  const wasFolded = folded;
-  setFold(false);
   const from = xp; xp = Math.min(xp + 12, 98); count += 1;
-  today.textContent = count + " auj."; document.getElementById("live-mini-today").textContent = count + " auj.";
+  today.textContent = count + " auj.";
   msg.hidden = false; msg.innerHTML = `<span><strong>${b.dataset.company}</strong> compte dans Goal Master.</span>`;
-  play(live, "win", from, xp);
+  if (!live.hidden) play(live, "win", from, xp);
   b.disabled = true; b.textContent = "Envoyée";
   const st = b.closest("tr").querySelector(".stamp"); st.className = "stamp sent"; st.textContent = "Envoyée";
-  setTimeout(() => { msg.hidden = true; live.classList.remove("win"); if (wasFolded) setFold(true); }, 3200);
+  setTimeout(() => { msg.hidden = true; live.classList.remove("win"); }, 3200);
 }));
 </script>
