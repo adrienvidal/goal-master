@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Encart job-finder en prod, boss adouci et coups d'entraide en prod
+✅ Fait      Modes de l'encart et scène d'évolution dans dev, boss adouci en prod
 ⛔ Bloqué    Aucun
-🎯 Priorité  Vérifier le duel du boss adouci (échéance 20/11 18 h), puis lot 2 job-finder
+🎯 Priorité  Duel du boss adouci (échéance 20/11 18 h), mise en prod des modes
 ```
 
 ## Réalisé
@@ -25,19 +25,30 @@
 - Fin de soirée : boss adouci arrivé dans `dev` par la PR #140 (une autre session, dans le même dossier, a emporté ces commits ; #139 fermée comme doublon). PV = le plus doux du rythme de départ (objectif ÷ vendredis de l'objectif) et du rythme qui reste : le retard ne fait plus grossir le boss, l'avance le fait maigrir. Coups d'entraide : relance suivie d'effet avant le duel = 1 coup pour qui relance, quête validée dans la semaine = 1 coup pour qui l'a faite. Écran de résultat « dont n d'entraide », texte de l'intro du boss, règle du CLAUDE.md ; 281 tests verts
 - Fin de soirée : **mise en production** du boss adouci sur accord d'Adrien
 - Fin de soirée : archivage vérifié, rien à archiver (16/11 porte toujours le duel du boss)
+- Nuit : mis à jour avec job-finder-claude. **Lot 2 fait côté job-finder** (#241 fusionnée dans leur `dev`, testée de bout en bout), pas encore en production chez eux
+- Nuit : maquette des trois modes de l'encart validée par Adrien (version 3, écran 6 « Nouvelle forme » compris) : https://claude.ai/artifact/S7LLMZcTPg4dxT2hAU5Kek (`docs/maquettes/encart-modes.html`) ; PR #140 (maquette et passation)
+- Nuit : cadrage `docs/specs/2026-11-19-encart-modes-et-evolution-design.md`, plan `docs/superpowers/plans/2026-11-19-encart-modes-et-evolution.md`, une relecture du cadrage et une de chaque branche, points corrigés
+- Nuit : **PR #143 fusionnée dans `dev`** (lot A) : `/widget?mode=normal|small|free`, tailles fixes 260 × 130, 130 × 50, page entière ; victoire dans la boîte ; nouvelle forme en silhouette ; paysage plus dessiné quand il est caché (plantait dans l'iframe de 50 px) ; page d'essai avec choix du mode. Vérifié au navigateur, trois modes
+- Nuit : **PR #144 fusionnée dans `dev`** (lot B) : `Player.seenForm` (migration `seen_form`), scène existante de l'accueil jouée une fois tous appareils confondus, encart / image du bilan / coffre plafonnés à la forme vue, notification « Ton héros a évolué ! » au joueur lui-même. Vérifié en local ; 307 tests verts
+- Nuit : archivage vérifié, rien à archiver (16/11 porte toujours le duel du boss)
 
 ## Reste à faire
+- **Mise en production** des lots A et B (`dev` → `main`), sur accord d'Adrien ; la migration `seen_form` part avec
+- **Côté job-finder-claude** : mise en production de #241, puis menu du rond (Normal, Small, Libre, Masqué), taille de l'iframe par mode et `?mode=`, d'après `docs/passation/2026-11-19-encart-modes.md` (section « Livré côté Goal Master ») ; garder un `color-scheme` clair pour la transparence du mode libre
 - **Vendredi 20/11 18 h** : vérifier que le duel affiche les PV adoucis et les coups d'entraide
-- **Lot 2 dans job-finder-claude**, depuis une session dans ce dépôt, d'après `docs/passation/2026-11-19-encart-job-finder-lot2.md` : réglage du profil, file « à compter » dans `changerStatut`, envoi et reprises, encart, `/collect` qui se met à jour
 - Puis Nicolas : « mets à jour job-finder et branche Goal Master » à Claude, et clic sur « Relier »
 - Jeudi 19/11 (ce soir) et vendredi 20/11 à 18 h 01 : rappel du boss puis duel
-- Base locale : candidatures de test « Essai Doctolib » et « Alan » (Adrien, source job-finder), clés révoquées ; à effacer si gênantes
+- Base locale : candidatures de test « Essai Doctolib », « Alan », « Pennylane », « Doctolib » (Adrien, source job-finder) et une clé de test active ; à effacer si gênantes
+- Petit reste connu : `/objectif/fin` montre la nouvelle forme si la candidature qui finit l'objectif fait aussi évoluer (avant la scène)
 - Plus tard si besoin : faire tenir l'aperçu de `dev` pour l'encart (protection Vercel), aujourd'hui seule la production ou un Goal Master local sont visables
 
 ## Blockers
 - Aucun
 
 ## Décisions
+- Encart : jamais agrandi, victoire comprise ; small sans la série (ne tient pas dès deux chiffres) ; libre sur toute la page, transparent, clics qui traversent
+- Nouvelle forme : l'encart l'annonce sans la montrer (silhouette, jamais le nom) ; la scène existante de l'accueil la dévoile, une fois tous appareils confondus ; l'encart garde l'ancienne forme d'ici là ; notification au joueur sans le nom de la forme
+- La forme reste calculée ; `seenForm` n'est qu'un accusé de lecture, posé sans scène pour un joueur d'avant ce lot
 - Encart masqué ou affiché par un rond dans la barre de job-finder (pas de case dans le profil), affiché par défaut
 - Encart servi par Goal Master (`/widget` en iframe) plutôt que redessiné par job-finder : sprites et animations à un seul endroit
 - C'est le serveur local de job-finder qui envoie les candidatures (pas l'encart) : une candidature passée à « envoyée » depuis le terminal compte aussi
