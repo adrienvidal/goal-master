@@ -4,7 +4,7 @@ import type { WidgetState } from "./widgetState";
 
 const base: WidgetState = {
   pseudo: "Adrien", character: "KNIGHT", color: "BLUE", displayedForm: 2, levelForm: 2, mood: "normal", idleWorkdays: 0,
-  level: 7, xpInLevel: 62, xpForNext: 100, today: 2, capReached: false, streak: 4, recent: [{ id: "a1", company: "Alan", at: "2026-11-19T09:00:00Z", xp: 10 }],
+  level: 7, xpInLevel: 62, xpForNext: 100, today: 2, capReached: false, streak: 4, evolutionPending: false, recent: [{ id: "a1", company: "Alan", at: "2026-11-19T09:00:00Z", xp: 10 }],
 };
 const withNew = (extra: Partial<WidgetState> = {}, xp = 10): WidgetState => ({
   ...base, ...extra, recent: [{ id: "a2", company: "Doctolib", at: "2026-11-19T10:00:00Z", xp }, ...base.recent],

@@ -560,7 +560,8 @@ body:has(.gm-free) { background: transparent; }
 .gm-small.win .gm-hero { animation: gm-hop .4s steps(4) 3; }
 .gm-small.derust .gm-hero { animation: gm-hop .4s steps(4) 3, gm-derust 1.6s steps(6) forwards; }
 /* Nouvelle forme : annoncée en silhouette blanche, jamais montrée (la scène de Goal Master la dévoile) */
-.widget-root.evo .gm-hero svg { filter: brightness(0) invert(1); }
+.widget-root.evo .gm-hero svg, .widget-root.evo-pending .gm-hero svg { filter: brightness(0) invert(1); }
+.gm-ssay.still, .gm-pop.still { animation: none; }
 .gm-normal.evo .gm-body::before, .gm-small.evo::before { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; animation: gm-flash .9s steps(4); }
 .gm-small.evo { position: relative; }
 @media (prefers-reduced-motion: reduce) {
