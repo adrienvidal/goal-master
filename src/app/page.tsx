@@ -230,7 +230,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const me = buildPlayerView(player, game.apps, game.nudges, game.quests, myGoal, now);
   if (me.goal && goalOutcome(me.goal.done, me.goal.target, me.goal.deadline, parisDay(now)) !== "active") redirect("/objectif/fin");
   // Forme vue (scène d'évolution) : un joueur d'avant la scène fiable reçoit sa forme actuelle, sans scène.
-  if (player.seenForm === null) await db().player.update({ where: { id: player.id }, data: { seenForm: me.levelForm } });
+  if (player.seenForm === null) await db().player.updateMany({ where: { id: player.id, seenForm: null }, data: { seenForm: me.levelForm } });
   const seenForm = player.seenForm ?? me.levelForm;
   const partnerRow = game.players.find((p) => p.id !== player.id);
   const partner = partnerRow ? buildPlayerView(partnerRow, game.apps, game.nudges, game.quests, activeGoal(game, partnerRow.id), now) : null;

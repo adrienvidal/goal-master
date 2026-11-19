@@ -7,8 +7,8 @@ const nico: Hero = { character: "PANDA", color: "GREEN", form: 3 };
 const tokens = (a: ReturnType<typeof sceneFor>) => a.map(sceneToken).join(",");
 
 describe("sceneFor", () => {
-  it("evo-me : le joueur à son ancienne forme, la nouvelle reste une surprise", () => {
-    expect(tokens(sceneFor({ kind: "evo-me", form: 3 }, { ...me, form: 3 }, nico))).toBe("hero.KNIGHT.BLUE.2.victory");
+  it("evo-me : le joueur tel qu'il est passé (forme vue), la nouvelle reste une surprise", () => {
+    expect(tokens(sceneFor({ kind: "evo-me", form: 3 }, me, nico))).toBe("hero.KNIGHT.BLUE.2.victory");
   });
   it("montre le binôme à sa nouvelle forme", () => {
     expect(tokens(sceneFor({ kind: "evo", partnerId: "n", partner: "Nicolas", form: 4, formName: "Moine voyageur" }, me, nico))).toBe("hero.PANDA.GREEN.4.victory");
