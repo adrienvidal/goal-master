@@ -6,6 +6,7 @@ import { LANDSCAPE_NAMES, LANDSCAPES } from "@/lib/landscapes";
 import { requirePlayer } from "@/server/session";
 import { setLandscape } from "./actions";
 import { NotificationSettings } from "./NotificationSettings";
+import { WidgetLink } from "./WidgetLink";
 
 // Réglages : pour l'instant, le paysage de fond de l'app (propre à chaque joueur).
 export default async function SettingsPage(): Promise<React.ReactElement> {
@@ -63,6 +64,7 @@ export default async function SettingsPage(): Promise<React.ReactElement> {
             </div>
           </div>
         </section>
+        <WidgetLink playerId={player.id} />
       </div>
     </main>
   );

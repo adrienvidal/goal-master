@@ -1,0 +1,526 @@
+<title>Goal Master · Encart job-finder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&family=Oswald:wght@500;600&family=Archivo:wght@400;500;600&family=JetBrains+Mono&display=swap">
+<style>
+/* Maquette : écrans empilés, chacun annoncé par sa route. Tokens Goal Master (globals.css), un seul thème sombre assumé.
+   Les écrans job-finder reprennent ses propres tokens (DESIGN.md « pochette de billets ») : l'encart y est une fenêtre de jeu posée sur l'outil. */
+:root {
+  color-scheme: dark;
+  --night: #16132a; --stone: #221e40; --stone-2: #2e2958; --edge: #4a4380;
+  --ink: #f1ecff; --muted: #a39dcc; --gold: #f2c14e; --gold-dk: #b9831c;
+  --ember: #ff7a45; --danger: #ff6b6b; --ok: #6fd49a; --warn-bg: #3a2f17;
+  --page: #0e0c1d; --shadow: #0c0a1a; --p1: #5aa9ff; --p2: #e5533d; --magic: #c58cff; --rust: #b0643a;
+  --f-display: "Press Start 2P", ui-monospace, monospace;
+  --f-ui: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-num: "VT323", ui-monospace, monospace;
+  /* job-finder */
+  --jf-marine: #16295a; --jf-rouge: #c8202f; --jf-carbone: #5b3d8f; --jf-stock: #fdfcf8; --jf-fond: #e4e7ee;
+  --jf-encre: #1b2236; --jf-doux: #566079; --jf-ligne: #d3d7e0; --jf-ligne-forte: #b9bfcd; --jf-bon: #1f6b45;
+  --jf-tete: Oswald, "Arial Narrow", sans-serif; --jf-corps: Archivo, system-ui, sans-serif; --jf-chiffre: "JetBrains Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--page); color: var(--ink); font-family: var(--f-ui); font-size: 16px; margin: 0; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--page); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 1080px; margin: 0 auto; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--page); padding: 14px 0 10px; border-bottom: 3px solid var(--edge); }
+.top h1 { font-family: var(--f-display); font-size: 12px; margin: 0 0 10px; line-height: 1.6; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: 13px; text-decoration: none; padding: 4px 8px; border: 2px solid var(--edge); color: var(--muted); }
+.toc a:hover { color: var(--ink); border-color: var(--gold); }
+.intro { color: var(--muted); max-width: 72ch; line-height: 1.5; margin: 22px 0 6px; }
+.rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin: 16px 0 8px; }
+.rules div { border: 2px dashed var(--edge); padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.rules b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+.screen { margin-top: 56px; scroll-margin-top: 110px; }
+.screen > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 14px; }
+.route { font-family: var(--f-num); font-size: 22px; color: var(--gold); }
+.screen > header h2 { font-family: var(--f-display); font-size: 11px; margin: 0; line-height: 1.6; }
+.screen > header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 80ch; }
+.states { display: grid; gap: 18px 16px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.state { display: flex; flex-direction: column; gap: 8px; min-width: 0; scroll-margin-top: 110px; }
+.state > h4 { font-family: var(--f-display); font-size: 9px; line-height: 1.7; margin: 0; color: var(--gold); }
+.state > p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.replay { align-self: flex-start; font: inherit; font-size: 13px; color: var(--muted); background: none; border: 2px solid var(--edge); padding: 3px 8px; cursor: pointer; }
+.replay:hover { color: var(--ink); border-color: var(--gold); }
+
+/* ---------- L'encart ---------- */
+.gm { position: relative; width: 100%; max-width: 280px; background: var(--night); border: 3px solid var(--edge); box-shadow: 3px 3px 0 var(--shadow); color: var(--ink); font-family: var(--f-ui); overflow: hidden; }
+.gm-bar { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 5px 8px; background: var(--stone); border-bottom: 2px solid var(--edge); }
+.gm-bar b { font-family: var(--f-display); font-size: 9px; letter-spacing: .04em; color: var(--gold); }
+.gm-bar button, .gm-bar a { font: inherit; font-size: 13px; color: var(--muted); background: none; border: 0; padding: 0 2px; cursor: pointer; text-decoration: none; line-height: 1; }
+.gm-body { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: end; padding: 10px; position: relative; }
+.gm-stage { overflow: visible; position: relative; width: 72px; height: 76px; display: flex; align-items: flex-end; justify-content: center; background: linear-gradient(#1d1938, #2a2450); border: 2px solid var(--edge); }
+.gm-stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: #3a6b3f; border-top: 2px solid #24452a; }
+.gm-hero { position: relative; z-index: 1; margin-bottom: 6px; transform-origin: 50% 100%; }
+.gm-info { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.gm-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gm-lvl { font-family: var(--f-display); font-size: 9px; color: var(--gold); }
+.xp { height: 10px; background: var(--shadow); border: 2px solid var(--edge); position: relative; }
+.xp i { position: absolute; inset: 0 auto 0 0; background: var(--gold); box-shadow: inset 0 -2px 0 var(--gold-dk); transition: width .9s steps(12); }
+.gm-sub { font-family: var(--f-num); font-size: 17px; color: var(--muted); line-height: 1; display: flex; justify-content: space-between; gap: 6px; }
+.gm-msg { padding: 7px 10px 9px; border-top: 2px dashed var(--edge); font-size: 13px; line-height: 1.35; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+.gm-msg strong { color: var(--ink); font-weight: 600; }
+.gm-btn { display: inline-flex; justify-content: center; align-items: center; gap: 6px; font-family: var(--f-display); font-size: 9px; line-height: 1.4; color: #1a1626; background: var(--gold); border: 0; padding: 9px 10px; box-shadow: inset -3px -3px 0 var(--gold-dk), 2px 2px 0 var(--shadow); cursor: pointer; text-decoration: none; min-height: 36px; }
+.gm-btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 2px var(--edge); }
+.gm-btn:active { transform: translate(2px, 2px); box-shadow: inset -3px -3px 0 var(--gold-dk); }
+.pop { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); font-family: var(--f-display); font-size: 10px; color: var(--gold); text-shadow: 2px 2px 0 var(--shadow); z-index: 3; white-space: nowrap; opacity: 0; pointer-events: none; }
+.pop.muted { color: var(--muted); font-size: 9px; }
+.spark { position: absolute; width: 4px; height: 4px; background: var(--gold); z-index: 2; opacity: 0; }
+.gm.rusty .gm-hero { filter: sepia(.85) saturate(1.6) hue-rotate(-12deg) brightness(.82); }
+.gm.rusty .gm-name::after { content: " · rouillé"; color: var(--rust); font-weight: 400; }
+.gm.ghosted .gm-stage .gm-hero { opacity: .35; filter: grayscale(1); }
+.toast { font-family: var(--f-ui); font-size: 13px; }
+
+/* Replié : une tête et un niveau */
+.gm-mini { display: inline-flex; align-items: center; gap: 8px; background: var(--night); border: 3px solid var(--edge); box-shadow: 3px 3px 0 var(--shadow); padding: 4px 10px 4px 4px; color: var(--ink); cursor: pointer; font: inherit; }
+.gm-mini .head { width: 36px; height: 30px; overflow: hidden; display: flex; justify-content: center; align-items: flex-start; background: var(--stone); }
+.gm-mini span { font-family: var(--f-display); font-size: 9px; color: var(--gold); }
+.gm-mini small { font-family: var(--f-num); font-size: 16px; color: var(--muted); }
+
+/* Animations */
+@keyframes jump { 0%,100% { transform: translateY(0) scale(1,1); } 15% { transform: translateY(0) scale(1.15,.85); } 40% { transform: translateY(-16px) scale(.92,1.1); } 60% { transform: translateY(-16px) scale(1,1); } 80% { transform: translateY(0) scale(1.1,.9); } }
+@keyframes pop { 0% { opacity: 0; transform: translate(-50%, 10px); } 15%,70% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -12px); } }
+@keyframes spark { 0% { opacity: 1; transform: translate(0,0); } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
+@keyframes flash { 0%,100% { background: transparent; } 20% { background: rgb(255 243 176 / .85); } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+@keyframes derust { from { filter: sepia(.85) saturate(1.6) hue-rotate(-12deg) brightness(.82); } to { filter: none; } }
+.win .gm-hero { animation: jump .8s steps(8) 2; }
+.win .pop { animation: pop 1.8s ease-out forwards; }
+.win .spark { animation: spark .7s steps(6) forwards; }
+.evo .gm-body::before { content: ""; position: absolute; inset: 0; z-index: 4; animation: flash .9s steps(4); pointer-events: none; }
+.derust .gm-hero { animation: jump .8s steps(8) 2, derust 1.6s steps(6) forwards; }
+.fail .gm-stage { animation: shake .3s steps(3) 2; }
+@media (prefers-reduced-motion: reduce) {
+  .win .gm-hero, .derust .gm-hero { animation: none; }
+  .derust .gm-hero { filter: none; }
+  .win .pop { animation: none; opacity: 1; }
+  .win .spark, .fail .gm-stage { animation: none; }
+  .xp i { transition: none; }
+}
+
+/* ---------- Écrans Goal Master (relier, réglages) ---------- */
+.phones { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.device { background: rgb(34 30 64 / .9); border: 4px solid var(--edge); box-shadow: 4px 4px 0 var(--shadow); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; scroll-margin-top: 110px; }
+.device h4 { font-family: var(--f-display); font-size: 9px; line-height: 1.6; margin: 0; color: var(--gold); }
+.h-title { font-family: var(--f-display); font-size: 12px; line-height: 1.6; margin: 0; }
+.muted { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0; }
+.btn { display: flex; justify-content: center; align-items: center; gap: 6px; width: 100%; font-family: var(--f-display); font-size: 10px; line-height: 1.4; color: #1a1626; background: var(--gold); border: 0; padding: 14px 12px; box-shadow: inset -4px -4px 0 var(--gold-dk), 4px 4px 0 var(--shadow); cursor: pointer; text-decoration: none; min-height: 48px; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 3px var(--edge); }
+.btn.danger { background: transparent; color: var(--danger); box-shadow: inset 0 0 0 3px var(--danger); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.4; }
+.list li { display: flex; gap: 8px; }
+.list li::before { content: "▸"; color: var(--gold); }
+.list.no li::before { content: "✕"; color: var(--muted); }
+.box { border: 2px solid var(--edge); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; background: var(--night); }
+.kv { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
+.kv span:last-child { font-family: var(--f-num); font-size: 18px; color: var(--ink); text-align: right; }
+.kv span:first-child { color: var(--muted); }
+.ok-badge { color: var(--ok); font-family: var(--f-display); font-size: 9px; }
+.input { background: var(--shadow); border: 2px solid var(--edge); color: var(--ink); padding: 10px; font: inherit; width: 100%; }
+
+/* ---------- Écrans job-finder ---------- */
+.jf { background: var(--jf-fond); color: var(--jf-encre); font-family: var(--jf-corps); font-size: 14px; border: 1px solid var(--jf-ligne-forte); min-width: 0; position: relative; }
+.jf-bar { background: var(--jf-marine); color: #fff; border-bottom: 3px solid var(--jf-rouge); display: flex; align-items: center; gap: 18px; padding: 0 14px; min-height: 46px; overflow-x: auto; scrollbar-width: none; }
+.jf-bar b { font-family: var(--jf-tete); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 15px; white-space: nowrap; }
+.jf-tabs { display: flex; gap: 2px; }
+.jf-tabs span { font-family: var(--jf-tete); font-weight: 500; text-transform: uppercase; letter-spacing: .1em; font-size: 12px; padding: 14px 10px 12px; color: #c6cfe6; white-space: nowrap; }
+.jf-tabs span.on { color: #fff; box-shadow: inset 0 -3px 0 #fff; }
+.jf-tabs em { font-style: normal; font-family: var(--jf-chiffre); font-size: 11px; opacity: .8; margin-left: 4px; }
+.jf-main { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.jf-filters { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 10px; border-bottom: 2px dotted var(--jf-ligne-forte); }
+.jf-filters span { border: 1px solid var(--jf-ligne-forte); background: var(--jf-stock); padding: 4px 9px; font-size: 13px; border-radius: 2px; }
+.jf-filters span.on { background: var(--jf-marine); color: #fff; border-color: var(--jf-marine); }
+.jf-scroll { overflow-x: auto; }
+.jf table { color: inherit; font: inherit; width: 100%; border-collapse: collapse; background: var(--jf-stock); min-width: 560px; }
+.jf th { background: var(--jf-marine); color: #fff; font-family: var(--jf-tete); font-weight: 500; text-transform: uppercase; letter-spacing: .1em; font-size: 11.5px; text-align: left; padding: 8px 10px; }
+.jf td { border-bottom: 1px solid var(--jf-ligne); padding: 9px 10px; vertical-align: middle; }
+.jf td.n { font-family: var(--jf-chiffre); font-size: 12.5px; color: var(--jf-carbone); white-space: nowrap; }
+.jf td small { display: block; color: var(--jf-doux); font-size: 12.5px; }
+.stamp { display: inline-block; border: 1.5px solid currentColor; border-radius: 2px; font-family: var(--jf-tete); text-transform: uppercase; letter-spacing: .1em; font-size: 11px; padding: 2px 6px; white-space: nowrap; }
+.stamp.built { color: var(--jf-marine); }
+.stamp.sent { color: var(--jf-carbone); }
+.jf-act { font: inherit; font-size: 13px; background: var(--jf-marine); color: #fff; border: 0; border-radius: 3px; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
+.jf-act:disabled { background: var(--jf-ligne); color: var(--jf-doux); cursor: default; }
+.jf-dock { position: absolute; right: 14px; bottom: 14px; z-index: 5; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.jf-dock .gm { width: 260px; }
+.jf-pad { height: 150px; }
+.jf-profile { background: var(--jf-stock); border: 1px solid var(--jf-ligne); }
+.jf-profile h5 { margin: 0; background: var(--jf-marine); color: #fff; font-family: var(--jf-tete); font-weight: 500; letter-spacing: .12em; text-transform: uppercase; font-size: 12px; padding: 8px 12px; }
+.jf-line { display: grid; grid-template-columns: minmax(130px, 200px) 1fr; gap: 6px 14px; padding: 10px 12px; border-bottom: 2px dotted var(--jf-ligne-forte); align-items: start; }
+.jf-line:last-child { border-bottom: 0; }
+.jf-line > span:first-child { font-family: var(--jf-tete); text-transform: uppercase; letter-spacing: .08em; font-size: 12px; color: var(--jf-doux); padding-top: 2px; }
+.jf-line label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+.jf-line input { accent-color: var(--jf-marine); width: 16px; height: 16px; margin: 2px 0 0; }
+.jf-line small { display: block; color: var(--jf-doux); font-size: 12.5px; line-height: 1.4; margin-top: 2px; }
+.jf-line .ok { color: var(--jf-bon); font-weight: 600; }
+.jf-btns { display: flex; gap: 8px; padding: 12px; justify-content: flex-end; }
+.jf-btn { font: inherit; border-radius: 3px; padding: 7px 14px; border: 1px solid var(--jf-ligne-forte); background: var(--jf-stock); color: var(--jf-encre); cursor: pointer; text-decoration: none; }
+.jf-btn.main { background: var(--jf-marine); border-color: var(--jf-marine); color: #fff; }
+.window { background: var(--jf-stock); color: var(--jf-encre); border: 1px solid var(--jf-ligne-forte); }
+.window-bar { background: #d9dce4; padding: 6px 10px; font-family: var(--jf-chiffre); font-size: 12px; color: var(--jf-doux); display: flex; gap: 8px; align-items: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.window-bar i { width: 9px; height: 9px; border-radius: 50%; background: #c0c4cf; flex: none; }
+
+@media (max-width: 640px) {
+  .top h1 { font-size: 10px; margin-bottom: 8px; }
+  .toc { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); padding-right: 16px; }
+  .toc a { flex: none; }
+  .jf-dock { right: 8px; bottom: 8px; }
+  .jf-dock .gm { width: 230px; }
+  .jf-line { grid-template-columns: 1fr; }
+  .jf-tabs span:nth-child(n+3) { display: none; }
+}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Encart Goal Master dans job-finder</h1>
+    <nav class="toc" aria-label="Écrans">
+      <a href="#parcours">Parcours</a>
+      <a href="#encart">1 · Encart</a>
+      <a href="#relier">2 · Relier</a>
+      <a href="#reglages">3 · Réglages</a>
+      <a href="#profil">4 · Profil job-finder</a>
+      <a href="#principal">5 · job-finder + encart</a>
+    </nav>
+  </div>
+
+  <p class="intro" id="parcours">Ton personnage Goal Master vit dans un coin de job-finder. Quand une candidature passe à « envoyée », elle compte dans Goal Master : l'XP monte, le héros saute. Chacun le sien : Adrien voit son Chevalier, Nicolas son Panda. Les boutons mènent d'un écran à l'autre.</p>
+  <div class="rules">
+    <div><b>Une fois, côté Nicolas</b>« Mets à jour job-finder et branche Goal Master » à Claude, puis un clic sur Relier. Rien à copier.</div>
+    <div><b>Ce qui part de job-finder</b>Le nom de l'entreprise, au passage à « envoyée ». Rien d'autre : ni offre, ni CV, ni lettre.</div>
+    <div><b>Ce qui ne bouge pas</b>Doublon d'entreprise : compte sans demander. Retour en arrière dans job-finder : rien n'est annulé. Pas d'import des anciennes.</div>
+    <div><b>Masqué par défaut</b>Les autres amis qui utilisent job-finder sans Goal Master ne voient rien.</div>
+  </div>
+
+  <!-- 1 · ENCART -->
+  <section class="screen" id="encart">
+    <header>
+      <span class="route">/widget</span>
+      <h2>1 · L'encart</h2>
+      <p>Une petite page de Goal Master, affichée dans job-finder. Repliable en une tête. Un clic sur le personnage ouvre Goal Master dans un nouvel onglet. Tous les états, du premier lancement au lien coupé.</p>
+    </header>
+    <div class="states">
+
+      <div class="state" id="etat-non-relie">
+        <h4>Pas encore relié</h4>
+        <div class="gm ghosted">
+          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-body">
+            <div class="gm-stage"><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></div>
+            <div class="gm-info"><span class="gm-name">Ton héros</span><span class="gm-sub"><span>t'attend</span></span></div>
+          </div>
+          <div class="gm-msg"><span>Relie ton compte pour que tes candidatures envoyées comptent.</span><a class="gm-btn" href="#relier">Relier à Goal Master</a></div>
+        </div>
+        <p>Ouvre Goal Master dans une petite fenêtre, où tu es déjà connecté.</p>
+      </div>
+
+      <div class="state" id="etat-repos">
+        <h4>Repos</h4>
+        <div class="gm">
+          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-body">
+            <a class="gm-stage" href="#principal" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></a>
+            <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 7</span><div class="xp"><i style="width:62%"></i></div><span class="gm-sub"><span>2 auj.</span><span>🔥 4 j</span></span></div>
+          </div>
+        </div>
+        <p>Niveau, barre vers le niveau suivant, candidatures du jour et série.</p>
+      </div>
+
+      <div class="state" id="etat-victoire">
+        <h4>Candidature envoyée · +10 XP</h4>
+        <div class="gm" data-anim="win" data-from="62" data-to="74">
+          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-body">
+            <div class="gm-stage"><span class="pop">+10 XP</span><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></div>
+            <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 7</span><div class="xp"><i style="width:62%"></i></div><span class="gm-sub"><span>3 auj.</span><span>🔥 4 j</span></span></div>
+          </div>
+          <div class="gm-msg toast"><span><strong>Doctolib</strong> compte dans Goal Master.</span></div>
+        </div>
+        <button class="replay" data-replay="etat-victoire">▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="etat-evo">
+        <h4>Niveau 8 · nouvelle forme</h4>
+        <div class="gm" data-anim="win evo" data-from="94" data-to="6">
+          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-body">
+            <div class="gm-stage"><span class="pop">NIV. 8 !</span><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></div>
+            <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 8</span><div class="xp"><i style="width:94%"></i></div><span class="gm-sub"><span>5 auj.</span><span>🔥 5 j</span></span></div>
+          </div>
+          <div class="gm-msg toast"><span><strong>Nouvelle forme : Écuyer.</strong> Va la voir dans Goal Master.</span><a class="gm-btn ghost" href="#principal">Voir dans Goal Master ↗</a></div>
+        </div>
+        <button class="replay" data-replay="etat-evo">▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="etat-plafond">
+        <h4>Plafond des 15 atteint</h4>
+        <div class="gm" data-anim="win" data-from="40" data-to="40">
+          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-body">
+            <div class="gm-stage"><span class="pop muted">+0 XP</span><div class="gm-hero" data-sprite="panda" data-color="p2" data-px="3"></div></div>
+            <div class="gm-info"><span class="gm-name">Nicolas</span><span class="gm-lvl">NIV. 5</span><div class="xp"><i style="width:40%"></i></div><span class="gm-sub"><span>16 auj.</span><span>🔥 9 j</span></span></div>
+          </div>
+          <div class="gm-msg toast"><span><strong>Back Market</strong> compte, sans XP : plafond de 15 atteint aujourd'hui.</span></div>
+        </div>
+        <button class="replay" data-replay="etat-plafond">▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="etat-rouille">
+        <h4>Rouillé, puis dérouillé</h4>
+        <div class="gm rusty" data-anim="win derust" data-from="18" data-to="30">
+          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-body">
+            <div class="gm-stage"><span class="pop">+10 XP</span><div class="gm-hero" data-sprite="panda" data-color="p2" data-px="3"></div></div>
+            <div class="gm-info"><span class="gm-name">Nicolas</span><span class="gm-lvl">NIV. 5</span><div class="xp"><i style="width:18%"></i></div><span class="gm-sub"><span>0 auj.</span><span>3 j sans</span></span></div>
+          </div>
+          <div class="gm-msg toast"><span>La rouille part dès la première candidature : <strong>Qonto</strong>.</span></div>
+        </div>
+        <button class="replay" data-replay="etat-rouille">▶ Rejouer</button>
+      </div>
+
+      <div class="state" id="etat-rate">
+        <h4>Ajout raté</h4>
+        <div class="gm fail-state">
+          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-body">
+            <div class="gm-stage"><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></div>
+            <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 7</span><div class="xp"><i style="width:62%"></i></div><span class="gm-sub"><span>2 auj.</span><span>🔥 4 j</span></span></div>
+          </div>
+          <div class="gm-msg"><span><strong>Pennylane</strong> n'a pas été comptée : Goal Master ne répond pas. Elle reste en attente ici.</span><a class="gm-btn" href="#etat-victoire">Réessayer</a></div>
+        </div>
+        <p>job-finder garde la candidature en attente : rien ne se perd, même si l'onglet se ferme.</p>
+      </div>
+
+      <div class="state" id="etat-coupe">
+        <h4>Lien coupé</h4>
+        <div class="gm ghosted">
+          <div class="gm-bar"><b>GOAL MASTER</b><button aria-label="Replier">▾</button></div>
+          <div class="gm-body">
+            <div class="gm-stage"><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></div>
+            <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-sub"><span>déconnecté</span></span></div>
+          </div>
+          <div class="gm-msg"><span>Le lien a été coupé depuis Goal Master. Tes candidatures ne comptent plus.</span><a class="gm-btn" href="#relier">Relier à nouveau</a></div>
+        </div>
+        <p>Après « Couper le lien » dans les réglages, ou une clé révoquée.</p>
+      </div>
+
+      <div class="state" id="etat-replie">
+        <h4>Replié</h4>
+        <button class="gm-mini" type="button"><span class="head" data-sprite="knight" data-color="p1" data-px="2"></span><span>NIV. 7</span><small>2 auj.</small></button>
+        <p>Une tête et le niveau. Au passage à « envoyée », l'encart se déplie le temps de la victoire, puis se replie.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · RELIER -->
+  <section class="screen" id="relier">
+    <header>
+      <span class="route">/relier</span>
+      <h2>2 · Relier job-finder</h2>
+      <p>Petite fenêtre Goal Master ouverte par « Relier ». Si tu n'es pas connecté, la connexion passe d'abord, puis revient ici. Après « Relier », la fenêtre se ferme toute seule et l'encart s'allume.</p>
+    </header>
+    <div class="phones">
+      <div class="device" id="relier-connecte">
+        <h4>Connecté</h4>
+        <p class="h-title">Relier job-finder à ton compte ?</p>
+        <p class="muted">Connecté en tant qu'<b style="color:var(--ink)">Adrien</b>.</p>
+        <div class="box">
+          <ul class="list">
+            <li>Afficher ton héros, ton niveau et ta série</li>
+            <li>Ajouter une candidature quand tu la passes à « envoyée »</li>
+          </ul>
+          <ul class="list no">
+            <li>Lire le fil, l'Arène, les quêtes ou Nicolas</li>
+            <li>Annuler ou supprimer une candidature</li>
+          </ul>
+        </div>
+        <div class="row2"><a class="btn ghost" href="#etat-non-relie">Annuler</a><a class="btn" href="#relier-ok">Relier</a></div>
+      </div>
+      <div class="device" id="relier-deconnecte">
+        <h4>Pas connecté</h4>
+        <p class="h-title">Connecte-toi d'abord</p>
+        <p class="muted">Ensuite, tu reviendras ici pour relier job-finder.</p>
+        <label class="muted" for="mail">Ton adresse</label>
+        <input class="input" id="mail" value="nicolas.m@exemple.fr" readonly>
+        <a class="btn" href="#relier-connecte">Recevoir mon code</a>
+        <p class="muted" style="font-size:13px">En local et sur l'aperçu : connexion directe, comme aujourd'hui.</p>
+      </div>
+      <div class="device" id="relier-ok">
+        <h4>C'est relié</h4>
+        <div style="display:flex;gap:12px;align-items:flex-end"><div data-sprite="knight" data-color="p1" data-px="4"></div><p class="muted">Ton héros t'attend dans job-finder. Cette fenêtre se ferme toute seule.</p></div>
+        <a class="btn" href="#etat-repos">Retour à job-finder</a>
+        <p class="muted" style="font-size:13px">Si la fenêtre ne se ferme pas (navigateur qui bloque) : ce bouton.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · RÉGLAGES -->
+  <section class="screen" id="reglages">
+    <header>
+      <span class="route">/reglages</span>
+      <h2>3 · Réglages · bloc job-finder</h2>
+      <p>Un bloc de plus sous les réglages existants. On n'y crée rien : le lien se fait depuis job-finder. On y voit qu'il marche et on peut le couper.</p>
+    </header>
+    <div class="phones">
+      <div class="device" id="reglages-relie">
+        <h4>Relié</h4>
+        <p class="h-title">job-finder</p>
+        <div class="box">
+          <div class="kv"><span>État</span><span class="ok-badge">RELIÉ</span></div>
+          <div class="kv"><span>Depuis</span><span>19/11 · 18:40</span></div>
+          <div class="kv"><span>Dernière reçue</span><span>Doctolib · 14:32</span></div>
+          <div class="kv"><span>Comptées par job-finder</span><span>23</span></div>
+        </div>
+        <a class="btn danger" href="#reglages-confirm">Couper le lien</a>
+      </div>
+      <div class="device" id="reglages-confirm">
+        <h4>Confirmation</h4>
+        <p class="h-title">Couper le lien ?</p>
+        <p class="muted">job-finder n'ajoutera plus tes candidatures. Celles déjà comptées restent, avec leurs XP.</p>
+        <div class="row2"><a class="btn ghost" href="#reglages-relie">Garder</a><a class="btn danger" href="#reglages-vide">Couper</a></div>
+      </div>
+      <div class="device" id="reglages-vide">
+        <h4>Pas relié</h4>
+        <p class="h-title">job-finder</p>
+        <p class="muted">Pas relié. Le lien se fait depuis l'encart Goal Master de job-finder, bouton « Relier ».</p>
+        <a class="btn ghost" href="#etat-coupe">Voir l'encart côté job-finder</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · PROFIL JOB-FINDER -->
+  <section class="screen" id="profil">
+    <header>
+      <span class="route">job-finder · Profil</span>
+      <h2>4 · Case « Goal Master »</h2>
+      <p>À côté de l'onglet Intermédiaires, décochée par défaut. Quand Nicolas dit « branche Goal Master » à Claude, c'est cette case que Claude coche pour lui.</p>
+    </header>
+    <div class="jf">
+      <div class="jf-bar"><b>Job-finder</b><div class="jf-tabs"><span>À valider<em>12</em></span><span>Candidatures<em>9</em></span><span>Écartées</span><span class="on">Profil</span></div></div>
+      <div class="jf-main">
+        <div class="jf-profile">
+          <h5>Affichage</h5>
+          <div class="jf-line"><span>Onglet Intermédiaires</span><label><input type="checkbox" id="inter" checked> <span>Affiché</span></label></div>
+          <div class="jf-line"><span>Goal Master</span>
+            <label><input type="checkbox" id="gm-case" checked> <span>Afficher mon héros Goal Master<small>Tes candidatures passées à « envoyée » comptent dans Goal Master : seul le nom de l'entreprise part.</small><small class="ok">✓ Relié au compte d'Adrien</small></span></label>
+          </div>
+        </div>
+        <div class="jf-btns"><span class="jf-btn">Annuler</span><a class="jf-btn main" href="#principal">Enregistrer</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · JOB-FINDER + ENCART -->
+  <section class="screen" id="principal">
+    <header>
+      <span class="route">job-finder · Candidatures</span>
+      <h2>5 · L'encart en place</h2>
+      <p>En bas à droite, par-dessus le bas de la liste (une marge sous le tableau lui laisse sa place). Essaie : « Marquer envoyée » sur une ligne.</p>
+    </header>
+    <div class="jf" id="jf-demo">
+      <div class="jf-bar"><b>Job-finder</b><div class="jf-tabs"><span>À valider<em>12</em></span><span class="on">Candidatures<em>9</em></span><span>Écartées</span><span>Intermédiaires</span><span>Profil</span></div></div>
+      <div class="jf-main">
+        <div class="jf-filters"><span class="on">À préparer · 3</span><span>En attente de réponse · 4</span><span>Entretien · 1</span><span>Closes · 1</span></div>
+        <div class="jf-scroll">
+          <table>
+            <thead><tr><th>N°</th><th>Offre</th><th>Note</th><th>Étape</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="n">318</td><td>Développeur front-end React senior<small>Alan · Paris · CDI</small></td><td class="n">8,4</td><td><span class="stamp built">Dossier prêt</span></td><td><button class="jf-act" data-company="Alan">Marquer envoyée</button></td></tr>
+              <tr><td class="n">311</td><td>Ingénieur fullstack TypeScript<small>Pennylane · Remote · CDI</small></td><td class="n">7,9</td><td><span class="stamp built">Dossier prêt</span></td><td><button class="jf-act" data-company="Pennylane">Marquer envoyée</button></td></tr>
+              <tr><td class="n">297</td><td>Mission Next.js · 3 mois<small>Malt · Lyon · Freelance</small></td><td class="n">7,1</td><td><span class="stamp built">Dossier prêt</span></td><td><button class="jf-act" data-company="Malt (mission)">Marquer envoyée</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="jf-pad"></div>
+      </div>
+      <div class="jf-dock">
+        <div class="gm" id="live">
+          <div class="gm-bar"><b>GOAL MASTER</b><button id="live-fold" aria-label="Replier">▾</button></div>
+          <div class="gm-body">
+            <a class="gm-stage" href="#etat-repos" title="Ouvrir Goal Master"><span class="pop">+10 XP</span><div class="gm-hero" data-sprite="knight" data-color="p1" data-px="3"></div></a>
+            <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl" id="live-lvl">NIV. 7</span><div class="xp"><i id="live-xp" style="width:62%"></i></div><span class="gm-sub"><span id="live-today">2 auj.</span><span>🔥 4 j</span></span></div>
+          </div>
+          <div class="gm-msg toast" id="live-msg" hidden></div>
+        </div>
+        <button class="gm-mini" type="button" id="live-mini" hidden><span class="head" data-sprite="knight" data-color="p1" data-px="2"></span><span id="live-mini-lvl">NIV. 7</span><small id="live-mini-today">2 auj.</small></button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const PAL = {K:'#1a1626',E:'#1a1626',S:'#f4c7a1',R:'#e8838a',W:'#dfe6ee',G:'#8b93a7',T:'#c99a5b',B:'#7a4a26',Y:'#f2c14e',O:'#b9831c',L:'#fffbe0',F:'#f3f1f6',N:'#26232f',I:'#ffffff',V:'#6fae4a'};
+const PLAYER = { p1: "#3d7bd9", p2: "#d94848" };
+const SQUIRE = ["....KKKKKKK.....","...KBBBBBBBK....","..KBBBBBBBBBK...","..KBSSSSSSSBK.W.","..KSSESSSESSK.W.","..KSSSSSSSSSK.W.","...KSSSKKSSK..W.","....KKSSSSKK..W.","...KKPPPPPPKKYWY",".KKKPPPPPPPPKSB.","KPPPKPPYYPPPKSB.","KPYPKPPPPPPKKK..","KPPPKBBBBBBK....",".KKKKPPPPPPK....","....KPPKKPPK....","....KGGK.KGGK...","....KBBK.KBBK...","...KKKKK.KKKKK.."];
+const P_NOV = ["....KKK......KKK....","...KNNNKKKKKKNNNK...","...KNFFFFFFFFFNK...V","..KFNNNFFFFFNNNFK..V","..KFNINFFFFFNINFK..V","..KFFFFFFNFFFFFFK..V","..KFFFFFKKKFFFFFK..V","...KFFFFFFFFFFFK...V","..KNNFFFFFFFFFNNK.NV",".KNNKFFFFFFFFFKNNNNV","KNNKFFFFFFFFFFFKNNNV","KNNKFFFFFFFFFFFK...V","KNNKFFFFFFFFFFFK...V",".KKKBBBBBBBBBBBK...V","...KPPPPPPPPPPPK...V","...KPPPPPKPPPPPK...V","....KNNNK.KNNNK....V","....KNNNK.KNNNK....V","...KKKKKK.KKKKKK...."];
+function svg(grid, player, px) {
+  const w = Math.max(...grid.map((r) => r.length)), h = grid.length;
+  let r = "";
+  grid.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${ch === "P" ? player : PAL[ch]}"/>`;
+  }));
+  return `<svg width="${w * px}" height="${h * px}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+document.querySelectorAll("[data-sprite]").forEach((el) => {
+  el.insertAdjacentHTML("afterbegin", svg(el.dataset.sprite === "panda" ? P_NOV : SQUIRE, PLAYER[el.dataset.color || "p1"], Number(el.dataset.px || 3)));
+});
+
+function sparks(stage) {
+  stage.querySelectorAll(".spark").forEach((s) => s.remove());
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement("i");
+    s.className = "spark";
+    const a = (i / 8) * Math.PI * 2;
+    s.style.left = "34px"; s.style.top = "34px";
+    s.style.setProperty("--dx", Math.round(Math.cos(a) * 30) + "px");
+    s.style.setProperty("--dy", Math.round(Math.sin(a) * 30) + "px");
+    stage.appendChild(s);
+  }
+}
+function play(gm, cls, from, to) {
+  const bar = gm.querySelector(".xp i");
+  cls.split(" ").forEach((c) => gm.classList.remove(c));
+  if (gm.dataset.rusty !== undefined) gm.classList.add("rusty");
+  if (bar) { bar.style.transition = "none"; bar.style.width = from + "%"; void bar.offsetWidth; bar.style.transition = ""; }
+  void gm.offsetWidth;
+  sparks(gm.querySelector(".gm-stage"));
+  cls.split(" ").forEach((c) => gm.classList.add(c));
+  if (bar) setTimeout(() => {
+    if (to < from) { bar.style.width = "100%"; setTimeout(() => { bar.style.transition = "none"; bar.style.width = "0%"; void bar.offsetWidth; bar.style.transition = ""; bar.style.width = to + "%"; }, 950); }
+    else bar.style.width = to + "%";
+  }, 300);
+  if (cls.includes("derust")) setTimeout(() => gm.classList.remove("rusty"), 1700);
+}
+document.querySelectorAll("[data-anim]").forEach((gm) => {
+  if (gm.classList.contains("rusty")) gm.dataset.rusty = "";
+  const run = () => play(gm, gm.dataset.anim, +gm.dataset.from, +gm.dataset.to);
+  setTimeout(run, 600);
+  const btn = document.querySelector(`[data-replay="${gm.closest(".state").id}"]`);
+  if (btn) btn.addEventListener("click", run);
+});
+
+/* Démo vivante dans job-finder */
+const live = document.getElementById("live"), mini = document.getElementById("live-mini");
+const msg = document.getElementById("live-msg"), today = document.getElementById("live-today");
+let xp = 62, count = 2, folded = false;
+function setFold(f) { folded = f; live.hidden = f; mini.hidden = !f; }
+document.getElementById("live-fold").addEventListener("click", () => setFold(true));
+mini.addEventListener("click", () => setFold(false));
+document.querySelectorAll(".jf-act").forEach((b) => b.addEventListener("click", () => {
+  const wasFolded = folded;
+  setFold(false);
+  const from = xp; xp = Math.min(xp + 12, 98); count += 1;
+  today.textContent = count + " auj."; document.getElementById("live-mini-today").textContent = count + " auj.";
+  msg.hidden = false; msg.innerHTML = `<span><strong>${b.dataset.company}</strong> compte dans Goal Master.</span>`;
+  play(live, "win", from, xp);
+  b.disabled = true; b.textContent = "Envoyée";
+  const st = b.closest("tr").querySelector(".stamp"); st.className = "stamp sent"; st.textContent = "Envoyée";
+  setTimeout(() => { msg.hidden = true; live.classList.remove("win"); if (wasFolded) setFold(true); }, 3200);
+}));
+</script>

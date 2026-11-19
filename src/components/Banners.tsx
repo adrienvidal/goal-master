@@ -101,7 +101,7 @@ export function VersionWatcher({ version }: { version: string }): React.ReactEle
   }, [version]);
   if (!stale) return null;
   return (
-    <div className="fixed inset-x-0 top-0 z-50 px-4 pt-[max(8px,env(safe-area-inset-top))]">
+    <div className="version-banner fixed inset-x-0 top-0 z-50 px-4 pt-[max(8px,env(safe-area-inset-top))]">
       <div role="alert" className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 border-[3px] border-gold bg-night px-3 py-2 shadow-[4px_4px_0_#0c0a1a]">
         <p className="min-w-0 text-[15px]">
           <b className="text-gold">Nouvelle version de Goal Master.</b> <small className="text-muted">Recharge pour en profiter.</small>

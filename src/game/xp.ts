@@ -8,6 +8,9 @@ export type Application = {
   company: string;
   createdAt: Date;
   cancelledAt: Date | null;
+  /** Encart job-finder : identifiant de l'offre et provenance ("job-finder"), absents pour une saisie à la main. */
+  externalRef?: string | null;
+  source?: string | null;
 };
 
 export type Nudge = {
