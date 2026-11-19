@@ -3,7 +3,7 @@
 import { addDays, isWorkday, parisDay, type Day } from "./calendar";
 import type { QuestRow } from "./quests";
 import { levelFromXp } from "./levels";
-import { activeApplications, totalXp, type Application, type Nudge } from "./xp";
+import { activeApplications, nudgeSucceeded, totalXp, type Application, type Nudge } from "./xp";
 
 export const BOSSES = ["Le Recruteur fantôme", "Le Golem ATS", "La Pile de refus", "Le Silence radio"] as const;
 export type BossIndex = 0 | 1 | 2 | 3;
@@ -20,7 +20,8 @@ export const LEVELS_PER_BONUS = 5;
 export type DuelGoal = { playerId: string; target: number; createdAt: Date; deadline: Day };
 export type DuelInput = { goals: DuelGoal[]; apps: Application[]; nudges: Nudge[]; quests?: QuestRow[] };
 
-export type Fighter = { playerId: string; need: number; hits: number; bonus: number };
+/** `hits` compte tous les coups : candidatures de la semaine et coups d'entraide (`support`). */
+export type Fighter = { playerId: string; need: number; hits: number; support: number; bonus: number };
 export type Duel = {
   /** Le vendredi du duel, qui sert d'identifiant. */
   id: Day;
@@ -84,6 +85,9 @@ export function duelOn(input: DuelInput, friday: Day, now: Date): Duel | null {
   const start = parisTime(addDays(friday, -7), DUEL_HOUR);
   const until = now < at ? now : at;
   const active = activeApplications(input.apps);
+  const quests = input.quests ?? [];
+  // Une relance ne compte que si sa réponse arrive avant le duel.
+  const answeredBefore = input.apps.filter((a) => a.createdAt < until);
   const fighters: Fighter[] = [];
 
   for (const goal of input.goals) {
@@ -93,12 +97,19 @@ export function duelOn(input: DuelInput, friday: Day, now: Date): Duel | null {
     const done = mine.filter((a) => a.createdAt < from).length;
     const remaining = goal.target - done;
     if (remaining <= 0) continue;
-    let need = Math.ceil(remaining / fridaysUntil(friday, goal.deadline));
+    // Rythme de départ, figé : une mauvaise semaine ne fait pas grossir le boss suivant.
+    let need = Math.ceil(goal.target / fridaysUntil(duelDayOf(goal.createdAt), goal.deadline));
     // Objectif fixé en cours de semaine : boss au prorata des jours ouvrés restants.
     if (goal.createdAt > start) need = Math.max(1, Math.ceil((need * workdays(parisDay(goal.createdAt), friday)) / 5));
-    const hits = mine.filter((a) => a.createdAt >= from && a.createdAt < until).length;
-    const bonus = Math.floor(levelAt(goal.playerId, input.apps, input.nudges, input.quests ?? [], until) / LEVELS_PER_BONUS);
-    fighters.push({ playerId: goal.playerId, need, hits, bonus });
+    need = Math.min(need, remaining);
+    const applied = mine.filter((a) => a.createdAt >= from && a.createdAt < until).length;
+    // Entraide : relance suivie d'effet (pour qui relance), quête validée (pour qui l'a faite).
+    const nudged = input.nudges.filter((n) => n.senderId === goal.playerId && n.sentAt >= from && n.sentAt < until && nudgeSucceeded(n, answeredBefore)).length;
+    const quested = quests.filter((q) => q.receiverId === goal.playerId && q.validatedAt !== null && q.validatedAt >= from && q.validatedAt < until).length;
+    const support = nudged + quested;
+    const hits = applied + support;
+    const bonus = Math.floor(levelAt(goal.playerId, input.apps, input.nudges, quests, until) / LEVELS_PER_BONUS);
+    fighters.push({ playerId: goal.playerId, need, hits, support, bonus });
   }
   if (fighters.length === 0) return null;
 
