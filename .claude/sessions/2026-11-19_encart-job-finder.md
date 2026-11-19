@@ -3,9 +3,9 @@
 ## Reprise
 
 ```
-✅ Fait      Modes de l'encart et scène d'évolution en prod, boss adouci en prod
+✅ Fait      Mode libre vivant dans dev (compagnons, monstres, clics relayés)
 ⛔ Bloqué    Aucun
-🎯 Priorité  Duel du boss adouci (échéance 20/11 18 h), menu du rond dans job-finder
+🎯 Priorité  Duel du boss adouci (échéance 20/11 18 h), mode libre en prod (accord d'Adrien)
 ```
 
 ## Réalisé
@@ -34,13 +34,19 @@
 - Nuit : base locale préparée pour l'essai de l'évolution (5 candidatures « Essai niveau n » sur des jours passés, Adrien à 190 XP, forme vue 2)
 - Nuit : **mise en production** sur accord d'Adrien (PR #148, commit de fusion) : déploiement réussi, migration `seen_form` passée, `/widget?mode=small|free` et `/connexion` vérifiés sur goal.viloris.io ; serveurs locaux arrêtés
 - Nuit : archivage vérifié, rien à archiver (16/11 porte toujours le duel du boss)
+- Fin de nuit : mode libre retravaillé à la demande d'Adrien. Maquette validée (fréquences revues : monstre toutes les 2 à 5 min, un compagnon de passage toutes les 2 à 4 min) : https://claude.ai/artifact/Nq2q3X1CqiokjB4JvWvtPc (`docs/maquettes/encart-libre-vivant.html`) ; cadrage `docs/specs/2026-11-19-encart-libre-vivant-design.md`, plan `docs/superpowers/plans/2026-11-19-encart-libre-vivant.md`
+- Fin de nuit : **PR #150 fusionnée dans `dev`** : `Player.walkers` (migration `walkers`, recopie du compagnon affiché), interrupteurs « En balade dans job-finder » dans la Ménagerie (3 au plus), `FreeScene` (héros, compagnon de passage, slime / chauve-souris / champignon, bulle au clic), relais `goal-master:hitboxes` / `goal-master:poke` joué dans `scripts/essai-job-finder.mjs` (`?vitesse=` pour accélérer, hors production), passation `docs/passation/2026-11-19-encart-libre-vivant.md`. Une relecture indépendante (scène remise au repos au redémarrage, interrupteur des Réglages réutilisé) ; 322 tests verts ; vérifié au navigateur, Ménagerie en 390 et 1280 px
+- Fin de nuit : travail fait dans une copie séparée du dépôt (une autre session tournait dans le dossier), retirée après fusion
+- Fin de nuit : archivage vérifié, rien à archiver (16/11 porte toujours le duel du boss)
 
 ## Reste à faire
-- **Côté job-finder-claude** : mise en production de #241, puis menu du rond (Normal, Small, Libre, Masqué), taille de l'iframe par mode et `?mode=`, d'après `docs/passation/2026-11-19-encart-modes.md` (section « Livré côté Goal Master ») ; garder un `color-scheme` clair pour la transparence du mode libre
+- **Mise en production du mode libre vivant** (PR #150 dans `dev`), sur accord d'Adrien ; la migration `walkers` passera sur Neon
+- **Côté job-finder-claude** : relais des clics du mode libre d'après `docs/passation/2026-11-19-encart-libre-vivant.md`, puis mise en production de #241, puis menu du rond (Normal, Small, Libre, Masqué), taille de l'iframe par mode et `?mode=`, d'après `docs/passation/2026-11-19-encart-modes.md` (section « Livré côté Goal Master ») ; garder un `color-scheme` clair pour la transparence du mode libre
 - **Vendredi 20/11 18 h** : vérifier que le duel affiche les PV adoucis et les coups d'entraide
 - Puis Nicolas : « mets à jour job-finder et branche Goal Master » à Claude, et clic sur « Relier »
 - Jeudi 19/11 (ce soir) et vendredi 20/11 à 18 h 01 : rappel du boss puis duel
 - Base locale : candidatures de test « Essai Doctolib », « Alan », « Pennylane », « Doctolib » (Adrien, source job-finder) et une clé de test active ; à effacer si gênantes
+- Base locale, essais du mode libre : clés d'encart de test pour Adrien et Nicolas, candidatures « Qonto », « Alan », « Pennylane » (Nicolas, source job-finder), compagnons en balade de Nicolas passés à chat, chien, renard ; à effacer si gênants
 - Petit reste connu : `/objectif/fin` montre la nouvelle forme si la candidature qui finit l'objectif fait aussi évoluer (avant la scène)
 - Plus tard si besoin : faire tenir l'aperçu de `dev` pour l'encart (protection Vercel), aujourd'hui seule la production ou un Goal Master local sont visables
 
@@ -61,4 +67,5 @@
 - Boss : pas de ligne « retard » (l'écran de l'objectif montre déjà la progression) ; texte de l'intro modifié sans nouvel écran, donc pas de « Nouveauté »
 - Deux sessions Claude dans le même dossier se volent les branches : une copie du dépôt (worktree) par session en parallèle
 - Boss : une candidature déclenchée par une relance compte deux coups (candidature + entraide), voulu ; le coup de grâce reste affiché à part, pas dans la barre de vie
+- Mode libre : monstres et compagnons ne sont que du décor (ni XP, ni dégâts) ; un seul compagnon de passage et un seul monstre à la fois ; par défaut le compagnon affiché se balade ; l'iframe garde `pointer-events: none` et job-finder relaie les clics
 - Écartés : Goal Master entier dans un panneau (cadrage du matin côté job-finder), base en ligne pour job-finder, import des anciennes candidatures, annulation par job-finder
