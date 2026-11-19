@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { victoryFor } from "./widgetVictory";
+import { victoryFor, victoryLine, victoryPop, type Victory } from "./widgetVictory";
 import type { WidgetState } from "./widgetState";
 
 const base: WidgetState = {
@@ -21,5 +21,29 @@ describe("victoryFor", () => {
   test("nouvelle forme", () => expect(victoryFor(base, withNew({ level: 8, levelForm: 3 }))?.newForm).toBe(true));
   test("la rouille part", () => {
     expect(victoryFor({ ...base, idleWorkdays: 3, mood: "tired" }, withNew())?.derust).toBe(true);
+  });
+});
+
+describe("victoryLine (mode normal, une ligne)", () => {
+  const v = (extra: Partial<Victory> = {}): Victory => ({ company: "Doctolib", xp: 10, levelUp: false, newForm: false, derust: false, ...extra });
+  const s = { ...base, level: 9 };
+  test("candidature", () => expect(victoryLine(v(), s)).toEqual({ strong: "Doctolib", rest: " compte", gold: false }));
+  test("niveau gagné", () => expect(victoryLine(v({ levelUp: true }), s).rest).toBe(" compte · niveau 9"));
+  test("plafond", () => expect(victoryLine(v({ xp: 0 }), s).rest).toBe(" · plafond, sans XP"));
+  test("rouille partie", () => expect(victoryLine(v({ derust: true }), s).rest).toBe(" · la rouille part"));
+  test("nouvelle forme : annoncée, jamais nommée", () => {
+    expect(victoryLine(v({ levelUp: true, newForm: true }), s)).toEqual({ strong: "NOUVELLE FORME !", rest: " Va la voir", gold: true });
+  });
+});
+
+describe("victoryPop", () => {
+  const v = (extra: Partial<Victory> = {}): Victory => ({ company: "Doctolib", xp: 10, levelUp: false, newForm: false, derust: false, ...extra });
+  const s = { ...base, level: 8 };
+  test("XP gagnée", () => expect(victoryPop(v(), s, "small")).toBe("+10 XP"));
+  test("plafond", () => expect(victoryPop(v({ xp: 0 }), s, "normal")).toBe("+0 XP"));
+  test("niveau", () => expect(victoryPop(v({ levelUp: true }), s, "free")).toBe("NIV. 8 !"));
+  test("nouvelle forme selon le mode", () => {
+    const evo = v({ levelUp: true, newForm: true });
+    expect([victoryPop(evo, s, "normal"), victoryPop(evo, s, "small"), victoryPop(evo, s, "free")]).toEqual(["NIV. 8 !", "ÉVOLUE !", "NOUVELLE FORME !"]);
   });
 });
