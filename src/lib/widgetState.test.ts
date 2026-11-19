@@ -21,6 +21,11 @@ describe("widgetState", () => {
     expect(s).toMatchObject({ pseudo: "Adrien", level: 7, xpInLevel: 62, xpForNext: 100, displayedForm: 2, streak: 4, today: 2, capReached: false, recent: [] });
   });
 
+  test("forme plafonnée à la dernière scène vue, niveau et victoire inchangés", () => {
+    const s = widgetState({ ...view, levelForm: 3, displayedForm: 3 } as PlayerView, [], "adrien", 2);
+    expect(s).toMatchObject({ displayedForm: 2, levelForm: 3 });
+  });
+
   test("plafond atteint à 15 candidatures du jour", () => {
     const s = widgetState({ ...view, today: { count: 15, items: [] } } as PlayerView, [], "adrien");
     expect(s.capReached).toBe(true);
