@@ -499,3 +499,36 @@ html[data-decor] main { visibility: hidden; }
 .botte-cracks polyline { fill: none; stroke: #ffffff; stroke-width: 3; stroke-linecap: square; stroke-dasharray: 100; stroke-dashoffset: 100; filter: drop-shadow(0 0 3px var(--clang)); }
 .botte-pierce { left: 0; right: 0; top: 20%; text-align: center; font-family: var(--font-press-start), monospace; font-size: 15px; line-height: 1.5; color: var(--gold); text-shadow: 3px 3px 0 #0c0a1a; opacity: 0; padding: 0 12px; }
 .botte-skip { right: max(12px, env(safe-area-inset-right, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px)); font-size: 12px; color: var(--muted); }
+
+/* Encart job-finder (/widget, maquette encart-job-finder) : une petite boîte affichée dans job-finder, sans fond vivant. */
+body:has(.widget-root) { min-height: 0; background: var(--night); }
+body:has(.widget-root) > .landscape-bg, body:has(.widget-root) > .landscape-veil { display: none; }
+.gm-widget { min-height: 100dvh; display: flex; flex-direction: column; background: var(--night); color: var(--ink); border: 3px solid var(--edge); overflow: hidden; }
+.gm-widget .gm-bar { display: flex; align-items: center; padding: 5px 8px; background: var(--stone); border-bottom: 2px solid var(--edge); }
+.gm-widget .gm-bar b { font-family: var(--font-display); font-size: 9px; color: var(--gold); letter-spacing: .04em; }
+.gm-body { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: end; padding: 10px; }
+.gm-stage { position: relative; min-width: 72px; min-height: 76px; padding: 4px 4px 10px; display: flex; align-items: flex-end; justify-content: center; background: linear-gradient(#1d1938, #2a2450); border: 2px solid var(--edge); }
+.gm-stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: #3a6b3f; border-top: 2px solid #24452a; }
+.gm-hero { position: relative; z-index: 1; display: block; transform-origin: 50% 100%; }
+.gm-info { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.gm-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gm-lvl { font-family: var(--font-display); font-size: 9px; color: var(--gold); }
+.gm-xp { position: relative; height: 10px; background: #0c0a1a; border: 2px solid var(--edge); }
+.gm-xp i { position: absolute; inset: 0 auto 0 0; background: var(--gold); box-shadow: inset 0 -2px 0 var(--gold-dk); transition: width .9s steps(12); }
+.gm-sub { display: flex; justify-content: space-between; gap: 6px; font-family: var(--font-num); font-size: 17px; line-height: 1; color: var(--muted); }
+.gm-widget .gm-msg { margin: 0; padding: 7px 10px 9px; border-top: 2px dashed var(--edge); font-size: 13px; line-height: 1.35; color: var(--muted); }
+.gm-widget .gm-msg strong { color: var(--ink); font-weight: 600; }
+.gm-pop { position: absolute; left: 50%; top: 2px; z-index: 3; transform: translateX(-50%); white-space: nowrap; font-family: var(--font-display); font-size: 10px; color: var(--gold); text-shadow: 2px 2px 0 #0c0a1a; pointer-events: none; animation: gm-pop 1.8s ease-out forwards; }
+.gm-pop.muted { color: var(--muted); font-size: 9px; }
+@keyframes gm-pop { 0% { opacity: 0; transform: translate(-50%, 10px); } 15%, 70% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -12px); } }
+@keyframes gm-jump { 0%, 100% { transform: translateY(0) scale(1, 1); } 15% { transform: scale(1.15, .85); } 40% { transform: translateY(-16px) scale(.92, 1.1); } 60% { transform: translateY(-16px); } 80% { transform: scale(1.1, .9); } }
+@keyframes gm-flash { 0%, 100% { background: transparent; } 20% { background: rgb(255 243 176 / .85); } }
+@keyframes gm-derust { from { filter: sepia(.85) saturate(1.6) hue-rotate(-12deg) brightness(.82); } to { filter: none; } }
+.gm-widget.win .gm-hero { animation: gm-jump .8s steps(8) 2; }
+.gm-widget.derust .gm-hero { animation: gm-jump .8s steps(8) 2, gm-derust 1.6s steps(6) forwards; }
+.gm-widget.evo .gm-body::before { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; animation: gm-flash .9s steps(4); }
+@media (prefers-reduced-motion: reduce) {
+  .gm-widget.win .gm-hero, .gm-widget.derust .gm-hero, .gm-widget.evo .gm-body::before { animation: none; }
+  .gm-pop { animation: none; }
+  .gm-xp i { transition: none; }
+}

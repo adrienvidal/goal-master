@@ -24,6 +24,10 @@ export function stateOf(game: GameData, player: Player, now: Date): WidgetState 
   return widgetState(view, game.apps, player.id);
 }
 
-export const UNAUTHORIZED = (): Response => Response.json({ error: "unauthorized" }, { status: 401, headers: { "Cache-Control": "no-store" } });
+export function json(body: unknown, status = 200): Response {
+  return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
+}
 
-export const json = (body: unknown, status = 200): Response => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
+export function UNAUTHORIZED(): Response {
+  return json({ error: "unauthorized" }, 401);
+}
