@@ -1,4 +1,5 @@
 // Page d'essai locale qui joue le rôle de job-finder pour l'encart Goal Master (cadrage encart-job-finder).
+// Le mode de l'encart (normal, small, free) se choisit par les boutons de la page ou par ?mode= dans l'adresse.
 // Usage : node scripts/essai-job-finder.mjs [adresse de Goal Master, défaut http://localhost:3000] [port, défaut 5199]
 // Comme le fera job-finder : la clé est gardée par ce serveur local, l'envoi part du serveur, l'iframe ne fait qu'afficher.
 import { createServer } from "node:http";
@@ -18,7 +19,13 @@ const page = () => `<!doctype html><meta charset="utf-8"><meta name="viewport" c
   .row { display: flex; gap: 8px; align-items: center; background: #fdfcf8; padding: 10px; border: 1px solid #d3d7e0; }
   .row span { flex: 1; } button { font: inherit; padding: 6px 10px; border-radius: 3px; border: 0; background: #16295a; color: #fff; cursor: pointer; }
   #dock { position: fixed; right: 16px; bottom: 16px; width: 260px; }
-  #dock iframe { width: 260px; height: 190px; border: 0; display: block; }
+  #dock iframe { border: 0; display: block; background: transparent; }
+  #dock.normal iframe { width: 260px; height: 130px; }
+  #dock.small { width: 130px; } #dock.small iframe { width: 130px; height: 50px; }
+  /* Libre : l'iframe couvre toute la page et laisse passer les clics, comme le fera job-finder */
+  #dock.free { inset: 0; width: auto; pointer-events: none; } #dock.free iframe { width: 100%; height: 100%; }
+  #dock.free .unlinked { position: fixed; right: 16px; bottom: 16px; width: 260px; pointer-events: auto; }
+  .modes { display: flex; gap: 6px; } .modes button.on { background: #c8202f; }
   .unlinked { background: #16132a; color: #f1ecff; border: 3px solid #4a4380; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
   .unlinked button { background: #f2c14e; color: #1a1626; }
   #log { font: 12px ui-monospace, monospace; color: #566079; white-space: pre-wrap; }
@@ -26,6 +33,7 @@ const page = () => `<!doctype html><meta charset="utf-8"><meta name="viewport" c
 <header>Essai job-finder</header>
 <main>
   <p>Goal Master visé : <code>${GM}</code>. Clé : <b id="k">${key ? "présente" : "aucune"}</b>.</p>
+  <div class="modes">${["normal", "small", "free"].map((m) => `<button data-mode="${m}">${m}</button>`).join("")}</div>
   ${["Alan", "Pennylane", "Doctolib", "Qonto", "Back Market"].map((c) => `<div class="row"><span>${c}</span><button data-company="${c}">Marquer envoyée</button></div>`).join("")}
   <div id="log"></div>
 </main>
@@ -33,14 +41,20 @@ const page = () => `<!doctype html><meta charset="utf-8"><meta name="viewport" c
 <script>
 const GM = ${JSON.stringify(GM)};
 const dock = document.getElementById("dock"), log = (t) => (document.getElementById("log").textContent = t + "\\n" + document.getElementById("log").textContent);
-let linked = ${key ? "true" : "false"}, frame = null;
+let linked = ${key ? "true" : "false"}, frame = null, mode = ["normal", "small", "free"].includes(new URLSearchParams(location.search).get("mode")) ? new URLSearchParams(location.search).get("mode") : "normal";
+function setMode(m) {
+  mode = m; dock.className = m;
+  document.querySelectorAll("[data-mode]").forEach((b) => b.classList.toggle("on", b.dataset.mode === m));
+  if (frame) showWidget();
+}
+document.querySelectorAll("[data-mode]").forEach((b) => (b.onclick = () => setMode(b.dataset.mode)));
 function showUnlinked(text) {
   linked = false; frame = null;
   dock.innerHTML = '<div class="unlinked"><b>GOAL MASTER</b><span>' + text + '</span><button id="link">Relier à Goal Master</button></div>';
   document.getElementById("link").onclick = () => window.open(GM + "/relier?origin=" + encodeURIComponent(location.origin), "goal-master-relier", "width=420,height=640");
 }
 function showWidget() {
-  dock.innerHTML = '<iframe title="Goal Master" src="' + GM + '/widget"></iframe>';
+  dock.innerHTML = '<iframe title="Goal Master" src="' + GM + '/widget?mode=' + mode + '"></iframe>';
   frame = dock.querySelector("iframe");
 }
 window.addEventListener("message", async (e) => {
@@ -61,6 +75,7 @@ document.querySelectorAll("[data-company]").forEach((b) => b.onclick = async () 
   if (r.status === 401) showUnlinked("Le lien a été coupé depuis Goal Master.");
   frame?.contentWindow.postMessage({ type: "goal-master:refresh" }, GM);
 });
+setMode(mode);
 linked ? showWidget() : showUnlinked("Relie ton compte pour que tes candidatures envoyées comptent.");
 </script>`;
 

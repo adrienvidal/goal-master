@@ -37,6 +37,8 @@ export function Landscape({ id, className = "", label = false }: Props): React.R
     let resizeTimer = 0;
 
     const paint = (force = false) => {
+      // Caché (encart job-finder, où l'iframe peut ne faire que 50 px de haut) : rien à dessiner, et pas de calcul inutile.
+      if (canvas.getClientRects().length === 0) return;
       const still = motion.matches;
       const key = `${quarter(hour)}|${grid.w}x${grid.h}`;
       if (still && !force && key === drawnKey) return;

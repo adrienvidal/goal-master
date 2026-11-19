@@ -3,6 +3,7 @@
 import { parisDay } from "@/game/calendar";
 import { applicationsOn, digestOf, xpGainedSince, type DigestRow } from "@/game/digest";
 import { BOSSES, currentDuel, parisTime, pastDuels, type Duel } from "@/game/duel";
+import { shownForm } from "@/game/evolution";
 import { formForLevel, levelFromXp } from "@/game/levels";
 import type { NotificationEvent } from "@/game/notifications";
 import { totalXp } from "@/game/xp";
@@ -20,13 +21,16 @@ function duelOfDay(game: GameData, input: Awaited<ReturnType<typeof loadDuelInpu
   return currentDuel(input, now);
 }
 
-function heroOf(game: GameData, id: string): Hero | null {
+/** `me` : le destinataire, jamais au-delà de sa forme vue (la nouvelle forme se découvre dans la scène de /). */
+function heroOf(game: GameData, id: string, me = false): Hero | null {
   const p = game.players.find((x) => x.id === id);
-  return p ? { character: p.character, color: p.color, form: formForLevel(levelFromXp(totalXp(p.id, game.apps, game.nudges, game.quests)).level) } : null;
+  if (!p) return null;
+  const form = formForLevel(levelFromXp(totalXp(p.id, game.apps, game.nudges, game.quests)).level);
+  return { character: p.character, color: p.color, form: me ? shownForm(form, form, p.seenForm) : form };
 }
 
 function sceneOf(game: GameData, playerId: string, event: NotificationEvent): MailScene | null {
-  const me = heroOf(game, playerId);
+  const me = heroOf(game, playerId, true);
   if (!me) return null;
   const partnerId = game.players.find((p) => p.id !== playerId)?.id;
   const actors = sceneFor(event, me, partnerId ? heroOf(game, partnerId) : null);

@@ -1,0 +1,299 @@
+<title>Boss final</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
+<style>
+/* Écrans de fin empilés, chacun annoncé par sa route ; la scène rejoue la quête en un combat. Tokens de l'app (globals.css), un seul thème sombre assumé. */
+:root {
+  color-scheme: dark;
+  --page: #0e0c1d; --night: #16132a; --stone: #221e40; --stone-2: #2e2958; --edge: #4a4380;
+  --ink: #f1ecff; --muted: #a39dcc; --gold: #f2c14e; --gold-dk: #b9831c;
+  --ember: #ff7a45; --danger: #ff6b6b; --ok: #6fd49a; --boss: #c9b8ff;
+  --f-display: "Press Start 2P", ui-monospace, monospace;
+  --f-ui: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-num: "VT323", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--f-ui); font-size: 16px; margin: 0; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--page); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 980px; margin: 0 auto; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--page); padding: 14px 0 10px; border-bottom: 3px solid var(--edge); }
+.top h1 { font-family: var(--f-display); font-size: 12px; margin: 0 0 10px; line-height: 1.6; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: 13px; text-decoration: none; padding: 4px 8px; border: 2px solid var(--edge); color: var(--muted); }
+.toc a:hover { color: var(--ink); border-color: var(--gold); }
+.intro { color: var(--muted); max-width: 70ch; line-height: 1.5; margin: 22px 0 6px; }
+.rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 16px 0 8px; }
+.rules div { border: 2px dashed var(--edge); padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.rules b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+
+.screen { margin-top: 56px; scroll-margin-top: 130px; }
+.screen > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
+.route { font-family: var(--f-num); font-size: 22px; color: var(--gold); }
+.screen > header h2 { font-family: var(--f-display); font-size: 11px; margin: 0; line-height: 1.6; }
+.screen > header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 75ch; }
+
+.page { background: radial-gradient(120% 70% at 50% 0%, #2a2252 0%, var(--night) 65%); border: 3px solid #000; padding: 22px 14px; }
+.device { background: var(--stone); border: 4px solid var(--edge); box-shadow: 4px 4px 0 #0c0a1a; padding: 18px 16px; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; position: relative; overflow: hidden; }
+.device.win-end { border-color: var(--gold); }
+
+/* Arène */
+.arena { position: relative; width: 100%; display: flex; align-items: flex-end; justify-content: center; gap: clamp(16px, 8vw, 56px); padding: 26px 0 8px; min-height: 190px; }
+.arena::after { content: ""; position: absolute; left: 8%; right: 8%; bottom: 4px; height: 6px; background: var(--stone-2); }
+.spr svg { display: block; width: 100%; height: auto; }
+.hero { width: clamp(76px, 20vw, 104px); position: relative; z-index: 1; }
+.hero .p { display: none; }
+.hero[data-pose="rest"] .p-rest, .hero[data-pose="act"] .p-act, .hero[data-pose="win"] .p-win, .hero[data-pose="parry"] .p-parry, .hero[data-pose="tired"] .p-tired { display: block; }
+.hero[data-pose="act"] { transform: translateX(10px); }
+.hero[data-pose="win"] { animation: hop .5s steps(2) 3; }
+.hero[data-pose="tired"] { animation: breathe 1.2s steps(2) infinite; }
+.bossbox { width: clamp(110px, 30vw, 150px); position: relative; z-index: 1; transform-origin: 50% 100%; }
+.bossbox.enter { animation: boss-enter .6s steps(6) both; }
+.bossbox.idle { animation: float 1.4s steps(2) infinite; }
+.bossbox.hit { animation: shake .18s steps(2); }
+.bossbox.block { animation: nudge .18s steps(2); }
+.bossbox.down { transform: rotate(90deg) translate(20%, 10%); filter: grayscale(1) brightness(.7); opacity: .75; transition: transform .5s steps(4), filter .5s, opacity .5s; }
+.bossbox.dazed { animation: wobble 1s steps(4) infinite; }
+.stars { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-family: var(--f-display); font-size: 12px; color: var(--gold); white-space: nowrap; display: none; animation: spin 1s steps(4) infinite; }
+.bossbox.dazed .stars { display: block; }
+.dmg { position: absolute; top: 0; right: 0; font-family: var(--f-display); font-size: 12px; color: var(--gold); pointer-events: none; animation: pop .6s steps(6) forwards; text-shadow: 2px 2px 0 #000; }
+.dmg.miss { color: var(--muted); }
+.flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 3; }
+.flash.go { animation: flash .7s ease-out; }
+@keyframes boss-enter { from { transform: scale(.4) translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes float { 50% { transform: translateY(-3px); } }
+@keyframes shake { 0% { transform: translateX(6px); } 100% { transform: translateX(-3px); } }
+@keyframes nudge { 50% { transform: translateX(2px); } }
+@keyframes wobble { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(4deg) translateY(2px); } }
+@keyframes spin { 50% { letter-spacing: 4px; } }
+@keyframes pop { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-28px); opacity: 0; } }
+@keyframes flash { 0% { opacity: .85; } 100% { opacity: 0; } }
+@keyframes hop { 50% { transform: translateY(-8px); } }
+@keyframes breathe { 50% { transform: translateY(2px); } }
+
+/* Barre de PV de l'objectif */
+.hud { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.hud .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.bname { font-family: var(--f-display); font-size: 10px; line-height: 1.6; color: var(--boss); }
+.num { font-family: var(--f-num); font-size: 1.25em; }
+.hp { height: 18px; border: 3px solid var(--boss); background: var(--night); }
+.hp i { display: block; height: 100%; width: 100%; background: var(--danger); transition: width .15s steps(3); }
+.weeks { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; }
+.weeks span { height: 10px; background: var(--stone-2); }
+.weeks span.w { background: var(--gold); }
+.weeks span.l { background: var(--danger); opacity: .8; }
+.weeks span.f { background: var(--ok); }
+.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; margin-right: 4px; vertical-align: -1px; }
+
+.outro { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+.device:not(.done) .outro { visibility: hidden; }
+.device.done .outro { animation: rise .4s steps(4); }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.h-title { font-family: var(--f-display); font-size: 14px; line-height: 1.6; margin: 0; text-wrap: balance; }
+.gold { color: var(--gold); }
+.muted { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0; }
+.btn { display: flex; justify-content: center; align-items: center; width: 100%; font-family: var(--f-display); font-size: 11px; line-height: 1.4; color: #1a1626; background: var(--gold); padding: 15px 12px; box-shadow: inset -4px -4px 0 var(--gold-dk), 4px 4px 0 #0c0a1a; text-decoration: none; border: 0; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 3px var(--edge); }
+.badge { font-size: 14px; border: 2px solid var(--gold); color: var(--gold); padding: 4px 10px; }
+.skip { position: absolute; top: 8px; right: 8px; z-index: 4; font-family: var(--f-ui); font-size: 14px; background: var(--night); color: var(--muted); border: 2px solid var(--edge); padding: 6px 10px; cursor: pointer; }
+.device.done .skip { display: none; }
+.replay { display: block; margin: 12px auto 0; font-family: var(--f-ui); font-size: 14px; background: transparent; color: var(--muted); border: 2px dashed var(--edge); padding: 6px 12px; cursor: pointer; }
+.replay:hover { color: var(--ink); border-color: var(--gold); }
+
+.note { margin: 12px auto 0; max-width: 920px; border-left: 4px solid var(--boss); background: var(--stone); padding: 10px 14px; font-size: 14px; line-height: 1.5; color: var(--muted); }
+.note b { color: var(--ink); font-weight: 600; }
+
+.pair { display: grid; gap: 14px; }
+@media (min-width: 860px) { .pair { grid-template-columns: 1fr 1fr; } }
+.pair .page { padding: 16px 10px; }
+.pair h3 { font-family: var(--f-display); font-size: 10px; line-height: 1.6; margin: 0 0 8px; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bossbox, .hero, .stars, .flash, .device.done .outro { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Boss final</h1>
+    <nav class="toc" aria-label="Écrans">
+      <a href="#mission">1 Mission accomplie</a>
+      <a href="#temps-ecoule">2 Temps écoulé</a>
+      <a href="#zero">3 Temps écoulé à zéro</a>
+      <a href="#fige">4 Sans animation</a>
+      <a href="#suite">5 Et après</a>
+    </nav>
+  </div>
+
+  <p class="intro">L'écran de fin rejoue toute la quête en un dernier combat. Le boss du dernier vendredi revient en grand, avec une barre de PV qui vaut l'objectif. Le héros frappe une fois par vendredi de la quête, plus vite à mesure que les semaines passent. Données d'exemple : Adrien, chevalier niveau 15, objectif de 100 candidatures fixé le 16/11, date limite le 12/02.</p>
+
+  <div class="rules">
+    <div><b>Un coup par vendredi</b>Chaque semaine de la quête frappe pour ses candidatures. Un duel gagné donne un coup franc, un duel perdu une parade. Une semaine à zéro frappe dans le vide.</div>
+    <div><b>Durée et contrôle</b>Environ 4 s. « Passer » saute à la fin. L'animation se rejoue à chaque passage tant que le joueur n'a pas choisi la suite.</div>
+    <div><b>Rien de stocké</b>Les coups, les PV et la couleur des semaines se calculent à partir des candidatures et des duels passés.</div>
+  </div>
+
+  <section class="screen" id="mission">
+    <header><span class="route">/objectif/fin</span><h2>Mission accomplie</h2><p>Jeudi 04/02, 100ᵉ candidature, une semaine avant la date limite. Le dernier coup déclenche l'éclair d'évolution, le boss tombe et le héros lève son épée. Puis le titre et le bouton apparaissent.</p></header>
+    <div class="page"><div class="device" data-scene="win"></div></div>
+    <button class="replay" type="button" data-replay="mission">Rejouer</button>
+    <p class="note"><b>Semaines.</b> 13 coups : 12 vendredis passés et le coup final de la semaine en cours (en vert). Les semaines de Noël et du Nouvel An (3 et 4 candidatures) sont des duels perdus : parade, le boss recule à peine.</p>
+  </section>
+
+  <section class="screen" id="temps-ecoule">
+    <header><span class="route">/objectif/fin</span><h2>Temps écoulé</h2><p>Samedi 13/02, 78 / 100. La barre s'arrête à 22 PV : le boss vacille, sonné, sans tomber. Le héros reprend son souffle. « Prolonger » devient « Reprendre le combat ».</p></header>
+    <div class="page"><div class="device" data-scene="lose"></div></div>
+    <button class="replay" type="button" data-replay="temps-ecoule">Rejouer</button>
+    <p class="note"><b>Ton.</b> Rien de punitif : on ne voit jamais le boss gagner. Le texte rappelle que l'avatar garde tout ce qu'il a gagné, comme aujourd'hui.</p>
+  </section>
+
+  <section class="screen" id="zero">
+    <header><span class="route">/objectif/fin</span><h2>Temps écoulé, aucune candidature</h2><p>Le cas limite : un objectif prolongé sans aucune candidature depuis. Le boss entre, le héros ne frappe pas, la barre reste pleine. Pas de série de coups dans le vide.</p></header>
+    <div class="page"><div class="device" data-scene="zero"></div></div>
+    <button class="replay" type="button" data-replay="zero">Rejouer</button>
+  </section>
+
+  <section class="screen" id="fige">
+    <header><span class="route">/objectif/fin</span><h2>Sans animation</h2><p>Si l'appareil demande de réduire les animations, ou après « Passer » : l'état final s'affiche directement, sur mobile comme sur ordinateur.</p></header>
+    <div class="pair">
+      <div><h3>Mission accomplie</h3><div class="page"><div class="device" data-scene="win" data-static></div></div></div>
+      <div><h3>Temps écoulé</h3><div class="page"><div class="device" data-scene="lose" data-static></div></div></div>
+    </div>
+  </section>
+
+  <section class="screen" id="suite">
+    <header><span class="route">→</span><h2>Et après</h2><p>Les boutons mènent aux écrans existants, inchangés.</p></header>
+    <p class="note"><b>Nouvel objectif</b> ouvre <b>/objectif/nouveau</b> (choix du personnage et de la date). <b>Reprendre le combat</b> prolonge de 4 semaines pour les deux joueurs et ramène à l'accueil, où le boss de la semaine revient. <a href="#mission">Revenir en haut</a></p>
+  </section>
+</div>
+
+<script>
+const SPR = {"kRest":"<svg viewBox=\"0 0 16 18\" shape-rendering=\"crispEdges\"><rect x=\"4\" y=\"0\" width=\"7\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"1\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"1\" width=\"7\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"11\" y=\"1\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"2\" y=\"2\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"2\" width=\"9\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"2\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"2\" y=\"3\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"3\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"4\" y=\"3\" width=\"7\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"11\" y=\"3\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"3\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"3\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"2\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"4\" width=\"2\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"5\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"6\" y=\"4\" width=\"3\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"9\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"4\" width=\"2\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"12\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"4\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"2\" y=\"5\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"5\" width=\"9\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"12\" y=\"5\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"5\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"3\" y=\"6\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"6\" width=\"3\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"7\" y=\"6\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"6\" width=\"2\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"11\" y=\"6\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"6\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"4\" y=\"7\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"6\" y=\"7\" width=\"4\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"10\" y=\"7\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"7\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"3\" y=\"8\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"8\" width=\"6\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"8\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"8\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"14\" y=\"8\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"15\" y=\"8\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"1\" y=\"9\" width=\"3\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"9\" width=\"8\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"12\" y=\"9\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"9\" width=\"1\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"14\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"0\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"10\" width=\"3\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"4\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"10\" width=\"2\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"7\" y=\"10\" width=\"2\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"9\" y=\"10\" width=\"3\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"12\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"10\" width=\"1\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"14\" y=\"10\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"0\" y=\"11\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"11\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"2\" y=\"11\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"3\" y=\"11\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"4\" y=\"11\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"11\" width=\"6\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"11\" width=\"3\" height=\"1\" fill=\"#1a1626\"/><rect x=\"0\" y=\"12\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"12\" width=\"3\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"4\" y=\"12\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"12\" width=\"6\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"11\" y=\"12\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"13\" width=\"4\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"13\" width=\"6\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"13\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"14\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"14\" width=\"2\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"7\" y=\"14\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"14\" width=\"2\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"14\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"15\" width=\"2\" height=\"1\" fill=\"#8b93a7\"/><rect x=\"7\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"15\" width=\"2\" height=\"1\" fill=\"#8b93a7\"/><rect x=\"12\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"16\" width=\"2\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"7\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"16\" width=\"2\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"17\" width=\"5\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"17\" width=\"5\" height=\"1\" fill=\"#1a1626\"/></svg>","kAct":"<svg viewBox=\"0 0 22 18\" shape-rendering=\"crispEdges\"><rect x=\"4\" y=\"0\" width=\"7\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"1\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"1\" width=\"7\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"11\" y=\"1\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"2\" y=\"2\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"2\" width=\"9\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"2\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"2\" y=\"3\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"3\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"4\" y=\"3\" width=\"7\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"11\" y=\"3\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"3\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"2\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"4\" width=\"2\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"5\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"6\" y=\"4\" width=\"3\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"9\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"4\" width=\"2\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"12\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"2\" y=\"5\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"5\" width=\"9\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"12\" y=\"5\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"6\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"6\" width=\"3\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"7\" y=\"6\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"6\" width=\"2\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"11\" y=\"6\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"7\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"6\" y=\"7\" width=\"4\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"10\" y=\"7\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"8\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"8\" width=\"6\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"8\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"15\" y=\"8\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"1\" y=\"9\" width=\"3\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"9\" width=\"8\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"12\" y=\"9\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"9\" width=\"1\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"14\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"15\" y=\"9\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"16\" y=\"9\" width=\"5\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"0\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"10\" width=\"3\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"4\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"10\" width=\"2\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"7\" y=\"10\" width=\"2\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"9\" y=\"10\" width=\"3\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"12\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"10\" width=\"1\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"15\" y=\"10\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"0\" y=\"11\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"11\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"2\" y=\"11\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"3\" y=\"11\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"4\" y=\"11\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"11\" width=\"6\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"11\" width=\"3\" height=\"1\" fill=\"#1a1626\"/><rect x=\"0\" y=\"12\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"12\" width=\"3\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"4\" y=\"12\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"12\" width=\"6\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"11\" y=\"12\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"13\" width=\"4\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"13\" width=\"6\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"13\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"14\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"14\" width=\"2\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"7\" y=\"14\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"14\" width=\"2\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"14\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"15\" width=\"2\" height=\"1\" fill=\"#8b93a7\"/><rect x=\"7\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"15\" width=\"2\" height=\"1\" fill=\"#8b93a7\"/><rect x=\"12\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"16\" width=\"2\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"7\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"16\" width=\"2\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"17\" width=\"5\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"17\" width=\"5\" height=\"1\" fill=\"#1a1626\"/></svg>","kWin":"<svg viewBox=\"0 0 16 22\" shape-rendering=\"crispEdges\"><rect x=\"14\" y=\"3\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"4\" y=\"4\" width=\"7\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"4\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"3\" y=\"5\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"5\" width=\"7\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"11\" y=\"5\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"5\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"2\" y=\"6\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"6\" width=\"9\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"6\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"6\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"2\" y=\"7\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"7\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"4\" y=\"7\" width=\"7\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"11\" y=\"7\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"7\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"7\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"2\" y=\"8\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"8\" width=\"2\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"5\" y=\"8\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"6\" y=\"8\" width=\"3\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"9\" y=\"8\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"8\" width=\"2\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"12\" y=\"8\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"8\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"14\" y=\"8\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"15\" y=\"8\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"2\" y=\"9\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"9\" width=\"9\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"12\" y=\"9\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"9\" width=\"1\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"14\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"3\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"10\" width=\"3\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"7\" y=\"10\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"10\" width=\"2\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"11\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"10\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"14\" y=\"10\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"4\" y=\"11\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"6\" y=\"11\" width=\"4\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"10\" y=\"11\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"11\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"3\" y=\"12\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"12\" width=\"6\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"12\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"12\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"1\" y=\"13\" width=\"3\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"13\" width=\"8\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"12\" y=\"13\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"13\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"0\" y=\"14\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"14\" width=\"3\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"4\" y=\"14\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"14\" width=\"2\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"7\" y=\"14\" width=\"2\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"9\" y=\"14\" width=\"3\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"12\" y=\"14\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"14\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"0\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"15\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"2\" y=\"15\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"3\" y=\"15\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"4\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"15\" width=\"6\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"15\" width=\"3\" height=\"1\" fill=\"#1a1626\"/><rect x=\"0\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"16\" width=\"3\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"4\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"16\" width=\"6\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"11\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"17\" width=\"4\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"17\" width=\"6\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"17\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"18\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"18\" width=\"2\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"7\" y=\"18\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"18\" width=\"2\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"18\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"19\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"19\" width=\"2\" height=\"1\" fill=\"#8b93a7\"/><rect x=\"7\" y=\"19\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"19\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"19\" width=\"2\" height=\"1\" fill=\"#8b93a7\"/><rect x=\"12\" y=\"19\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"20\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"20\" width=\"2\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"7\" y=\"20\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"20\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"20\" width=\"2\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"20\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"21\" width=\"5\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"21\" width=\"5\" height=\"1\" fill=\"#1a1626\"/></svg>","kParry":"<svg viewBox=\"0 0 19 19\" shape-rendering=\"crispEdges\"><rect x=\"4\" y=\"1\" width=\"7\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"2\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"2\" width=\"7\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"11\" y=\"2\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"2\" y=\"3\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"3\" width=\"9\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"3\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"2\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"4\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"4\" y=\"4\" width=\"7\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"11\" y=\"4\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"4\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"2\" y=\"5\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"5\" width=\"2\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"5\" y=\"5\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"6\" y=\"5\" width=\"3\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"9\" y=\"5\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"5\" width=\"2\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"12\" y=\"5\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"5\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"2\" y=\"6\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"6\" width=\"9\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"12\" y=\"6\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"6\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"3\" y=\"7\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"7\" width=\"3\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"7\" y=\"7\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"7\" width=\"2\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"11\" y=\"7\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"7\" width=\"1\" height=\"1\" fill=\"#ffd84a\"/><rect x=\"14\" y=\"7\" width=\"1\" height=\"1\" fill=\"#dfe6ee\"/><rect x=\"15\" y=\"7\" width=\"1\" height=\"1\" fill=\"#ffd84a\"/><rect x=\"4\" y=\"8\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"6\" y=\"8\" width=\"4\" height=\"1\" fill=\"#f4c7a1\"/><rect x=\"10\" y=\"8\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"12\" y=\"8\" width=\"1\" height=\"1\" fill=\"#ffd84a\"/><rect x=\"13\" y=\"8\" width=\"3\" height=\"1\" fill=\"#1a1626\"/><rect x=\"16\" y=\"8\" width=\"1\" height=\"1\" fill=\"#ffd84a\"/><rect x=\"3\" y=\"9\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"9\" width=\"6\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"9\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"9\" width=\"3\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"16\" y=\"9\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"17\" y=\"9\" width=\"1\" height=\"1\" fill=\"#ffd84a\"/><rect x=\"4\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"10\" width=\"7\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"12\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"10\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"14\" y=\"10\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"15\" y=\"10\" width=\"1\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"16\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"17\" y=\"10\" width=\"1\" height=\"1\" fill=\"#ffd84a\"/><rect x=\"4\" y=\"11\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"11\" width=\"2\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"7\" y=\"11\" width=\"2\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"9\" y=\"11\" width=\"3\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"12\" y=\"11\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"11\" width=\"3\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"16\" y=\"11\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"17\" y=\"11\" width=\"1\" height=\"1\" fill=\"#ffd84a\"/><rect x=\"4\" y=\"12\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"12\" width=\"6\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"12\" width=\"5\" height=\"1\" fill=\"#1a1626\"/><rect x=\"16\" y=\"12\" width=\"1\" height=\"1\" fill=\"#ffd84a\"/><rect x=\"4\" y=\"13\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"13\" width=\"6\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"11\" y=\"13\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"13\" width=\"3\" height=\"1\" fill=\"#ffd84a\"/><rect x=\"4\" y=\"14\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"14\" width=\"6\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"14\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"15\" width=\"2\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"7\" y=\"15\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"15\" width=\"2\" height=\"1\" fill=\"#3d7bd9\"/><rect x=\"11\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"16\" width=\"2\" height=\"1\" fill=\"#8b93a7\"/><rect x=\"7\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"16\" width=\"2\" height=\"1\" fill=\"#8b93a7\"/><rect x=\"12\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"17\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"17\" width=\"2\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"7\" y=\"17\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"17\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"17\" width=\"2\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"17\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"18\" width=\"5\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"18\" width=\"5\" height=\"1\" fill=\"#1a1626\"/></svg>","kTired":"<svg viewBox=\"0 0 16 18\" shape-rendering=\"crispEdges\"><rect x=\"4\" y=\"0\" width=\"7\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"1\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"1\" width=\"7\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"11\" y=\"1\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"2\" y=\"2\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"2\" width=\"9\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"2\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"2\" y=\"3\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"3\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"4\" y=\"3\" width=\"7\" height=\"1\" fill=\"#dcc6b6\"/><rect x=\"11\" y=\"3\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"3\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"3\" width=\"1\" height=\"1\" fill=\"#b3a58c\"/><rect x=\"2\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"4\" width=\"2\" height=\"1\" fill=\"#dcc6b6\"/><rect x=\"5\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"6\" y=\"4\" width=\"3\" height=\"1\" fill=\"#dcc6b6\"/><rect x=\"9\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"4\" width=\"2\" height=\"1\" fill=\"#dcc6b6\"/><rect x=\"12\" y=\"4\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"4\" width=\"1\" height=\"1\" fill=\"#b3a58c\"/><rect x=\"2\" y=\"5\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"5\" width=\"2\" height=\"1\" fill=\"#dcc6b6\"/><rect x=\"5\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7a5aa0\"/><rect x=\"6\" y=\"5\" width=\"3\" height=\"1\" fill=\"#dcc6b6\"/><rect x=\"9\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7a5aa0\"/><rect x=\"10\" y=\"5\" width=\"2\" height=\"1\" fill=\"#dcc6b6\"/><rect x=\"12\" y=\"5\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"5\" width=\"1\" height=\"1\" fill=\"#b3a58c\"/><rect x=\"3\" y=\"6\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"6\" width=\"3\" height=\"1\" fill=\"#dcc6b6\"/><rect x=\"7\" y=\"6\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"6\" width=\"2\" height=\"1\" fill=\"#dcc6b6\"/><rect x=\"11\" y=\"6\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"6\" width=\"1\" height=\"1\" fill=\"#b3a58c\"/><rect x=\"4\" y=\"7\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"6\" y=\"7\" width=\"4\" height=\"1\" fill=\"#dcc6b6\"/><rect x=\"10\" y=\"7\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"14\" y=\"7\" width=\"1\" height=\"1\" fill=\"#b3a58c\"/><rect x=\"3\" y=\"8\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"8\" width=\"3\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"8\" y=\"8\" width=\"1\" height=\"1\" fill=\"#a4501f\"/><rect x=\"9\" y=\"8\" width=\"2\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"11\" y=\"8\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"8\" width=\"1\" height=\"1\" fill=\"#a88a4a\"/><rect x=\"14\" y=\"8\" width=\"1\" height=\"1\" fill=\"#b3a58c\"/><rect x=\"15\" y=\"8\" width=\"1\" height=\"1\" fill=\"#a88a4a\"/><rect x=\"1\" y=\"9\" width=\"3\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"9\" width=\"7\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"11\" y=\"9\" width=\"1\" height=\"1\" fill=\"#a4501f\"/><rect x=\"12\" y=\"9\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"9\" width=\"1\" height=\"1\" fill=\"#dcc6b6\"/><rect x=\"14\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"0\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"10\" width=\"3\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"4\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"10\" width=\"1\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"6\" y=\"10\" width=\"1\" height=\"1\" fill=\"#a4501f\"/><rect x=\"7\" y=\"10\" width=\"2\" height=\"1\" fill=\"#a88a4a\"/><rect x=\"9\" y=\"10\" width=\"3\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"12\" y=\"10\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"13\" y=\"10\" width=\"1\" height=\"1\" fill=\"#dcc6b6\"/><rect x=\"14\" y=\"10\" width=\"1\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"0\" y=\"11\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"11\" width=\"1\" height=\"1\" fill=\"#a4501f\"/><rect x=\"2\" y=\"11\" width=\"1\" height=\"1\" fill=\"#a88a4a\"/><rect x=\"3\" y=\"11\" width=\"1\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"4\" y=\"11\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"11\" width=\"4\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"9\" y=\"11\" width=\"1\" height=\"1\" fill=\"#a4501f\"/><rect x=\"10\" y=\"11\" width=\"1\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"11\" y=\"11\" width=\"3\" height=\"1\" fill=\"#1a1626\"/><rect x=\"0\" y=\"12\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"12\" width=\"3\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"4\" y=\"12\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"12\" width=\"6\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"11\" y=\"12\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"1\" y=\"13\" width=\"4\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"13\" width=\"2\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"7\" y=\"13\" width=\"1\" height=\"1\" fill=\"#a4501f\"/><rect x=\"8\" y=\"13\" width=\"3\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"11\" y=\"13\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"14\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"14\" width=\"2\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"7\" y=\"14\" width=\"2\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"14\" width=\"1\" height=\"1\" fill=\"#7d5a45\"/><rect x=\"10\" y=\"14\" width=\"1\" height=\"1\" fill=\"#a4501f\"/><rect x=\"11\" y=\"14\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"15\" width=\"1\" height=\"1\" fill=\"#a4501f\"/><rect x=\"6\" y=\"15\" width=\"1\" height=\"1\" fill=\"#7b6f5e\"/><rect x=\"7\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"15\" width=\"2\" height=\"1\" fill=\"#7b6f5e\"/><rect x=\"12\" y=\"15\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"4\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"5\" y=\"16\" width=\"2\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"7\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"10\" y=\"16\" width=\"2\" height=\"1\" fill=\"#7a4a26\"/><rect x=\"12\" y=\"16\" width=\"1\" height=\"1\" fill=\"#1a1626\"/><rect x=\"3\" y=\"17\" width=\"5\" height=\"1\" fill=\"#1a1626\"/><rect x=\"9\" y=\"17\" width=\"5\" height=\"1\" fill=\"#1a1626\"/></svg>","boss3":"<svg viewBox=\"0 0 16 13\" shape-rendering=\"crispEdges\"><rect x=\"0\" y=\"0\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"15\" y=\"0\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"0\" y=\"1\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"1\" y=\"1\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"6\" y=\"1\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"9\" y=\"1\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"14\" y=\"1\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"15\" y=\"1\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"0\" y=\"2\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"1\" y=\"2\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"2\" y=\"2\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"6\" y=\"2\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"7\" y=\"2\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"8\" y=\"2\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"9\" y=\"2\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"13\" y=\"2\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"14\" y=\"2\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"15\" y=\"2\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"0\" y=\"3\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"1\" y=\"3\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"2\" y=\"3\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"3\" y=\"3\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"6\" y=\"3\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"7\" y=\"3\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"8\" y=\"3\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"9\" y=\"3\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"12\" y=\"3\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"13\" y=\"3\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"14\" y=\"3\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"15\" y=\"3\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"0\" y=\"4\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"1\" y=\"4\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"2\" y=\"4\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"3\" y=\"4\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"4\" y=\"4\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"5\" y=\"4\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"6\" y=\"4\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"7\" y=\"4\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"8\" y=\"4\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"9\" y=\"4\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"10\" y=\"4\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"11\" y=\"4\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"12\" y=\"4\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"13\" y=\"4\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"14\" y=\"4\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"15\" y=\"4\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"0\" y=\"5\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"1\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"2\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"3\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"4\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"5\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"6\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"7\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"8\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"9\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"10\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"11\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"12\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"13\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"14\" y=\"5\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"15\" y=\"5\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"0\" y=\"6\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"1\" y=\"6\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"2\" y=\"6\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"3\" y=\"6\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"4\" y=\"6\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"5\" y=\"6\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"6\" y=\"6\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"7\" y=\"6\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"8\" y=\"6\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"9\" y=\"6\" width=\"1\" height=\"1\" fill=\"#f2c14e\"/><rect x=\"10\" y=\"6\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"11\" y=\"6\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"12\" y=\"6\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"13\" y=\"6\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"14\" y=\"6\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"15\" y=\"6\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"1\" y=\"7\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"2\" y=\"7\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"3\" y=\"7\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"4\" y=\"7\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"5\" y=\"7\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"6\" y=\"7\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"7\" y=\"7\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"8\" y=\"7\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"9\" y=\"7\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"10\" y=\"7\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"11\" y=\"7\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"12\" y=\"7\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"13\" y=\"7\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"14\" y=\"7\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"1\" y=\"8\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"2\" y=\"8\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"3\" y=\"8\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"4\" y=\"8\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"5\" y=\"8\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"6\" y=\"8\" width=\"1\" height=\"1\" fill=\"#f4f0e6\"/><rect x=\"7\" y=\"8\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"8\" y=\"8\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"9\" y=\"8\" width=\"1\" height=\"1\" fill=\"#f4f0e6\"/><rect x=\"10\" y=\"8\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"11\" y=\"8\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"12\" y=\"8\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"13\" y=\"8\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"14\" y=\"8\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"2\" y=\"9\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"3\" y=\"9\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"4\" y=\"9\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"5\" y=\"9\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"6\" y=\"9\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"7\" y=\"9\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"8\" y=\"9\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"9\" y=\"9\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"10\" y=\"9\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"11\" y=\"9\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"12\" y=\"9\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"13\" y=\"9\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"3\" y=\"10\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"4\" y=\"10\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"6\" y=\"10\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"7\" y=\"10\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"8\" y=\"10\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"9\" y=\"10\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"11\" y=\"10\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"12\" y=\"10\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"6\" y=\"11\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"7\" y=\"11\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"8\" y=\"11\" width=\"1\" height=\"1\" fill=\"#5b5394\"/><rect x=\"9\" y=\"11\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"7\" y=\"12\" width=\"1\" height=\"1\" fill=\"#2a2550\"/><rect x=\"8\" y=\"12\" width=\"1\" height=\"1\" fill=\"#2a2550\"/></svg>"};
+const SCENES = {
+  win: {
+    boss: "Le Silence radio", target: 100,
+    weeks: [9,7,10,8,6,3,4,11,9,12,10,8,3],
+    won:   [1,0,1,1,0,0,0,1,1,1,1,1,1],
+    outro: `<p class="h-title gold">Mission accomplie !</p>
+      <p class="num">100 candidatures · Niv. 15 · 80 j de quête</p>
+      <span class="badge">Succès débloqué : Mission accomplie</span>
+      <p class="muted">Tu gardes ton XP, ton niveau et tes succès.</p>
+      <a class="btn" href="#suite">Nouvel objectif</a>
+      <p class="muted">Au nouvel objectif, tu peux changer de personnage.</p>`,
+  },
+  lose: {
+    boss: "Le Silence radio", target: 100,
+    weeks: [8,6,9,5,4,2,0,7,8,9,6,7,7],
+    won:   [1,0,1,0,0,0,0,0,1,1,0,0,0],
+    outro: `<p class="h-title gold">Temps écoulé</p>
+      <p><span class="num">78</span> candidatures sur <span class="num">100</span> au 12/02. Le boss est sonné : il lui reste 22 PV.</p>
+      <p class="muted">Ton avatar garde tout ce qu'il a gagné.</p>
+      <a class="btn" href="#suite">Reprendre le combat jusqu'au 13/03</a>
+      <a class="btn ghost" href="#suite">Nouvel objectif</a>`,
+  },
+  zero: {
+    boss: "Le Silence radio", target: 100,
+    weeks: [0,0,0,0], won: [0,0,0,0],
+    outro: `<p class="h-title gold">Temps écoulé</p>
+      <p><span class="num">0</span> candidature sur <span class="num">100</span> au 13/03. Le boss n'a pas encore été touché.</p>
+      <p class="muted">Ton avatar garde tout ce qu'il a gagné.</p>
+      <a class="btn" href="#suite">Reprendre le combat jusqu'au 10/04</a>
+      <a class="btn ghost" href="#suite">Nouvel objectif</a>`,
+  },
+};
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function build(dev) {
+  const s = SCENES[dev.dataset.scene];
+  const n = s.weeks.length;
+  dev.innerHTML = `
+    <button class="skip" type="button">Passer</button>
+    <div class="flash"></div>
+    <div class="arena">
+      <span class="spr hero" data-pose="rest">
+        <span class="p p-rest">${SPR.kRest}</span><span class="p p-act">${SPR.kAct}</span><span class="p p-win">${SPR.kWin}</span><span class="p p-parry">${SPR.kParry}</span><span class="p p-tired">${SPR.kTired}</span>
+      </span>
+      <span class="spr bossbox"><span class="stars">* * *</span>${SPR.boss3}</span>
+    </div>
+    <div class="hud">
+      <div class="row"><span class="bname">${s.boss}</span><span class="num"><b class="left">${s.target}</b> / ${s.target} PV</span></div>
+      <div class="hp" role="img" aria-label="Points de vie du boss"><i></i></div>
+      <div class="weeks" style="grid-template-columns:repeat(${n},1fr)">${s.weeks.map(() => "<span></span>").join("")}</div>
+      <div class="legend"><span><i style="background:var(--gold)"></i>duel gagné</span><span><i style="background:var(--danger)"></i>duel perdu</span>${dev.dataset.scene === "win" ? '<span><i style="background:var(--ok)"></i>coup final</span>' : ""}</div>
+    </div>
+    <div class="outro">${s.outro}</div>`;
+  dev.querySelector(".skip").addEventListener("click", () => finish(dev));
+}
+
+function setHp(dev, done) {
+  const s = SCENES[dev.dataset.scene];
+  const left = Math.max(0, s.target - done);
+  dev.querySelector(".left").textContent = left;
+  dev.querySelector(".hp i").style.width = (left / s.target * 100) + "%";
+}
+
+function finish(dev) {
+  (dev._timers || []).forEach(clearTimeout);
+  dev._timers = [];
+  const s = SCENES[dev.dataset.scene];
+  const kind = dev.dataset.scene;
+  const total = s.weeks.reduce((a, b) => a + b, 0);
+  setHp(dev, total);
+  dev.querySelectorAll(".weeks span").forEach((el, i) => { el.className = cls(s, i); });
+  const hero = dev.querySelector(".hero"), boss = dev.querySelector(".bossbox");
+  boss.className = "spr bossbox " + (kind === "win" ? "down" : kind === "lose" ? "dazed" : "idle");
+  hero.dataset.pose = kind === "win" ? "win" : "tired";
+  dev.classList.toggle("win-end", kind === "win");
+  dev.classList.add("done");
+}
+
+function cls(s, i) {
+  if (s.weeks[i] === 0) return "";
+  if (s === SCENES.win && i === s.weeks.length - 1) return "f";
+  return s.won[i] ? "w" : "l";
+}
+
+function play(dev) {
+  build(dev);
+  dev.classList.remove("done", "win-end");
+  if (reduced || dev.hasAttribute("data-static")) { finish(dev); return; }
+  const s = SCENES[dev.dataset.scene];
+  const hero = dev.querySelector(".hero"), boss = dev.querySelector(".bossbox");
+  const T = dev._timers = [];
+  const at = (ms, fn) => T.push(setTimeout(fn, ms));
+  boss.className = "spr bossbox enter";
+  let t = 700, done = 0;
+  const allZero = s.weeks.every((w) => w === 0);
+  if (!allZero) s.weeks.forEach((w, i) => {
+    const gap = Math.max(150, 420 - i * 28);
+    at(t, () => {
+      const last = i === s.weeks.length - 1;
+      const kind = w === 0 ? "miss" : s.won[i] || (last && dev.dataset.scene === "win") ? "hit" : "block";
+      hero.dataset.pose = kind === "block" ? "parry" : "act";
+      boss.className = "spr bossbox " + (kind === "hit" ? "hit" : kind === "block" ? "block" : "");
+      done += w; setHp(dev, done);
+      dev.querySelectorAll(".weeks span")[i].className = cls(s, i);
+      const d = document.createElement("span");
+      d.className = "dmg" + (w === 0 ? " miss" : "");
+      d.textContent = w === 0 ? "raté" : "-" + w;
+      boss.appendChild(d);
+      setTimeout(() => d.remove(), 650);
+      if (last && dev.dataset.scene === "win") dev.querySelector(".flash").classList.add("go");
+    });
+    at(t + gap * 0.55, () => { hero.dataset.pose = "rest"; });
+    t += gap;
+  });
+  at(t + 250, () => finish(dev));
+}
+
+const devices = [...document.querySelectorAll(".device[data-scene]")];
+devices.forEach(build);
+const io = "IntersectionObserver" in window ? new IntersectionObserver((es) => es.forEach((e) => {
+  if (e.isIntersecting && !e.target._played) { e.target._played = true; play(e.target); }
+}), { threshold: .5 }) : null;
+devices.forEach((d) => { if (d.hasAttribute("data-static") || !io) play(d); else { finish(d); io.observe(d); } });
+document.querySelectorAll("[data-replay]").forEach((b) => b.addEventListener("click", () => play(document.querySelector(`#${b.dataset.replay} .device`))));
+</script>

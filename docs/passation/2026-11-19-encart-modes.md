@@ -44,3 +44,13 @@ Maquette validée par Adrien le 19/11 : https://claude.ai/artifact/S7LLMZcTPg4dx
 - Pas de nouveau message entre les deux pages (pas de hauteur envoyée par `/widget` : les tailles sont fixes).
 - Pas de déplacement du héros par glisser-déposer, pas de clic en mode free.
 - Rien ne change à l'API (`/api/widget/state`, `/api/widget/applications`) ni à la liaison.
+
+## Livré côté Goal Master (lot A, 19/11)
+
+Cadrage : `docs/specs/2026-11-19-encart-modes-et-evolution-design.md`. `/widget?mode=normal|small|free` est en place, aux tailles prévues : **260 × 130**, **130 × 50**, page entière. Rien n'a changé au protocole ni à l'API.
+
+À respecter côté job-finder :
+
+- **Mode free** : l'iframe couvre toute la page avec `pointer-events: none` et un fond transparent (`background: transparent` sur l'iframe). L'encart force `color-scheme: light` en free : job-finder doit garder un `color-scheme` clair, sinon le navigateur peint un fond opaque dans l'iframe.
+- Les états que job-finder dessine lui-même (non relié, lien coupé, en attente) se posent à la taille du mode ; en free, à l'emplacement de l'encart normal (en bas à droite, 260 px de large), cliquables.
+- `scripts/essai-job-finder.mjs` montre l'intégration attendue (boutons de mode, tailles, iframe rechargée au changement de mode).
