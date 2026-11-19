@@ -187,6 +187,40 @@ a { color: inherit; }
 .menu-demo .jf { flex: 1 1 340px; }
 .menu-demo .jf-main { min-height: 230px; align-items: flex-end; }
 
+
+/* ---------- Nouvelle forme : notification et scène dans Goal Master ---------- */
+.evo-flow { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: start; }
+.notif { background: #2b2840; color: #f1ecff; border-radius: 14px; padding: 12px 14px; display: grid; grid-template-columns: 36px 1fr auto; gap: 10px; align-items: start; text-decoration: none; box-shadow: 0 6px 20px rgb(0 0 0 / .35); font-family: system-ui, -apple-system, sans-serif; }
+.notif .app { width: 36px; height: 36px; border-radius: 8px; background: var(--night); border: 2px solid var(--edge); display: flex; align-items: center; justify-content: center; color: var(--gold); }
+.notif b { display: block; font-size: 14px; }
+.notif span { display: block; font-size: 14px; line-height: 1.35; color: #d6d1ee; }
+.notif small { font-size: 12px; color: #a8a3c4; }
+.scene { position: relative; background: radial-gradient(circle at 50% 55%, #2e2958, var(--night) 70%); border: 4px solid var(--edge); box-shadow: 4px 4px 0 var(--shadow); min-height: 380px; padding: 22px 16px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 14px; text-align: center; overflow: hidden; scroll-margin-top: 110px; }
+.scene h3 { font-family: var(--f-display); font-size: 12px; line-height: 1.6; margin: 0; color: var(--gold); }
+.scene .stage-evo { position: relative; height: 160px; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.scene .stage-evo > div { position: absolute; bottom: 0; line-height: 0; }
+.scene .stage-evo svg { display: block; }
+.scene .new-form { opacity: 0; }
+.scene .burst { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 70%, #fffbe0 0 20%, transparent 60%); }
+.scene .reveal { opacity: 0; display: flex; flex-direction: column; gap: 6px; }
+.scene .reveal strong { font-family: var(--f-display); font-size: 14px; color: var(--ink); line-height: 1.5; }
+.scene .reveal span { color: var(--muted); font-size: 15px; }
+.scene .btn-go { font-family: var(--f-display); font-size: 10px; color: #1a1626; background: var(--gold); border: 0; padding: 14px 18px; box-shadow: inset -4px -4px 0 var(--gold-dk), 4px 4px 0 var(--shadow); cursor: pointer; text-decoration: none; opacity: 0; }
+.scene.play .old-form { animation: evo-old 2.4s steps(1) forwards; }
+.scene.play .old-form svg { animation: evo-blink .3s steps(2) 5 .6s; }
+.scene.play .burst { animation: evo-burst 1s steps(5) 2.1s forwards; }
+.scene.play .new-form { animation: evo-new .1s steps(1) 2.4s forwards; }
+.scene.play .reveal, .scene.play .btn-go { animation: evo-new .1s steps(1) 3.1s forwards; }
+@keyframes evo-old { 0%, 99% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes evo-blink { 50% { filter: brightness(0) invert(1); } }
+@keyframes evo-burst { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes evo-new { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .scene.play .old-form { animation: none; opacity: 0; }
+  .scene.play .old-form svg, .scene.play .burst { animation: none; }
+  .scene.play .new-form, .scene.play .reveal, .scene.play .btn-go { animation: none; opacity: 1; }
+}
+
 @media (max-width: 640px) {
   .top h1 { font-size: 10px; margin-bottom: 8px; }
   .toc { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); padding-right: 16px; }
@@ -206,6 +240,7 @@ a { color: inherit; }
       <a href="#mode-libre">3 · Libre</a>
       <a href="#menu">4 · Menu du rond</a>
       <a href="#en-place">5 · En place</a>
+      <a href="#evolution">6 · Nouvelle forme</a>
     </nav>
   </div>
 
@@ -268,11 +303,11 @@ a { color: inherit; }
         <div class="gm normal" data-anim="win evo" data-from="94" data-to="6">
           <div class="gm-bar"><b>GOAL MASTER</b></div>
           <div class="gm-body">
-            <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><span class="pop">NIV. 8 !</span><div class="gm-hero" data-sprite="knight" data-px="3"></div></a>
+            <a class="gm-stage" href="#transformation" title="Ouvrir Goal Master"><span class="pop">NIV. 8 !</span><div class="gm-hero" data-sprite="knight" data-px="3"></div></a>
             <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 8</span><div class="xp"><i style="width:94%"></i></div><span class="gm-sub"><span>5 auj.</span><span>🔥 5 j</span></span><span class="gm-say gold"><b>NOUVELLE FORME !</b> Va la voir</span></div>
           </div>
         </div>
-        <p>Silhouette blanche pendant la victoire, pas de nom de forme : la surprise reste pour Goal Master, ouvert d'un clic sur le héros. Tant que le lot suivant n'est pas là, la nouvelle forme apparaît dans l'encart une fois la victoire finie.</p>
+        <p>Silhouette blanche pendant la victoire, pas de nom de forme : la surprise reste pour Goal Master, ouvert d'un clic sur le héros. Une notification part en même temps (écran 6).</p>
         <button class="replay" data-replay>▶ Rejouer</button>
       </div>
 
@@ -365,7 +400,7 @@ a { color: inherit; }
       <div class="state" id="s-forme">
         <h4>Nouvelle forme</h4>
         <div class="gm small" data-anim="win lvlup evo">
-          <a class="gm-stage" href="#en-place" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="knight" data-head data-px="3"></div></a>
+          <a class="gm-stage" href="#transformation" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="knight" data-head data-px="3"></div></a>
           <div class="s-info"><span class="s-lvl">NIV. 8</span><span class="s-line">5 auj. 🔥5</span><span class="s-say evo-say">ÉVOLUE !</span></div>
         </div>
         <p>Flash, tête en silhouette. Un clic ouvre Goal Master.</p>
@@ -447,7 +482,7 @@ a { color: inherit; }
     </div>
     <div class="states" style="margin-top:16px">
       <div class="state"><h4>Victoire</h4><p>Il s'arrête, saute sur place, « +10 XP » au-dessus de lui (ou « NIV. 9 ! »). Pas de nom d'entreprise.</p></div>
-      <div class="state"><h4>Nouvelle forme</h4><p>Il s'arrête, devient une silhouette blanche, « NOUVELLE FORME ! » au-dessus de lui. Pas de clic possible ici : c'est la notification qui ramène vers Goal Master.</p></div>
+      <div class="state"><h4>Nouvelle forme</h4><p>Il s'arrête, devient une silhouette blanche, « NOUVELLE FORME ! » au-dessus de lui. Pas de clic possible ici : c'est la <a href="#evo-notif">notification</a> qui ramène vers Goal Master.</p></div>
       <div class="state"><h4>Mouvement réduit</h4><p>Immobile dans le coin en bas à gauche, loin de l'encart des autres modes. La victoire sans saut, seulement « +10 XP ».</p></div>
       <div class="state"><h4>Lien coupé, attente</h4><p>Le personnage disparaît. job-finder dessine lui-même son encart « Lien coupé ». L'attente ne montre rien.</p></div>
     </div>
@@ -524,6 +559,52 @@ a { color: inherit; }
       <div class="free-layer" id="live-free" hidden>
         <div class="walker"><span class="pop">+10 XP</span><div class="flip"><div class="gm-hero" data-sprite="knight" data-px="3"></div></div><span class="shadow"></span></div>
       </div>
+    </div>
+  </section>
+  <!-- 6 · NOUVELLE FORME -->
+  <section class="screen" id="evolution">
+    <header>
+      <span class="route">notification → /</span>
+      <h2>6 · Nouvelle forme : retour dans Goal Master</h2>
+      <p>Lot suivant, montré ici pour lire le parcours en entier. L'encart annonce la nouvelle forme sans la montrer. En même temps, une notification part vers tes appareils (même si l'encart est masqué ou en mode libre). Elle ouvre Goal Master, où la transformation se joue une seule fois. Ton binôme reçoit toujours sa notification « Adrien est devenu Écuyer ⚔️ », inchangée.</p>
+    </header>
+    <div class="evo-flow">
+      <div class="state" id="evo-notif">
+        <h4>La notification</h4>
+        <a class="notif" href="#transformation">
+          <span class="app" data-icon></span>
+          <span><b>Goal Master</b><span>Ton héros a évolué ! Viens découvrir sa nouvelle forme.</span></span>
+          <small>maintenant</small>
+        </a>
+        <p>Pas de nom de forme : la surprise reste pour la scène. Elle part au même moment que la victoire dans l'encart, quel que soit le mode. Clique dessus.</p>
+      </div>
+      <div class="state">
+        <h4>Ou depuis l'encart</h4>
+        <div class="gm normal">
+          <div class="gm-bar"><b>GOAL MASTER</b></div>
+          <div class="gm-body">
+            <a class="gm-stage" href="#transformation" title="Ouvrir Goal Master"><div class="gm-hero" data-sprite="knight" data-px="3" style="filter:brightness(0) invert(1)"></div></a>
+            <div class="gm-info"><span class="gm-name">Adrien</span><span class="gm-lvl">NIV. 8</span><div class="xp"><i style="width:6%"></i></div><span class="gm-say gold" style="display:block"><b>NOUVELLE FORME !</b> Va la voir</span></div>
+          </div>
+        </div>
+        <p>En normal et en small, un clic sur le héros mène au même endroit.</p>
+      </div>
+      <div class="scene play" id="transformation">
+        <h3>Ton héros évolue…</h3>
+        <div class="stage-evo">
+          <div class="old-form"><svg width="84" height="96" viewBox="0 0 14 16" shape-rendering="crispEdges" aria-hidden="true"><rect x="4" y="0" width="6" height="1" fill="#1a1626"/><rect x="3" y="1" width="1" height="1" fill="#1a1626"/><rect x="4" y="1" width="6" height="1" fill="#c99a5b"/><rect x="10" y="1" width="1" height="1" fill="#1a1626"/><rect x="2" y="2" width="1" height="1" fill="#1a1626"/><rect x="3" y="2" width="8" height="1" fill="#c99a5b"/><rect x="11" y="2" width="1" height="1" fill="#1a1626"/><rect x="12" y="2" width="1" height="1" fill="#7a4a26"/><rect x="2" y="3" width="10" height="1" fill="#1a1626"/><rect x="12" y="3" width="1" height="1" fill="#7a4a26"/><rect x="2" y="4" width="1" height="1" fill="#1a1626"/><rect x="3" y="4" width="8" height="1" fill="#f4c7a1"/><rect x="11" y="4" width="1" height="1" fill="#1a1626"/><rect x="12" y="4" width="1" height="1" fill="#7a4a26"/><rect x="2" y="5" width="1" height="1" fill="#1a1626"/><rect x="3" y="5" width="1" height="1" fill="#f4c7a1"/><rect x="4" y="5" width="1" height="1" fill="#1a1626"/><rect x="5" y="5" width="4" height="1" fill="#f4c7a1"/><rect x="9" y="5" width="1" height="1" fill="#1a1626"/><rect x="10" y="5" width="1" height="1" fill="#f4c7a1"/><rect x="11" y="5" width="1" height="1" fill="#1a1626"/><rect x="12" y="5" width="1" height="1" fill="#7a4a26"/><rect x="2" y="6" width="1" height="1" fill="#1a1626"/><rect x="3" y="6" width="3" height="1" fill="#f4c7a1"/><rect x="6" y="6" width="2" height="1" fill="#1a1626"/><rect x="8" y="6" width="3" height="1" fill="#f4c7a1"/><rect x="11" y="6" width="1" height="1" fill="#1a1626"/><rect x="12" y="6" width="1" height="1" fill="#7a4a26"/><rect x="3" y="7" width="2" height="1" fill="#1a1626"/><rect x="5" y="7" width="4" height="1" fill="#f4c7a1"/><rect x="9" y="7" width="2" height="1" fill="#1a1626"/><rect x="11" y="7" width="3" height="1" fill="#7a4a26"/><rect x="1" y="8" width="2" height="1" fill="#8b93a7"/><rect x="3" y="8" width="1" height="1" fill="#1a1626"/><rect x="4" y="8" width="2" height="1" fill="#c99a5b"/><rect x="6" y="8" width="2" height="1" fill="#3d7bd9"/><rect x="8" y="8" width="2" height="1" fill="#c99a5b"/><rect x="10" y="8" width="1" height="1" fill="#1a1626"/><rect x="11" y="8" width="1" height="1" fill="#f4c7a1"/><rect x="12" y="8" width="1" height="1" fill="#7a4a26"/><rect x="0" y="9" width="4" height="1" fill="#8b93a7"/><rect x="4" y="9" width="1" height="1" fill="#1a1626"/><rect x="5" y="9" width="1" height="1" fill="#c99a5b"/><rect x="6" y="9" width="2" height="1" fill="#3d7bd9"/><rect x="8" y="9" width="1" height="1" fill="#c99a5b"/><rect x="9" y="9" width="2" height="1" fill="#1a1626"/><rect x="11" y="9" width="1" height="1" fill="#f4c7a1"/><rect x="12" y="9" width="1" height="1" fill="#7a4a26"/><rect x="0" y="10" width="1" height="1" fill="#8b93a7"/><rect x="1" y="10" width="1" height="1" fill="#dfe6ee"/><rect x="2" y="10" width="2" height="1" fill="#8b93a7"/><rect x="4" y="10" width="1" height="1" fill="#1a1626"/><rect x="5" y="10" width="4" height="1" fill="#c99a5b"/><rect x="9" y="10" width="1" height="1" fill="#1a1626"/><rect x="0" y="11" width="4" height="1" fill="#8b93a7"/><rect x="4" y="11" width="1" height="1" fill="#1a1626"/><rect x="5" y="11" width="4" height="1" fill="#c99a5b"/><rect x="9" y="11" width="1" height="1" fill="#1a1626"/><rect x="1" y="12" width="2" height="1" fill="#8b93a7"/><rect x="3" y="12" width="2" height="1" fill="#1a1626"/><rect x="5" y="12" width="4" height="1" fill="#c99a5b"/><rect x="9" y="12" width="2" height="1" fill="#1a1626"/><rect x="4" y="13" width="1" height="1" fill="#1a1626"/><rect x="5" y="13" width="2" height="1" fill="#3d7bd9"/><rect x="7" y="13" width="1" height="1" fill="#1a1626"/><rect x="8" y="13" width="2" height="1" fill="#3d7bd9"/><rect x="10" y="13" width="1" height="1" fill="#1a1626"/><rect x="4" y="14" width="1" height="1" fill="#1a1626"/><rect x="5" y="14" width="1" height="1" fill="#f4c7a1"/><rect x="6" y="14" width="1" height="1" fill="#1a1626"/><rect x="8" y="14" width="1" height="1" fill="#1a1626"/><rect x="9" y="14" width="1" height="1" fill="#f4c7a1"/><rect x="10" y="14" width="1" height="1" fill="#1a1626"/><rect x="3" y="15" width="3" height="1" fill="#1a1626"/><rect x="8" y="15" width="3" height="1" fill="#1a1626"/></svg></div>
+          <div class="new-form"><svg width="96" height="108" viewBox="0 0 16 18" shape-rendering="crispEdges" aria-hidden="true"><rect x="4" y="0" width="7" height="1" fill="#1a1626"/><rect x="3" y="1" width="1" height="1" fill="#1a1626"/><rect x="4" y="1" width="7" height="1" fill="#7a4a26"/><rect x="11" y="1" width="1" height="1" fill="#1a1626"/><rect x="2" y="2" width="1" height="1" fill="#1a1626"/><rect x="3" y="2" width="9" height="1" fill="#7a4a26"/><rect x="12" y="2" width="1" height="1" fill="#1a1626"/><rect x="2" y="3" width="1" height="1" fill="#1a1626"/><rect x="3" y="3" width="1" height="1" fill="#7a4a26"/><rect x="4" y="3" width="7" height="1" fill="#f4c7a1"/><rect x="11" y="3" width="1" height="1" fill="#7a4a26"/><rect x="12" y="3" width="1" height="1" fill="#1a1626"/><rect x="14" y="3" width="1" height="1" fill="#dfe6ee"/><rect x="2" y="4" width="1" height="1" fill="#1a1626"/><rect x="3" y="4" width="2" height="1" fill="#f4c7a1"/><rect x="5" y="4" width="1" height="1" fill="#1a1626"/><rect x="6" y="4" width="3" height="1" fill="#f4c7a1"/><rect x="9" y="4" width="1" height="1" fill="#1a1626"/><rect x="10" y="4" width="2" height="1" fill="#f4c7a1"/><rect x="12" y="4" width="1" height="1" fill="#1a1626"/><rect x="14" y="4" width="1" height="1" fill="#dfe6ee"/><rect x="2" y="5" width="1" height="1" fill="#1a1626"/><rect x="3" y="5" width="9" height="1" fill="#f4c7a1"/><rect x="12" y="5" width="1" height="1" fill="#1a1626"/><rect x="14" y="5" width="1" height="1" fill="#dfe6ee"/><rect x="3" y="6" width="1" height="1" fill="#1a1626"/><rect x="4" y="6" width="3" height="1" fill="#f4c7a1"/><rect x="7" y="6" width="2" height="1" fill="#1a1626"/><rect x="9" y="6" width="2" height="1" fill="#f4c7a1"/><rect x="11" y="6" width="1" height="1" fill="#1a1626"/><rect x="14" y="6" width="1" height="1" fill="#dfe6ee"/><rect x="4" y="7" width="2" height="1" fill="#1a1626"/><rect x="6" y="7" width="4" height="1" fill="#f4c7a1"/><rect x="10" y="7" width="2" height="1" fill="#1a1626"/><rect x="14" y="7" width="1" height="1" fill="#dfe6ee"/><rect x="3" y="8" width="2" height="1" fill="#1a1626"/><rect x="5" y="8" width="6" height="1" fill="#3d7bd9"/><rect x="11" y="8" width="2" height="1" fill="#1a1626"/><rect x="13" y="8" width="1" height="1" fill="#f2c14e"/><rect x="14" y="8" width="1" height="1" fill="#dfe6ee"/><rect x="15" y="8" width="1" height="1" fill="#f2c14e"/><rect x="1" y="9" width="3" height="1" fill="#1a1626"/><rect x="4" y="9" width="8" height="1" fill="#3d7bd9"/><rect x="12" y="9" width="1" height="1" fill="#1a1626"/><rect x="13" y="9" width="1" height="1" fill="#f4c7a1"/><rect x="14" y="9" width="1" height="1" fill="#7a4a26"/><rect x="0" y="10" width="1" height="1" fill="#1a1626"/><rect x="1" y="10" width="3" height="1" fill="#3d7bd9"/><rect x="4" y="10" width="1" height="1" fill="#1a1626"/><rect x="5" y="10" width="2" height="1" fill="#3d7bd9"/><rect x="7" y="10" width="2" height="1" fill="#f2c14e"/><rect x="9" y="10" width="3" height="1" fill="#3d7bd9"/><rect x="12" y="10" width="1" height="1" fill="#1a1626"/><rect x="13" y="10" width="1" height="1" fill="#f4c7a1"/><rect x="14" y="10" width="1" height="1" fill="#7a4a26"/><rect x="0" y="11" width="1" height="1" fill="#1a1626"/><rect x="1" y="11" width="1" height="1" fill="#3d7bd9"/><rect x="2" y="11" width="1" height="1" fill="#f2c14e"/><rect x="3" y="11" width="1" height="1" fill="#3d7bd9"/><rect x="4" y="11" width="1" height="1" fill="#1a1626"/><rect x="5" y="11" width="6" height="1" fill="#3d7bd9"/><rect x="11" y="11" width="3" height="1" fill="#1a1626"/><rect x="0" y="12" width="1" height="1" fill="#1a1626"/><rect x="1" y="12" width="3" height="1" fill="#3d7bd9"/><rect x="4" y="12" width="1" height="1" fill="#1a1626"/><rect x="5" y="12" width="6" height="1" fill="#7a4a26"/><rect x="11" y="12" width="1" height="1" fill="#1a1626"/><rect x="1" y="13" width="4" height="1" fill="#1a1626"/><rect x="5" y="13" width="6" height="1" fill="#3d7bd9"/><rect x="11" y="13" width="1" height="1" fill="#1a1626"/><rect x="4" y="14" width="1" height="1" fill="#1a1626"/><rect x="5" y="14" width="2" height="1" fill="#3d7bd9"/><rect x="7" y="14" width="2" height="1" fill="#1a1626"/><rect x="9" y="14" width="2" height="1" fill="#3d7bd9"/><rect x="11" y="14" width="1" height="1" fill="#1a1626"/><rect x="4" y="15" width="1" height="1" fill="#1a1626"/><rect x="5" y="15" width="2" height="1" fill="#8b93a7"/><rect x="7" y="15" width="1" height="1" fill="#1a1626"/><rect x="9" y="15" width="1" height="1" fill="#1a1626"/><rect x="10" y="15" width="2" height="1" fill="#8b93a7"/><rect x="12" y="15" width="1" height="1" fill="#1a1626"/><rect x="4" y="16" width="1" height="1" fill="#1a1626"/><rect x="5" y="16" width="2" height="1" fill="#7a4a26"/><rect x="7" y="16" width="1" height="1" fill="#1a1626"/><rect x="9" y="16" width="1" height="1" fill="#1a1626"/><rect x="10" y="16" width="2" height="1" fill="#7a4a26"/><rect x="12" y="16" width="1" height="1" fill="#1a1626"/><rect x="3" y="17" width="5" height="1" fill="#1a1626"/><rect x="9" y="17" width="5" height="1" fill="#1a1626"/></svg></div>
+          <i class="burst"></i>
+        </div>
+        <div class="reveal"><strong>ÉCUYER</strong><span>Gamin devient Écuyer · niveau 8</span></div>
+        <a class="btn-go" href="#evolution">Continuer</a>
+      </div>
+    </div>
+    <div class="ctls"><button class="ctl" type="button" id="evo-replay">▶ Rejouer la transformation</button></div>
+    <div class="states" style="margin-top:16px">
+      <div class="state"><h4>Quand</h4><p>À la première ouverture de Goal Master qui suit la nouvelle forme, par-dessus l'accueil. Une seule fois : « Continuer » ramène à l'accueil, où l'avatar a déjà sa nouvelle forme.</p></div>
+      <div class="state"><h4>L'encart en attendant</h4><p>Tant que la scène n'a pas été vue, l'encart garde l'ancienne forme après la victoire, pour ne pas gâcher la surprise.</p></div>
+      <div class="state"><h4>Mouvement réduit</h4><p>Pas de clignotement ni d'éclair : la nouvelle forme et son nom s'affichent directement.</p></div>
     </div>
   </section>
 </div>
@@ -646,6 +727,7 @@ function toggle(id, fn) {
   b.addEventListener("click", () => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", String(on)); fn(on); });
 }
 document.getElementById("free-evo").addEventListener("click", () => { if (!freeLayer.hidden) cheer(freeLayer, "NOUVELLE FORME !"); });
+document.getElementById("evo-replay").addEventListener("click", () => { const sc = document.getElementById("transformation"); sc.classList.remove("play"); void sc.offsetWidth; sc.classList.add("play"); });
 toggle("free-rust", (on) => freeLayer.classList.toggle("rusty", on));
 toggle("free-still", (on) => freeLayer.classList.toggle("still", on));
 toggle("free-cutbtn", (on) => { freeLayer.hidden = on; document.getElementById("free-cut").hidden = !on; });
