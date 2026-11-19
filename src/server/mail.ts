@@ -65,6 +65,8 @@ function linkLabel(event: NotificationEvent): string | null {
       return "Voir la nouveauté";
     case "duel":
       return "Voir le duel";
+    case "evo-me":
+      return "Voir ton héros";
     default:
       return null;
   }

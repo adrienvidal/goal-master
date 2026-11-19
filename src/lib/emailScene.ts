@@ -15,6 +15,9 @@ export function sceneFor(event: NotificationEvent, me: Hero, partner: Hero | nul
     case "nudge":
     case "nudge-ok":
       return p("victory");
+    case "evo-me":
+      // L'ancienne forme : la nouvelle se découvre dans Goal Master.
+      return [hero(me, "victory", "none", Math.max(1, event.form - 1) as Form)];
     case "evo":
       return p("victory", "none", event.form);
     case "ko":

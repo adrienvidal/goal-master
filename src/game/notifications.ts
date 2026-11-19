@@ -15,7 +15,7 @@ export const CATEGORY_INFO: Record<Category, { label: string; hint: string }> = 
   partner: { label: "Binôme", hint: "Il change de forme, il achève le boss." },
   duel: { label: "Duel", hint: "Rappel du jeudi soir, résultat du vendredi 18 h, défis." },
   quests: { label: "Quêtes", hint: "Quête reçue, faite, validée." },
-  reminders: { label: "Rappels", hint: "Ton avatar commence à rouiller." },
+  reminders: { label: "Rappels", hint: "Ton avatar change de forme ou commence à rouiller." },
   news: { label: "Nouveautés", hint: "Une nouvelle fonctionnalité arrive dans Goal Master." },
 };
 
@@ -32,6 +32,8 @@ export type NotificationEvent =
   | { kind: "nudge"; nudgeId: string; from: string; message: number }
   | { kind: "nudge-ok"; nudgeId: string; partner: string }
   | { kind: "evo"; partnerId: string; partner: string; form: Form; formName: string }
+  /** Au joueur qui change de forme : jamais le nom de la forme, la scène de / la dévoile (cadrage encart-modes-et-evolution). */
+  | { kind: "evo-me"; form: Form }
   | { kind: "ko"; friday: Day; partner: string; boss: BossIndex }
   | { kind: "remind"; friday: Day; boss: BossIndex; missing: number }
   | { kind: "duel"; friday: Day; won: boolean; boss: BossIndex; total: number; hp: number }
@@ -51,6 +53,7 @@ const RULES: Record<NotificationEvent["kind"], { category: Category; capped: boo
   nudge: { category: "nudges", capped: false },
   "nudge-ok": { category: "nudges", capped: true },
   evo: { category: "partner", capped: true },
+  "evo-me": { category: "reminders", capped: false },
   ko: { category: "partner", capped: true },
   remind: { category: "duel", capped: false },
   duel: { category: "duel", capped: false },
@@ -88,6 +91,8 @@ export function keyOf(event: NotificationEvent): string {
       return `${event.kind}:${event.nudgeId}`;
     case "evo":
       return `evo:${event.partnerId}:${event.form}`;
+    case "evo-me":
+      return `evo-me:${event.form}`;
     case "ko":
     case "remind":
     case "duel":
@@ -134,6 +139,8 @@ export function textOf(event: NotificationEvent): NotificationText {
       return { title: `⚔️ ${event.from} te motive`, headline: `${event.from} te motive : ${NUDGE_MESSAGES[event.message]}`, detail: "Candidate dans les 24 h : +15 XP pour vous deux.", url: "/" };
     case "nudge-ok":
       return t(`${event.partner} a candidaté après ta relance : +15 XP pour vous deux.`, "Ta relance a fait mouche.");
+    case "evo-me":
+      return t("Ton héros a évolué !", "Viens découvrir sa nouvelle forme.");
     case "evo":
       return t(`${event.partner} est devenu ${event.formName} ⚔️`, "Ton binôme vient de changer de forme. À ton tour de lui montrer le chemin.");
     case "ko":

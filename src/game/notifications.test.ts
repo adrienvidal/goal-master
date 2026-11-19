@@ -152,3 +152,17 @@ describe("sendsEmail", () => {
     expect(sendsEmail(nudgeEvent)).toBe(true);
   });
 });
+
+describe("evo-me (au joueur qui change de forme)", () => {
+  const evoMe: NotificationEvent = { kind: "evo-me", form: 3 };
+  it("ne nomme jamais la forme et mène à l'accueil, où la scène la dévoile", () => {
+    const t = textOf(evoMe);
+    expect(t).toMatchObject({ title: "Goal Master", headline: "Ton héros a évolué !", detail: "Viens découvrir sa nouvelle forme.", url: "/" });
+    expect(pushBody(t, evoMe)).not.toMatch(/Écuyer|Novice/);
+  });
+  it("une clé par forme, rangée dans les rappels, jamais plafonnée", () => {
+    expect(keyOf(evoMe)).toBe("evo-me:3");
+    expect(ruleOf(evoMe)).toEqual({ category: "reminders", capped: false });
+    expect(sendsEmail(evoMe)).toBe(true);
+  });
+});

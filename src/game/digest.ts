@@ -23,6 +23,7 @@ const PRIORITY: NotificationEvent["kind"][] = [
   "nudge",
   "nudge-ok",
   "evo",
+  "evo-me",
   "ko",
   "rust",
   "news",
