@@ -33,12 +33,12 @@ describe("boss of the week", () => {
   // 12 et 30 candidatures avant la semaine : il reste 88 et 70 sur 13 semaines.
   const before = [...many("a", 12, "2026-11-10T09:00:00Z"), ...many("n", 30, "2026-11-10T09:00:00Z")];
 
-  test("hit points follow the starting pace of the goal", () => {
-    // 15 vendredis du 06/11 au 12/02 : ceil(100/15) = 7 chacun, quel que soit le retard pris.
+  test("hit points: the gentler of the starting pace and the pace left", () => {
+    // Départ : ceil(100/15) = 7. Reste : ceil(88/13) = 7 et ceil(70/13) = 6.
     const input: DuelInput = { goals, apps: before, nudges: [] };
     const duel = currentDuel(input, new Date("2026-11-18T10:00:00Z"))!;
-    expect(duel.fighters.map((f) => f.need)).toEqual([7, 7]);
-    expect(duel.hp).toBe(14);
+    expect(duel.fighters.map((f) => f.need)).toEqual([7, 6]);
+    expect(duel.hp).toBe(13);
     expect(duel.hits).toBe(0);
     expect(duel.resolved).toBe(false);
   });
@@ -61,19 +61,20 @@ describe("boss of the week", () => {
     const duel = currentDuel({ goals, apps, nudges: [] }, new Date("2026-11-20T17:30:00Z"));
     expect(duel?.id).toBe("2026-11-27");
     const past = pastDuels({ goals, apps, nudges: [] }, new Date("2026-11-20T17:30:00Z"));
-    expect(past[0]).toMatchObject({ id: "2026-11-20", hp: 14, hits: 12, resolved: true });
-    expect(past[0].won).toBe(past[0].bonus >= 2);
+    expect(past[0]).toMatchObject({ id: "2026-11-20", hp: 13, hits: 12, resolved: true });
+    expect(past[0].won).toBe(past[0].bonus >= 1);
   });
 
-  test("a bad week does not grow the next boss", () => {
+  test("being late does not grow the boss", () => {
     const input: DuelInput = { goals, apps: [], nudges: [] };
     expect(currentDuel(input, new Date("2026-11-18T10:00:00Z"))!.hp).toBe(14);
     expect(currentDuel(input, new Date("2027-01-20T10:00:00Z"))!.hp).toBe(14);
   });
 
-  test("the boss never asks more than what is left of the goal", () => {
+  test("being ahead makes the boss smaller", () => {
+    // Il reste 3 candidatures sur 13 vendredis.
     const duel = currentDuel({ goals: [goals[0]], apps: many("a", 97, "2026-11-10T09:00:00Z"), nudges: [] }, new Date("2026-11-18T10:00:00Z"))!;
-    expect(duel.hp).toBe(3);
+    expect(duel.hp).toBe(1);
   });
 
   test("a successful nudge is a hit for the sender, once answered before the duel", () => {

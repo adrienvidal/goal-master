@@ -97,11 +97,13 @@ export function duelOn(input: DuelInput, friday: Day, now: Date): Duel | null {
     const done = mine.filter((a) => a.createdAt < from).length;
     const remaining = goal.target - done;
     if (remaining <= 0) continue;
-    // Rythme de départ, figé : une mauvaise semaine ne fait pas grossir le boss suivant.
-    let need = Math.ceil(goal.target / fridaysUntil(duelDayOf(goal.createdAt), goal.deadline));
+    // Le plus doux des deux rythmes : celui de départ (le retard ne fait pas grossir le boss)
+    // et celui qui reste (l'avance le fait maigrir).
+    const startPace = Math.ceil(goal.target / fridaysUntil(duelDayOf(goal.createdAt), goal.deadline));
+    const pace = Math.ceil(remaining / fridaysUntil(friday, goal.deadline));
+    let need = Math.min(startPace, pace);
     // Objectif fixé en cours de semaine : boss au prorata des jours ouvrés restants.
     if (goal.createdAt > start) need = Math.max(1, Math.ceil((need * workdays(parisDay(goal.createdAt), friday)) / 5));
-    need = Math.min(need, remaining);
     const applied = mine.filter((a) => a.createdAt >= from && a.createdAt < until).length;
     // Entraide : relance suivie d'effet (pour qui relance), quête validée (pour qui l'a faite).
     const nudged = input.nudges.filter((n) => n.senderId === goal.playerId && n.sentAt >= from && n.sentAt < until && nudgeSucceeded(n, answeredBefore)).length;
