@@ -502,7 +502,7 @@ html[data-decor] main { visibility: hidden; }
 
 /* Encart job-finder (/widget, maquette encart-job-finder) : une petite boîte affichée dans job-finder, sans fond vivant. */
 body:has(.widget-root) { min-height: 0; background: var(--night); }
-body:has(.widget-root) > .landscape-bg, body:has(.widget-root) > .landscape-veil { display: none; }
+body:has(.widget-root) > .landscape-bg, body:has(.widget-root) > .landscape-veil, body:has(.widget-root) .version-banner { display: none; }
 .gm-widget { min-height: 100dvh; display: flex; flex-direction: column; background: var(--night); color: var(--ink); border: 3px solid var(--edge); overflow: hidden; }
 .gm-widget .gm-bar { display: flex; align-items: center; padding: 5px 8px; background: var(--stone); border-bottom: 2px solid var(--edge); }
 .gm-widget .gm-bar b { font-family: var(--font-display); font-size: 9px; color: var(--gold); letter-spacing: .04em; }

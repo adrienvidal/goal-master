@@ -22,7 +22,8 @@ export function bearerKey(header: string | null): string | null {
 
 /** Adresse de retour après connexion : un chemin interne, sinon l'accueil. */
 export function safeReturnPath(raw: string | null): string {
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) return "/";
+  // Les navigateurs retirent tabulations et retours à la ligne d'une adresse : « /\t/site » deviendrait « //site ».
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\") || /[\x00-\x1f\x7f]/.test(raw)) return "/";
   return raw;
 }
 

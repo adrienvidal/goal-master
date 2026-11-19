@@ -29,6 +29,10 @@ describe("intakeDecision", () => {
     expect(decide([app("m1", "doctolib")])).toEqual({ kind: "attach", id: "m1" });
   });
 
+  test("saisie à la main déjà rattachée à une autre offre : nouvelle candidature", () => {
+    expect(decide([app("m1", "Doctolib", { externalRef: "290" })])).toEqual({ kind: "create" });
+  });
+
   test("saisie à la main hier : nouvelle candidature", () => {
     expect(decide([app("m1", "Doctolib", { createdAt: yesterday })])).toEqual({ kind: "create" });
   });

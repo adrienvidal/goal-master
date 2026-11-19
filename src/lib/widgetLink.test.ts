@@ -33,6 +33,6 @@ describe("origines et retours", () => {
 
   test("safeReturnPath", () => {
     expect(safeReturnPath("/relier?origin=http%3A%2F%2Flocalhost%3A5173")).toBe("/relier?origin=http%3A%2F%2Flocalhost%3A5173");
-    for (const r of ["//evil.example", "https://evil.example", "/\\evil.example", "relier", "", null]) expect(safeReturnPath(r)).toBe("/");
+    for (const r of ["//evil.example", "https://evil.example", "/\\evil.example", "/\t/evil.example", "/\n/evil.example", "relier", "", null]) expect(safeReturnPath(r)).toBe("/");
   });
 });

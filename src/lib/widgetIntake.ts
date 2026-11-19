@@ -15,7 +15,8 @@ export function intakeDecision(input: { company: string; ref: string; playerId: 
   const known = mine.find((a) => a.externalRef === input.ref);
   if (known) return { kind: "known", id: known.id };
   const day = parisDay(input.now);
-  const manualToday = mine.filter((a) => !a.source && parisDay(a.createdAt) === day);
+  // Une saisie déjà rattachée à une offre ne se rattache pas à une deuxième : ce sont deux candidatures.
+  const manualToday = mine.filter((a) => !a.source && !a.externalRef && parisDay(a.createdAt) === day);
   const duplicate = findDuplicate(input.company, input.playerId, manualToday);
   return duplicate?.sure ? { kind: "attach", id: duplicate.app.id } : { kind: "create" };
 }
