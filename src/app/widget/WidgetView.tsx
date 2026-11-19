@@ -1,9 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Sprite } from "@/components/Sprite";
-import { formName } from "@/lib/forms";
 import { isLocalOrigin } from "@/lib/localOrigin";
-import { victoryFor, type Victory } from "@/lib/widgetVictory";
+import type { WidgetMode } from "@/lib/widgetMode";
+import { victoryFor, victoryLine, victoryPop, type Victory } from "@/lib/widgetVictory";
 import type { WidgetState } from "@/lib/widgetState";
 
 const REFRESH_MS = 30_000;
@@ -29,11 +29,13 @@ function writeLast(state: WidgetState): void {
   }
 }
 
-export function WidgetView(): React.ReactElement {
+export function WidgetView({ mode }: { mode: WidgetMode }): React.ReactElement {
   const [status, setStatus] = useState<Status>("waiting");
   const [state, setState] = useState<WidgetState | null>(null);
   const [victory, setVictory] = useState<Victory | null>(null);
   const [shownXp, setShownXp] = useState<number | null>(null);
+  // Le dernier héros vu, pour dessiner l'attente et le lien coupé sans attendre l'API (lu après le montage).
+  const [ghost, setGhost] = useState<WidgetState | null>(null);
   const key = useRef<string | null>(null);
   const parentOrigin = useRef<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -75,6 +77,7 @@ export function WidgetView(): React.ReactElement {
         void load();
       }
     }
+    setGhost(readLast());
     window.addEventListener("message", onMessage);
     // Rien de secret ici : on signale seulement qu'on attend la clé (à chaque montage, rechargement compris).
     if (window.parent !== window) window.parent.postMessage({ type: "goal-master:ready" }, "*");
@@ -87,89 +90,143 @@ export function WidgetView(): React.ReactElement {
     };
   }, [load]);
 
-  if (status === "unlinked") {
+  const hero = status === "ready" ? state : null;
+  const classes = ["widget-root", `gm-${mode}`, mode === "free" ? "" : "gm-widget", hero ? "" : "gm-ghost", victory ? "win" : "", victory?.newForm ? "evo" : "", victory?.derust ? "derust" : ""];
+  const className = classes.filter(Boolean).join(" ");
+  if (mode === "free") return <FreeView className={className} state={hero} victory={victory} />;
+  if (mode === "small") return <SmallView className={className} state={hero ?? ghost} ready={hero !== null} unlinked={status === "unlinked"} victory={victory} />;
+  if (!hero) {
+    const shown = ghost;
     return (
-      <div className="gm-widget widget-root">
+      <div className={className}>
         <Bar />
-        <p className="gm-msg">Le lien a été coupé depuis Goal Master. Tes candidatures ne comptent plus.</p>
-      </div>
-    );
-  }
-  if (!state) {
-    return (
-      <div className="gm-widget widget-root">
-        <Bar />
-        <p className="gm-msg">Ton héros arrive…</p>
+        <div className="gm-body">
+          <div className="gm-stage">{shown && <HeroSprite state={shown} px={shown.displayedForm >= 4 ? 2 : 3} />}</div>
+          <div className="gm-info">
+            {status === "unlinked" ? (
+              <>
+                <span className="gm-name">Lien coupé</span>
+                <span className="gm-note">Tes candidatures ne comptent plus. Relie à nouveau depuis job-finder.</span>
+              </>
+            ) : (
+              <span className="gm-name">
+                Ton héros arrive<span className="gm-dots" />
+              </span>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
 
-  const xpPct = shownXp ?? (state.xpInLevel / state.xpForNext) * 100;
-  const classes = ["gm-widget", "widget-root", victory ? "win" : "", victory?.newForm ? "evo" : "", victory?.derust ? "derust" : ""].join(" ");
+  const xpPct = shownXp ?? (hero.xpInLevel / hero.xpForNext) * 100;
+  const line = victory ? victoryLine(victory, hero) : null;
   return (
-    <div className={classes}>
+    <div className={className}>
       <Bar />
       <div className="gm-body">
         <a className="gm-stage" href="/" target="_blank" rel="noopener" title="Ouvrir Goal Master">
-          {victory && <span className={victory.xp === 0 ? "gm-pop muted" : "gm-pop"}>{victory.levelUp ? `NIV. ${state.level} !` : `+${victory.xp} XP`}</span>}
-          <span className="gm-hero">
-            <Sprite
-              character={state.character}
-              color={state.color}
-              form={state.displayedForm}
-              mood={victory ? "normal" : state.mood}
-              pose={victory ? "victory" : "rest"}
-              px={state.displayedForm >= 4 ? 2 : 3}
-            />
-          </span>
+          {victory && <span className={victory.xp === 0 && !victory.levelUp ? "gm-pop muted" : "gm-pop"}>{victoryPop(victory, hero, mode)}</span>}
+          <HeroSprite state={hero} victory={victory} px={hero.displayedForm >= 4 ? 2 : 3} />
         </a>
         <div className="gm-info">
-          <span className="gm-name">{state.pseudo}</span>
-          <span className="gm-lvl">NIV. {state.level}</span>
+          <span className="gm-name">{hero.pseudo}</span>
+          <span className="gm-lvl">NIV. {hero.level}</span>
           <div className="gm-xp" role="progressbar" aria-label="XP vers le niveau suivant" aria-valuenow={Math.round(xpPct)} aria-valuemin={0} aria-valuemax={100}>
             <i style={{ width: `${xpPct}%`, transition: shownXp === 100 || shownXp === null ? undefined : "none" }} />
           </div>
-          <span className="gm-sub">
-            <span>{state.today} auj.</span>
-            <span>{rhythm(state)}</span>
-          </span>
+          {line ? (
+            <span className={line.gold ? "gm-say gold" : "gm-say"} role="status">
+              <strong>{line.strong}</strong>
+              {line.rest}
+            </span>
+          ) : (
+            <span className="gm-sub">
+              <span>{hero.today} auj.</span>
+              <Rhythm state={hero} />
+            </span>
+          )}
         </div>
       </div>
-      {victory && (
-        <p className="gm-msg" role="status">
-          <VictoryMessage victory={victory} state={state} />
-        </p>
-      )}
     </div>
   );
 }
 
-/** Série en cours, sinon jours ouvrés sans candidature (la rouille). */
-function rhythm(state: WidgetState): string {
-  if (state.streak > 0) return `🔥 ${state.streak} j`;
-  if (state.idleWorkdays > 0) return `${state.idleWorkdays} j sans`;
-  return "";
+function HeroSprite({ state, victory = null, px }: { state: WidgetState; victory?: Victory | null; px: number }): React.ReactElement {
+  return (
+    <span className="gm-hero">
+      <Sprite character={state.character} color={state.color} form={state.displayedForm} mood={victory ? "normal" : state.mood} pose={victory ? "victory" : "rest"} px={px} />
+    </span>
+  );
 }
 
-function VictoryMessage({ victory, state }: { victory: Victory; state: WidgetState }): React.ReactElement {
-  if (victory.newForm) {
-    return (
-      <>
-        <strong>Nouvelle forme : {formName(state.character, state.levelForm)}.</strong> Va la voir dans Goal Master.
-      </>
-    );
-  }
-  if (victory.xp === 0) {
-    return (
-      <>
-        <strong>{victory.company}</strong> compte, sans XP : plafond de 15 atteint aujourd&apos;hui.
-      </>
-    );
+/** Série en cours, sinon jours ouvrés sans candidature (la rouille). */
+function Rhythm({ state }: { state: WidgetState }): React.ReactElement | null {
+  if (state.streak > 0) return <span>🔥 {state.streak} j</span>;
+  if (state.idleWorkdays > 0) return <span className="gm-rust">{state.idleWorkdays} j sans</span>;
+  return null;
+}
+
+/** Small : la tête cadrée, le niveau, le compte du jour (ou la rouille) ; la victoire prend la place du compte. */
+function SmallView({ className, state, ready, unlinked, victory }: { className: string; state: WidgetState | null; ready: boolean; unlinked: boolean; victory: Victory | null }): React.ReactElement {
+  const head = state && <HeroSprite state={state} victory={victory} px={state.displayedForm >= 4 ? 3 : 4} />;
+  let line: React.ReactNode = <span className="gm-dots" />;
+  if (unlinked) line = "relier ?";
+  else if (ready && state) {
+    line =
+      state.streak > 0 ? (
+        <>
+          {state.today} auj. <span className="gm-fire">🔥</span>
+          {state.streak}
+        </>
+      ) : state.idleWorkdays > 0 ? (
+        <span className="gm-rust">{state.idleWorkdays} j sans</span>
+      ) : (
+        `${state.today} auj.`
+      );
   }
   return (
-    <>
-      <strong>{victory.company}</strong> compte dans Goal Master.
-    </>
+    <div className={className}>
+      {ready ? (
+        <a className="gm-head" href="/" target="_blank" rel="noopener" title="Ouvrir Goal Master">
+          {head}
+        </a>
+      ) : (
+        <div className="gm-head">{head}</div>
+      )}
+      <div className="gm-sinfo">
+        <span className="gm-slvl" style={unlinked ? { color: "var(--muted)" } : undefined}>
+          {unlinked ? "COUPÉ" : ready && state ? `NIV. ${state.level}` : "\u00a0"}
+        </span>
+        {victory && state ? (
+          <span className={["gm-ssay", victory.xp === 0 && !victory.levelUp ? "muted" : "", victory.newForm ? "evo" : ""].filter(Boolean).join(" ")} role="status">
+            {victoryPop(victory, state, "small")}
+          </span>
+        ) : (
+          <span className="gm-sline">{line}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Free : le personnage patrouille le long du bas de job-finder (patrouille du décor) ; rien en attente ni lien coupé. */
+const PATROL = { "--from": "6%", "--to": "94%", "--dur": "80s", "--steps": 320, "--face": 1, "--delay": "0s" } as React.CSSProperties;
+
+function FreeView({ className, state, victory }: { className: string; state: WidgetState | null; victory: Victory | null }): React.ReactElement {
+  return (
+    <div className={className}>
+      {state && (
+        <span className="walker" style={PATROL}>
+          {victory && <span className="gm-pop">{victoryPop(victory, state, "free")}</span>}
+          <span className="facer">
+            <span className="sizer">
+              <HeroSprite state={state} victory={victory} px={state.displayedForm >= 4 ? 2 : 3} />
+            </span>
+          </span>
+        </span>
+      )}
+    </div>
   );
 }
 
