@@ -1,6 +1,8 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { parisDay } from "@/game/calendar";
+import { formForLevel, levelFromXp } from "@/game/levels";
+import { totalXp } from "@/game/xp";
 import { findDuplicate, removalImpact } from "@/lib/playerView";
 import { db } from "@/server/db";
 import { createApplication, MAX_COMPANY } from "@/server/applications";
@@ -56,4 +58,15 @@ export async function removeApplication(id: string): Promise<RemoveResult> {
   await db().application.updateMany({ where: { id, playerId: player.id, cancelledAt: null }, data: { cancelledAt: now } });
   revalidatePath("/");
   return { ok: true, xp };
+}
+
+/**
+ * Scène d'évolution fermée sur / : la forme du niveau, recalculée ici (jamais reçue du client), devient la forme vue.
+ * Jamais à la baisse : la mise à jour ne touche la ligne que si la forme vue est plus basse (double onglet, annulation).
+ */
+export async function seeEvolution(): Promise<void> {
+  const player = await requirePlayer();
+  const game = await loadGame();
+  const form = formForLevel(levelFromXp(totalXp(player.id, game.apps, game.nudges, game.quests)).level);
+  await db().player.updateMany({ where: { id: player.id, OR: [{ seenForm: null }, { seenForm: { lt: form } }] }, data: { seenForm: form } });
 }

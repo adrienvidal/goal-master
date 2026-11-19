@@ -12,8 +12,3 @@ export function shownForm(displayedForm: Form, levelForm: Form, seenForm: number
   if (seenForm === null) return displayedForm;
   return Math.min(displayedForm, levelForm, seenForm) as Form;
 }
-
-/** Nouvelle forme vue après la scène : jamais à la baisse (double onglet, candidature annulée entre-temps). */
-export function nextSeenForm(seenForm: number | null, levelForm: Form): number {
-  return Math.max(seenForm ?? 0, levelForm);
-}
