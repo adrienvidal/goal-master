@@ -1,0 +1,351 @@
+<title>Boss à l'échéance</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
+<style>
+/* Scénarios empilés, chacun annoncé par sa route ; frise des vendredis au-dessus de chaque écran. Tokens de l'app (globals.css), un seul thème sombre assumé. */
+:root {
+  color-scheme: dark;
+  --page: #0e0c1d; --night: #16132a; --stone: #221e40; --stone-2: #2e2958; --edge: #4a4380;
+  --ink: #f1ecff; --muted: #a39dcc; --gold: #f2c14e; --gold-dk: #b9831c;
+  --ember: #ff7a45; --danger: #ff6b6b; --ok: #6fd49a; --boss: #c9b8ff;
+  --f-display: "Press Start 2P", ui-monospace, monospace;
+  --f-ui: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-num: "VT323", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--f-ui); font-size: 16px; margin: 0; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--page); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 980px; margin: 0 auto; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--page); padding: 14px 0 10px; border-bottom: 3px solid var(--edge); }
+.top h1 { font-family: var(--f-display); font-size: 12px; margin: 0 0 10px; line-height: 1.6; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: 13px; text-decoration: none; padding: 4px 8px; border: 2px solid var(--edge); color: var(--muted); }
+.toc a:hover { color: var(--ink); border-color: var(--gold); }
+.toc a.open { border-color: var(--ember); color: var(--ember); }
+.intro { color: var(--muted); max-width: 70ch; line-height: 1.5; margin: 22px 0 6px; }
+.rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 16px 0 8px; }
+.rules div { border: 2px dashed var(--edge); padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.rules b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+
+.screen { margin-top: 56px; scroll-margin-top: 130px; }
+.screen > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
+.route { font-family: var(--f-num); font-size: 22px; color: var(--gold); }
+.screen > header h2 { font-family: var(--f-display); font-size: 11px; margin: 0; line-height: 1.6; }
+.screen > header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 75ch; }
+.tag { font-size: 12px; padding: 2px 7px; border: 2px solid var(--ok); color: var(--ok); }
+.tag.open { border-color: var(--ember); color: var(--ember); }
+
+/* Frise des vendredis */
+.weeks { overflow-x: auto; margin-bottom: 12px; }
+.weeks ol { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; min-width: max-content; }
+.weeks li { font-family: var(--f-num); font-size: 18px; line-height: 1.1; padding: 6px 8px; border: 2px solid var(--stone-2); color: var(--muted); text-align: center; min-width: 64px; }
+.weeks li small { display: block; font-family: var(--f-ui); font-size: 11px; }
+.weeks li.duel { border-color: var(--boss); color: var(--boss); }
+.weeks li.now { background: var(--stone-2); color: var(--ink); }
+.weeks li.end { border-color: var(--gold); color: var(--gold); }
+.weeks li.none { border-style: dashed; opacity: .75; }
+.weeks li.gap { border-color: var(--ember); color: var(--ember); border-style: dashed; }
+
+.stage { background: radial-gradient(120% 80% at 50% 0%, #2a2252 0%, var(--night) 60%); border: 3px solid #000; padding: 22px 14px; }
+.device { background: var(--stone); border: 4px solid var(--edge); box-shadow: 4px 4px 0 #0c0a1a; padding: 18px 16px; max-width: 920px; margin: 0 auto; display: grid; gap: 18px; }
+@media (min-width: 760px) { .device.two { grid-template-columns: 1.25fr 1fr; } }
+.device.narrow { max-width: 440px; text-align: center; justify-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.me { display: flex; align-items: center; gap: 12px; }
+.av { width: 48px; height: 48px; flex: none; display: grid; place-items: center; font-family: var(--f-display); font-size: 14px; color: #1a1626; background: var(--gold); box-shadow: inset -4px -4px 0 var(--gold-dk); position: relative; }
+.av.panda { background: var(--ink); box-shadow: inset -4px -4px 0 var(--muted); }
+.av.big { width: 88px; height: 88px; font-size: 24px; }
+.av .band { position: absolute; left: -4px; right: -4px; top: 30%; height: 7px; background: var(--ink); border-block: 2px solid var(--muted); transform: rotate(-8deg); }
+.info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.name { font-family: var(--f-display); font-size: 11px; line-height: 1.6; }
+.muted { color: var(--muted); font-size: 14px; line-height: 1.45; }
+.num { font-family: var(--f-num); font-size: 1.25em; }
+.row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.bar { height: 14px; border: 3px solid var(--edge); background: var(--night); }
+.bar i { display: block; height: 100%; background: var(--gold); }
+.btn { display: flex; justify-content: center; align-items: center; width: 100%; font-family: var(--f-display); font-size: 11px; line-height: 1.4; color: #1a1626; background: var(--gold); padding: 15px 12px; box-shadow: inset -4px -4px 0 var(--gold-dk), 4px 4px 0 #0c0a1a; text-decoration: none; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 3px var(--edge); }
+.h-title { font-family: var(--f-display); font-size: 14px; color: var(--gold); margin: 0; line-height: 1.6; }
+
+/* Bloc boss, comme BossCard */
+.boss { border: 3px solid var(--boss); background: var(--night); padding: 12px; display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; }
+.boss .portrait { width: 52px; grid-row: span 3; animation: float 1.4s steps(2) infinite; }
+.boss .portrait svg { display: block; width: 100%; height: auto; }
+.boss .title { font-family: var(--f-display); font-size: 10px; line-height: 1.6; color: var(--boss); }
+.boss .hp { height: 16px; border: 3px solid var(--boss); background: var(--night); }
+.boss .hp i { display: block; height: 100%; background: var(--danger); }
+.boss .line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; font-size: 14px; color: var(--muted); margin: 0; }
+.boss .hits { grid-column: 1 / -1; }
+.boss .out { color: var(--muted); opacity: .7; text-decoration: line-through; }
+.boss .heal { flex-basis: 100%; color: var(--ember); }
+.boss.huge { border-color: var(--ember); }
+.boss.huge .title { color: var(--ember); }
+.empty { border: 3px dashed var(--edge); padding: 14px; color: var(--muted); font-size: 14px; line-height: 1.45; text-align: center; }
+@keyframes float { 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .boss .portrait { animation: none; } }
+
+.partner { border: 3px solid var(--stone-2); background: var(--night); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.feed li { display: flex; justify-content: space-between; gap: 8px; border-bottom: 2px dotted var(--stone-2); padding-bottom: 4px; }
+.feed .lost { color: var(--danger); }
+.feed .won { color: var(--ok); }
+
+/* Note sous chaque écran : ce que dit le code */
+.note { margin: 12px auto 0; max-width: 920px; border-left: 4px solid var(--boss); background: var(--stone); padding: 10px 14px; font-size: 14px; line-height: 1.5; color: var(--muted); }
+.note b { color: var(--ink); font-weight: 600; }
+.note.open { border-left-color: var(--ember); }
+.note code { font-family: var(--f-num); font-size: 17px; color: var(--ink); }
+
+/* Comparaison aujourd'hui / proposition */
+.versus { display: grid; gap: 14px; max-width: 920px; margin: 0 auto; }
+@media (min-width: 760px) { .versus { grid-template-columns: 1fr 1fr; } }
+.versus > div { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.versus h3 { font-family: var(--f-display); font-size: 9px; line-height: 1.6; margin: 0; color: var(--muted); }
+.versus h3.reco { color: var(--ok); }
+
+/* Décisions */
+.decide { display: grid; gap: 12px; }
+.decide article { border: 3px solid var(--edge); background: var(--stone); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.decide h3 { font-family: var(--f-display); font-size: 10px; line-height: 1.7; margin: 0; color: var(--ember); }
+.decide p, .decide li { margin: 0; font-size: 15px; line-height: 1.5; color: var(--muted); }
+.decide ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.decide .reco { color: var(--ok); }
+.decide b { color: var(--ink); font-weight: 600; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ghost" viewBox="0 0 12 12" shape-rendering="crispEdges">
+    <path fill="#c9b8ff" d="M3 1h6v1h1v1h1v8h-1v-1h-1v1h-1v-1h-1v1h-1v-1h-1v1h-1v-1h-1v1h-1v-8h1v-1h1z"/>
+    <path fill="#16132a" d="M3 4h2v2h-2zM7 4h2v2h-2z"/>
+    <path fill="#ff6b6b" d="M4 5h1v1h-1zM8 5h1v1h-1z"/>
+    <path fill="#16132a" d="M4 8h4v1h-4z"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Boss à l'échéance</h1>
+    <nav class="toc" aria-label="Scénarios">
+      <a href="#derniere-semaine">1 Dernier duel</a>
+      <a href="#objectif-atteint">2 Objectif atteint</a>
+      <a href="#boss-solo">3 Boss en solo</a>
+      <a href="#nouvel-objectif" class="open">4 Nouvel objectif ⚠</a>
+      <a href="#temps-ecoule">5 Temps écoulé</a>
+      <a href="#prolongation">6 Prolongation</a>
+      <a href="#echeance-mercredi" class="open">7 Échéance un mercredi ⚠</a>
+      <a href="#decisions" class="open">À trancher</a>
+    </nav>
+  </div>
+
+  <p class="intro">Ce que fait le code aujourd'hui quand l'objectif arrive à son terme, scénario par scénario. Données d'exemple : objectif de 100 candidatures fixé le 16/11 par Adrien (Écuyer) et Nicolas (Panda), date limite commune le vendredi 12/02, soit 13 vendredis de duel. Les écrans marqués ⚠ montrent un cas qui n'a jamais été tranché.</p>
+
+  <div class="rules">
+    <div><b>Qui combat</b>Un joueur entre dans le duel d'un vendredi si ce vendredi tombe au plus tard le jour de son échéance et s'il lui reste des candidatures à faire.</div>
+    <div><b>Sa part de PV</b>Le plus doux entre le rythme de départ (100 ÷ 13 = 8) et le reste ÷ vendredis restants. Objectif fixé en cours de semaine : part au prorata des jours ouvrés.</div>
+    <div><b>Fin d'objectif</b>Objectif atteint ou date passée : l'accueil renvoie vers <code>/objectif/fin</code> tant que le joueur n'a pas choisi la suite.</div>
+  </div>
+
+  <!-- 1 -->
+  <section class="screen" id="derniere-semaine">
+    <header><span class="route">/</span><h2>Dernier duel avant l'échéance</h2><span class="tag">Tranché</span><p>Mercredi 10/02, accueil d'Adrien. Le dernier vendredi est le jour même de l'échéance. Le boss ne réclame pas tout le reste d'un coup : chacun garde le plus doux des deux rythmes.</p></header>
+    <div class="weeks"><ol>
+      <li class="duel">29/01<small>duel</small></li><li class="duel">05/02<small>duel</small></li><li class="duel now end">12/02<small>dernier duel · échéance</small></li><li class="none">19/02<small>pas de boss</small></li>
+    </ol></div>
+    <div class="stage"><div class="device two">
+      <div class="col">
+        <div class="me"><span class="av">A</span><div class="info"><span class="name">Adrien · Niv. 14</span><span class="muted">Écuyer · objectif <span class="num">70 / 100</span> au 12/02</span><div class="bar"><i style="width:70%"></i></div></div></div>
+        <div class="boss">
+          <span class="portrait"><svg viewBox="0 0 12 12"><use href="#ghost"/></svg></span>
+          <span class="title">Le Silence radio</span>
+          <div class="hp"><i style="width:58%"></i></div>
+          <p class="line"><span class="num">7 / 12 PV</span><span>Duel vendredi 18 h · dans 2 j 5 h</span></p>
+          <p class="line hits"><span>Adrien : 3 coups</span><span>Nicolas : 2 coups</span><span>Coup de grâce au duel : +4</span></p>
+        </div>
+        <a class="btn" href="#derniere-semaine">+ Candidature</a>
+      </div>
+      <div class="col">
+        <div class="partner">
+          <div class="me"><span class="av panda">N</span><div class="info"><span class="name">Nicolas · Niv. 17</span><span class="muted">Panda · <span class="num">96 / 100</span></span><div class="bar"><i style="width:96%"></i></div></div></div>
+          <ul class="feed"><li><span>Candidature chez Doctolib</span><span class="muted">09/02</span></li><li><span>Candidature chez Alan</span><span class="muted">08/02</span></li><li><span class="won">Victoire contre le Golem ATS</span><span class="muted">05/02</span></li></ul>
+        </div>
+      </div>
+    </div></div>
+    <p class="note"><b>Calcul.</b> Adrien : reste 30 ÷ 1 vendredi = 30, rythme de départ 8 → <b>8 PV</b>. Nicolas : reste 4, rythme 8 → <b>4 PV</b>. Boss à 12 PV. Les 30 candidatures qui manquent à Adrien ne gonflent pas le boss.</p>
+  </section>
+
+  <!-- 2 -->
+  <section class="screen" id="objectif-atteint">
+    <header><span class="route">/objectif/fin</span><h2>Objectif atteint avant l'échéance</h2><span class="tag">Tranché</span><p>Mercredi 27/01, Nicolas envoie sa 100ᵉ candidature. L'accueil le renvoie ici. Tant qu'il n'a pas cliqué sur « Nouvel objectif », il ne combat plus.</p></header>
+    <div class="weeks"><ol>
+      <li class="duel">22/01<small>duel</small></li><li class="duel now">29/01<small>Adrien seul</small></li><li class="duel">05/02<small>duel</small></li><li class="duel end">12/02<small>échéance</small></li>
+    </ol></div>
+    <div class="stage"><div class="device narrow">
+      <span class="av panda big">N</span>
+      <p class="h-title">Mission accomplie !</p>
+      <p class="num">100 candidatures · Niv. 16 · 72 j de quête</p>
+      <p class="muted">Succès « Mission accomplie » débloqué. Tu gardes ton XP, ton niveau et tes succès.</p>
+      <a class="btn" href="#nouvel-objectif">Nouvel objectif</a>
+      <small class="muted">Au nouvel objectif, tu peux changer de personnage.</small>
+    </div></div>
+    <p class="note"><b>Côté boss.</b> Nicolas n'a plus rien à faire sur cet objectif : il sort du duel de la semaine, sa part de PV disparaît et ses coups déjà portés aussi. Voir l'écran suivant, côté Adrien.</p>
+  </section>
+
+  <!-- 3 -->
+  <section class="screen" id="boss-solo">
+    <header><span class="route">/</span><h2>Boss en solo pendant que Nicolas a fini</h2><span class="tag">Tranché</span><p>Mercredi 27/01, accueil d'Adrien. Le boss ne compte plus que la part d'Adrien. Si Nicolas candidate sans avoir fixé de nouvel objectif, ses candidatures ne frappent pas.</p></header>
+    <div class="stage"><div class="device two">
+      <div class="col">
+        <div class="me"><span class="av">A</span><div class="info"><span class="name">Adrien · Niv. 13</span><span class="muted">Écuyer · <span class="num">52 / 100</span> au 12/02</span><div class="bar"><i style="width:52%"></i></div></div></div>
+        <div class="boss">
+          <span class="portrait"><svg viewBox="0 0 12 12"><use href="#ghost"/></svg></span>
+          <span class="title">Le Recruteur fantôme</span>
+          <div class="hp"><i style="width:63%"></i></div>
+          <p class="line"><span class="num">5 / 8 PV</span><span>Duel vendredi 18 h · dans 2 j 5 h</span></p>
+          <p class="line hits"><span>Adrien : 3 coups</span><span class="out">Nicolas</span><span>Coup de grâce au duel : +2</span></p>
+        </div>
+        <a class="btn" href="#boss-solo">+ Candidature</a>
+      </div>
+      <div class="col">
+        <div class="partner">
+          <div class="me"><span class="av panda">N</span><div class="info"><span class="name">Nicolas · Niv. 16</span><span class="muted">Objectif atteint · hors combat</span></div></div>
+          <ul class="feed"><li><span class="won">Mission accomplie</span><span class="muted">27/01</span></li><li><span>Candidature chez Qonto</span><span class="muted">27/01</span></li></ul>
+        </div>
+      </div>
+    </div></div>
+    <p class="note"><b>Calcul.</b> Le boss passe de 16 PV (8 + 8) à 8 PV. Le coup de grâce ne compte plus que le niveau d'Adrien (13 → +2). Nicolas réintègre le duel dès qu'il fixe un nouvel objectif.</p>
+  </section>
+
+  <!-- 4 -->
+  <section class="screen" id="nouvel-objectif">
+    <header><span class="route">/</span><h2>Nicolas relance un objectif à deux semaines de l'échéance</h2><span class="tag open">À trancher</span><p>Jeudi 28/01, Nicolas fixe un nouvel objectif. Il vaut toujours 100 candidatures, et sa date limite est forcée sur celle d'Adrien, le 12/02. Il ne reste que 3 vendredis : le boss explose.</p></header>
+    <div class="weeks"><ol>
+      <li class="duel now">29/01<small>part de Nicolas 14</small></li><li class="duel">05/02<small>part de Nicolas 34</small></li><li class="duel end">12/02<small>part de Nicolas 34</small></li>
+    </ol></div>
+    <div class="stage"><div class="device two">
+      <div class="col">
+        <div class="me"><span class="av panda">N</span><div class="info"><span class="name">Nicolas · Niv. 16</span><span class="muted">Panda · nouvel objectif <span class="num">0 / 100</span> au 12/02</span><div class="bar"><i style="width:0%"></i></div></div></div>
+        <div class="boss huge">
+          <span class="portrait"><svg viewBox="0 0 12 12"><use href="#ghost"/></svg></span>
+          <span class="title">Le Recruteur fantôme</span>
+          <div class="hp"><i style="width:86%"></i></div>
+          <p class="line"><span class="num">19 / 22 PV</span><span>Duel vendredi 18 h · dans 1 j 5 h</span></p>
+          <p class="line hits"><span>Nicolas : 0 coup</span><span>Adrien : 3 coups</span><span>Coup de grâce au duel : +5</span></p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="empty">La semaine suivante, le boss demande <b class="num">34 + 8 = 42</b> coups, cinq fois plus qu'une semaine normale. Avec un coup de grâce de +5, la défaite est quasi certaine jusqu'au 12/02.</div>
+      </div>
+    </div></div>
+    <p class="note open"><b>Pourquoi.</b> Au nouvel objectif, <code>createGoal</code> reprend la date du binôme et la cible reste à 100. Le rythme de départ vaut donc 100 ÷ 3 vendredis = 34, et le prorata du jeudi en garde 14. Finir en avance est puni par le boss suivant.</p>
+  </section>
+
+  <!-- 5 -->
+  <section class="screen" id="temps-ecoule">
+    <header><span class="route">/objectif/fin</span><h2>Échéance passée, objectif pas atteint</h2><span class="tag">Tranché</span><p>Samedi 13/02, Adrien a fini à 78 / 100 et le dernier duel est perdu. L'accueil le renvoie ici. Sans choix de sa part, il n'y a pas de boss.</p></header>
+    <div class="weeks"><ol>
+      <li class="duel">05/02<small>duel</small></li><li class="duel end">12/02<small>perdu</small></li><li class="none now">19/02<small>pas de boss</small></li>
+    </ol></div>
+    <div class="stage"><div class="device narrow">
+      <span class="av big">A<span class="band"></span></span>
+      <p class="h-title">Temps écoulé</p>
+      <p><span class="num">78</span> candidatures sur <span class="num">100</span> au 12/02. Ton avatar garde tout ce qu'il a gagné.</p>
+      <a class="btn" href="#prolongation">Prolonger jusqu'au 13/03</a>
+      <a class="btn ghost" href="#nouvel-objectif">Nouvel objectif</a>
+    </div></div>
+    <p class="note"><b>À savoir.</b> « Prolonger » repousse la date des deux joueurs, Nicolas compris. Le bandage du duel perdu reste affiché jusqu'à la prochaine victoire.</p>
+  </section>
+
+  <!-- 6 -->
+  <section class="screen" id="prolongation">
+    <header><span class="route">/</span><h2>Après la prolongation, le boss revient</h2><span class="tag">Tranché</span><p>Lundi 15/02, accueil d'Adrien. Avec la nouvelle date, le boss reprend au rythme de départ recalculé. Le bandage tient jusqu'à la victoire de vendredi.</p></header>
+    <div class="weeks"><ol>
+      <li class="duel end">12/02<small>ancienne échéance</small></li><li class="duel now">19/02<small>duel</small></li><li class="duel">26/02<small>duel</small></li><li class="duel">05/03<small>duel</small></li><li class="duel end">12/03<small>nouvelle échéance</small></li>
+    </ol></div>
+    <div class="stage"><div class="device two">
+      <div class="col">
+        <div class="me"><span class="av">A<span class="band"></span></span><div class="info"><span class="name">Adrien · Niv. 15</span><span class="muted">Écuyer · <span class="num">78 / 100</span> au 13/03</span><div class="bar"><i style="width:78%"></i></div></div></div>
+        <div class="boss">
+          <span class="portrait"><svg viewBox="0 0 12 12"><use href="#ghost"/></svg></span>
+          <span class="title">Le Golem ATS</span>
+          <div class="hp"><i style="width:100%"></i></div>
+          <p class="line"><span class="num">21 / 21 PV</span><span>Duel vendredi 18 h · dans 4 j 5 h</span></p>
+          <p class="line hits"><span>Adrien : 0 coup</span><span>Nicolas : 0 coup</span><span>Coup de grâce au duel : +6</span><span class="heal">Une victoire soigne vos blessures.</span></p>
+        </div>
+        <a class="btn" href="#prolongation">+ Candidature</a>
+      </div>
+      <div class="col">
+        <div class="partner">
+          <div class="me"><span class="av panda">N</span><div class="info"><span class="name">Nicolas · Niv. 17</span><span class="muted">Panda · <span class="num">30 / 100</span> au 13/03</span><div class="bar"><i style="width:30%"></i></div></div></div>
+          <ul class="feed"><li><span class="lost">Duel perdu contre le Silence radio</span><span class="muted">12/02</span></li><li><span>Candidature chez Swile</span><span class="muted">11/02</span></li></ul>
+        </div>
+      </div>
+    </div></div>
+    <p class="note"><b>Calcul.</b> Adrien : 100 ÷ 17 vendredis depuis le 20/11 = 6, reste 22 ÷ 4 = 6 → <b>6 PV</b>. Nicolas (objectif du 28/01) : 100 ÷ 7 = 15, reste 70 ÷ 4 = 18 → <b>15 PV</b>. La prolongation adoucit aussi le boss du scénario 4.</p>
+  </section>
+
+  <!-- 7 -->
+  <section class="screen" id="echeance-mercredi">
+    <header><span class="route">/</span><h2>Échéance un mercredi</h2><span class="tag open">À trancher</span><p>Même objectif, mais la date limite tombe le mercredi 10/02. Le dernier duel a lieu le vendredi 05/02. Du lundi 08 au mercredi 10, plus de boss : les dernières candidatures ne frappent rien.</p></header>
+    <div class="weeks"><ol>
+      <li class="duel">29/01<small>duel</small></li><li class="duel">05/02<small>dernier duel</small></li><li class="gap now">08 → 10/02<small>3 jours sans boss</small></li><li class="end">10/02<small>échéance</small></li>
+    </ol></div>
+    <div class="versus">
+      <div>
+        <h3>Aujourd'hui</h3>
+        <div class="stage"><div class="col">
+          <div class="me"><span class="av">A</span><div class="info"><span class="name">Adrien · Niv. 14</span><span class="muted"><span class="num">84 / 100</span> au 10/02</span><div class="bar"><i style="width:84%"></i></div></div></div>
+          <div class="empty">Pas de boss cette semaine.<br>Le bloc disparaît de l'accueil.</div>
+        </div></div>
+      </div>
+      <div>
+        <h3 class="reco">Proposition : dernier duel le jour de l'échéance</h3>
+        <div class="stage"><div class="col">
+          <div class="me"><span class="av">A</span><div class="info"><span class="name">Adrien · Niv. 14</span><span class="muted"><span class="num">84 / 100</span> au 10/02</span><div class="bar"><i style="width:84%"></i></div></div></div>
+          <div class="boss">
+            <span class="portrait"><svg viewBox="0 0 12 12"><use href="#ghost"/></svg></span>
+            <span class="title">Le Golem ATS</span>
+            <div class="hp"><i style="width:80%"></i></div>
+            <p class="line"><span class="num">8 / 10 PV</span><span>Duel final mercredi 18 h · dans 1 j 5 h</span></p>
+            <p class="line hits"><span>Adrien : 1 coup</span><span>Nicolas : 1 coup</span><span>Coup de grâce au duel : +5</span></p>
+          </div>
+        </div></div>
+      </div>
+    </div>
+    <p class="note open"><b>Proposition.</b> Un duel final à 18 h le jour de l'échéance, avec des PV au prorata des jours ouvrés (3 sur 5, comme pour un objectif fixé en cours de semaine). Une alternative plus simple : n'accepter que des échéances un vendredi.</p>
+  </section>
+
+  <!-- Décisions -->
+  <section class="screen" id="decisions">
+    <header><span class="route">À trancher</span><h2>Ce qu'il reste à décider</h2><p>Le reste de la page montre le code tel qu'il est. Ces trois points n'ont jamais été décidés.</p></header>
+    <div class="decide">
+      <article>
+        <h3>1 · Nouvel objectif après une victoire en avance</h3>
+        <p>Un objectif de 100 forcé sur la date du binôme donne un boss énorme (<a href="#nouvel-objectif">scénario 4</a>).</p>
+        <ul>
+          <li class="reco"><b>Recommandé :</b> la part de PV d'un nouvel objectif ne dépasse jamais le rythme de départ de l'objectif d'avant (8 ici).</li>
+          <li>Ou : la cible du nouvel objectif se réduit au prorata du temps qui reste.</li>
+          <li>Ou : laisser choisir une date libre quand on a fini en avance.</li>
+        </ul>
+      </article>
+      <article>
+        <h3>2 · Échéance en milieu de semaine</h3>
+        <p>Les derniers jours n'ont pas de boss (<a href="#echeance-mercredi">scénario 7</a>).</p>
+        <ul>
+          <li class="reco"><b>Recommandé :</b> duel final le jour de l'échéance à 18 h, au prorata des jours ouvrés.</li>
+          <li>Ou : n'accepter que des dates limites un vendredi.</li>
+        </ul>
+      </article>
+      <article>
+        <h3>3 · Bandage après le dernier duel</h3>
+        <p>Une défaite le jour de l'échéance laisse le bandage sur le nouvel objectif ou la prolongation (<a href="#temps-ecoule">scénario 5</a>). Ça ne dure qu'une semaine, puisque le boss revient dès qu'on choisit la suite.</p>
+        <ul>
+          <li class="reco"><b>Recommandé :</b> laisser tel quel, la prochaine victoire soigne.</li>
+          <li>Ou : « Mission accomplie » soigne d'office.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+</div>
