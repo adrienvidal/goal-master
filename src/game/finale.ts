@@ -22,6 +22,15 @@ export type Finale = {
   outcome: "won" | "expired";
 };
 
+/** Entre 40 et 60 % des coups chacun : coup ultime partagé ; sinon, celui qui a le plus frappé. */
+function finisherOf(mine: number, theirs: number): Finisher {
+  if (theirs === 0) return "me";
+  const share = mine / (mine + theirs);
+  if (share < SHARED_FROM) return "partner";
+  if (share > 1 - SHARED_FROM) return "me";
+  return "both";
+}
+
 type Raw = { a: number; n: number; hp: number; cover: number };
 
 function group(raw: Raw[]): Raw[] {
@@ -46,8 +55,6 @@ export function buildFinale(duels: Duel[], meId: string, partnerId: string | nul
   const mine = weeks.reduce((s, w) => s + w.a, 0);
   const theirs = weeks.reduce((s, w) => s + w.n, 0);
   const duo = theirs > 0;
-  const share = mine + theirs === 0 ? 1 : mine / (mine + theirs);
-  const finisher: Finisher = !duo ? "me" : share >= SHARED_FROM && share <= 1 - SHARED_FROM ? "both" : share > 1 - SHARED_FROM ? "me" : "partner";
   return {
     weeks,
     boss: mineDuels[mineDuels.length - 1].boss,
@@ -56,7 +63,7 @@ export function buildFinale(duels: Duel[], meId: string, partnerId: string | nul
     theirs,
     totalHp: weeks.reduce((s, w) => s + w.hp, 0),
     dealt: weeks.reduce((s, w) => s + w.dealt, 0),
-    finisher,
+    finisher: finisherOf(mine, theirs),
     outcome,
   };
 }

@@ -1,43 +1,28 @@
 "use client";
 // Boss final de l'écran de fin d'objectif : la quête rejouée en un combat (cadrage boss-finale).
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { BOSSES } from "@/game/duel";
 import type { Finale } from "@/game/finale";
-import { Arena, Cancelled, H, pairTints, W, type HeroLook } from "./arena/engine";
+import { H, pairTints, W, type HeroLook } from "./arena/engine";
 import { finaleRest, playFinale, type FinaleHud } from "./arena/finale";
+import { useArenaScene } from "./arena/useArenaScene";
 
 const WEEK_CLASS = { "": "bg-stone-2", w: "bg-gold", l: "bg-danger", f: "bg-[var(--ok)]" } as const;
 
-export function BossFinale({ finale, me, partner, names }: { finale: Finale; me: HeroLook; partner: HeroLook | null; names: [string, string] }): React.ReactElement {
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const skip = useRef<() => void>(() => undefined);
-  const [playing, setPlaying] = useState(true);
-  const [hud, setHud] = useState<FinaleHud>({ left: finale.totalHp, mine: 0, theirs: 0, weeks: finale.weeks.map(() => "") });
+type Props = { finale: Finale; me: HeroLook; partner: HeroLook | null; names: [string, string] };
 
-  useEffect(() => {
-    if (!canvas.current) return;
-    const A = new Arena({ canvas: canvas.current, me, partner: finale.duo ? partner : null, boss: finale.boss });
-    let over = false;
-    const rest = (): void => {
-      if (over) return;
-      over = true;
-      A.cancel();
-      setHud(finaleRest(A, finale));
-      setPlaying(false);
-    };
-    skip.current = rest;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) rest();
-    else
-      playFinale(A, finale, (p) => setHud((h) => ({ ...h, ...p })))
-        .then(() => {
-          over = true;
-          setPlaying(false);
-        })
-        .catch((e: unknown) => {
-          if (!(e instanceof Cancelled)) throw e;
-        });
-    return () => A.destroy();
-  }, [finale, me, partner]);
+export function BossFinale({ finale, me, partner, names }: Props): React.ReactElement {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const [hud, setHud] = useState<FinaleHud>({ left: finale.totalHp, mine: 0, theirs: 0, weeks: finale.weeks.map(() => "") });
+  const { playing, skip } = useArenaScene(
+    canvas,
+    {
+      setup: { me, partner: finale.duo ? partner : null, boss: finale.boss },
+      play: (A) => playFinale(A, finale, (p) => setHud((h) => ({ ...h, ...p }))),
+      rest: (A) => setHud(finaleRest(A, finale)),
+    },
+    [finale, me, partner],
+  );
 
   const total = Math.max(1, hud.mine + hud.theirs);
   const [tMe, tMate] = pairTints(me.color);
@@ -46,7 +31,7 @@ export function BossFinale({ finale, me, partner, names }: { finale: Finale; me:
       <div className="relative border-[3px] border-black bg-[#0b0918]">
         <canvas ref={canvas} width={W} height={H} className="block aspect-video h-auto w-full [image-rendering:pixelated]" aria-label={`Combat contre le boss final, ${BOSSES[finale.boss]}`} />
         {playing ? (
-          <button type="button" onClick={() => skip.current()} className="absolute right-2 top-2 border-2 border-edge bg-night/85 px-2.5 py-1.5 text-sm">
+          <button type="button" onClick={skip} className="absolute right-2 top-2 border-2 border-edge bg-night/85 px-2.5 py-1.5 text-sm">
             Passer
           </button>
         ) : null}

@@ -5,7 +5,11 @@ import { Arena, easeIn, easeOut, GROUND, W, H, type Hero } from "./engine";
 
 export type FinaleHud = { left: number; mine: number; theirs: number; weeks: ("" | "w" | "l" | "f")[] };
 
-const TIER = (n: number): "small" | "medium" | "large" => (n >= 9 ? "large" : n >= 4 ? "medium" : "small");
+function TIER(n: number): "small" | "medium" | "large" {
+  if (n >= 9) return "large";
+  if (n >= 4) return "medium";
+  return "small";
+}
 const FEEL = {
   small: { shake: 2.5, stop: 0, parts: 6, slash: 14, size: 9, knock: 4, flash: 0.25 },
   medium: { shake: 5, stop: 60, parts: 12, slash: 20, size: 11, knock: 8, flash: 0.55 },
@@ -136,7 +140,11 @@ const leapover: Move = async (A, w, n) => {
   };
 };
 const BIG = [dive, tornado, leapover];
-const moveFor = (n: number, i: number): Move => (n >= 9 ? BIG[i % 3] : n >= 4 ? uppercut : estoc);
+function moveFor(n: number, i: number): Move {
+  const tier = TIER(n);
+  if (tier === "large") return BIG[i % 3];
+  return tier === "medium" ? uppercut : estoc;
+}
 
 async function relay(A: Arena, up: Hero, down: Hero, nu: number, nd: number): Promise<void> {
   const d = side(A, up);

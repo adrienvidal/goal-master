@@ -72,7 +72,7 @@ export default async function GoalEndPage(): Promise<React.ReactElement> {
           <span className="num">{g.done}</span> candidatures sur <span className="num">{g.target}</span> au {short(g.deadline)}. {finale ? "Le boss est sonné. " : ""}Ton avatar garde tout ce qu&apos;il a gagné.
         </p>
         <form action={extendGoal} className="w-full max-w-md">
-          <SubmitButton className="btn">Reprendre le combat jusqu&apos;au <span className="whitespace-nowrap">{short(extendedDeadline(parisDay(now)))}</span></SubmitButton>
+          <SubmitButton className="btn"><span>Reprendre le combat jusqu&apos;au <span className="whitespace-nowrap">{short(extendedDeadline(parisDay(now)))}</span></span></SubmitButton>
         </form>
         <form action={abandonGoal} className="w-full max-w-md">
           <SubmitButton className="btn ghost">Nouvel objectif</SubmitButton>
