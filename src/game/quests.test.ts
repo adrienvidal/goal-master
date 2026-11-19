@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
   checkCompanionName,
+  checkWalkers,
+  MAX_WALKERS,
+  walkersAfterAdopt,
   checkLink,
   checkQuestText,
   companionLabel,
@@ -138,5 +141,28 @@ describe("nom du compagnon", () => {
     expect(companionLabel("nicolas", "fox", quests)).toBe("Roux");
     expect(companionLabel("nicolas", "cat", quests)).toBe("Chat");
     expect(companionLabel("adrien", "fox", quests)).toBe("Renard");
+  });
+});
+
+describe("compagnons en balade", () => {
+  const owned = ["cat", "fox", "owl", "dragon"] as const;
+  test("garde les compagnons adoptés, dans l'ordre", () => {
+    expect(checkWalkers(["fox", "cat"], [...owned])).toEqual({ ok: true, walkers: ["fox", "cat"] });
+    expect(checkWalkers([], [...owned])).toEqual({ ok: true, walkers: [] });
+  });
+  test("refuse plus de trois", () => {
+    expect(checkWalkers(["cat", "fox", "owl", "dragon"], [...owned]).ok).toBe(false);
+    expect(MAX_WALKERS).toBe(3);
+  });
+  test("refuse un compagnon pas adopté, inconnu, ou en double", () => {
+    expect(checkWalkers(["dog"], [...owned]).ok).toBe(false);
+    expect(checkWalkers(["licorne"], [...owned]).ok).toBe(false);
+    expect(checkWalkers(["cat", "cat"], [...owned]).ok).toBe(false);
+    expect(checkWalkers("cat", [...owned]).ok).toBe(false);
+    expect(checkWalkers([1], [...owned]).ok).toBe(false);
+  });
+  test("à l'adoption, le compagnon entre en balade seulement si personne ne s'y promène", () => {
+    expect(walkersAfterAdopt([], "cat")).toEqual(["cat"]);
+    expect(walkersAfterAdopt(["fox"], "cat")).toEqual(["fox"]);
   });
 });
