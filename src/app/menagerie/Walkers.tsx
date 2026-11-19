@@ -43,7 +43,7 @@ export function Walkers({ owned, walkers, names, linked }: { owned: CompanionId[
                 {name}
                 {name !== COMPANION_NAMES[c].name ? <small className="block text-xs text-muted">{COMPANION_NAMES[c].name}</small> : null}
               </span>
-              <input id={`walk-${c}`} type="checkbox" className="switch" checked={on} disabled={off} onChange={(e) => toggle(c, e.target.checked)} aria-label={`${name} se balade dans job-finder`} />
+              <input id={`walk-${c}`} type="checkbox" role="switch" className="switch" checked={on} disabled={off} onChange={(e) => toggle(c, e.target.checked)} aria-label={`${name} se balade dans job-finder`} />
             </label>
           );
         })}

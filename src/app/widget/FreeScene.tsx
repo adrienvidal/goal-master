@@ -359,6 +359,14 @@ export function FreeScene({ className, state, victory, parentOrigin }: { classNa
       const origin = parentOrigin.current;
       if (origin) window.parent.postMessage({ type: "goal-master:hitboxes", boxes: [] }, origin);
       engine.current = null;
+      // Le moteur redémarre quand les compagnons changent : React garde les éléments, on les remet au repos.
+      const moved = ["walking", "talking", "poof", "alt", "hop", "hurt", "lunge", "strike", "shake", "jump"];
+      box.querySelectorAll<HTMLElement>(".fs-ent").forEach((el) => {
+        el.classList.remove(...moved);
+        el.querySelector(".fs-say")?.replaceChildren();
+        if (!el.classList.contains("fs-hero")) el.hidden = true;
+      });
+      box.querySelectorAll(".fs-hit").forEach((n) => n.remove());
     };
   }, [ready, ids, parentOrigin]);
 
