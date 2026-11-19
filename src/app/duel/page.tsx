@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { BossSprite } from "@/components/BossSprite";
+import { BossUltimate } from "@/components/BossUltimate";
 import { DuelContinue } from "@/components/DuelWatcher";
 import { Sprite } from "@/components/Sprite";
 import { BOSSES, currentDuel, fightersMeFirst, pastDuels } from "@/game/duel";
@@ -25,17 +26,22 @@ export default async function DuelPage(): Promise<React.ReactElement> {
   const levels = fighters.map((f) => views.find((v) => v.id === f.playerId)?.level).filter(Boolean);
   const boss = BOSSES[duel.boss];
   const meFirst = [...views].sort((a, b) => (a.id === player.id ? -1 : b.id === player.id ? 1 : 0));
+  const look = (v: (typeof views)[number]) => ({ character: v.character, color: v.color, form: v.displayedForm });
 
   return (
     <main className="mx-auto grid min-h-dvh max-w-xl content-center px-4 py-8">
       {duel.won ? <div className="duel-flash" aria-hidden /> : null}
       <div className={`device flex flex-col items-center gap-5 text-center ${duel.won ? "!border-gold" : "!border-danger"}`}>
-        <h1 className={`h-title text-balance ${duel.won ? "text-gold" : "text-danger"}`}>{duel.won ? "Boss vaincu !" : `${boss} s'échappe`}</h1>
-        <div className="flex items-end justify-center gap-4 sm:gap-6">
-          {meFirst[0] ? <Sprite character={meFirst[0].character} color={meFirst[0].color} form={meFirst[0].displayedForm} pose={duel.won ? "victory" : "rest"} mood={duel.won ? "normal" : "tired"} hurt={!duel.won} px={4} label={meFirst[0].title} /> : null}
-          <span className={duel.won ? "boss-down" : "boss-float"}><BossSprite boss={duel.boss} px={4} /></span>
-          {meFirst[1] ? <Sprite character={meFirst[1].character} color={meFirst[1].color} form={meFirst[1].displayedForm} pose={duel.won ? "victory" : "rest"} mood={duel.won ? "normal" : "tired"} hurt={!duel.won} px={4} label={meFirst[1].title} /> : null}
-        </div>
+        <h1 className={`h-title text-balance ${duel.won ? "text-gold" : "text-danger"}`}>{duel.won ? "Boss vaincu !" : `${boss} vous met K.O.`}</h1>
+        {duel.won ? (
+          <div className="flex items-end justify-center gap-4 sm:gap-6">
+            {meFirst[0] ? <Sprite character={meFirst[0].character} color={meFirst[0].color} form={meFirst[0].displayedForm} pose="victory" px={4} label={meFirst[0].title} /> : null}
+            <span className="boss-down"><BossSprite boss={duel.boss} px={4} /></span>
+            {meFirst[1] ? <Sprite character={meFirst[1].character} color={meFirst[1].color} form={meFirst[1].displayedForm} pose="victory" px={4} label={meFirst[1].title} /> : null}
+          </div>
+        ) : (
+          <BossUltimate boss={duel.boss} me={look(meFirst[0])} partner={meFirst[1] ? look(meFirst[1]) : null} />
+        )}
         <dl className="flex w-full flex-col gap-1 text-[15px]">
           {fighters.map((f) => (
             <div key={f.playerId} className="flex justify-between border-b-2 border-dotted border-stone-2 pb-1">

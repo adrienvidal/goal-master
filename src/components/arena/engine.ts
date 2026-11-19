@@ -172,7 +172,7 @@ export class Arena {
   private last = 0;
   private frame = 0;
   private stopped = false;
-  private font: string;
+  readonly fontFamily: string;
 
   constructor(setup: ArenaSetup) {
     this.g = setup.canvas.getContext("2d")!;
@@ -184,7 +184,7 @@ export class Arena {
     this.mate.vis = setup.partner !== null;
     this.b = { img: render(bossSprite(setup.boss)), index: setup.boss, x: 200, y: GROUND, sc: 4, a: 1, rot: 0, ox: 0, vis: true, flash: 0, dazed: 0, split: 0, cut: 0, cut2: 0 };
     const css = getComputedStyle(setup.canvas).getPropertyValue("--font-press-start").trim();
-    this.font = `${css || "'Press Start 2P'"}, ui-monospace, monospace`;
+    this.fontFamily = `${css || "'Press Start 2P'"}, ui-monospace, monospace`;
     this.frame = requestAnimationFrame(this.loop);
   }
 
@@ -477,7 +477,7 @@ export class Arena {
     if (b.dazed) {
       g.save();
       g.fillStyle = "#f2c14e";
-      g.font = `8px ${this.font}`;
+      g.font = `8px ${this.fontFamily}`;
       for (let i = 0; i < 3; i++) {
         const a = this.now / 300 + i * 2.1;
         g.fillText("*", b.x + Math.cos(a) * 22 - 4, b.y - h - 10 + Math.sin(a) * 5);
@@ -594,7 +594,7 @@ export class Arena {
       const age = t.life0 - t.life;
       const pop = 1 + 0.8 * Math.max(0, 1 - age / 7);
       g.globalAlpha = Math.min(1, t.life / 15);
-      g.font = `${Math.round(t.size * pop)}px ${this.font}`;
+      g.font = `${Math.round(t.size * pop)}px ${this.fontFamily}`;
       g.fillStyle = "#000";
       g.fillText(t.s, t.x + 1, t.y + 1);
       g.fillStyle = t.col;
@@ -609,7 +609,7 @@ export class Arena {
     }
     if (this.label && this.labelT > 0) {
       g.textAlign = "left";
-      g.font = `10px ${this.font}`;
+      g.font = `10px ${this.fontFamily}`;
       g.fillStyle = "#000";
       g.fillText(this.label, 11, 21);
       g.fillStyle = "#f2c14e";
@@ -621,10 +621,10 @@ export class Arena {
       g.fillStyle = "rgba(0,0,0,.6)";
       g.fillRect(0, H / 2 - 22, W, 34);
       g.textAlign = "center";
-      g.font = `14px ${this.font}`;
+      g.font = `14px ${this.fontFamily}`;
       g.fillStyle = bn.col;
       g.fillText(bn.s, W / 2, H / 2);
-      g.font = `7px ${this.font}`;
+      g.font = `7px ${this.fontFamily}`;
       g.fillStyle = "#c9b8ff";
       g.fillText(bn.sub, W / 2, H / 2 + 8);
       g.globalAlpha = 1;
