@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { Companion, Pixels } from "@/components/Companion";
 import { Sprite } from "@/components/Sprite";
 import type { CompanionId } from "@/game/quests";
-import { between, bubbleAlign, FIRST_MONSTER_S, friendBubble, friendHello, heroBubble, MONSTER_DELAY_S, MONSTER_HP, nextMonster, nextVisitor, pickGesture, pickThought, STAY_S, STRIKE_S, THOUGHT_DELAY_S, THOUGHT_MS, thoughts, visitDelay, type Gesture, type Range, type Visitor } from "@/lib/freeScene";
+import { between, bubbleAlign, FIRST_MONSTER_S, friendBubble, friendHello, friendXpGain, heroBubble, MONSTER_DELAY_S, MONSTER_HP, nextMonster, nextVisitor, pickGesture, pickThought, STAY_S, STRIKE_S, THOUGHT_DELAY_S, THOUGHT_MS, thoughts, visitDelay, type Gesture, type Range, type Visitor } from "@/lib/freeScene";
 import { isLocalOrigin } from "@/lib/localOrigin";
 import { FLYING, MONSTER_GRIDS, MONSTER_IDS, MONSTER_PAL, type MonsterId } from "@/lib/monsters";
 import { victoryPop, type Victory } from "@/lib/widgetVictory";
@@ -16,7 +16,7 @@ import type { WidgetState } from "@/lib/widgetState";
 
 type Target = "hero" | "companion" | "monster";
 type Ent = { el: HTMLElement; face: HTMLElement; say: HTMLElement; x: number; dir: 1 | -1 };
-type Engine = { victory: () => void; poke: (target: Target) => void; friendApplied: () => void };
+type Engine = { victory: () => void; poke: (target: Target) => void; friendApplied: (xp: number) => void };
 
 const REACH = 34;
 const ENGAGE = 220;
@@ -30,6 +30,8 @@ export function FreeScene({ className, state, victory, parentOrigin }: { classNa
   const root = useRef<HTMLDivElement>(null);
   const latest = useRef(state);
   const engine = useRef<Engine | null>(null);
+  // Nouvelles de l'ami déjà dites : gardées quand le moteur redémarre (compagnons changés, ami arrivé).
+  const said = useRef(new Set<string>());
   useEffect(() => {
     latest.current = state;
   }, [state]);
@@ -40,7 +42,7 @@ export function FreeScene({ className, state, victory, parentOrigin }: { classNa
   const friendToday = useRef<number | null>(null);
   useEffect(() => {
     const today = state?.friend?.today ?? null;
-    if (today !== null && friendToday.current !== null && today > friendToday.current) engine.current?.friendApplied();
+    if (today !== null && friendToday.current !== null && today > friendToday.current) engine.current?.friendApplied(friendXpGain(friendToday.current, today));
     friendToday.current = today;
   }, [state]);
 
@@ -69,7 +71,6 @@ export function FreeScene({ className, state, victory, parentOrigin }: { classNa
     let lastMonster: MonsterId | null = null;
     let gesture: Gesture | null = null;
     let lastThought: string | null = null;
-    const said = new Set<string>();
     const timers = new Set<ReturnType<typeof setTimeout>>();
     const later = (fn: () => void, ms: number) => {
       const t = setTimeout(() => {
@@ -175,10 +176,10 @@ export function FreeScene({ className, state, victory, parentOrigin }: { classNa
       const s = latest.current;
       thoughtAt = clock() + THOUGHT_RETRY_S / speed;
       if (!s || fight?.alive || (hero.el.classList.contains("talking") && gesture !== "whistle")) return;
-      const t = pickThought(thoughts({ ...s, friend: s.friend ?? null, boss: s.boss ?? null, canNudge: s.canNudge ?? false }, Date.now(), said), lastThought);
+      const t = pickThought(thoughts({ ...s, friend: s.friend ?? null, boss: s.boss ?? null, canNudge: s.canNudge ?? false }, Date.now(), said.current), lastThought);
       if (!t) return;
       rest();
-      if (t.urgent) said.add(t.key);
+      if (t.urgent) said.current.add(t.key);
       lastThought = t.key;
       const n = node("div", "fs-bubble fs-think", t.text);
       say(hero, [n], THOUGHT_MS);
@@ -243,10 +244,10 @@ export function FreeScene({ className, state, victory, parentOrigin }: { classNa
         if (!still()) hero.cheer = 1.8;
         if (visit && !still()) later(() => visit && once(visit.e, "hop", 450), 150);
       },
-      friendApplied() {
+      friendApplied(xp) {
         if (!visit || visit.id !== "friend" || visit.state === "leave" || still()) return;
-        const pop = node("span", "fs-xp", "+10 XP");
-        say(visit.e, [pop], 1_800);
+        // Au-delà de son plafond du jour, il saute quand même, sans XP affichée.
+        if (xp > 0) say(visit.e, [node("span", "fs-xp", `+${xp} XP`)], 1_800);
         once(visit.e, "jump", 900);
         later(() => once(hero, "hop", 450), 150);
       },
@@ -309,6 +310,7 @@ export function FreeScene({ className, state, victory, parentOrigin }: { classNa
       const min = 24;
       const max = Math.max(min + 10, W - 24);
       if (still()) {
+        rest();
         hero.x = 36;
         hero.dir = 1;
         if (visit) gone();

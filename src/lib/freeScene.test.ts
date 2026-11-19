@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { between, bubbleAlign, FIRST_MONSTER_S, FIRST_VISIT_S, FRIEND_DELAY_S, FRIEND_FIRST_S, friendBubble, friendHello, heroBubble, pickGesture, MONSTER_DELAY_S, nextMonster, nextVisitor, pickThought, pickVisitor, thoughts, VISIT_DELAY_S, visitDelay } from "./freeScene";
+import { between, bubbleAlign, FIRST_MONSTER_S, FIRST_VISIT_S, FRIEND_DELAY_S, FRIEND_FIRST_S, friendBubble, friendHello, friendXpGain, heroBubble, pickGesture, MONSTER_DELAY_S, nextMonster, nextVisitor, pickThought, pickVisitor, thoughts, VISIT_DELAY_S, visitDelay } from "./freeScene";
 
 describe("délais de la scène libre", () => {
   test("tirés entre les bornes", () => {
@@ -122,4 +122,11 @@ test("pickGesture : la sieste reste rare", () => {
   expect(pickGesture(() => 0)).toBe("sit");
   expect(pickGesture(() => 0.6)).toBe("whistle");
   expect(pickGesture(() => 0.95)).toBe("nap");
+});
+
+test("friendXpGain : 10 XP par candidature, rien au-delà du plafond", () => {
+  expect(friendXpGain(3, 4)).toBe(10);
+  expect(friendXpGain(3, 5)).toBe(20);
+  expect(friendXpGain(14, 16)).toBe(10);
+  expect(friendXpGain(15, 16)).toBe(0);
 });

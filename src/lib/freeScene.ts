@@ -1,6 +1,6 @@
 // Scène du mode libre (spec encart-libre-vivant) : ce qui se calcule sans DOM. Le moteur est dans FreeScene.tsx.
 import type { CompanionId } from "@/game/quests";
-import { DAILY_XP_CAP } from "@/game/levels";
+import { DAILY_XP_CAP, XP_PER_APPLICATION } from "@/game/levels";
 import { MONSTER_IDS, type MonsterId } from "./monsters";
 import type { WidgetFriend, WidgetState } from "./widgetState";
 
@@ -122,4 +122,9 @@ export function nextVisitor(ids: readonly CompanionId[], hasFriend: boolean, las
 export function visitDelay(companions: number, first: boolean): Range {
   if (companions > 0) return first ? FIRST_VISIT_S : VISIT_DELAY_S;
   return first ? FRIEND_FIRST_S : FRIEND_DELAY_S;
+}
+
+/** XP gagnée par l'ami entre deux lectures de son compte du jour : rien au-delà du plafond. */
+export function friendXpGain(before: number, after: number): number {
+  return Math.max(0, Math.min(after, DAILY_XP_CAP) - Math.min(before, DAILY_XP_CAP)) * XP_PER_APPLICATION;
 }
