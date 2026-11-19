@@ -3,7 +3,7 @@
 ## Reprise
 
 ```
-✅ Fait      Encart job-finder côté Goal Master en prod (liaison, API, /widget)
+✅ Fait      Encart job-finder en prod, maquette alignée sur le rond de la barre
 ⛔ Bloqué    Aucun
 🎯 Priorité  Lot 2 dans job-finder-claude (note de passation), duel du boss (échéance 20/11 18 h)
 ```
@@ -19,6 +19,9 @@
 - **Mise en production** sur accord d'Adrien (PR #132, commit de fusion) : déploiement réussi, `/widget`, `/relier` et l'API vérifiés sur goal.viloris.io
 - Note de passation pour job-finder : `docs/passation/2026-11-19-encart-job-finder-lot2.md` (PR #133)
 - Archivage : rien à archiver (la session du 16/11 porte encore le chantier du duel du boss)
+- Soir : PR #135 fusionnée dans `dev` (maquette de l'encart : rond dans la barre de job-finder à la place de la case du profil, plus d'état « Replié », encart affiché par défaut ; suit la PR job-finder-claude #241) ; maquette publiée en version 5
+- Soir : mise en production sur accord d'Adrien (documentation seule : note de passation, maquette, résumés de session)
+- Soir : archivage vérifié, rien à archiver (16/11 porte toujours le duel du boss)
 
 ## Reste à faire
 - **Lot 2 dans job-finder-claude**, depuis une session dans ce dépôt, d'après `docs/passation/2026-11-19-encart-job-finder-lot2.md` : réglage du profil, file « à compter » dans `changerStatut`, envoi et reprises, encart, `/collect` qui se met à jour
@@ -31,6 +34,7 @@
 - Aucun
 
 ## Décisions
+- Encart masqué ou affiché par un rond dans la barre de job-finder (pas de case dans le profil), affiché par défaut
 - Encart servi par Goal Master (`/widget` en iframe) plutôt que redessiné par job-finder : sprites et animations à un seul endroit
 - C'est le serveur local de job-finder qui envoie les candidatures (pas l'encart) : une candidature passée à « envoyée » depuis le terminal compte aussi
 - Clé par `postMessage`, gardée hachée en base, jamais dans une adresse ; `/relier` refusée dans un cadre, `/widget` affichable seulement depuis localhost
