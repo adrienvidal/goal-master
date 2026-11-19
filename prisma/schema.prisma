@@ -60,6 +60,9 @@ model Player {
   createdAt       DateTime              @default(now())
   /// Dernier affichage de /arene : présence « X est dans l'Arène » (spec arene v2)
   arenaSeenAt     DateTime?
+  /// Dernière forme dont le joueur a vu la scène d'évolution sur / (accusé de lecture ; la forme elle-même se calcule).
+  /// null : joueur d'avant la scène fiable, reçoit sa forme actuelle sans scène (cadrage encart-modes-et-evolution).
+  seenForm        Int?
   goals           Goal[]
   applications    Application[]
   widgetKeys      WidgetKey[]
