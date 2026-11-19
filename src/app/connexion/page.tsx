@@ -3,11 +3,14 @@ import { SubmitButton } from "@/components/LinkButton";
 import { currentUser } from "@/server/session";
 import { parseAllowedEmails } from "@/lib/allowlist";
 import { devLoginEnabled } from "@/lib/devLogin";
+import { safeReturnPath } from "@/lib/widgetLink";
 import { devLogin } from "./dev-actions";
 import LoginForm from "./LoginForm";
 
-export default async function LoginPage(): Promise<React.ReactElement> {
-  if (await currentUser()) redirect("/");
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ retour?: string }> }): Promise<React.ReactElement> {
+  // Retour après connexion (ex. /relier ouvert depuis job-finder) : un chemin interne seulement.
+  const retour = safeReturnPath((await searchParams).retour ?? null);
+  if (await currentUser()) redirect(retour);
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-10">
       <div className="device flex flex-col gap-6">
@@ -19,13 +22,13 @@ export default async function LoginPage(): Promise<React.ReactElement> {
         <div className="flex flex-col gap-3">
           <p className="text-sm text-muted">Version de test : connexion directe, sans code.</p>
           {parseAllowedEmails(process.env.ALLOWED_EMAILS).map((email) => (
-            <form key={email} action={devLogin.bind(null, email)}>
+            <form key={email} action={devLogin.bind(null, email, retour)}>
               <SubmitButton className="btn ghost !text-[10px]">{email}</SubmitButton>
             </form>
           ))}
         </div>
       ) : (
-        <LoginForm />
+        <LoginForm retour={retour} />
       )}
       </div>
     </main>

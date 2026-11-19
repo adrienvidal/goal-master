@@ -22,3 +22,10 @@ export async function setCategoryMuted(category: string, muted: boolean): Promis
   await db().player.update({ where: { id: player.id }, data: { mutedCategories: next } });
   revalidatePath("/reglages");
 }
+
+/** Coupe le lien avec job-finder : la clé est révoquée, les candidatures déjà comptées restent. */
+export async function unlinkWidget(): Promise<void> {
+  const player = await requirePlayer();
+  await db().widgetKey.updateMany({ where: { playerId: player.id, revokedAt: null }, data: { revokedAt: new Date() } });
+  revalidatePath("/reglages");
+}
