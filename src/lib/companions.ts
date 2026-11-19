@@ -24,8 +24,8 @@ export const CHEST_GRIDS: Record<"closed" | "open", string[]> = {
 
 export type PixelRect = { x: number; y: number; w: number; fill: string };
 
-/** Rectangles d'une grille, les pixels voisins de même couleur fusionnés par ligne. */
-export function gridRects(grid: string[]): { width: number; height: number; rects: PixelRect[] } {
+/** Rectangles d'une grille (palette des compagnons par défaut), les pixels voisins de même couleur fusionnés par ligne. */
+export function gridRects(grid: string[], palette: Record<string, string> = COMPANION_PAL): { width: number; height: number; rects: PixelRect[] } {
   const rects: PixelRect[] = [];
   grid.forEach((row, y) => {
     let x = 0;
@@ -33,7 +33,7 @@ export function gridRects(grid: string[]): { width: number; height: number; rect
       const ch = row[x];
       let w = 1;
       while (row[x + w] === ch) w++;
-      if (ch !== ".") rects.push({ x, y, w, fill: COMPANION_PAL[ch] });
+      if (ch !== ".") rects.push({ x, y, w, fill: palette[ch] });
       x += w;
     }
   });

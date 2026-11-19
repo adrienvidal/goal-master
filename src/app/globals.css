@@ -544,10 +544,41 @@ body:has(.widget-root) > .landscape-bg, body:has(.widget-root) > .landscape-veil
 html:has(.gm-free) { color-scheme: light; background: transparent; }
 body:has(.gm-free) { background: transparent; }
 .gm-free { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
-.gm-free .walker { bottom: 6px; gap: 0; }
-.gm-free .walker .sizer { transform: none; }
 .gm-free .gm-pop { top: -16px; }
-.gm-free.win .walker, .gm-free.win .walker .facer, .gm-free.win .walker .sizer { animation-play-state: paused; }
+/* Scène vivante (maquette encart-libre-vivant) : le moteur de FreeScene place les personnages, le CSS les anime */
+.fs-ent { position: absolute; bottom: 6px; left: 0; display: flex; flex-direction: column; align-items: center; line-height: 0; translate: -50% 0; }
+.fs-fly { bottom: 70px; }
+.fs-face, .fs-bob { transform-origin: 50% 100%; }
+.fs-ent.walking .fs-bob { animation: walk-bob .45s steps(2) infinite; }
+.fs-ent.jump .fs-bob { animation: gm-jump .8s steps(8) 1; }
+.fs-ent.hop .fs-bob { animation: gm-hop .45s steps(4) 1; }
+.fs-ent.strike .fs-bob, .fs-ent.lunge .fs-bob { animation: fs-strike .3s steps(2) 1; }
+.fs-ent.shake .fs-bob { animation: fs-shake .25s steps(2) 1; }
+.fs-ent.hurt svg { animation: fs-flash .3s steps(2) 1; }
+.fs-ent.poof .fs-face { visibility: hidden; }
+.fs-frame.fs-alt, .fs-ent.alt .fs-frame { display: none; }
+.fs-ent.alt .fs-frame.fs-alt { display: block; }
+.fs-frame { display: block; }
+.fs-smoke { display: none; position: absolute; left: 50%; bottom: 8px; width: 6px; height: 6px; background: #c9c4d9; translate: -50% 0; }
+.fs-ent.poof .fs-smoke { display: block; animation: fs-smoke .6s steps(6) forwards; }
+.fs-ent .gm-pop { line-height: normal; }
+.fs-say { position: absolute; bottom: 100%; left: 50%; z-index: 4; translate: -50% -6px; display: flex; flex-direction: column; align-items: center; gap: 4px; white-space: nowrap; line-height: 1.4; }
+.fs-say[data-align="start"] { translate: -24px -6px; align-items: flex-start; }
+.fs-say[data-align="end"] { translate: calc(-100% + 24px) -6px; align-items: flex-end; }
+.fs-hero.talking .gm-pop.still { visibility: hidden; }
+.fs-bubble { background: var(--night); color: var(--ink); border: 2px solid var(--edge); box-shadow: 2px 2px 0 #0c0a1a; padding: 6px 9px; font-family: var(--font-ui); font-size: 14px; text-align: center; }
+.fs-bubble strong { display: block; margin-bottom: 3px; font-family: var(--font-display); font-size: 10px; font-weight: normal; color: var(--gold); }
+.fs-tag { font-family: var(--font-display); font-size: 9px; background: var(--night); color: var(--ink); border: 2px solid var(--edge); padding: 3px 6px; }
+.fs-mark { font-family: var(--font-display); font-size: 14px; color: var(--gold); text-shadow: 2px 2px 0 #0c0a1a; }
+.fs-mark.fear { font-size: 11px; color: var(--danger); }
+.fs-zzz { font-family: var(--font-num); font-size: 20px; color: #5b3d8f; animation: gm-wait 2s steps(4) infinite; }
+.fs-heart { font-size: 18px; color: #ff7aa2; animation: fs-rise 1.2s ease-out forwards; }
+.fs-hit { position: absolute; bottom: 60px; translate: -50% 0; font-family: var(--font-display); font-size: 10px; color: var(--danger); text-shadow: 1px 1px 0 #fff; animation: fs-rise .8s ease-out forwards; }
+@keyframes fs-strike { 50% { translate: 7px 0; } }
+@keyframes fs-shake { 50% { translate: -3px 0; } }
+@keyframes fs-flash { 50% { filter: brightness(0) invert(1); } }
+@keyframes fs-rise { 0% { opacity: 0; transform: translateY(6px); } 15%, 70% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-14px); } }
+@keyframes fs-smoke { 0% { box-shadow: 0 0 0 0 #c9c4d9; opacity: 1; } 100% { box-shadow: -14px -10px 0 4px #c9c4d9, 14px -12px 0 3px #d8d4e5, 0 -22px 0 5px #e4e1ee, -6px 2px 0 2px #c9c4d9; opacity: 0; } }
 
 @keyframes gm-pop { 0% { opacity: 0; transform: translate(-50%, 10px); } 15%, 70% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -12px); } }
 @keyframes gm-jump { 0%, 100% { transform: translateY(0) scale(1, 1); } 15% { transform: scale(1.15, .85); } 40% { transform: translateY(-16px) scale(.92, 1.1); } 60% { transform: translateY(-16px); } 80% { transform: scale(1.1, .9); } }
@@ -568,4 +599,15 @@ body:has(.gm-free) { background: transparent; }
   .widget-root.win .gm-hero, .widget-root.derust .gm-hero, .gm-normal.evo .gm-body::before, .gm-small.evo::before, .gm-ssay, .gm-dots::after { animation: none; }
   .gm-pop { animation: none; }
   .gm-xp i { transition: none; }
+  .fs-ent .fs-bob, .fs-ent svg, .fs-zzz, .fs-heart, .fs-hit { animation: none !important; }
 }
+
+/* Ménagerie : compagnons en balade dans job-finder (maquette encart-libre-vivant, écran 3) */
+.walkers-title { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-family: var(--font-press-start); font-size: 11px; line-height: 1.6; color: var(--gold); }
+.walkers-title .num { flex: none; white-space: nowrap; font-size: 20px; line-height: 1; }
+.walkers { display: flex; flex-direction: column; border: 3px solid var(--edge); }
+.walk-row { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; background: var(--stone); cursor: pointer; }
+.walk-row + .walk-row { border-top: 3px solid var(--night); }
+.walk-row .pet { justify-self: center; }
+.walk-row.off { opacity: .5; cursor: not-allowed; }
+.walk-row .switch:disabled { cursor: not-allowed; }

@@ -133,3 +133,19 @@ export function companionLabel(playerId: string, id: CompanionId, quests: QuestR
 export function questsGivenValidated(playerId: string, quests: QuestRow[]): number {
   return quests.filter((q) => q.giverId === playerId && q.status === "VALIDATED").length;
 }
+
+/** Compagnons qui se baladent dans job-finder, en mode libre (spec encart-libre-vivant). */
+export const MAX_WALKERS = 3;
+
+export function checkWalkers(raw: unknown, owned: readonly CompanionId[]): { ok: true; walkers: CompanionId[] } | { ok: false; error: string } {
+  if (!Array.isArray(raw) || raw.some((c) => typeof c !== "string")) return { ok: false, error: "Choix illisible." };
+  if (raw.length > MAX_WALKERS) return { ok: false, error: `${MAX_WALKERS} compagnons au plus.` };
+  if (new Set(raw).size !== raw.length) return { ok: false, error: "Un compagnon ne compte qu'une fois." };
+  if (!raw.every((c: string) => isCompanion(c) && owned.includes(c))) return { ok: false, error: "Ce compagnon n'est pas encore dans ta Ménagerie." };
+  return { ok: true, walkers: raw as CompanionId[] };
+}
+
+/** Le premier compagnon adopté (ou le premier après avoir tout décoché) part se balader d'office. */
+export function walkersAfterAdopt(walkers: readonly string[], adopted: CompanionId): string[] {
+  return walkers.length === 0 ? [adopted] : [...walkers];
+}

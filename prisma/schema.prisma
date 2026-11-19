@@ -80,6 +80,8 @@ model Player {
   receivedQuests  Quest[]               @relation("receivedQuests")
   /// Compagnon affiché à côté du héros (src/game/quests.ts), choisi parmi ceux adoptés.
   companion       String?
+  /// Compagnons qui se baladent dans job-finder en mode libre (3 au plus, adoptés), dans l'ordre choisi.
+  walkers         String[]              @default([])
 }
 
 model Goal {

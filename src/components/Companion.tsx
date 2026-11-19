@@ -1,8 +1,9 @@
 import { COMPANION_NAMES, type CompanionId } from "@/game/quests";
 import { CHEST_GRIDS, COMPANION_GRIDS, gridRects } from "@/lib/companions";
 
-function Pixels({ grid, px, label }: { grid: string[]; px: number; label?: string }): React.ReactElement {
-  const { width, height, rects } = gridRects(grid);
+/** Grille 8 bits en SVG net (compagnons, coffre, monstres du mode libre). */
+export function Pixels({ grid, px, label, palette }: { grid: string[]; px: number; label?: string; palette?: Record<string, string> }): React.ReactElement {
+  const { width, height, rects } = gridRects(grid, palette);
   return (
     <svg viewBox={`0 0 ${width} ${height}`} width={width * px} height={height * px} shapeRendering="crispEdges" role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
       {rects.map((r, i) => (

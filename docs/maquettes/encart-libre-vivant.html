@@ -1,0 +1,613 @@
+<title>Goal Master · Encart libre vivant</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=VT323&family=Oswald:wght@500;600&family=Archivo:wght@400;500;600&family=JetBrains+Mono&display=swap">
+<style>
+/* Maquette : écrans empilés, chacun annoncé par sa route. Tokens Goal Master (globals.css), un seul thème sombre assumé.
+   La scène libre est posée sur une fausse page job-finder (ses propres tokens, « pochette de billets »). */
+:root {
+  color-scheme: dark;
+  --night: #16132a; --stone: #221e40; --stone-2: #2e2958; --edge: #4a4380;
+  --ink: #f1ecff; --muted: #a39dcc; --gold: #f2c14e; --gold-dk: #b9831c;
+  --danger: #ff6b6b; --ok: #6fd49a; --heart: #ff7aa2;
+  --page: #0e0c1d; --shadow: #0c0a1a;
+  --f-display: "Press Start 2P", ui-monospace, monospace;
+  --f-ui: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-num: "VT323", ui-monospace, monospace;
+  /* job-finder */
+  --jf-marine: #16295a; --jf-rouge: #c8202f; --jf-carbone: #5b3d8f; --jf-stock: #fdfcf8; --jf-fond: #e4e7ee;
+  --jf-encre: #1b2236; --jf-doux: #566079; --jf-ligne: #d3d7e0; --jf-ligne-forte: #b9bfcd;
+  --jf-tete: Oswald, "Arial Narrow", sans-serif; --jf-corps: Archivo, system-ui, sans-serif; --jf-chiffre: "JetBrains Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--page); color: var(--ink); font-family: var(--f-ui); font-size: 16px; margin: 0; padding-block: 0 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--page); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 1080px; margin: 0 auto; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--page); padding: 14px 0 10px; border-bottom: 3px solid var(--edge); }
+.top h1 { font-family: var(--f-display); font-size: 12px; margin: 0 0 10px; line-height: 1.6; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: 14px; text-decoration: none; padding: 4px 10px; border: 2px solid var(--edge); color: var(--muted); }
+.toc a:hover { color: var(--ink); border-color: var(--gold); }
+.intro { color: var(--muted); max-width: 72ch; line-height: 1.5; margin: 22px 0 6px; }
+.rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin: 16px 0 8px; }
+.rules div { border: 2px dashed var(--edge); padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.rules b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+.screen { margin-top: 56px; scroll-margin-top: 110px; }
+.screen > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 14px; }
+.route { font-family: var(--f-num); font-size: 22px; color: var(--gold); }
+.screen > header h2 { font-family: var(--f-display); font-size: 11px; margin: 0; line-height: 1.6; }
+.screen > header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 80ch; }
+.ctl { font: inherit; font-size: 14px; color: var(--muted); background: none; border: 2px solid var(--edge); padding: 4px 10px; cursor: pointer; }
+.ctl:hover { color: var(--ink); border-color: var(--gold); }
+.ctl[aria-pressed="true"] { color: var(--ink); border-color: var(--gold); background: var(--stone); }
+.ctls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+.ctls .note { color: var(--muted); font-size: 13px; }
+.states { display: grid; gap: 22px 16px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.state { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.state > h4 { font-family: var(--f-display); font-size: 9px; line-height: 1.7; margin: 0; color: var(--gold); }
+.state > p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.4; }
+
+/* ---------- job-finder (repris de la maquette des modes) ---------- */
+.jf { background: var(--jf-fond); color: var(--jf-encre); font-family: var(--jf-corps); font-size: 14px; border: 1px solid var(--jf-ligne-forte); min-width: 0; position: relative; overflow: hidden; }
+.jf-bar { background: var(--jf-marine); color: #fff; border-bottom: 3px solid var(--jf-rouge); display: flex; align-items: center; gap: 18px; padding: 0 14px; min-height: 46px; overflow-x: auto; scrollbar-width: none; }
+.jf-bar b { font-family: var(--jf-tete); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 15px; white-space: nowrap; }
+.jf-bar .jf-sp { flex: 1; }
+.jf-tabs { display: flex; gap: 2px; }
+.jf-tabs span { font-family: var(--jf-tete); font-weight: 500; text-transform: uppercase; letter-spacing: .1em; font-size: 12px; padding: 14px 10px 12px; color: #c6cfe6; white-space: nowrap; }
+.jf-tabs span.on { color: #fff; box-shadow: inset 0 -3px 0 #fff; }
+.jf-tabs em { font-style: normal; font-family: var(--jf-chiffre); font-size: 11px; opacity: .8; margin-left: 4px; }
+.jf-main { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.jf-filters { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 10px; border-bottom: 2px dotted var(--jf-ligne-forte); }
+.jf-filters span { border: 1px solid var(--jf-ligne-forte); background: var(--jf-stock); padding: 4px 9px; font-size: 13px; border-radius: 2px; }
+.jf-filters span.on { background: var(--jf-marine); color: #fff; border-color: var(--jf-marine); }
+.jf-scroll { overflow-x: auto; }
+.jf table { color: inherit; font: inherit; width: 100%; border-collapse: collapse; background: var(--jf-stock); min-width: 560px; }
+.jf th { background: var(--jf-marine); color: #fff; font-family: var(--jf-tete); font-weight: 500; text-transform: uppercase; letter-spacing: .1em; font-size: 11.5px; text-align: left; padding: 8px 10px; }
+.jf td { border-bottom: 1px solid var(--jf-ligne); padding: 9px 10px; vertical-align: middle; }
+.jf td.n { font-family: var(--jf-chiffre); font-size: 12.5px; color: var(--jf-carbone); white-space: nowrap; }
+.jf td small { display: block; color: var(--jf-doux); font-size: 12.5px; }
+.stamp { display: inline-block; border: 1.5px solid currentColor; border-radius: 2px; font-family: var(--jf-tete); text-transform: uppercase; letter-spacing: .1em; font-size: 11px; padding: 2px 6px; white-space: nowrap; color: var(--jf-marine); }
+.stamp.sent { color: var(--jf-carbone); }
+.jf-act { font: inherit; font-size: 13px; background: var(--jf-marine); color: #fff; border: 0; border-radius: 3px; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
+.jf-act:disabled { background: var(--jf-ligne); color: var(--jf-doux); cursor: default; }
+.jf-pad { height: 150px; }
+.jf-rond { flex: none; width: 36px; height: 36px; border: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #22397a; color: #fff; box-shadow: inset 0 0 0 2px rgb(255 255 255 / .7); }
+.jf-card { position: absolute; right: 14px; bottom: 14px; z-index: 5; background: var(--jf-stock); border: 1px solid var(--jf-ligne-forte); box-shadow: 0 2px 6px rgb(27 34 54 / .15); padding: 10px 12px; width: 230px; font-size: 13px; line-height: 1.4; }
+.jf-card h6 { margin: 0 0 6px; font-family: var(--jf-tete); font-weight: 600; letter-spacing: .1em; text-transform: uppercase; font-size: 12px; color: var(--jf-marine); }
+
+/* ---------- La scène libre ---------- */
+.layer { position: absolute; inset: 0; z-index: 6; pointer-events: none; overflow: hidden; }
+.ent { position: absolute; bottom: 6px; left: 0; display: flex; flex-direction: column; align-items: center; pointer-events: auto; cursor: pointer; translate: -50% 0; line-height: 0; }
+.ent.flyer { bottom: 70px; }
+.ent .face { transform-origin: 50% 100%; }
+.ent .bob { transform-origin: 50% 100%; }
+.ent.walking .bob { animation: bob .45s steps(2) infinite; }
+.ent svg { display: block; }
+.ent .say { position: absolute; bottom: 100%; left: 50%; translate: -50% -6px; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 4px; white-space: nowrap; line-height: 1.4; }
+.bubble { background: var(--night); color: var(--ink); border: 2px solid var(--edge); box-shadow: 2px 2px 0 var(--shadow); padding: 6px 9px; font-family: var(--f-ui); font-size: 14px; text-align: center; position: relative; }
+.bubble strong { display: block; font-family: var(--f-display); font-size: 10px; color: var(--gold); margin-bottom: 3px; }
+.bubble::after { content: ""; position: absolute; left: 50%; bottom: -8px; translate: -50% 0; border: 4px solid transparent; border-top: 4px solid var(--edge); }
+.tag { font-family: var(--f-display); font-size: 9px; background: var(--night); color: var(--ink); border: 2px solid var(--edge); padding: 3px 6px; }
+.mark { font-family: var(--f-display); font-size: 14px; color: var(--gold); text-shadow: 2px 2px 0 var(--shadow); }
+.mark.fear { color: var(--danger); font-size: 11px; }
+.zzz { font-family: var(--f-num); font-size: 20px; color: var(--jf-carbone); animation: zzz 2s steps(4) infinite; }
+.heart { font-size: 18px; color: var(--heart); animation: float 1.2s ease-out forwards; }
+.ent.jump .bob { animation: jump .7s steps(7) 2; }
+.ent.hop .bob { animation: hop .45s steps(4) 1; }
+.ent.strike .face > .bob { animation: strike .3s steps(2) 1; }
+.ent.lunge .face > .bob { animation: strike .3s steps(2) 1; }
+.ent.shake .bob { animation: shake .25s steps(2) 1; }
+.ent.hurt svg { animation: flash .3s steps(2) 1; }
+.ent.silhouette svg { filter: brightness(0) invert(1); }
+.ent.poof svg { visibility: hidden; }
+.smoke { position: absolute; left: 50%; bottom: 8px; width: 6px; height: 6px; background: #c9c4d9; translate: -50% 0; animation: smoke .6s steps(6) forwards; pointer-events: none; }
+.hit { position: absolute; bottom: 60px; translate: -50% 0; font-family: var(--f-display); font-size: 10px; color: var(--danger); text-shadow: 1px 1px 0 #fff; animation: float .8s ease-out forwards; pointer-events: none; }
+.pop { font-family: var(--f-display); font-size: 11px; color: var(--gold-dk); text-shadow: 2px 2px 0 #fff; animation: float 1.8s ease-out forwards; }
+@keyframes bob { 50% { translate: 0 -2px; } }
+@keyframes jump { 0%, 100% { translate: 0 0; } 30%, 60% { translate: 0 -22px; } }
+@keyframes hop { 50% { translate: 0 -10px; } }
+@keyframes strike { 50% { translate: 7px 0; } }
+@keyframes shake { 50% { translate: -3px 0; } }
+@keyframes flash { 50% { filter: brightness(0) invert(1); } }
+@keyframes smoke { 0% { box-shadow: 0 0 0 0 #c9c4d9; opacity: 1; } 100% { box-shadow: -14px -10px 0 4px #c9c4d9, 14px -12px 0 3px #d8d4e5, 0 -22px 0 5px #e4e1ee, -6px 2px 0 2px #c9c4d9; opacity: 0; } }
+@keyframes float { 0% { opacity: 0; translate: -50% 6px; } 15%, 70% { opacity: 1; } 100% { opacity: 0; translate: -50% -18px; } }
+@keyframes zzz { 0% { opacity: .2; } 50% { opacity: 1; } }
+.ent .say .heart, .ent .say .pop { translate: 0 0; animation-name: float-in; }
+@keyframes float-in { 0% { opacity: 0; transform: translateY(6px); } 15%, 70% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-14px); } }
+.still .ent .bob, .still .zzz { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .ent .bob, .zzz, .heart, .pop, .hit, .smoke, .ent svg { animation: none !important; }
+}
+
+/* Vignettes figées des états */
+.vig { position: relative; height: 150px; background: var(--jf-fond); border: 1px solid var(--jf-ligne-forte); overflow: hidden; font-family: var(--jf-corps); color: var(--jf-encre); }
+.vig::before { content: "297   Mission Next.js · 3 mois — Malt"; position: absolute; left: 0; right: 0; top: 0; padding: 8px 10px; background: var(--jf-stock); border-bottom: 1px solid var(--jf-ligne); font-size: 12px; color: var(--jf-doux); white-space: nowrap; overflow: hidden; }
+.vig .ent { animation: none; cursor: default; }
+.vig .ent .say > * { animation: none !important; opacity: 1 !important; transform: none !important; }
+.vig .ent.jump .bob { animation: none; translate: 0 -18px; }
+.vig .ent.hop .bob { animation: none; translate: 0 -8px; }
+.vig .ent.strike .face > .bob { animation: none; translate: 6px 0; }
+.vig .ent.hurt svg { animation: none; filter: brightness(0) invert(1); }
+.vig .hit, .vig .smoke { animation: none; }
+.vig .smoke { box-shadow: -14px -10px 0 4px #c9c4d9, 14px -12px 0 3px #d8d4e5, 0 -22px 0 5px #e4e1ee, -6px 2px 0 2px #c9c4d9; }
+.vig.empty-card .jf-card { right: 8px; bottom: 8px; width: 200px; }
+
+/* ---------- Ménagerie (Goal Master) ---------- */
+.gm-page { background: var(--night); border: 3px solid var(--edge); box-shadow: 4px 4px 0 var(--shadow); padding: 18px 16px; display: flex; flex-direction: column; gap: 16px; max-width: 560px; }
+.gm-page h3 { font-family: var(--f-display); font-size: 12px; margin: 0; line-height: 1.6; }
+.gm-page h5 { font-family: var(--f-display); font-size: 10px; margin: 0; line-height: 1.6; color: var(--gold); display: flex; justify-content: space-between; gap: 8px; }
+.gm-page h5 span { font-family: var(--f-num); font-size: 20px; color: var(--muted); line-height: 1; }
+.gm-page p.lead { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
+.picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (min-width: 720px) { .picks { grid-template-columns: repeat(6, 1fr); } }
+.pick { background: var(--stone); border: 2px solid var(--edge); padding: 10px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 14px; text-align: center; min-width: 0; color: var(--ink); }
+.pick svg { display: block; }
+.pick.shown { border-color: var(--gold); }
+.pick small { display: block; font-size: 12px; color: var(--gold); }
+.pick.locked { opacity: .45; }
+.walkers { display: flex; flex-direction: column; border: 2px solid var(--edge); }
+.walk-row { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; background: var(--stone); }
+.walk-row + .walk-row { border-top: 2px solid var(--night); }
+.walk-row .nm { font-size: 16px; min-width: 0; }
+.walk-row .nm small { display: block; font-size: 13px; color: var(--muted); }
+.walk-row svg { display: block; margin: 0 auto; }
+.walk-row.off { opacity: .5; }
+.sw { position: relative; width: 46px; height: 26px; flex: none; appearance: none; margin: 0; background: var(--night); border: 2px solid var(--edge); cursor: pointer; }
+.sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: var(--muted); }
+.sw:checked { background: var(--ok); border-color: var(--ok); }
+.sw:checked::after { left: 23px; background: var(--night); }
+.sw:disabled { cursor: not-allowed; }
+.hint { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.45; }
+.hint.warn { color: var(--gold); }
+.err { margin: 0; font-size: 14px; color: var(--danger); }
+.gm-field { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.gm-field label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); min-width: 0; }
+.gm-field input { font: inherit; font-size: 16px; color: var(--ink); background: var(--page); border: 2px solid var(--edge); padding: 8px 10px; min-width: 0; }
+.btn { font-family: var(--f-display); font-size: 10px; color: #1a1626; background: var(--gold); border: 0; padding: 12px 14px; box-shadow: inset -3px -3px 0 var(--gold-dk); cursor: pointer; }
+.btn.ghost { background: none; color: var(--ink); border: 2px solid var(--edge); box-shadow: none; }
+.mini-states { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); margin-top: 20px; }
+.mini-states .gm-page { padding: 14px 12px; gap: 10px; }
+
+/* ---------- Relais des clics ---------- */
+.relay { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.relay div { background: var(--stone); border: 2px solid var(--edge); padding: 12px 14px; font-size: 15px; line-height: 1.45; }
+.relay b { display: block; font-family: var(--f-display); font-size: 9px; line-height: 1.7; color: var(--gold); margin-bottom: 6px; }
+.relay code { font-family: var(--f-num); font-size: 18px; color: var(--ok); }
+
+@media (max-width: 640px) {
+  .top h1 { font-size: 10px; margin-bottom: 8px; }
+  .toc { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .toc a { flex: none; }
+  .jf-tabs span:nth-child(n+3) { display: none; }
+}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Goal Master · Encart libre vivant</h1>
+    <nav class="toc" aria-label="Écrans">
+      <a href="#scene">1 · La scène</a>
+      <a href="#etats">2 · États</a>
+      <a href="#menagerie">3 · Ménagerie</a>
+      <a href="#relais">4 · Relais des clics</a>
+    </nav>
+  </div>
+
+  <p class="intro">En mode Libre, le bas de job-finder devient une petite scène. Le héros patrouille. De temps en temps, un compagnon choisi dans la Ménagerie passe le voir, et plus rarement un monstre arrive : le héros le chasse. Tout se clique. Le parcours : Ménagerie → choisir qui se balade → job-finder en mode Libre → la scène tourne pendant que tu travailles.</p>
+  <div class="rules">
+    <div><b>Décor, rien d'autre</b>Tuer un monstre ne rapporte rien, et un monstre ne blesse jamais le héros. L'XP ne vient que des candidatures.</div>
+    <div><b>Calme la plupart du temps</b>Un compagnon passe toutes les 2 à 4 minutes et reste environ une minute, un seul à la fois. Un monstre toutes les 2 à 5 minutes, un seul à la fois.</div>
+    <div><b>La page reste à toi</b>Ailleurs que sur un personnage, le clic atteint job-finder comme aujourd'hui.</div>
+    <div><b>Mouvement réduit</b>Ni monstre ni visite, le héros reste en bas à gauche, les clics donnent encore leur bulle.</div>
+  </div>
+
+  <!-- 1 · SCÈNE -->
+  <section class="screen" id="scene">
+    <header>
+      <span class="route">/widget?mode=free</span>
+      <h2>1 · La scène, dans job-finder</h2>
+      <p>À jouer : clique sur le héros, sur un compagnon, sur le monstre. « Marquer envoyée » joue la victoire. Les compagnons qui passent sont ceux cochés dans la Ménagerie plus bas.</p>
+    </header>
+    <div class="jf" id="demo">
+      <div class="jf-bar"><b>Job-finder</b><div class="jf-tabs"><span>À valider<em>12</em></span><span class="on">Candidatures<em>9</em></span><span>Écartées</span></div><span class="jf-sp"></span><div class="jf-tabs"><span>Profil</span></div><span class="jf-rond" aria-label="Goal Master : mode libre" data-icon></span></div>
+      <div class="jf-main">
+        <div class="jf-filters"><span class="on">À préparer · 3</span><span>En attente de réponse · 4</span><span>Entretien · 1</span></div>
+        <div class="jf-scroll">
+          <table>
+            <thead><tr><th>N°</th><th>Offre</th><th>Note</th><th>État</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="n">318</td><td>Développeur front-end React senior<small>Alan · Paris · CDI</small></td><td class="n">8,4</td><td><span class="stamp">Dossier prêt</span></td><td><button class="jf-act" data-send>Marquer envoyée</button></td></tr>
+              <tr><td class="n">311</td><td>Ingénieur fullstack TypeScript<small>Pennylane · Remote · CDI</small></td><td class="n">7,9</td><td><span class="stamp">Dossier prêt</span></td><td><button class="jf-act" data-send>Marquer envoyée</button></td></tr>
+              <tr><td class="n">297</td><td>Mission Next.js · 3 mois<small>Malt · Lyon · Freelance</small></td><td class="n">7,1</td><td><span class="stamp">Dossier prêt</span></td><td><button class="jf-act" data-send>Marquer envoyée</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="jf-pad"></div>
+      </div>
+      <div class="layer" id="layer"></div>
+    </div>
+    <div class="ctls" aria-label="Piloter la scène">
+      <button class="ctl" type="button" id="visit">▶ Faire passer un compagnon</button>
+      <button class="ctl" type="button" id="spawn">▶ Faire venir un monstre</button>
+      <button class="ctl" type="button" id="evo" aria-pressed="false">Nouvelle forme en attente</button>
+      <button class="ctl" type="button" id="still" aria-pressed="false">Mouvement réduit</button>
+      <span class="note">Accéléré ici : un compagnon reste 30 s et revient 30 s après, un monstre toutes les 90 s. En vrai : compagnon toutes les 2 à 4 min, monstre toutes les 2 à 5 min.</span>
+    </div>
+  </section>
+
+  <!-- 2 · ÉTATS -->
+  <section class="screen" id="etats">
+    <header>
+      <span class="route">/widget?mode=free</span>
+      <h2>2 · États, figés</h2>
+      <p>Chaque moment de la scène, arrêté pour le lire. Le fond est la page de job-finder : l'encart reste transparent.</p>
+    </header>
+    <div class="states" id="vigs"></div>
+  </section>
+
+  <!-- 3 · MÉNAGERIE -->
+  <section class="screen" id="menagerie">
+    <header>
+      <span class="route">/menagerie</span>
+      <h2>3 · Ménagerie : qui se balade</h2>
+      <p>Une nouvelle partie sous la collection et le nom du compagnon affiché. Par défaut, ton compagnon affiché se balade. Trois au plus. Coche ou décoche : la scène du haut suit.</p>
+    </header>
+    <div class="gm-page">
+      <h3>Ménagerie</h3>
+      <div class="picks" id="picks"></div>
+      <form class="gm-field" onsubmit="event.preventDefault()">
+        <label for="rename">Renommer ton chat<input id="rename" value="Biscotte" maxlength="20" autocomplete="off"></label>
+        <button class="btn" type="submit">Enregistrer</button>
+      </form>
+      <h5>En balade dans job-finder <span id="count">2 / 3</span></h5>
+      <p class="lead">Ils passent un par un voir ton héros quand l'encart de job-finder est en mode Libre.</p>
+      <div class="walkers" id="walkers"></div>
+      <p class="hint warn" id="full" hidden>Trois au plus. Retire-en un pour en faire venir un autre.</p>
+    </div>
+    <div class="mini-states">
+      <div class="state"><h4>Aucun compagnon adopté</h4>
+        <div class="gm-page"><h5>En balade dans job-finder</h5><p class="hint">Valide une quête pour ouvrir un coffre et adopter ton premier compagnon. Il viendra se balader ici.</p></div>
+      </div>
+      <div class="state"><h4>job-finder pas relié</h4>
+        <div class="gm-page"><h5>En balade dans job-finder <span>1 / 3</span></h5><p class="hint">Le choix est gardé. Relie job-finder dans les <a href="#menagerie">Réglages</a> pour les voir s'y promener.</p></div>
+      </div>
+      <div class="state"><h4>Enregistrement raté</h4>
+        <div class="gm-page"><h5>En balade dans job-finder <span>2 / 3</span></h5><p class="err" role="alert">Impossible pour l'instant. Vérifie ta connexion et réessaie.</p><p class="hint">L'interrupteur revient à sa place.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · RELAIS -->
+  <section class="screen" id="relais">
+    <header>
+      <span class="route">job-finder · iframe pleine page</span>
+      <h2>4 · Relais des clics</h2>
+      <p>L'encart laisse passer tous les clics, comme aujourd'hui. Pour qu'un personnage réagisse, job-finder fait le lien. Sans ce relais, la scène s'anime quand même : seuls les clics sur les personnages ne font rien.</p>
+    </header>
+    <div class="relay">
+      <div><b>Goal Master envoie</b>La boîte de chaque personnage, dix fois par seconde tant que ça bouge :<br><code>goal-master:hitboxes</code></div>
+      <div><b>job-finder écoute</b>Main au survol d'une boîte. Au clic dans une boîte, il garde le clic pour lui (la page ne le reçoit pas) et renvoie <code>goal-master:poke</code> avec le personnage touché.</div>
+      <div><b>Ailleurs</b>Le clic atteint la page de job-finder, sans changement. Rien à faire si l'encart n'est pas en mode Libre.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+// ---------- Sprites ----------
+const PAL = {K:'#1a1626',E:'#1a1626',S:'#f4c7a1',R:'#e8838a',W:'#dfe6ee',G:'#8b93a7',T:'#c99a5b',B:'#7a4a26',Y:'#f2c14e',O:'#b9831c',L:'#fffbe0',P:'#3d7bd9'};
+const SQUIRE = ["....KKKKKKK.....","...KBBBBBBBK....","..KBBBBBBBBBK...","..KBSSSSSSSBK.W.","..KSSESSSESSK.W.","..KSSSSSSSSSK.W.","...KSSSKKSSK..W.","....KKSSSSKK..W.","...KKPPPPPPKKYWY",".KKKPPPPPPPPKSB.","KPPPKPPYYPPPKSB.","KPYPKPPPPPPKKK..","KPPPKBBBBBBK....",".KKKKPPPPPPK....","....KPPKKPPK....","....KGGK.KGGK...","....KBBK.KBBK...","...KKKKK.KKKKK.."];
+const CPAL = {K:"#1a1626",E:"#1a1626",R:"#e8838a",L:"#fffbe0",Y:"#f2c14e",T:"#c99a5b",B:"#7a4a26",O:"#b9831c",a:"#e8873a",b:"#fbeedd",c:"#9aa0b5",d:"#6b4a2b",e:"#c98a4b",f:"#a8794a",h:"#ecd9b2",j:"#f0eef5",k:"#f3a6b5",m:"#5fbf7a",n:"#2f8a55",o:"#ffd84a"};
+const COMP = {
+  cat: ["..K....K......", "..KK..KK......", ".KcKKKKcK.....", ".KccccccK.....", "KcEccccEcK....", "KcccRRcccK..K.", ".KccccccK..KcK", "..KcbbcK...KcK", ".KccbbccK.KcK.", ".KccbbcccKcK..", ".KcKccKcccK...", "..KK.KK.KKK..."],
+  dog: ["..KKK..KKK....", ".KdddKKdddK...", ".KddeeeeddK...", ".KdeEeeEedK...", "..KeeeeeeK....", "..KeeKKeeK..K.", "...KeRReK..KeK", "..KeeeeeeK.KeK", ".KeeebbeeeKeK.", ".KeeebbeeeeK..", ".KeeKeeKeeeK..", "..KK.KK.KKK..."],
+  fox: [".K......K.....", "KaK....KaK....", "KaaKKKKaaK....", "KaaaaaaaaK....", "KaEaaaaEaK..KK", ".KbbaabbK..KaaK", "..KbbKbK..KaabK", "...KaaaK.KaabbK", "..KaabaaKaaabK.", "..KaabaaaaaaK..", "..KaaKaaKaaK...", "...KK.KK.KK...."],
+  owl: [".K......K.", ".KK....KK.", "KffKKKKffK", "KfLLffLLfK", "KfLEffELfK", "KffffYffffK", "KfhhffhhfK", "KfhhhhhhfK", "KffhhhhffK", ".KffhhffK.", "..KYKKYK..", "..K....K.."],
+  rabbit: ["..K...K...", ".KjK.KjK..", ".KkK.KkK..", ".KkK.KkK..", ".KjKKKjK..", "KjjjjjjjK.", "KjEjjjEjK.", "KjjjkjjjK.", ".KjjjjjK..", "KjjjjjjjKK", "KjjjjjjjKjK", ".KjKKKjKK.", "..K...K..."],
+  dragon: ["...K....K.....", "..KmK..KmK....", "..KmmKKmmK....", "..KmmmmmmK....", "..KmEmmEmK....", "..KmmmmmmmK...", "...KmmRmmK....", "KK.KmooomK.KK.", "KnKmmoommmKnK.", "KnnmmoommnnK..", ".KKmmoommKK..K", "...KmmmmmKKKmK", "...KmKKmmmmmK.", "...KK.KKKKKK.."],
+};
+// Monstres : nouveaux, dans la palette du jeu.
+const MPAL = {K:"#1a1626",E:"#1a1626",R:"#ff6b6b",L:"#e9fff0",g:"#6fd49a",G:"#3fa55b",c:"#8a6bc0",C:"#5b3d8f",z:"#c9774a",Z:"#8a3f22",F:"#f3f1f6"};
+const MON = {
+  slime: { name: "Slime", px: 3, grid: ["...KKKK...", "..KggggK..", ".KgLgggGK.", ".KgEggEgK.", "KgggggggGK", "KggKKKggGK", "KGgggggGGK", ".KKKKKKKK."] },
+  bat: { name: "Chauve-souris", px: 3, fly: true, grid: ["c..........c", "cc..K..K..cc", "cccKcKKcKccc", ".ccKRccRKcc.", "...KccccK...", "....KccK....", ".....KK....."], alt: ["....K..K....", "...KcKKcK...", "..KKRccRKK..", ".ccKccccKcc.", "ccc.KccK.ccc", "cc...KK...cc", "c..........c"] },
+  shroom: { name: "Champignon", px: 3, grid: ["..KKKKKK..", ".KzzFzzzK.", "KzFzzzzFzK", "KzzzzzzzzK", ".KKFFFFKK.", "..KFEFEK..", "..KFFFFK..", "..KKKKKK.."] },
+};
+function svg(grid, pal, px) {
+  const w = Math.max(...grid.map((r) => r.length)), h = grid.length;
+  let r = "";
+  grid.forEach((row, y) => {
+    let x = 0;
+    while (x < row.length) {
+      const ch = row[x]; let n = 1;
+      while (row[x + n] === ch) n++;
+      if (ch !== ".") r += `<rect x="${x}" y="${y}" width="${n}" height="1" fill="${pal[ch]}"/>`;
+      x += n;
+    }
+  });
+  return `<svg width="${w * px}" height="${h * px}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+const heroSvg = () => svg(SQUIRE, PAL, 3);
+const compSvg = (id, px = 2) => svg(COMP[id], CPAL, px);
+const monSvg = (k, alt) => svg(alt && MON[k].alt ? MON[k].alt : MON[k].grid, MPAL, MON[k].px);
+const ICON = ["..####..", ".######.", ".#.##.#.", ".######.", "..####..", ".######.", "#.####.#", "..#..#.."];
+document.querySelectorAll("[data-icon]").forEach((el) => {
+  let r = "";
+  ICON.forEach((l, y) => [...l].forEach((c, x) => { if (c === "#") r += `<rect x="${x}" y="${y}" width="1" height="1" fill="currentColor"/>`; }));
+  el.innerHTML = `<svg width="16" height="16" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+});
+
+// ---------- Données plausibles ----------
+const OWNED = ["cat", "fox", "owl", "dragon"];
+const NAMES = { cat: "Biscotte", fox: "Rox", owl: "Hibou", dragon: "Petit dragon", dog: "Chien", rabbit: "Lapin" };
+const KIND = { cat: "Chat", fox: "Renard", owl: "Hibou", dragon: "Petit dragon" };
+let chosen = ["cat", "fox"];
+const HERO_SAY = ["NIV. 8 · ÉCUYER", "Série 12 j · 60 XP avant niv. 9"];
+
+// ---------- La scène ----------
+const layer = document.getElementById("layer");
+const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+const isStill = () => layer.classList.contains("still") || reduced.matches;
+let evoPending = false;
+
+function makeEnt(kind, inner, extra = "") {
+  const el = document.createElement("div");
+  el.className = "ent " + extra;
+  el.innerHTML = `<div class="say"></div><div class="face"><div class="bob">${inner}</div></div>`;
+  layer.appendChild(el);
+  return { el, kind, x: 0, dir: 1, say: el.querySelector(".say"), face: el.querySelector(".face"), bob: el.querySelector(".bob") };
+}
+function say(e, html, ms) {
+  clearTimeout(e._sayT);
+  e.say.innerHTML = html;
+  if (ms) e._sayT = setTimeout(() => { e.say.innerHTML = e.persist || ""; }, ms);
+}
+function once(e, cls, ms) {
+  e.el.classList.remove(cls); void e.el.offsetWidth; e.el.classList.add(cls);
+  clearTimeout(e["_" + cls]); e["_" + cls] = setTimeout(() => e.el.classList.remove(cls), ms);
+}
+
+const hero = makeEnt("hero", heroSvg());
+hero.x = 120; hero.pause = 0; hero.cheer = 0; hero.atk = 0; hero.rush = false;
+hero.el.addEventListener("click", () => {
+  if (evoPending) say(hero, `<div class="bubble"><strong>NOUVELLE FORME !</strong>Ouvre Goal Master pour la voir</div>`, 3200);
+  else say(hero, `<div class="bubble"><strong>${HERO_SAY[0]}</strong>${HERO_SAY[1]}</div>`, 3200);
+  if (!isStill()) { hero.cheer = Math.max(hero.cheer, 1.4); once(hero, "jump", 1400); }
+});
+
+let comps = [];
+function buildComps() {
+  comps.forEach((c) => c.el.remove());
+  comps = chosen.map((id, i) => {
+    const c = makeEnt("comp", compSvg(id));
+    c.id = id; c.present = false; c.el.hidden = true; c.state = "walk"; c.t = 2; c.dir = 1;
+    c.el.addEventListener("click", () => {
+      c.state = "sit"; c.t = 2.5;
+      say(c, `<span class="heart">♥</span><span class="tag">${NAMES[id]}</span>`, 2000);
+      if (!isStill()) once(c, "hop", 450);
+    });
+    return c;
+  });
+  if (comps[0]) arrive(comps[0], 80);
+}
+// Un compagnon entre par un côté, reste un moment, puis repart.
+function arrive(c, x) {
+  const W = layer.clientWidth, fromLeft = x !== undefined || Math.random() < .5;
+  c.present = true; c.el.hidden = false; c.stay = 30;
+  c.x = x !== undefined ? x : fromLeft ? -20 : W + 20; c.dir = fromLeft ? 1 : -1; c.state = "walk"; c.t = 2 + Math.random() * 2;
+  say(c, "");
+}
+let visitT = 30;
+function visit() {
+  const away = comps.filter((c) => !c.present);
+  if (!away.length || isStill()) return;
+  arrive(away[Math.floor(Math.random() * away.length)]);
+  visitT = 30;
+}
+buildComps();
+
+let monster = null, kinds = ["slime", "bat", "shroom"], kindIx = 0;
+function spawn() {
+  if (monster || isStill() || layer.closest("[hidden]")) return;
+  const k = kinds[kindIx++ % kinds.length], W = layer.clientWidth;
+  const m = makeEnt("mon", monSvg(k), MON[k].fly ? "flyer" : "");
+  m.k = k; m.hp = 3; m.alive = true; m.lunge = 1.2; m.flap = 0; m.alt = false;
+  const fromRight = hero.x < W / 2;
+  m.x = fromRight ? W + 30 : -30; m.dir = fromRight ? -1 : 1;
+  m.el.addEventListener("click", () => { if (m.alive) { hero.rush = true; say(hero, `<span class="mark">!</span>`, 800); } });
+  monster = m;
+  comps.filter((c) => c.present).forEach((c) => { c.state = "flee"; say(c, `<span class="mark fear">!</span>`, 900); });
+}
+function kill(m) {
+  m.alive = false;
+  m.el.classList.add("poof");
+  const s = document.createElement("i"); s.className = "smoke"; m.el.appendChild(s);
+  setTimeout(() => { m.el.remove(); if (monster === m) monster = null; comps.forEach((c) => { if (c.state === "flee") { c.state = "sit"; c.t = 1.5; } }); }, 650);
+  hero.rush = false; hero.pause = 0.8;
+}
+function hit(m) {
+  m.hp--;
+  once(hero, "strike", 300); once(m, "hurt", 300);
+  const h = document.createElement("span"); h.className = "hit"; h.textContent = "-1"; h.style.left = m.x + "px";
+  layer.appendChild(h); setTimeout(() => h.remove(), 800);
+  if (m.hp <= 0) kill(m);
+}
+
+function victory() {
+  hero.cheer = 1.8; once(hero, "jump", 1400);
+  say(hero, `<span class="pop">+10 XP</span>`, 1800);
+  comps.filter((c) => c.present).forEach((c, i) => setTimeout(() => once(c, "hop", 450), 150 + i * 120));
+}
+document.querySelectorAll("[data-send]").forEach((b) => b.addEventListener("click", () => {
+  b.disabled = true; b.textContent = "Envoyée";
+  const st = b.closest("tr").querySelector(".stamp"); st.textContent = "Envoyée"; st.classList.add("sent");
+  victory();
+  setTimeout(() => { b.disabled = false; b.textContent = "Marquer envoyée"; st.textContent = "Dossier prêt"; st.classList.remove("sent"); }, 6000);
+}));
+document.getElementById("spawn").addEventListener("click", spawn);
+document.getElementById("visit").addEventListener("click", visit);
+document.getElementById("evo").addEventListener("click", (e) => {
+  evoPending = !evoPending; e.currentTarget.setAttribute("aria-pressed", evoPending);
+  hero.el.classList.toggle("silhouette", evoPending);
+  hero.persist = evoPending ? `<span class="mark">!</span>` : "";
+  say(hero, hero.persist);
+});
+document.getElementById("still").addEventListener("click", (e) => {
+  const on = !layer.classList.contains("still");
+  layer.classList.toggle("still", on); e.currentTarget.setAttribute("aria-pressed", on);
+  if (on && monster) { monster.el.remove(); monster = null; }
+  if (on) comps.forEach((c) => { c.present = false; c.el.hidden = true; say(c, ""); });
+});
+setInterval(spawn, 90000);
+setTimeout(spawn, 12000);
+
+const REACH = 34;
+let last = performance.now();
+function setPos(e, walking) {
+  e.el.style.left = e.x + "px";
+  // La bulle reste dans la page : calée à gauche ou à droite près des bords.
+  const W = layer.clientWidth;
+  e.say.style.translate = e.x < 120 ? "-24px -6px" : e.x > W - 120 ? "calc(-100% + 24px) -6px" : "-50% -6px";
+  e.say.style.alignItems = e.x < 120 ? "flex-start" : e.x > W - 120 ? "flex-end" : "center";
+  e.face.style.transform = `scaleX(${e.dir})`;
+  e.el.classList.toggle("walking", !!walking && !isStill());
+}
+function tick(t) {
+  const dt = Math.min(0.05, (t - last) / 1000); last = t;
+  const W = layer.clientWidth, min = 24, max = Math.max(min + 10, W - 24);
+  const still = isStill();
+  // Héros
+  let hw = false;
+  if (still) { hero.x = 36; hero.dir = 1; }
+  else if (hero.cheer > 0) hero.cheer -= dt;
+  else if (monster && monster.alive && (hero.rush || Math.abs(monster.x - hero.x) < 220)) {
+    const d = monster.x - hero.x; hero.dir = d >= 0 ? 1 : -1;
+    if (Math.abs(d) > REACH) { hero.x += hero.dir * (hero.rush ? 120 : 70) * dt; hw = true; }
+    else if ((hero.atk -= dt) <= 0) { hero.atk = 0.5; hit(monster); }
+  } else if (hero.pause > 0) hero.pause -= dt;
+  else {
+    hw = true; hero.x += hero.dir * 36 * dt;
+    if (hero.x > max) { hero.x = max; hero.dir = -1; hero.pause = 1.2; }
+    else if (hero.x < min) { hero.x = min; hero.dir = 1; hero.pause = 1.2; }
+    else if (Math.random() < dt * 0.3) { hero.pause = 0.8 + Math.random() * 1.6; if (Math.random() < .4) hero.dir = -hero.dir; }
+  }
+  setPos(hero, hw);
+  // Monstre : s'approche du héros, tente des charges qui ne font rien
+  if (monster && monster.alive && !still) {
+    const m = monster, d = hero.x - m.x;
+    m.dir = d >= 0 ? 1 : -1;
+    let mw = false;
+    if (Math.abs(d) > REACH) { m.x += m.dir * 34 * dt; mw = true; }
+    else if ((m.lunge -= dt) <= 0) { m.lunge = 1.3; once(m, "lunge", 300); once(hero, "shake", 250); }
+    if (MON[m.k].fly) {
+      m.flap += dt; if (m.flap > .2) { m.flap = 0; m.alt = !m.alt; m.bob.innerHTML = monSvg(m.k, m.alt); }
+      m.el.style.bottom = (Math.abs(d) > REACH ? 70 + Math.sin(t / 250) * 10 : 14) + "px";
+    }
+    setPos(m, mw && !MON[m.k].fly);
+  }
+  // Compagnons : un seul de passage à la fois
+  if (!still && !comps.some((c) => c.present) && (visitT -= dt) <= 0) visit();
+  comps.forEach((c, i) => {
+    if (!c.present) return;
+    let cw = false;
+    if (still) { c.x = 90; c.dir = 1; c.state = "sit"; c.el.querySelector(".zzz") && say(c, ""); }
+    else if (c.state === "leave") {
+      c.x += c.dir * 30 * dt;
+      if (c.x < -30 || c.x > W + 30) { c.present = false; c.el.hidden = true; say(c, ""); }
+      setPos(c, true); return;
+    } else if (c.x < min || c.x > max) {
+      c.dir = c.x < min ? 1 : -1; c.x += c.dir * 30 * dt; setPos(c, true); return;
+    } else if (c.state !== "flee" && (c.stay -= dt) <= 0) {
+      if (c.state === "sleep") say(c, "");
+      c.state = "leave"; c.dir = c.x < W / 2 ? -1 : 1; setPos(c, true); return;
+    }
+    else if (c.state === "flee" && monster) {
+      const away = c.x < monster.x ? -1 : 1; c.dir = away;
+      if ((away < 0 && c.x > min) || (away > 0 && c.x < max)) { c.x += away * 70 * dt; cw = true; }
+    } else {
+      if ((c.t -= dt) <= 0) {
+        const r = Math.random();
+        if (c.state === "sleep") say(c, "");
+        c.state = r < .35 ? "walk" : r < .6 ? "follow" : r < .85 ? "sit" : "sleep";
+        c.t = c.state === "sleep" ? 6 + Math.random() * 4 : 2 + Math.random() * 3;
+        if (c.state === "walk") c.dir = Math.random() < .5 ? 1 : -1;
+        if (c.state === "sleep") say(c, `<span class="zzz">z Z</span>`);
+      }
+      if (c.state === "walk") {
+        c.x += c.dir * 24 * dt; cw = true;
+        if (c.x > max) { c.x = max; c.dir = -1; } else if (c.x < min) { c.x = min; c.dir = 1; }
+      } else if (c.state === "follow") {
+        const target = hero.x - hero.dir * (40 + i * 26), d = target - c.x;
+        if (Math.abs(d) > 6) { c.dir = d > 0 ? 1 : -1; c.x += c.dir * 46 * dt; cw = true; }
+      }
+    }
+    c.x = Math.min(max, Math.max(min, c.x));
+    setPos(c, cw);
+  });
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// ---------- Vignettes figées ----------
+function vig(title, text, ents, extra = "") {
+  const box = document.createElement("div"); box.className = "state";
+  const stage = ents.map((e) => {
+    const inner = e.hero ? heroSvg() : e.comp ? compSvg(e.comp) : monSvg(e.mon);
+    const style = `left:${e.x}%;${e.bottom ? "bottom:" + e.bottom + "px;" : ""}`;
+    return `<div class="ent ${e.cls || ""}" style="${style}"><div class="say">${e.say || ""}</div><div class="face" style="transform:scaleX(${e.dir || 1})"><div class="bob">${inner}</div></div>${e.smoke ? '<i class="smoke"></i>' : ""}</div>`;
+  }).join("");
+  box.innerHTML = `<h4>${title}</h4><div class="vig ${extra.cls || ""}">${stage}${extra.html || ""}</div><p>${text}</p>`;
+  document.getElementById("vigs").appendChild(box);
+}
+const B = (s, t) => `<div class="bubble"><strong>${s}</strong>${t}</div>`;
+vig("La plupart du temps", "Le héros patrouille seul. Rien d'autre ne bouge sur la page.",
+  [{ hero: 1, x: 40 }]);
+vig("Un compagnon de passage", "Biscotte entre par un côté, suit le héros, s'assoit ou fait la sieste, puis repart au bout d'une minute environ.",
+  [{ comp: "cat", x: 26, say: '<span class="zzz">z Z</span>' }, { hero: 1, x: 56 }]);
+vig("Clic sur le héros", "Il saute et dit où il en est : niveau, forme, série, XP avant le niveau suivant. La bulle part après 3 s.",
+  [{ hero: 1, x: 50, cls: "jump", say: B(HERO_SAY[0], HERO_SAY[1]) }]);
+vig("Clic sur un compagnon", "Un cœur, un petit bond et son nom. Il s'assoit un instant, et se réveille s'il dormait.",
+  [{ hero: 1, x: 24 }, { comp: "cat", x: 58, cls: "hop", say: '<span class="heart">♥</span><span class="tag">Biscotte</span>' }]);
+vig("Un monstre arrive", "Il entre par le côté le plus éloigné du héros. Les compagnons s'écartent. Le héros fonce dès qu'il est proche, ou tout de suite si tu cliques sur le monstre.",
+  [{ comp: "cat", x: 10, dir: -1, say: '<span class="mark fear">!</span>' }, { hero: 1, x: 40, say: '<span class="mark">!</span>' }, { mon: "slime", x: 82, dir: -1 }]);
+// Le compagnon ne s'écarte que s'il est de passage à ce moment-là.
+vig("Combat", "Trois coups, un toutes les demi-secondes. Les charges du monstre font juste vaciller le héros : il ne perd jamais rien.",
+  [{ hero: 1, x: 44, cls: "strike" }, { mon: "bat", x: 64, dir: -1, cls: "hurt", bottom: 14 }],
+  { html: '<span class="hit" style="left:64%">-1</span>' });
+vig("Monstre vaincu", "Un nuage de fumée, rien d'autre : ni XP, ni compteur.",
+  [{ hero: 1, x: 40 }, { mon: "shroom", x: 62, cls: "poof", smoke: 1 }]);
+vig("Candidature envoyée", "La victoire d'aujourd'hui, inchangée. Si un compagnon est de passage, il saute avec lui.",
+  [{ comp: "cat", x: 32, cls: "hop" }, { hero: 1, x: 52, cls: "jump", say: '<span class="pop">+10 XP</span>' }]);
+vig("Nouvelle forme en attente", "Silhouette et « ! » comme aujourd'hui. Au clic, la bulle invite à ouvrir Goal Master, sans dire le nom de la forme.",
+  [{ hero: 1, x: 50, cls: "silhouette", say: B("NOUVELLE FORME !", "Ouvre Goal Master pour la voir") }]);
+vig("Mouvement réduit", "Le héros reste en bas à gauche, ni monstre ni visite. Le clic donne encore la bulle, sans saut.",
+  [{ hero: 1, x: 8 }]);
+vig("Aucun compagnon choisi", "Le héros seul, avec ses monstres. Pour qui n'a encore adopté aucun compagnon, ou n'en a coché aucun.",
+  [{ hero: 1, x: 36 }, { mon: "slime", x: 70, dir: -1 }]);
+vig("Lien coupé", "La scène disparaît. job-finder affiche sa carte, comme aujourd'hui.", [],
+  { cls: "empty-card", html: '<div class="jf-card"><h6>Goal Master</h6>Le lien a été coupé. Tes candidatures ne comptent plus.</div>' });
+
+// ---------- Ménagerie ----------
+const ALL = ["cat", "dog", "fox", "owl", "rabbit", "dragon"];
+document.getElementById("picks").innerHTML = ALL.map((id) => OWNED.includes(id)
+  ? `<div class="pick ${id === "cat" ? "shown" : ""}">${compSvg(id, 3)}<span>${NAMES[id]}${id === "cat" ? "<small>affiché</small>" : ""}</span></div>`
+  : `<div class="pick locked">${svg(COMP[id].map((r) => r.replace(/[^.]/g, "K")), CPAL, 3)}<span>???</span></div>`).join("");
+const walkers = document.getElementById("walkers");
+function renderWalkers() {
+  const full = chosen.length >= 3;
+  walkers.innerHTML = OWNED.map((id) => {
+    const on = chosen.includes(id), dis = full && !on;
+    return `<label class="walk-row ${dis ? "off" : ""}" for="w-${id}">${compSvg(id, 2)}<span class="nm">${NAMES[id]}${NAMES[id] !== KIND[id] ? `<small>${KIND[id]}</small>` : ""}</span><input class="sw" type="checkbox" id="w-${id}" data-id="${id}" ${on ? "checked" : ""} ${dis ? "disabled" : ""} aria-label="${NAMES[id]} se balade dans job-finder"></label>`;
+  }).join("");
+  document.getElementById("count").textContent = `${chosen.length} / 3`;
+  document.getElementById("full").hidden = !full;
+}
+walkers.addEventListener("change", (e) => {
+  const id = e.target.dataset.id; if (!id) return;
+  chosen = e.target.checked ? [...chosen, id] : chosen.filter((c) => c !== id);
+  renderWalkers(); buildComps();
+});
+renderWalkers();
+</script>

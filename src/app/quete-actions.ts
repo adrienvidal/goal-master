@@ -4,7 +4,7 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { questFormReached, type NotificationEvent } from "@/game/notifications";
-import { checkCompanionName, checkLink, checkQuestText, drawOffer, isCompanion, openQuest, ownedCompanions, type QuestRow } from "@/game/quests";
+import { checkCompanionName, checkLink, checkQuestText, checkWalkers, drawOffer, isCompanion, openQuest, ownedCompanions, walkersAfterAdopt, type QuestRow } from "@/game/quests";
 import { formName } from "@/lib/forms";
 import { db } from "@/server/db";
 import { loadGame, syncAchievements } from "@/server/game";
@@ -130,7 +130,7 @@ export async function adoptCompanion(questId: string, companion: string, rawName
     data: { companion, companionName: named.name },
   });
   if (count !== 1) return { ok: false, error: "Ce coffre est déjà ouvert." };
-  await db().player.update({ where: { id: player.id }, data: { companion } });
+  await db().player.update({ where: { id: player.id }, data: { companion, walkers: walkersAfterAdopt(player.walkers, companion) } });
   await syncAchievements({ ...game, quests: game.quests.map((q) => (q.id === questId ? { ...q, companion } : q)) }, new Date());
   // Pas de revalidatePath("/") ici : la page du coffre se rechargerait et partirait sur l'accueil avant l'écran d'adoption.
   return { ok: true };
@@ -156,6 +156,17 @@ export async function showCompanion(companion: string): Promise<QuestResult> {
   if (!isCompanion(companion) || !ownedCompanions(player.id, game.quests).includes(companion)) return { ok: false, error: "Ce compagnon n'est pas encore dans ta Ménagerie." };
   await db().player.update({ where: { id: player.id }, data: { companion } });
   revalidatePath("/");
+  revalidatePath("/menagerie");
+  return { ok: true };
+}
+
+/** Choisir les compagnons qui se baladent dans job-finder (mode libre), 3 au plus, parmi ceux adoptés. */
+export async function setWalkers(raw: unknown): Promise<QuestResult> {
+  const player = await requirePlayer();
+  const game = await loadGame();
+  const checked = checkWalkers(raw, ownedCompanions(player.id, game.quests));
+  if (!checked.ok) return checked;
+  await db().player.update({ where: { id: player.id }, data: { walkers: checked.walkers } });
   revalidatePath("/menagerie");
   return { ok: true };
 }
