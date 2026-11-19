@@ -574,6 +574,17 @@ body:has(.gm-free) { background: transparent; }
 .fs-zzz { font-family: var(--font-num); font-size: 20px; color: #5b3d8f; animation: gm-wait 2s steps(4) infinite; }
 .fs-heart { font-size: 18px; color: #ff7aa2; animation: fs-rise 1.2s ease-out forwards; }
 .fs-hit { position: absolute; bottom: 60px; translate: -50% 0; font-family: var(--font-display); font-size: 10px; color: var(--danger); text-shadow: 1px 1px 0 #fff; animation: fs-rise .8s ease-out forwards; }
+/* Héros jamais seul (maquette encart-libre-sans-compagnon) : gestes, pensées, héros de l'ami */
+.fs-ent.sit .fs-bob { transform: translateY(4px) scaleY(.84); }
+.fs-ent.stretch .fs-bob { animation: fs-stretch .9s steps(4) 1; }
+.fs-ent.wave .fs-bob { animation: gm-hop .45s steps(4) 2; }
+.fs-music { font-family: var(--font-display); font-size: 12px; color: var(--gold); text-shadow: 2px 2px 0 #0c0a1a; animation: fs-float 1.6s ease-in-out infinite; }
+.fs-bubble.fs-think { border-style: dashed; background: #1c1838; }
+.fs-bubble.fs-friendly { border-color: var(--ok, #6fd49a); }
+.fs-bubble.fs-friendly strong { color: var(--ok, #6fd49a); }
+.fs-xp { font-family: var(--font-display); font-size: 10px; color: var(--gold); text-shadow: 2px 2px 0 #0c0a1a; animation: fs-rise 1.8s ease-out forwards; }
+@keyframes fs-stretch { 40% { transform: scaleY(1.12) scaleX(.94); } }
+@keyframes fs-float { 50% { translate: 0 -3px; } }
 @keyframes fs-strike { 50% { translate: 7px 0; } }
 @keyframes fs-shake { 50% { translate: -3px 0; } }
 @keyframes fs-flash { 50% { filter: brightness(0) invert(1); } }
@@ -599,7 +610,7 @@ body:has(.gm-free) { background: transparent; }
   .widget-root.win .gm-hero, .widget-root.derust .gm-hero, .gm-normal.evo .gm-body::before, .gm-small.evo::before, .gm-ssay, .gm-dots::after { animation: none; }
   .gm-pop { animation: none; }
   .gm-xp i { transition: none; }
-  .fs-ent .fs-bob, .fs-ent svg, .fs-zzz, .fs-heart, .fs-hit { animation: none !important; }
+  .fs-ent .fs-bob, .fs-ent svg, .fs-zzz, .fs-heart, .fs-hit, .fs-music, .fs-xp { animation: none !important; }
 }
 
 /* Ménagerie : compagnons en balade dans job-finder (maquette encart-libre-vivant, écran 3) */
