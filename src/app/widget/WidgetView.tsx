@@ -93,7 +93,7 @@ export function WidgetView({ mode }: { mode: WidgetMode }): React.ReactElement {
   }, [load]);
 
   const hero = status === "ready" ? state : null;
-  const classes = ["widget-root", `gm-${mode}`, mode === "free" ? "" : "gm-widget", hero ? "" : "gm-ghost", victory ? "win" : "", victory?.newForm ? "evo" : "", victory?.derust ? "derust" : ""];
+  const classes = ["widget-root", `gm-${mode}`, mode === "free" ? "" : "gm-widget", hero ? "" : "gm-ghost", victory ? "win" : "", victory?.newForm ? "evo" : "", victory?.derust ? "derust" : "", hero?.evolutionPending ? "evo-pending" : ""];
   const className = classes.filter(Boolean).join(" ");
   if (mode === "free") return <FreeView className={className} state={hero} victory={victory} />;
   if (mode === "small") return <SmallView className={className} state={hero ?? state ?? ghost} ready={hero !== null} unlinked={status === "unlinked"} victory={victory} />;
@@ -122,7 +122,8 @@ export function WidgetView({ mode }: { mode: WidgetMode }): React.ReactElement {
   }
 
   const xpPct = shownXp ?? (hero.xpInLevel / hero.xpForNext) * 100;
-  const line = victory ? victoryLine(victory, hero) : null;
+  // Nouvelle forme pas encore vue sur / : l'annonce reste après la victoire, jusqu'à la scène.
+  const line = victory ? victoryLine(victory, hero) : hero.evolutionPending ? PENDING_LINE : null;
   return (
     <div className={className}>
       <Bar />
@@ -153,6 +154,8 @@ export function WidgetView({ mode }: { mode: WidgetMode }): React.ReactElement {
     </div>
   );
 }
+
+const PENDING_LINE = { strong: "NOUVELLE FORME !", rest: " Va la voir", gold: true };
 
 function HeroSprite({ state, victory = null, px }: { state: WidgetState; victory?: Victory | null; px: number }): React.ReactElement {
   return (
@@ -195,6 +198,8 @@ function SmallView({ className, state, ready, unlinked, victory }: { className: 
           <span className={["gm-ssay", victory.xp === 0 && !victory.levelUp ? "muted" : "", victory.newForm ? "evo" : ""].filter(Boolean).join(" ")} role="status">
             {victoryPop(victory, state, "small")}
           </span>
+        ) : ready && state?.evolutionPending ? (
+          <span className="gm-ssay evo still">ÉVOLUE !</span>
         ) : (
           <span className="gm-sline">{line}</span>
         )}
@@ -211,7 +216,7 @@ function FreeView({ className, state, victory }: { className: string; state: Wid
     <div className={className}>
       {state && (
         <span className="walker" style={PATROL}>
-          {victory && <span className="gm-pop">{victoryPop(victory, state, "free")}</span>}
+          {victory ? <span className="gm-pop">{victoryPop(victory, state, "free")}</span> : state.evolutionPending ? <span className="gm-pop still">!</span> : null}
           <span className="facer">
             <span className="sizer">
               <HeroSprite state={state} victory={victory} px={state.displayedForm >= 4 ? 2 : 3} />

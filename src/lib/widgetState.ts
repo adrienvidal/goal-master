@@ -21,6 +21,8 @@ export type WidgetState = {
   today: number;
   capReached: boolean;
   streak: number;
+  /** Une forme atteinte dont la scène n'a pas encore été vue sur / : l'encart l'annonce en silhouette jusque-là. */
+  evolutionPending: boolean;
   /** Les dernières candidatures arrivées par job-finder, la plus récente d'abord, avec l'XP qu'elles ont rapportée. */
   recent: { id: string; company: string; at: string; xp: number }[];
 };
@@ -59,6 +61,7 @@ export function widgetState(view: PlayerView, apps: Application[], playerId: str
     today: view.today.count,
     capReached: view.today.count >= DAILY_XP_CAP,
     streak: view.streak,
+    evolutionPending: seenForm !== null && view.levelForm > seenForm,
     recent,
   };
 }
