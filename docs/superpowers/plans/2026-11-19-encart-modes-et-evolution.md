@@ -14,11 +14,11 @@ Cadrage : `docs/specs/2026-11-19-encart-modes-et-evolution-design.md`. Maquette 
 
 ## Lot B · Scène d'évolution (branche `feat/scene-evolution`, depuis `dev` après le lot A)
 
-1. **Migration** `seen_form` : `Player.seenForm Int?`, `npx prisma migrate dev`, `npx prisma generate`.
-2. **Logique pure** `src/game/evolution.ts` : `sceneDue(levelForm, seenForm)` → `{ from, to } | null` (`null` si `seenForm` est `null` ou ≥ `levelForm`), `shownForm(displayedForm, levelForm, seenForm)`. Tests d'abord.
-3. **Encart** : `widgetState` reçoit `seenForm` et plafonne `displayedForm` ; `/api/widget/state` lit `seenForm`. Test.
-4. **Notification** `evo-me` dans `src/game/notifications.ts` (type, règle `reminders` non plafonnée, clé, texte, aide de la catégorie). Envoi dans `applicationEvents` (`src/server/applications.ts`) et dans la validation de quête (`src/app/quete-actions.ts`). Tests.
-5. **Scène** : `src/components/EvolutionScene.tsx` (client) + action serveur `seeEvolution()` qui recalcule `levelForm` et pose `seenForm`. Sur `/` : si `seenForm` est `null`, le poser à la forme actuelle sans scène ; si `sceneDue`, rendre la scène. CSS reprise de l'écran 6 de la maquette. Vérification en local (forcer `seenForm` plus bas en base).
+1. **Migration** `seen_form` : `Player.seenForm Int?`, `npx prisma migrate dev --name seen_form`, `npx prisma generate`.
+2. **Logique pure** `src/game/evolution.ts` : `sceneDue(displayedForm, seenForm)` (vrai si `seenForm` non nul et dépassé), `shownForm(displayedForm, levelForm, seenForm)`, `nextSeenForm(seenForm, levelForm)` (= max). Tests d'abord.
+3. **Encart** : `widgetState` reçoit `seenForm` et plafonne `displayedForm` ; `stateOf` (`src/server/widget.ts`) le passe. `widgetState.test.ts` mis à jour.
+4. **Notification** `evo-me` : type, règle, clé, texte, aide de catégorie (`src/game/notifications.ts`) ; rang (`src/game/digest.ts`), lien (`src/server/mail.ts`), image sans nouvelle forme (`src/lib/emailScene.ts`) ; envoi dans `applicationEvents` et dans la validation de quête. Tests.
+5. **Scène** : `MyAvatar` reçoit `seenForm` ; l'évolution se déclenche par `sceneDue` au lieu du navigateur, « Retour en grâce » inchangé ; la fermeture appelle `seeEvolution()` (action serveur, `max`). Sur `/`, poser `seenForm` s'il est nul (après les redirections). Vérification en local (abaisser `seenForm` en base, ouvrir `/`, puis l'encart).
 6. PR vers `dev`.
 
 ## Relectures
