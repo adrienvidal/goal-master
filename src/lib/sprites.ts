@@ -13,7 +13,9 @@ const COMBAT_POSES: Pose[] = ["parry", "potion", "ko"];
 /** Couleurs propres à l'Arène : fiole rouge, contour cyan de la parade, feuille claire. */
 const ARENA_PAL: Record<string, string> = { J: "#e8364a", Q: "#7fe3ff", M: "#a8e07a" };
 export type Rect = { x: number; y: number; w: number; fill: string };
-export type SpriteData = { width: number; height: number; scale: number; rects: Rect[] };
+/** Bandeau du héros blessé, en cases de la grille : une ligne du front, d'un bord à l'autre du contour. */
+export type Bandage = { x: number; y: number; w: number };
+export type SpriteData = { width: number; height: number; scale: number; rects: Rect[]; bandage: Bandage | null };
 
 type Grid = string[];
 
@@ -320,6 +322,24 @@ function posed(g: Grid, pose: Pose, character: CharacterId = "KNIGHT"): Grid {
   }
 }
 
+/**
+ * Place le bandeau d'après le dessin : la ligne du front (au-dessus des yeux, plus haut chez le Panda dont les
+ * yeux sont cerclés de noir), ou à défaut la 3e ligne de la tête (casque fermé). Sa largeur suit le
+ * contour de la tête sur cette ligne : ni les oreilles, ni le bâton, ni le vide.
+ */
+function bandageOf(g: Grid, character: CharacterId): Bandage | null {
+  const eye = g.findIndex((r) => r.includes(character === "PANDA" ? "I" : "E"));
+  let y: number;
+  if (eye >= 0) y = eye - (character === "PANDA" ? 2 : 1);
+  else y = g.findIndex((r) => r.lastIndexOf("K") - r.indexOf("K") >= 3) + 2;
+  const row = g[y];
+  if (!row) return null;
+  const x = row.indexOf("K");
+  let end = x;
+  for (let i = x; i < row.length && row[i] !== "."; i++) if (row[i] === "K") end = i;
+  return end - x >= 2 ? { x, y, w: end - x + 1 } : null;
+}
+
 /** Grille d'une pose, pour les tests. */
 export function poseGrid(character: CharacterId, form: Form, pose: Pose): Grid {
   return posed(GRIDS[character][form], pose, character);
@@ -346,14 +366,18 @@ export function sprite(character: CharacterId, color: ColorId, form: Form, mood:
   const tired = mood === "tired" || mood === "exhausted";
   const base = character === "KNIGHT" && tired && OPEN_HELMET[form] ? OPEN_HELMET[form]! : GRIDS[character][form];
   const faced = character === "PANDA" ? pandaFace(base, mood) : knightFace(base, mood);
-  const posedGrid = posed(faced, mood === "normal" || COMBAT_POSES.includes(pose) ? pose : "rest", character);
-  const g = crown ? crowned(posedGrid) : posedGrid;
+  const shown = mood === "normal" || COMBAT_POSES.includes(pose) ? pose : "rest";
+  const withCrown = (grid: Grid) => (crown ? crowned(grid) : grid);
+  const g = withCrown(posed(faced, shown, character));
   const player = COLOR_HEX[color];
+  // Le sommeil ferme les yeux : le bandeau se place sur la même grille, yeux ouverts. Couché (K.O.), pas de bandeau.
+  const bandage = shown === "ko" ? null : bandageOf(withCrown(posed(base, shown, character)), character);
   return {
     width: Math.max(...g.map((r) => r.length)),
     height: g.length,
     scale: character === "PANDA" ? PANDA_SCALE[form] : 1,
     rects: rectsOf(g, (c, x, y) => colorOf(c, player, mood, x, y, character)),
+    bandage,
   };
 }
 
