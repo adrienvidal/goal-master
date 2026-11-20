@@ -150,7 +150,7 @@ export function textOf(event: NotificationEvent): NotificationText {
     case "duel":
       return event.won
         ? t("Boss vaincu !", `${BOSSES[event.boss]} est tombé : ${event.total} coups contre ${event.hp} PV.`, "/duel")
-        : t(`${BOSSES[event.boss]} s'échappe.`, `${event.total} coup${event.total > 1 ? "s" : ""} contre ${event.hp} PV. Vous êtes blessés jusqu'à la prochaine victoire.`, "/duel");
+        : t(`${BOSSES[event.boss]} s'échappe.`, `${event.total} coup${event.total > 1 ? "s" : ""} contre ${event.hp} PV. Mettez le prochain boss à terre pour guérir.`, "/duel");
     case "rust":
       return t(`Ton ${event.hero} commence à rouiller.`, `${event.idle} jours sans candidature. Une candidature suffit à le réveiller.`);
     case "news":

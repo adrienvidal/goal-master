@@ -137,10 +137,20 @@ export function pastDuels(input: DuelInput, now: Date): Duel[] {
   return duels;
 }
 
-/** Blessés tant que le dernier duel tranché est une défaite (purement visuel). */
+/** Coups qui manquent pour mettre le boss à terre, coup de grâce non compris (il ne tombe qu'au duel). */
+export function hitsLeft(duel: Duel): number {
+  return Math.max(0, duel.hp - duel.hits);
+}
+
+/**
+ * Blessés après un duel perdu (purement visuel), jusqu'à ce que le boss suivant ait pris assez de coups
+ * pour tomber : la guérison n'attend pas le vendredi.
+ */
 export function isWounded(input: DuelInput, now: Date): boolean {
   const last = pastDuels(input, now)[0];
-  return last ? !last.won : false;
+  if (!last || last.won) return false;
+  const duel = currentDuel(input, now);
+  return duel ? hitsLeft(duel) > 0 : true;
 }
 
 /** Les combattants, le joueur courant en premier. */

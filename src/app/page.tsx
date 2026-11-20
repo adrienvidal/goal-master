@@ -17,7 +17,7 @@ import { ArenaIncoming, ArenaPending, type ArenaLaunch } from "@/components/Aren
 import { ANSWER_WITHIN_MS, arenaCrowns, arenaPhase, arenaState, canProvoke, CURRENT_RULES, ENERGY_PER_TURN, finishedArenas, MAX_ENERGY, openArena, startEnergy, statsFor, type ArenaEntry, type ArenaInput } from "@/game/arena";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { canLaunch, challengeScore, crownHolder, deadlineFor, lastFinished, openChallenge, phaseOf, timeLeft, untilLabel, type ChallengeRow } from "@/game/challenge";
-import { bossInSentence, currentDuel, pastDuels, type Duel } from "@/game/duel";
+import { bossInSentence, currentDuel, isWounded, pastDuels, type Duel } from "@/game/duel";
 import { parisDay } from "@/game/calendar";
 import { justWonNudge, NUDGE_MESSAGES, pendingNudge, sentToday } from "@/game/nudges";
 import Link from "next/link";
@@ -239,7 +239,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
   const duelInput = await loadDuelInput(game);
   const duel = currentDuel(duelInput, now);
   const lastDuel = pastDuels(duelInput, now)[0] ?? null;
-  const wounded = lastDuel ? !lastDuel.won : false;
+  const wounded = isWounded(duelInput, now);
   const arenas = arenaInputs(game);
   const crownIds = new Set([crownHolder(game.challenges, now), ...arenaCrowns(arenas, now)].filter((id): id is string => id !== null));
   const openFight = openArena(game.arenas, now);
