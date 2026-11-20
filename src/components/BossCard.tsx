@@ -41,7 +41,7 @@ export function BossCard({ duel, names, meId, wounded, now }: { duel: Duel; name
           <span key={f.playerId}>{names[f.playerId] ?? "?"} : {coups(f.hits)}</span>
         ))}
         {duel.bonus > 0 ? <span>Coup de grâce au duel : +{duel.bonus}</span> : null}
-        {wounded && !ko ? <span className="basis-full text-ember">Une victoire soigne vos blessures.</span> : null}
+        {wounded && !ko ? <span className="basis-full text-ember">Battez-le pour retirer vos bandages.</span> : null}
       </p>
     </div>
   );

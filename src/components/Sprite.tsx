@@ -29,11 +29,31 @@ export function Sprite({ character, color, form, mood = "normal", pose = "rest",
   return (
     <span className={classes.filter(Boolean).join(" ")}>
       <svg viewBox={`0 0 ${s.width} ${s.height}`} width={s.width * k} height={s.height * k} shapeRendering="crispEdges" role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
-        {s.rects.map((r, i) => (
-          <rect key={i} x={r.x} y={r.y} width={r.w} height={tilted ? 1.1 : 1} fill={r.fill} />
-        ))}
+        <g className="body">
+          {s.rects.map((r, i) => (
+            <rect key={i} x={r.x} y={r.y} width={r.w} height={tilted ? 1.1 : 1} fill={r.fill} />
+          ))}
+        </g>
+        {hurt ? <Bandage width={s.width} height={s.height} k={k} crown={crown} /> : null}
       </svg>
-      {hurt ? <span className="bandage" aria-hidden /> : null}
     </span>
+  );
+}
+
+/** Bandeau sur le front, dessiné dans l'image : il suit la respiration, l'inclinaison et les poses du héros. */
+function Bandage({ width, height, k, crown }: { width: number; height: number; k: number; crown: boolean }): React.ReactElement {
+  const x = width * 0.22;
+  const w = width * 0.56;
+  // La couronne ajoute des lignes au-dessus de la tête : le bandeau descend d'autant.
+  const y = height * (crown ? 0.28 : 0.12);
+  const h = Math.max(4 / k, height * 0.07);
+  const edge = 2 / k;
+  return (
+    <g className="bandage">
+      {/* Tache de sang décalée vers le bas à droite, sous le bandeau. */}
+      <rect x={x + 3 / k} y={y + 1 / k} width={w} height={h} fill="var(--danger)" />
+      <rect x={x - edge} y={y - edge} width={w + edge * 2} height={h + edge * 2} fill="#6b5f4a" />
+      <rect x={x} y={y} width={w} height={h} fill="#f4f0e6" />
+    </g>
   );
 }
