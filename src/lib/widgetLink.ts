@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-export { isLocalOrigin } from "./localOrigin";
+export { isLocalOrigin, widgetFrameAncestors } from "./localOrigin";
 
 // Liaison de job-finder (cadrage encart-job-finder) : une clé par joueur, montrée une fois, gardée hachée en base.
 

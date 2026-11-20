@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { bearerKey, hashWidgetKey, isLocalOrigin, newWidgetKey, safeReturnPath } from "./widgetLink";
+import { bearerKey, hashWidgetKey, isLocalOrigin, newWidgetKey, safeReturnPath, widgetFrameAncestors } from "./widgetLink";
 
 describe("clé de l'encart", () => {
   test("newWidgetKey : préfixe, longueur, hash cohérent", () => {
@@ -29,6 +29,22 @@ describe("origines et retours", () => {
     for (const o of ["https://localhost:5173", "http://localhost.evil.example", "https://evil.example", "http://localhost:5173/x", null, ""]) {
       expect(isLocalOrigin(o)).toBe(false);
     }
+  });
+
+  test("isLocalOrigin accepte une machine du réseau Tailscale (100.64.0.0/10)", () => {
+    for (const o of ["http://100.64.0.1:5173", "http://100.101.102.103:4321", "http://100.127.255.255"]) expect(isLocalOrigin(o)).toBe(true);
+    for (const o of ["http://100.63.255.255:5173", "http://100.128.0.1:5173", "https://100.101.102.103:5173", "http://100.101.102.103.evil.example", "http://192.168.1.10:5173"]) {
+      expect(isLocalOrigin(o)).toBe(false);
+    }
+  });
+
+  test("widgetFrameAncestors : localhost toujours, plus la page qui affiche l'encart si elle est locale", () => {
+    const base = "frame-ancestors http://localhost:* http://127.0.0.1:*";
+    expect(widgetFrameAncestors(null)).toBe(base);
+    expect(widgetFrameAncestors("pas une adresse")).toBe(base);
+    expect(widgetFrameAncestors("https://evil.example/page")).toBe(base);
+    expect(widgetFrameAncestors("http://localhost:5173/")).toBe(base);
+    expect(widgetFrameAncestors("http://100.101.102.103:5173/offres?x=1")).toBe(`${base} http://100.101.102.103:5173`);
   });
 
   test("safeReturnPath", () => {

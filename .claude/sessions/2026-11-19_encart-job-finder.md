@@ -3,7 +3,7 @@
 ## Reprise
 
 ```
-✅ Fait      Mode libre vivant, boss final et attaque ultime en prod
+✅ Fait      Boss final, encart libre « jamais seul » en prod (job-finder aussi)
 ⛔ Bloqué    Aucun
 🎯 Priorité  Duel du 20/11 18 h, puis trancher les 3 cas du boss à l'échéance
 ```
@@ -46,14 +46,20 @@
 - Soirée (session boss) : cadrage `docs/specs/2026-11-19-boss-finale-design.md`, plan `docs/superpowers/plans/2026-11-19-boss-finale.md` ; **PR #154 fusionnée dans `dev`** : `src/game/finale.ts` (testé d'abord), moteur canvas `src/components/arena/` (engine, finale, ultimate, `useArenaScene`), `BossFinale` sur `/objectif/fin`, `BossUltimate` sur `/duel` (titre « … vous met K.O. »), espace manquant du bouton « Reprendre le combat jusqu'au … » corrigé ; une passe de simplification ; 331 tests verts, build OK ; joué au navigateur en local, 1280 et 390 px, avec une quête d'exemple de 13 semaines (base locale sauvegardée puis restaurée)
 - Soirée (session boss) : **mise en production** sur accord d'Adrien (PR #155) : déploiement réussi, goal.viloris.io répond
 - Soirée (session boss) : archivage vérifié, rien à archiver (16/11 porte toujours le duel du boss)
+- Nuit (session encart) : constat en production, aucun compagnon adopté (aucune quête validée) et premier monstre à 2 à 5 min de page affichée (compteur à l'image, arrêté onglet caché) : le héros paraissait seul. Côté job-finder-claude, vérifié : #245, #248 et la mise en production #249 sont dans `main`
+- Nuit (session encart) : maquette « héros jamais seul » validée par Adrien : https://claude.ai/artifact/QKXuvCs4v4k8XP4u83NKpW (`docs/maquettes/encart-libre-sans-compagnon.html`) ; cadrage `docs/specs/2026-11-19-encart-sans-compagnon-design.md`, plan `docs/superpowers/plans/2026-11-19-encart-sans-compagnon.md`
+- Nuit (session encart) : **PR #157 fusionnée dans `dev`** : `WidgetState.friend` / `boss` / `canNudge`, héros de l'ami visiteur (salut, bulle de sa journée, combat, « +XP » plafonné), pensées (`thoughts`, `pickThought`), gestes (assis, étirement, sifflote, regarde, sieste), premier monstre en 30 à 60 s, échéances en temps réel. Vérifié au navigateur avec la page d'essai en 1280 et 390 px ; une relecture indépendante (3 détails corrigés) ; 350 tests verts. Travail fait dans un worktree (`../goal-master-encart`) pour ne pas gêner la session boss
+- Nuit (session encart) : **mise en production** sur accord d'Adrien (PR #158) : déploiement réussi, `/widget?mode=free` sert la nouvelle scène, `/api/widget/state` répond 401 sans clé
+- Refermé : relais des clics et menu du rond côté job-finder-claude (fait et en production chez eux)
+
 ## Reste à faire
-- **Côté job-finder-claude** : relais des clics du mode libre d'après `docs/passation/2026-11-19-encart-libre-vivant.md`, puis mise en production de #241, puis menu du rond (Normal, Small, Libre, Masqué), taille de l'iframe par mode et `?mode=`, d'après `docs/passation/2026-11-19-encart-modes.md` (section « Livré côté Goal Master ») ; garder un `color-scheme` clair pour la transparence du mode libre
 - **Vendredi 20/11 18 h** : vérifier que le duel affiche les PV adoucis et les coups d'entraide
 - Puis Nicolas : « mets à jour job-finder et branche Goal Master » à Claude, et clic sur « Relier »
 - Jeudi 19/11 (ce soir) et vendredi 20/11 à 18 h 01 : rappel du boss puis duel
 - Base locale : candidatures de test « Essai Doctolib », « Alan », « Pennylane », « Doctolib » (Adrien, source job-finder) et une clé de test active ; à effacer si gênantes
 - Base locale, essais du mode libre : clés d'encart de test pour Adrien et Nicolas, candidatures « Qonto », « Alan », « Pennylane » (Nicolas, source job-finder), compagnons en balade de Nicolas passés à chat, chien, renard ; à effacer si gênants
 - Petit reste connu : `/objectif/fin` montre la nouvelle forme si la candidature qui finit l'objectif fait aussi évoluer (avant la scène)
+- Base locale, essai « jamais seul » : une clé d'encart de test de plus pour Adrien, compagnons en balade d'Adrien vidés ; à effacer si gênants
 - Plus tard si besoin : faire tenir l'aperçu de `dev` pour l'encart (protection Vercel), aujourd'hui seule la production ou un Goal Master local sont visables
 
 - **Boss à l'échéance, trois cas à trancher** (maquette `boss-echeance.html`) : nouvel objectif après une victoire en avance (100 sur la date commune, boss énorme ; recommandé : plafonner sa part au rythme de l'objectif précédent), échéance en milieu de semaine (recommandé : duel final le jour de l'échéance au prorata), bandage après le dernier duel (recommandé : laisser tel quel)
@@ -82,3 +88,4 @@
 - Duel perdu : attaque ultime propre à chaque boss, les deux héros K.O. même sans coup ; défaite toujours visuelle ; pas d'animation de victoire du duel pour l'instant
 - Pas d'écran d'intro ni de « Nouveauté » pour le boss final et l'attaque ultime : aucune règle nouvelle
 - Écartés : Goal Master entier dans un panneau (cadrage du matin côté job-finder), base en ligne pour job-finder, import des anciennes candidatures, annulation par job-finder
+- Encart sans compagnon : le héros de l'ami est un visiteur comme un compagnon, un seul visiteur à la fois, à tour de rôle ; sa boîte part comme `companion` pour ne rien changer à job-finder ; la sieste est un geste au hasard (pas de détection d'activité) ; tout est décor, rien ne compte dans le duel
