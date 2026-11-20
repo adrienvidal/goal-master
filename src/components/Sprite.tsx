@@ -1,7 +1,7 @@
 import type { Mood } from "@/game/avatar";
 import type { Form } from "@/game/levels";
 import type { CharacterId, ColorId } from "@/lib/onboarding";
-import { sprite, type Pose } from "@/lib/sprites";
+import { sprite, type Bandage as BandageCells, type Pose } from "@/lib/sprites";
 
 type Props = {
   character: CharacterId;
@@ -34,20 +34,21 @@ export function Sprite({ character, color, form, mood = "normal", pose = "rest",
             <rect key={i} x={r.x} y={r.y} width={r.w} height={tilted ? 1.1 : 1} fill={r.fill} />
           ))}
         </g>
-        {hurt ? <Bandage width={s.width} height={s.height} k={k} crown={crown} /> : null}
+        {hurt && s.bandage ? <Bandage cells={s.bandage} k={k} /> : null}
       </svg>
     </span>
   );
 }
 
-/** Bandeau sur le front, dessiné dans l'image : il suit la respiration, l'inclinaison et les poses du héros. */
-function Bandage({ width, height, k, crown }: { width: number; height: number; k: number; crown: boolean }): React.ReactElement {
-  const x = width * 0.22;
-  const w = width * 0.56;
-  // La couronne ajoute des lignes au-dessus de la tête : le bandeau descend d'autant.
-  const y = height * (crown ? 0.28 : 0.12);
-  const h = Math.max(4 / k, height * 0.07);
-  const edge = 2 / k;
+/**
+ * Bandeau sur le front, dessiné dans l'image : il suit la respiration, l'inclinaison et les poses du héros.
+ * Sa place vient du dessin (ligne du front, contour de la tête), calculée par `sprite`.
+ */
+function Bandage({ cells, k }: { cells: BandageCells; k: number }): React.ReactElement {
+  const { x, y, w } = cells;
+  // Au moins 4 pixels écran de haut, pour rester lisible sur les petits avatars.
+  const h = Math.max(1, 4 / k);
+  const edge = 1 / k;
   return (
     <g className="bandage">
       {/* Tache de sang décalée vers le bas à droite, sous le bandeau. */}
