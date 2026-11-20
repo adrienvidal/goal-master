@@ -125,3 +125,40 @@ describe("spriteLayers (Bottes plein écran)", () => {
     expect(spriteLayers("PANDA", "RED", 1).pivot).toBeNull();
   });
 });
+
+describe("bandage", () => {
+  const covered = (s: ReturnType<typeof sprite>, x: number, y: number) => s.rects.some((r) => r.y === y && r.x <= x && x < r.x + r.w);
+
+  it("sits on the head of every form, crown and moods included, never on the staff or the air", () => {
+    for (const character of ["KNIGHT", "PANDA"] as const)
+      for (const form of [1, 2, 3, 4, 5, 6] as const)
+        for (const mood of ["normal", "tired", "sleep"] as const)
+          for (const crown of [false, true]) {
+            const s = sprite(character, "BLUE", form, mood, "rest", crown);
+            const b = s.bandage!;
+            expect(b, `${character} ${form} ${mood} ${crown}`).not.toBeNull();
+            expect(b.w).toBeGreaterThanOrEqual(3);
+            for (let x = b.x; x < b.x + b.w; x++) expect(covered(s, x, b.y), `${character} ${form} ${mood} x=${x}`).toBe(true);
+          }
+  });
+
+  it("goes on the panda forehead, between the ears and above the eye patches", () => {
+    const s = sprite("PANDA", "BLUE", 3, "normal");
+    expect(s.bandage).toEqual({ x: 3, y: 2, w: 13 });
+  });
+
+  it("goes on the knight forehead, just above the eyes", () => {
+    expect(sprite("KNIGHT", "BLUE", 1, "normal").bandage).toEqual({ x: 1, y: 4, w: 10 });
+  });
+
+  it("follows the crown down", () => {
+    const plain = sprite("PANDA", "BLUE", 3, "normal").bandage!;
+    const crowned = sprite("PANDA", "BLUE", 3, "normal", "rest", true).bandage!;
+    expect(crowned.y).toBeGreaterThan(plain.y);
+    expect(crowned.x).toBe(plain.x);
+  });
+
+  it("is left out when the hero lies knocked out", () => {
+    expect(sprite("PANDA", "BLUE", 3, "normal", "ko").bandage).toBeNull();
+  });
+});
