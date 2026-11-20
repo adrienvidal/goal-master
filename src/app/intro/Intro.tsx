@@ -65,7 +65,7 @@ const STEPS: Step[] = [
   },
   {
     title: "Chaque vendredi, un boss.",
-    text: "Vous l'affrontez à deux, le vendredi à 18 h. Chaque candidature de la semaine lui porte un coup, une relance suivie d'effet ou une quête validée aussi, et ton niveau ajoute un coup de grâce. Une mauvaise semaine ne le fait pas grossir, une avance le fait maigrir. Perdu ? Vos héros portent un bandage jusqu'à la victoire suivante, et c'est tout.",
+    text: "Vous l'affrontez à deux, le vendredi à 18 h. Chaque candidature de la semaine lui porte un coup, une relance suivie d'effet ou une quête validée aussi, et ton niveau ajoute un coup de grâce. Une mauvaise semaine ne le fait pas grossir, une avance le fait maigrir. Perdu ? Vos héros portent un bandage jusqu'à ce que le boss suivant ait pris assez de coups pour tomber, et c'est tout.",
     stage: (
       <div className="flex flex-col items-center gap-4">
         <span className="font-display text-[10px] text-[#c9b8ff]">Le Recruteur fantôme</span>

@@ -1,5 +1,5 @@
 // Attaque ultime du boss quand le duel du vendredi est perdu (maquette docs/maquettes/boss-ultime-ko.html).
-// Purement visuel : la défaite ne coûte rien, les héros restent seulement blessés jusqu'à la prochaine victoire.
+// Purement visuel : la défaite ne coûte rien, les héros restent seulement blessés jusqu'à ce que le boss suivant ait pris assez de coups.
 import type { BossIndex } from "@/game/duel";
 import { Arena, easeIn, easeOut, GROUND, H, W, type Hero } from "./engine";
 

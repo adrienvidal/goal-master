@@ -1,4 +1,4 @@
-import { BOSSES, fightersMeFirst, isUrgent, type Duel } from "@/game/duel";
+import { BOSSES, fightersMeFirst, hitsLeft, isUrgent, type Duel } from "@/game/duel";
 import { BossSprite } from "./BossSprite";
 
 function countdown(at: Date, now: Date): string {
@@ -22,7 +22,7 @@ function DuelStatus({ duel, now, ko, urgent }: { duel: Duel; now: Date; ko: bool
 
 // Bloc du boss de la semaine sur l'accueil : points de vie restants, compte à rebours, coups de chacun.
 export function BossCard({ duel, names, meId, wounded, now }: { duel: Duel; names: Record<string, string>; meId: string; wounded: boolean; now: Date }): React.ReactElement {
-  const left = Math.max(0, duel.hp - duel.hits);
+  const left = hitsLeft(duel);
   const ko = left === 0;
   const urgent = isUrgent(duel, now);
   return (
@@ -41,7 +41,7 @@ export function BossCard({ duel, names, meId, wounded, now }: { duel: Duel; name
           <span key={f.playerId}>{names[f.playerId] ?? "?"} : {coups(f.hits)}</span>
         ))}
         {duel.bonus > 0 ? <span>Coup de grâce au duel : +{duel.bonus}</span> : null}
-        {wounded && !ko ? <span className="basis-full text-ember">Une victoire soigne vos blessures.</span> : null}
+        {wounded ? <span className="basis-full text-ember">Encore {coups(left)} pour guérir.</span> : null}
       </p>
     </div>
   );
