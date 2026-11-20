@@ -59,7 +59,7 @@ export default async function DuelPage(): Promise<React.ReactElement> {
           </div>
         </dl>
         {firstWin ? <p className="border-[3px] border-gold px-3 py-2 text-sm">🏆 Succès débloqué : Premier boss</p> : null}
-        {!duel.won ? <p className="text-sm text-muted">Vous êtes blessés jusqu&apos;à votre prochaine victoire. Aucune XP, aucun niveau, aucun succès perdu.</p> : null}
+        {!duel.won ? <p className="text-sm text-muted">Vous êtes blessés jusqu&apos;à ce que le boss suivant ait pris assez de coups pour tomber. Aucune XP, aucun niveau, aucun succès perdu.</p> : null}
         {next ? <p className="text-sm text-muted">Prochain boss : {BOSSES[next.boss]}, {next.hp} PV, vendredi 18 h.</p> : null}
         <DuelContinue id={duel.id} />
       </div>

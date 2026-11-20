@@ -119,6 +119,16 @@ describe("after the duel", () => {
     expect(isWounded(comeback, new Date("2026-11-28T10:00:00Z"))).toBe(false);
   });
 
+  test("healed as soon as the next boss has taken enough hits, without waiting for Friday", () => {
+    const fresh = goals.map((g) => ({ ...g, createdAt: new Date("2026-11-16T08:00:00Z") }));
+    const monday = new Date("2026-11-23T20:00:00Z");
+    const hp = currentDuel({ goals: fresh, apps: [], nudges: [] }, monday)!.hp;
+    const almost = { goals: fresh, apps: many("a", hp - 1, "2026-11-23T09:00:00Z"), nudges: [] };
+    expect(isWounded(almost, monday)).toBe(true);
+    const enough = { goals: fresh, apps: many("a", hp, "2026-11-23T09:00:00Z"), nudges: [] };
+    expect(isWounded(enough, monday)).toBe(false);
+  });
+
   test("urgent in the last 24 hours while the boss stands", () => {
     const input = { goals, apps: [], nudges: [] };
     expect(isUrgent(currentDuel(input, new Date("2026-11-19T18:00:00Z"))!, new Date("2026-11-19T18:00:00Z"))).toBe(true);
