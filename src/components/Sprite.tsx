@@ -46,8 +46,8 @@ export function Sprite({ character, color, form, mood = "normal", pose = "rest",
  */
 function Bandage({ cells, k }: { cells: BandageCells; k: number }): React.ReactElement {
   const { x, y, w } = cells;
-  // Au moins 4 pixels écran de haut, pour rester lisible sur les petits avatars.
-  const h = Math.max(1, 4 / k);
+  // Une seule ligne du dessin à toutes les tailles : plus épais, il mange les yeux des petits avatars.
+  const h = 1;
   const edge = 1 / k;
   return (
     <g className="bandage">
