@@ -4,7 +4,7 @@ import { Companion, Pixels } from "@/components/Companion";
 import { Sprite } from "@/components/Sprite";
 import type { CompanionId } from "@/game/quests";
 import { between, bubbleAlign, FIRST_MONSTER_S, friendBubble, friendHello, friendXpGain, heroBubble, MONSTER_DELAY_S, MONSTER_HP, nextMonster, nextVisitor, pickGesture, pickThought, STAY_S, STRIKE_S, THOUGHT_DELAY_S, THOUGHT_MS, thoughts, visitDelay, type Gesture, type Range, type Visitor } from "@/lib/freeScene";
-import { isLocalOrigin } from "@/lib/localOrigin";
+import { isJobFinderOrigin } from "@/lib/localOrigin";
 import { FLYING, MONSTER_GRIDS, MONSTER_IDS, MONSTER_PAL, type MonsterId } from "@/lib/monsters";
 import { victoryPop, type Victory } from "@/lib/widgetVictory";
 import type { WidgetState } from "@/lib/widgetState";
@@ -507,7 +507,7 @@ export function FreeScene({ className, state, victory, parentOrigin }: { classNa
     frame = requestAnimationFrame(tick);
 
     function onMessage(event: MessageEvent): void {
-      if (event.source !== window.parent || !isLocalOrigin(event.origin)) return;
+      if (event.source !== window.parent || !isJobFinderOrigin(event.origin)) return;
       const data = event.data as { type?: string; target?: string } | null;
       if (data?.type === "goal-master:poke" && (data.target === "hero" || data.target === "companion" || data.target === "monster")) engine.current?.poke(data.target);
     }
