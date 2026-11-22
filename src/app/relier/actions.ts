@@ -1,5 +1,5 @@
 "use server";
-import { isLocalOrigin, newWidgetKey } from "@/lib/widgetLink";
+import { isJobFinderOrigin, newWidgetKey } from "@/lib/widgetLink";
 import { db } from "@/server/db";
 import { requirePlayer } from "@/server/session";
 
@@ -8,7 +8,7 @@ export type LinkResult = { ok: true; key: string } | { ok: false; error: string 
 /** Relie job-finder au joueur connecté : nouvelle clé, la précédente est révoquée. La clé n'est renvoyée qu'ici, une fois. */
 export async function linkWidget(origin: string): Promise<LinkResult> {
   const player = await requirePlayer();
-  if (!isLocalOrigin(origin)) return { ok: false, error: "Adresse de job-finder refusée." };
+  if (!isJobFinderOrigin(origin)) return { ok: false, error: "Adresse de job-finder refusée." };
   const { key, hash } = newWidgetKey();
   const now = new Date();
   await db().$transaction([
