@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Sprite } from "@/components/Sprite";
-import { isLocalOrigin } from "@/lib/localOrigin";
+import { isJobFinderOrigin } from "@/lib/localOrigin";
 import type { WidgetMode } from "@/lib/widgetMode";
 import { victoryFor, victoryLine, victoryPop, type Victory } from "@/lib/widgetVictory";
 import { FreeScene } from "./FreeScene";
@@ -70,7 +70,7 @@ export function WidgetView({ mode }: { mode: WidgetMode }): React.ReactElement {
 
   useEffect(() => {
     function onMessage(event: MessageEvent): void {
-      if (event.source !== window.parent || !isLocalOrigin(event.origin)) return;
+      if (event.source !== window.parent || !isJobFinderOrigin(event.origin)) return;
       const data = event.data as { type?: string; key?: string } | null;
       if (data?.type === "goal-master:key" && typeof data.key === "string") {
         key.current = data.key;

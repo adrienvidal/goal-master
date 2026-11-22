@@ -12,12 +12,16 @@ function isLoopback(hostname: string): boolean {
   return hostname === "localhost" || hostname === "127.0.0.1";
 }
 
+/** job-finder en ligne : liste fermée, adresses exactes. */
+const ONLINE_ORIGINS = ["https://job.viloris.io"];
+
 /**
- * job-finder tourne chez le joueur : sur son ordinateur (localhost) ou sur une de ses machines
- * jointe par Tailscale. Seules ces origines peuvent afficher l'encart ou recevoir une clé.
+ * job-finder tourne chez le joueur (son ordinateur, localhost, ou une de ses machines jointe
+ * par Tailscale) ou en ligne. Seules ces origines peuvent afficher l'encart ou recevoir une clé.
  */
-export function isLocalOrigin(origin: string | null): origin is string {
+export function isJobFinderOrigin(origin: string | null): origin is string {
   if (!origin) return false;
+  if (ONLINE_ORIGINS.includes(origin)) return true;
   try {
     const url = new URL(origin);
     return url.protocol === "http:" && (isLoopback(url.hostname) || isTailscaleIp(url.hostname)) && url.origin === origin;
@@ -28,11 +32,11 @@ export function isLocalOrigin(origin: string | null): origin is string {
 
 /**
  * En-tête CSP de /widget. Une plage d'adresses IP ne s'écrit pas dans frame-ancestors :
- * on ajoute la page qui charge l'encart (son Referer) quand elle est locale.
+ * on ajoute la page qui charge l'encart (son Referer) quand elle est sur Tailscale.
  */
 export function widgetFrameAncestors(referer: string | null): string {
-  const base = "frame-ancestors http://localhost:* http://127.0.0.1:*";
+  const base = ["frame-ancestors http://localhost:* http://127.0.0.1:*", ...ONLINE_ORIGINS].join(" ");
   const origin = referer && URL.canParse(referer) ? new URL(referer).origin : null;
-  if (!isLocalOrigin(origin) || isLoopback(new URL(origin).hostname)) return base;
+  if (!isJobFinderOrigin(origin) || !isTailscaleIp(new URL(origin).hostname)) return base;
   return `${base} ${origin}`;
 }
